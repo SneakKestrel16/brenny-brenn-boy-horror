@@ -11,7 +11,7 @@ Director, not resolved in the lower doc.
 | 03 | Creature, AI Director & Scares | Game Designer | Not started (task PP-06) |
 | 04 | Farm Layout | Level Designer | Not started (task PP-05) |
 | 05 | Technical Design | Gameplay Programmer | Not started (task PP-07) |
-| 06 | Networking & Voice | Network & Voice Programmer | Not started (task PP-01) |
+| [06](06_networking_and_voice.md) | Networking & Voice | Network & Voice Programmer | Done (PP-01) |
 | 07 | Art Direction & Asset List | Technical Artist | Not started (task PP-08) |
 | 08 | Audio Design & Sound List | Audio Designer | Not started (task PP-09) |
 | 09 | Playtest Plan | QA / Reviewer | Not started (task PP-10) |
