@@ -1,4 +1,4 @@
-# Consensus Change List (v4)
+# Consensus Change List (FINAL: unanimous AGREE in round 6)
 
 Compiled by the Director from rounds 1 and 2. Each item merges the original issue with the amendments the designers made. **Status** marks where it stands after round 2:
 
