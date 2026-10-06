@@ -1,4 +1,4 @@
-I'm the CEO. I want to build the farming horror game described in `01design doc.md` (2 to 4 player online co-op: farm by day, survive the creature in the corn by night). Read it in full before doing anything else. It is the source of truth for tone, pillars and scope; nothing outside its scope gets built without my approval. Its Build Plan and Open Issues sections are binding, and only I approve changes to the design doc itself.
+I'm the CEO. I want to build the farming horror game described in `docs/01_design_doc.md` (2 to 4 player online co-op: farm by day, survive the creature in the corn by night). Read it in full before doing anything else. It is the source of truth for tone, pillars and scope; nothing outside its scope gets built without my approval. Its Build Plan and Open Issues sections are binding, and only I approve changes to the design doc itself.
 
 The engine is Godot 4 (design doc section "Engine and Tech"). You have access to Blender for creating 3D assets.
 

@@ -1,0 +1,26 @@
+# Godot
+.godot/
+*.translation
+export_presets.cfg.local
+
+# Exported builds
+export/
+builds/
+*.exe
+*.pck
+*.zip
+
+# Local voice recordings: never committed (kickoff rule: no real people's voices in the repo).
+# The game stores lobby lines under user://voice/, outside the repo; these catch stray copies.
+recordings/
+voice_local/
+*.opus
+*.ogg.rec
+
+# Logs from local playtests
+logs/
+
+# Tools
+.serena/
+__pycache__/
+*.blend1
