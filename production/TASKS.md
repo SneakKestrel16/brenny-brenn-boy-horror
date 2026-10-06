@@ -20,8 +20,8 @@ Order (kickoff): 06 and the voice spike first, then 02 and 04 together, then 03,
 
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
-| PP-01 | Network & Voice | Doc 06 Networking & Voice | in progress | — |
-| PP-02 | Network & Voice | Voice spike: Opus over ENet, UPnP and join code | blocked | PP-01 candidate list, CEO approval of the addon (D-008) |
+| PP-01 | Network & Voice | Doc 06 Networking & Voice | in review | — |
+| PP-02 | Network & Voice | Voice spike: Opus over ENet, UPnP and join code | done (CEO test at STOP 1) | — |
 | PP-03 | QA | Test harness: headless smoke run, multi-instance launcher, log checker | done | — |
 | PP-04 | Game Designer | Doc 02 Systems & Economy, data schemas | todo | STOP 1 |
 | PP-05 | Level Designer | Doc 04 Farm Layout | todo | STOP 1 |

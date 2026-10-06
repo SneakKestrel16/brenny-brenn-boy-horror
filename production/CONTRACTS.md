@@ -125,13 +125,18 @@ Planned files: `crops.json`, `traps.json`, `ramp_up.json`, `player_scaling.json`
 `voice_lines.json`, `dawn_report_templates.json`, `roles.json`. Schemas: *to be written by PP-04/PP-06
 and approved here.*
 
-## 7. Network messages (*Draft*, filled by PP-01)
+## 7. Network messages (D-010)
 
-- ENet channels: 0 reliable gameplay, 1 unreliable movement, 2 voice. *Confirm in doc 06.*
+Full list and frame formats: [doc 06 section 7](../docs/06_networking_and_voice.md#7-message-list).
+
+- ENet channels: 0 reliable gameplay, 1 unreliable ordered movement, 2 unreliable voice, 3 reliable
+  bulk (lobby-line clips, dawn save copy).
 - Naming: client-to-host requests `request_<verb>` (`@rpc("any_peer", "call_remote", "reliable")`,
-  host validates); host-to-all results `apply_<event>`; voice frames `voice_frame`.
+  host validates); host-to-all results `apply_<event>`. RPCs live on the `Net` autoload.
+- Movement and voice frames use `SceneMultiplayer.send_bytes()` with a one-byte type prefix.
+- `SceneMultiplayer.server_relay = false`: clients talk only to the host and learn the roster from
+  `apply_roster`.
 - Creature state is replicated as one of `lurk`, `lure`, `stalk`, `chase`, `retreat`.
-- Message list: *to be written by PP-01.*
 
 ## 8. Shared runtime interfaces (*Draft*)
 

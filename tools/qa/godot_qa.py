@@ -90,6 +90,7 @@ def run_godot(
 ) -> StepResult:
     """Run one Godot command to completion, saving its combined output to log_path."""
     log_path.parent.mkdir(parents=True, exist_ok=True)
+    ignore_qa_logs()
     start = time.monotonic()
     timed_out = False
     with log_path.open("wb") as out:
@@ -111,6 +112,16 @@ def run_godot(
         log_path=log_path,
         errors=scan_errors(text, allow),
     )
+
+
+def ignore_qa_logs() -> None:
+    """Keep Godot from scanning logs/qa/: hundreds of files there slow the editor's first scan
+    enough to hide the Q-008 first-import crash, so a clean import in this tree would not behave
+    like a fresh checkout."""
+    QA_OUT_ROOT.mkdir(parents=True, exist_ok=True)
+    marker = QA_OUT_ROOT / ".gdignore"
+    if not marker.exists():
+        marker.write_bytes(b"")
 
 
 def timestamp() -> str:

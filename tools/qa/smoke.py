@@ -8,6 +8,10 @@
     uv run tools/qa/smoke.py --frames 600    # longer run
     uv run tools/qa/smoke.py --clean-import  # delete .godot/ first (close the editor before)
 
+--clean-import seeds .godot/extension_list.cfg with every addons/*/*.gdextension, as a fresh
+checkout opened in the editor ends up with. Without it the first headless import segfaults while
+registering TwoVoIP mid-scan (Q-008, Q-010). --no-seed-extensions reproduces that crash.
+
 Steps (CONTRACTS section 1 headless checks, plus a parse check):
   1. import      "$GODOT" --headless --editor --quit --path .
   2. parse_check "$GODOT" --headless --path . -s res://tests/qa/parse_check.gd
@@ -33,6 +37,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--scene", help="run this scene instead of the main scene, e.g. res://game/world/farm.tscn")
     parser.add_argument("--timeout", type=float, default=300.0, help="seconds per step before it counts as hung (default 300)")
     parser.add_argument("--clean-import", action="store_true", help="delete .godot/ before importing (a pass after a fail with no edit: rerun with this)")
+    parser.add_argument("--no-seed-extensions", action="store_true", help="with --clean-import: don't seed .godot/extension_list.cfg (reproduces the Q-008 first-import crash)")
     parser.add_argument("--skip-parse-check", action="store_true", help="skip step 2")
     parser.add_argument("--allow", action="append", default=[], metavar="REGEX", help="ignore error lines matching REGEX (repeatable; say why in the task handoff)")
     parser.add_argument("--out", help="output folder (default logs/qa/smoke_<timestamp>)")
@@ -49,6 +54,13 @@ def main(argv: list[str] | None = None) -> int:
         if cache.exists():
             print(f"Deleting {cache}")
             shutil.rmtree(cache)
+        if not args.no_seed_extensions:
+            extensions = sorted(p.relative_to(REPO_ROOT).as_posix() for p in (REPO_ROOT / "addons").glob("*/*.gdextension"))
+            if extensions:
+                cache.mkdir()
+                lines = "".join(f"res://{e}\n" for e in extensions)
+                (cache / "extension_list.cfg").write_bytes(lines.encode("utf-8"))
+                print(f"Seeded .godot/extension_list.cfg: {', '.join(extensions)} (Q-010)")
 
     steps: list[tuple[str, list[str]]] = [("import", [godot, "--headless", "--editor", "--quit", "--path", root])]
     if not args.skip_parse_check:

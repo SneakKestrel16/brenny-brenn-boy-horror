@@ -37,7 +37,7 @@ import sys
 import time
 from pathlib import Path
 
-from godot_qa import QA_OUT_ROOT, REPO_ROOT, find_godot, scan_errors, timestamp, user_data_dir
+from godot_qa import QA_OUT_ROOT, REPO_ROOT, find_godot, ignore_qa_logs, scan_errors, timestamp, user_data_dir
 
 TILE_W, TILE_H = 640, 360  # 2x2 grid on a 1280x720-or-larger screen
 
@@ -100,6 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     allow = [re.compile(p) for p in args.allow]
     out_dir = Path(args.out).resolve() if args.out else QA_OUT_ROOT / f"multi_{timestamp()}"
     out_dir.mkdir(parents=True, exist_ok=True)
+    ignore_qa_logs()
 
     logs_root = user_data_dir(Path(godot)) / "logs"
     before = snapshot(logs_root)

@@ -14,4 +14,7 @@ reviews and are proposed to the CEO for doc 01 when they change it.
 
 ## Found by the studio
 
-*(none yet)*
+1. **A laggy player is hard to kill.** Doc 01 "Close calls: lag never kills", built in doc 06
+   section 6 as "no answer within 300 ms plus RTT is a miss", means a player with high latency or
+   loss survives lunges others wouldn't, and nobody dies during a timeout. Inference; settled by DD
+   Phase 1 logs counting close calls missed for timeout versus disagreement, per player RTT.

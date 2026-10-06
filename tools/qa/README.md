@@ -49,6 +49,16 @@ folders with a `.gdignore`), so the parse error prints, and the step exits 1.
 
 **A pass after a fail with no edit in between is suspicious.** Rerun with `--clean-import`.
 
+**`--clean-import` seeds `.godot/extension_list.cfg`** with every `addons/*/*.gdextension`
+(Q-010). A fresh checkout's first headless import segfaults while it registers TwoVoIP mid-scan
+(Q-008, PP-02 handoff); the seeded file registers it at startup instead, as the editor does on
+every later run. `--no-seed-extensions` reproduces the crash, e.g. to test a TwoVoIP upgrade.
+
+**`logs/qa/` holds a `.gdignore`,** written by the harness, so Godot never scans QA output. With
+hundreds of log files there, the editor's first scan ran long enough to hide that crash, and a
+clean import in the dev tree no longer behaved like a fresh checkout (measured in the PP-02 review:
+the dev tree passed 4 of 4 unseeded, fresh copies crashed 3 of 3).
+
 ## Multi-instance run: `multi.py`
 
 ```bash

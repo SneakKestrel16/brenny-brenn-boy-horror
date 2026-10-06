@@ -1,0 +1,12 @@
+[configuration]
+
+entry_symbol = "two_voip_library_init"
+compatibility_minimum = "4.6.0"
+reloadable = false
+
+; Trimmed from TwoVoIP v6.5 to Windows x86_64 only (DECISIONS D-009). See VERSION.
+
+[libraries]
+
+windows.x86_64 = "libs/libtwovoip.windows.template_debug.x86_64.dll"
+windows.template_release.x86_64 = "libs/libtwovoip.windows.template_release.x86_64.dll"

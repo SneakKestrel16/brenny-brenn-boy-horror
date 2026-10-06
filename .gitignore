@@ -16,6 +16,12 @@ recordings/
 voice_local/
 *.opus
 *.ogg.rec
+*.vclip
+*.wav
+*.ogg
+# Generated placeholder sounds and CEO-approved audio may live here (CONTRACTS section 2).
+!assets/audio/**/*.wav
+!assets/audio/**/*.ogg
 
 # Logs from local playtests
 logs/
