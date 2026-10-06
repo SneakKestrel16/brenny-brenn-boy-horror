@@ -579,27 +579,7 @@ The size drops by one for each night the creature gnawed it, and for each bite d
 
 ### Economy Check
 
-A hand check of the first payment, assuming no deaths, turnips on every tendable field plot, and moonflowers from day 3.
-
-**4 players (16 field plots, 4 moonflower plots):**
-
-| Day | Coins |
-|---|---|
-| Day 1: start 60, plant 15 turnips (−60) | 0 |
-| Day 2: sell 15 turnips (+150), plant 16 (−64) | 86 |
-| Day 3: sell 16 (+160), plant 16 turnips (−64) and 4 moonflowers (−100) | 82 |
-| Night 3: sell 4 moonflowers (+240) | **322 vs 255 owed** |
-
-**2 players (8 field plots, 2 moonflower plots):**
-
-| Day | Coins |
-|---|---|
-| Day 1: plant 8 turnips (−32) | 28 |
-| Day 2: sell 8 (+80), plant 8 (−32) | 76 |
-| Day 3: sell 8 (+80), plant 8 turnips (−32) and 2 moonflowers (−50) | 74 |
-| Night 3: sell 2 moonflowers (+120) | **194 vs 153 owed** |
-
-A perfect start has about 25% headroom. Scheduled sabotage and a death or two eat most of it, which is the right pressure for a first payment. The 8 of 12 tendable plots at 2 players, and 16 of 24 at 4, leave about a third of everyone's time for sweeps, washing and repairs.
+A perfect start (no deaths, turnips on every tendable plot, moonflowers from day 3) reaches 322 coins at 4 players and 194 at 2. That's about 25% headroom over the first payment, and scheduled sabotage plus a death or two eats most of it. That's the right pressure. Planting 16 of 24 tendable plots at 4 players (8 of 12 at 2) leaves about a third of everyone's time for sweeps, washing and repairs.
 
 ### Season Simulator
 
@@ -721,9 +701,9 @@ Scary is half the job. The other half is the stories the group tells each other 
 
 At every dawn, a short newspaper-style card shows the night. It also lists the dawn's cash-in, medical bill and payment, in that order.
 
-- **"Best Impression":** the lure that worked best, replayed in the creature's voice (or as text, for players on Off). For example: *"The creature said 'come look at this' as Sam. Alex walked 40 meters into the corn."* Targeted lures nobody else heard are revealed here.
+- **"Best Impression":** the lure that worked best, replayed in the creature's voice (or as text, for players on Off). Targeted lures nobody else heard are revealed here.
 - **"Most Wanted":** who the creature chased the most.
-- **"Cause of Death":** written like a small-town obituary. *"Jordan, 2nd night. Survived by 11 turnips."*
+- **"Cause of Death":** written like a small-town obituary.
 - **"Hero of the Night":** whoever refueled the generator, guarded the pumpkin, or freed a teammate.
 
 Players can skip it. Replays follow each player's voice setting. This is where the "remember when..." moments come from, and it's what makes people want to play another night.
