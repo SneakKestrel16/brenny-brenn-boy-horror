@@ -1,0 +1,6 @@
+{"t": 1.0, "day": 1, "phase": "day", "peer": 1, "event": "lure_played", "data": {}}
+this is not json
+{"t": "soon", "day": 1, "phase": "day", "peer": 1, "event": "death", "data": {}}
+{"t": 2.0, "day": 1, "phase": "midnight", "peer": 1, "event": "death", "data": {}}
+{"t": 3.0, "day": 1, "phase": "night", "peer": 1, "event": "lure_result", "data": {"target": 2}}
+{"t": 4.0, "day": 1, "phase": "night", "peer": 1, "event": "spatial_audio_trial", "data": {"kind": "voice", "range": 10}}

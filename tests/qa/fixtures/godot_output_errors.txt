@@ -1,0 +1,10 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[1;31mERROR:[0m qa push_error probe
+   at: push_error (core/variant/variant_utility.cpp:1023)
+SCRIPT ERROR: Parse Error: Unexpected "Indent" in class body.
+   at: GDScript::reload (res://tests/qa/_tmp_broken.gd:4)
+WARNING: this is only a warning
+print("an ERROR: inside a print line is not at line start")
+CrashHandlerException: Program crashed with signal 11
+USER ERROR: allowed by test

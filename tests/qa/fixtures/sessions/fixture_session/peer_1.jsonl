@@ -1,0 +1,19 @@
+{"t": 10.0, "day": 1, "phase": "day", "peer": 1, "event": "lure_played", "data": {"target": 2, "clip": "help_me"}}
+{"t": 18.0, "day": 1, "phase": "day", "peer": 1, "event": "lure_result", "data": {"target": 2, "moved_m": 11.2, "within_s": 8, "worked": true}}
+{"t": 300.0, "day": 1, "phase": "night", "peer": 1, "event": "lure_result", "data": {"target": 2, "moved_m": 10.0, "within_s": 5, "worked": true}}
+{"t": 320.0, "day": 1, "phase": "night", "peer": 1, "event": "lure_result", "data": {"target": 3, "moved_m": 25.0, "within_s": 8.5, "worked": false}}
+{"t": 340.0, "day": 1, "phase": "night", "peer": 1, "event": "lure_result", "data": {"target": 3, "moved_m": 12.0, "within_s": 3, "worked": true}}
+{"t": 50.0, "day": 1, "phase": "day", "peer": 1, "event": "trap_sprung", "data": {"trap": "bear_trap", "player": 2}}
+{"t": 60.0, "day": 1, "phase": "day", "peer": 1, "event": "trap_race_result", "data": {"player": 2, "solo": true, "tainted": false, "pried_at_once": true, "survived": true, "seconds_spare": 2.5}}
+{"t": 70.0, "day": 1, "phase": "day", "peer": 1, "event": "trap_race_result", "data": {"player": 3, "solo": true, "tainted": false, "pried_at_once": true, "survived": false, "seconds_spare": 0}}
+{"t": 80.0, "day": 1, "phase": "day", "peer": 1, "event": "trap_race_result", "data": {"player": 2, "solo": false, "tainted": true, "pried_at_once": false, "survived": true, "seconds_spare": 4.0}}
+{"t": 90.0, "day": 1, "phase": "day", "peer": 1, "event": "spatial_audio_trial", "data": {"sound": "voice", "distance_m": 10, "correct": true}}
+{"t": 91.0, "day": 1, "phase": "day", "peer": 1, "event": "spatial_audio_trial", "data": {"sound": "voice", "distance_m": 10, "correct": false}}
+{"t": 92.0, "day": 1, "phase": "day", "peer": 1, "event": "spatial_audio_trial", "data": {"sound": "whistle", "distance_m": 60, "correct": true}}
+{"t": 100.0, "day": 1, "phase": "day", "peer": 1, "event": "hold_completed", "data": {"verb": "plant", "seconds": 1.5}}
+{"t": 101.0, "day": 1, "phase": "day", "peer": 1, "event": "hold_completed", "data": {"verb": "plant", "seconds": 2.5}}
+{"t": 102.0, "day": 1, "phase": "day", "peer": 1, "event": "hold_completed", "data": {"verb": "water", "seconds": 3.0}}
+{"t": 70.0, "day": 1, "phase": "day", "peer": 1, "event": "death", "data": {"player": 3, "cause": "trap_race"}}
+{"t": 110.0, "day": 1, "phase": "day", "peer": 1, "event": "money_changed", "data": {"delta": 12, "total": 112}}
+{"t": 400.0, "day": 1, "phase": "night", "peer": 1, "event": "inside_at_night", "data": {"player": 2, "seconds": 40}}
+{"t": 450.0, "day": 1, "phase": "night", "peer": 1, "event": "inside_at_night", "data": {"player": 2, "seconds": 20}}

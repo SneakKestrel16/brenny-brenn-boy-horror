@@ -33,3 +33,9 @@ all read the same logs.
 ### D-007 · 2026-10-05 · Director · Building origins at the main door
 Building models and scenes put their origin at the main door's outer threshold. **Why:** doc 01
 measures the Prize Pumpkin and several rules from building doors; this makes them one distance check.
+
+### D-008 · 2026-10-05 · CEO · Opus via an existing GDExtension
+The voice spike and game use an existing open-source Godot 4 Opus GDExtension with prebuilt Windows
+binaries, not our own libopus wrapper (Q-001). The specific addon is chosen from doc 06's candidate
+list and approved by the CEO under D-005 before download. **Why:** no C++ toolchain is installed,
+and it is the fastest route to the spike, the riskiest piece in doc 01.
