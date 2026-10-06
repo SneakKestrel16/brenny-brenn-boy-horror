@@ -1,4 +1,4 @@
-# Consensus Change List (draft for round 3)
+# Consensus Change List (v2, for round 4)
 
 Compiled by the Director from rounds 1 and 2. Each item merges the original issue with the amendments the designers made. **Status** marks where it stands after round 2:
 
@@ -7,6 +7,12 @@ Compiled by the Director from rounds 1 and 2. Each item merges the original issu
 - **New**: raised in round 2 and not yet reviewed by the other two.
 
 In round 3 every designer votes on every item.
+
+**v2 changes (after round 3):**
+- **Objections adopted as written:** Mara's on A8, Theo's on B2, Priya's on A9 and C2.
+- **Notes folded in:** A3, A10, C8, C11.
+- **New items added:** M14 → A13, M15 → A14, T14 → B14, T15 → B15, P15 → C12, P16 → C13, P17 → C14.
+- **Status now:** every item is *Agreed*, except the new items, which are marked *New (round 3)*.
 
 ---
 
@@ -25,6 +31,7 @@ In round 3 every designer votes on every item.
 
 **A3. Back-loaded debt** (M3) · *Agreed*
 - The 4p debt is **1,300** = 255 + 1,045 (adjusted for A1).
+- **Scaled finals:** 3p 836, 2p 627.
 - The final payment is tuned so a median team needs to deliver a **Large** Prize Pumpkin.
 - The season simulator verifies this.
 
@@ -47,22 +54,26 @@ In round 3 every designer votes on every item.
 - **Lock:** about 40 coins.
 - **Lock still leaks:** a locked shed still loses 1 trap a night ("pried a board loose"). From day 5 the creature can break the lock fully.
 
-**A8. Prize Pumpkin trade-off** (M8) · *Director proposal*
+**A8. Prize Pumpkin trade-off** (M8) · *Agreed, with Mara's round-3 wording*
 - **Scaling:** the payout scales with player count, the same way payments do.
-- **Giant:** needs watering every day **and** an outdoor guard. Someone must be outdoors (not inside a building) within 20 m of the pumpkin for at least 60 s, on at least 2 nights.
-- **Fertilizer is cut.** Priya: it adds store and inventory scope for no social gain. Mara offered it only as an alternative path.
+- **Location:** the Prize Pumpkin patch sits **at least 30 m from any building's door**, in the open between the farmhouse and the first corn strip. At dusk on night 7 the pumpkin is moved to the barn for loading.
+- **Giant:** needs watering every day **and** a guard. Someone must be outdoors within 20 m of the pumpkin for at least 60 s, on at least 2 of nights 1 to 6. Time inside the light radius of a lit doorway doesn't count. Carrying a lantern is allowed; it's a risk the guard chooses.
+- **Fertilizer is cut.**
 - **Gnawing:** happens on any night nobody is within 20 m of the pumpkin.
 
-**A9. Joining and leaving mid-season** (M9, P7) · *Director proposal*
+**A9. Joining and leaving mid-season** (M9, P7) · *Agreed, with Priya's round-3 formula*
 - **Joining:** a late joiner enters at once as a ghost and gets a body at the next dawn.
-- **Headcount changes** take effect at the next dawn. From then, the amount still owed rescales pro rata over the days left, in **either direction**, and the moonflower bed scales with it.
-- **No exploit:** a payment due at that dawn is already locked, so quitting saves nothing.
-- **Why both directions:** this is Mara's rule. Priya's "a departure never lowers payments" punishes real disconnects; a missing player is missing labor.
-- **Players who drop** become an idle NPC farmhand.
+- **Formula:**
+  - Each season day carries an equal share of the debt.
+  - A day's share is scaled by the headcount at that day's dawn (100/80/60%).
+  - The amount still owed is the sum of the remaining days' shares, minus payments made.
+  - The moonflower bed follows the headcount.
+- **Players who drop** count as absent from the next dawn. Their idle NPC farmhand doesn't count toward headcount.
+- **No exploit:** a payment due at a dawn is locked when that dawn begins, so quitting saves nothing.
 - **Saves are portable:** any player who was in the season can host it.
 
 **A10. Progression** (M10) · *Agreed*
-- Early payment is allowed.
+- Early payment is allowed. Early payments count against what's owed before any A9 rescale.
 - Spare coins carry over at 25% as "savings".
 - The 3-day season gets its own numbers.
 
@@ -71,10 +82,38 @@ In round 3 every designer votes on every item.
 - **Farmer bonus:** +1 crop on every 5th harvest.
 - **Rounding:** scaled trap counts round up.
 
-**A12. Generator costs** (M12) · *New*
+**A12. Generator costs** (M12) · *Agreed*
 - **Fuel:** the drum is free and infinite; the cost is the walk to it.
 - **Repairs:** repairing creature damage takes 1 scrap. One scrap is salvaged free each dawn; extra scrap costs 15.
 - **Dead at dawn:** a generator left dead at dawn costs 1 extra trampled plot.
+
+**A13. Medical bill scales with players** (M14) · *New (round 3)*
+- **Death costs and nightly cap:**
+
+  | Players | First death | Each later death | Nightly cap |
+  |---|---|---|---|
+  | 2 | 15 | 30 | 72 |
+  | 3 | 20 | 40 | 96 |
+  | 4 | 25 | 50 | 120 |
+
+- **Rescaling:** A9's rescale applies to these too.
+
+**A14. Phase 4 gated on simulator targets** (M15) · *New (round 3)*
+- **The sim:** runs at 2p, 3p and 4p with A1 to A13 applied.
+- **The median team:**
+  - plays greedily, with a 33% chore tax;
+  - takes the scheduled sabotage plus the A1 trample rule;
+  - takes 1 death on each of 3 nights;
+  - delivers a Large pumpkin.
+- **Targets:**
+
+  | Measure | Target |
+  |---|---|
+  | Median team clears the first payment | about 85% of runs |
+  | Median team clears the final payment | 55–70% of runs |
+  | Spread across player counts | at most 10 points |
+
+- **Playtest check:** live playtest logs must land within 15 points of the sim before the numbers are frozen.
 
 ## B. Creature, AI Director and fear
 
@@ -83,12 +122,15 @@ In round 3 every designer votes on every item.
 - **Taint** comes only from things a player chooses to do: touching creature leavings, picking up a stolen tool, leaving items out at dusk, touching an unpicked moonflower.
 - **Cure:** every Taint can be washed off at the well.
 
-**B2. Day trap kill is a race** (T2) · *Agreed*
+**B2. Day trap kill is a race** (T2) · *Agreed, with Theo's round-3 wording*
 - When a trap springs by day, the creature's sound signature starts approaching from a set distance.
+- **Tuning:** the race is tuned so that a solo, untainted player who starts prying at once survives, with a few seconds to spare.
+- **What can lose it:** hesitating, being Tainted (shorter sprint means a slower pry), or the trap being deep in the corn.
 - **Outcome:** pry free in time and you live, Shaken; fail and you die.
 - **Help:** a teammate shortens the pry.
+- **AI Director:** its distance bending (B3) applies to the start distance, within that tuning.
 
-**B3. Day deaths: cut the "2 of 3" clause** (Priya C3) · *New*
+**B3. Day deaths: cut the "2 of 3" clause** (Priya C3) · *Agreed*
 - **Day death conditions:**
   - (a) alone, Tainted by choice, and deep in the corn; or
   - (b) losing the trap race.
@@ -140,13 +182,23 @@ In round 3 every designer votes on every item.
 - The HUD marker is dropped; the whistle is a 3D sound only.
 - **Fallback:** if Phase 3 tests show players can't place a whistle, the whistler's lantern or hat flashes briefly.
 
-**B12. Private scare budget** (T13) · *New*
+**B12. Private scare budget** (T13) · *Agreed*
 - Targeted lures, hallucinations and the wrong count all count against the per-player daily cap and the 2-minute spacing.
 
-**B13. Discord, said plainly** (T12) · *New*
+**B13. Discord, said plainly** (T12) · *Agreed*
 - The doc admits Discord removes the cost of talking.
 - **No compensation:** the AI Director doesn't cheat to make up for it.
 - **Lobby note:** "The creature can't hear Discord, and you can't hear where your friends are."
+
+**B14. Dark buildings aren't safe** (T14) · *New (round 3)*
+- A building whose lights are out is not safe.
+- **Getting in:** the creature can enter only through a door, and it bangs the door first (the B7 tell).
+- **Getting it out:** restoring power drives it out.
+
+**B15. Nightmare difficulty** (T15) · *New (round 3)*
+- **Day deaths:** on Nightmare they're more likely only through wider distance bends (B3).
+- **Whistle:** stays honest.
+- **Voice tells:** removed, but the positional tell (C11) always remains.
 
 ## C. Voice, multiplayer and production
 
@@ -161,9 +213,11 @@ In round 3 every designer votes on every item.
 - **Off players:** the creature never imitates them with a generic voice. It mimics their footsteps and tools instead. In the Dawn Report, their lures appear as text plus the sound, with no voice. (This resolves P14 vs Theo's P1 amendment.)
 - **Generic voices** are used only for "stranger" calls.
 
-**C2. Barn chatter** (P2) · *Agreed*
+**C2. Barn chatter** (P2) · *Agreed, with Priya's round-3 wording*
 - **Capture:** 20 to 40 s of free barn chatter is added to the Lobby-lines tier.
-- **Notice:** a visible "recording" notice in the barn, plus per-clip review and delete.
+- **Who is captured:** only players on the Lobby-lines tier who take part in the staged recording, which can be skipped.
+- **How:** capture happens on the sender's machine. A visible "recording" lantern or tally light shows while capture is live.
+- **Review:** each clip can be reviewed and deleted before the match starts.
 - **Timing:** lands in Phase 2.
 - **Line list:** never tell players the line list is the whole pool.
 - **When lures fire:** when a call-and-response check would be costly.
@@ -202,16 +256,37 @@ In round 3 every designer votes on every item.
 **C8. Onboarding** (P9) · *Agreed*
 - Days 1 to 3 are the tutorial.
 - Each verb gets one diegetic introduction.
+- **No introduction may tell players the day is safe.** They learn it and doubt it.
 
 **C9. Testing** (P10) · *Agreed*
 - **Debug tools:** a "mic from WAV" input and simulated latency and packet loss.
 - **"A lure worked"** means the target moved more than 10 m toward the source within 8 s. That one definition is used everywhere.
 
-**C10. Open mic by default** (P12) · *New*
+**C10. Open mic by default** (P12) · *Agreed*
 - Proximity chat defaults to open mic with voice activity detection (VAD); push-to-talk is an option.
 - The creature hears whatever is transmitted.
 - **Live clips** (Phase 5) come only from transmitted speech in the Live tier.
 
-**C11. Spatial audio check** (P13) · *New*
+**C11. Spatial audio check** (P13) · *Agreed*
+- This is a **Phase 1 gate**, not an optional check: B11 and the positional voice tell depend on it.
 - **Phase 1 test:** check headphone localization at 10, 30 and 60 m.
 - **If it fails:** evaluate the Steam Audio GDExtension, or add a per-source occlusion/reverb send.
+
+**C12. Host disconnects** (P15) · *New (round 3)*
+- If the host leaves, the session ends for everyone with a "host left" card.
+- **Resuming:** the season resumes from the last dawn save, and any player from that season can host it (A9).
+- **No host migration in v1.** Lost progress is at most one day and night.
+
+**C13. Two voice backends** (P16) · *New (round 3)*
+- **One interface, two backends:**
+  - Steam voice (shipping);
+  - an Opus-over-ENet dev backend, which can be fed from C9's mic-from-WAV input.
+- **Two-machine Phase 1 test:** uses Steam's free test AppID (480) until we have our own.
+
+**C14. The doc's own bookkeeping** (P17) · *New (round 3)*
+- **Rewrite to match the change list:**
+  - the review summary ("ten changes");
+  - Resolved and Open Issues: the consent entry; Open Issue 3, closed by B11; Open Issue 4, changed by A2 and A8;
+  - the hard-gate wording in Build Notes;
+  - Next Steps.
+- **Next Steps step 2** becomes "Steam voice between two machines (C5, C13)".
