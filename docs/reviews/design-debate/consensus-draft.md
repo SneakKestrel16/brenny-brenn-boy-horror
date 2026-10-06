@@ -18,7 +18,7 @@ In round 3 every designer votes on every item.
 
 ## A. Economy
 
-**A1. First payment** (M1, P11) · *Director proposal*
+**A1. First payment** (M1, P11) · *Agreed*
 - **Amounts:** the first payment is 4p **255**, 3p 205, 2p 155.
 - **Check:** a median simulated team, with scheduled sabotage and 1 trampled plot a night (2 on unattended nights), clears it with about 15% margin.
 - **Why this number:** Mara's 240 sits on top of the A2 safety net, which softens the game twice (Theo). Theo's 270 leaves about 10% margin, which a single sabotage roll can wipe out. 255 splits the difference.
