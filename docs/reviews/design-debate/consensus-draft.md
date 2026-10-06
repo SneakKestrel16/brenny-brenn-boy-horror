@@ -1,4 +1,4 @@
-# Consensus Change List (v2, for round 4)
+# Consensus Change List (v3, for round 5)
 
 Compiled by the Director from rounds 1 and 2. Each item merges the original issue with the amendments the designers made. **Status** marks where it stands after round 2:
 
@@ -13,6 +13,11 @@ In round 3 every designer votes on every item.
 - **Notes folded in:** A3, A10, C8, C11.
 - **New items added:** M14 → A13, M15 → A14, T14 → B14, T15 → B15, P15 → C12, P16 → C13, P17 → C14.
 - **Status now:** every item is *Agreed*, except the new items, which are marked *New (round 3)*.
+
+**v3 changes (after round 4):**
+- **Round 3 items accepted:** every round-3 item and every reworded item was accepted by all three designers.
+- **A9 rewritten:** it now uses Mara's corrected formula (the v2 formula undercounted the final payment) and adds Priya's P18 (below two players).
+- **A9 is the only item still open.**
 
 ---
 
@@ -61,15 +66,26 @@ In round 3 every designer votes on every item.
 - **Fertilizer is cut.**
 - **Gnawing:** happens on any night nobody is within 20 m of the pumpkin.
 
-**A9. Joining and leaving mid-season** (M9, P7) · *Agreed, with Priya's round-3 formula*
+**A9. Joining and leaving mid-season** (M9, P7, P18) · *Agreed, with Mara's round-4 formula and Priya's P18*
 - **Joining:** a late joiner enters at once as a ghost and gets a body at the next dawn.
 - **Formula:**
-  - Each season day carries an equal share of the debt.
-  - A day's share is scaled by the headcount at that day's dawn (100/80/60%).
-  - The amount still owed is the sum of the remaining days' shares, minus payments made.
-  - The moonflower bed follows the headcount.
+  - Each of the 7 days carries an equal share of the base debt (1,300 ÷ 7).
+  - A day's share is scaled by the headcount at that day's dawn (100/80/60%), and is fixed once that dawn begins.
+  - **Total debt** is the sum of all 7 days' shares. Past days use their recorded headcount; future days use the current one.
+  - **Still owed** is the total debt, minus all payments made (including early ones), plus any A2 foreclosure penalty and A5 deferred bills. Those additions never rescale.
+  - **Split:** if the first payment is still ahead, it takes 255/1,300 of the total debt (rounded), and the final payment takes the rest.
+  - **Moonflower bed:** follows the headcount.
+- **Worked checks:**
+
+  | Case | Calculation | Owed |
+  |---|---|---|
+  | 4p, no change, after the first payment | 1,300 − 255 | 1,045 |
+  | 2p, full season | 1,300 × 0.6 | 780 (155 + 625) |
+  | 4p, one player drops before dawn 2 | 185.7 + 6 × 148.6 | 1,077; first payment 211 |
+
 - **Players who drop** count as absent from the next dawn. Their idle NPC farmhand doesn't count toward headcount.
 - **No exploit:** a payment due at a dawn is locked when that dawn begins, so quitting saves nothing.
+- **Below two players:** if the headcount at a dawn would be 1, the game saves at that dawn and the season pauses ("Waiting for a farmhand"). It resumes when a second player joins, through the C12 path. Solo play isn't supported in v1.
 - **Saves are portable:** any player who was in the season can host it.
 
 **A10. Progression** (M10) · *Agreed*
