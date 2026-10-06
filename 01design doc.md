@@ -617,7 +617,7 @@ Only move on when the current phase is fun. Each "done when" is checked in at le
 4. Start only when nothing it depends on is open.
 
 **Phase 1 (prototype):**
-- **First:** Steam voice between two machines.
+- **First:** voice between two machines on different home networks, joining through UPnP and a join code.
 - **Then:**
   - one small field, the shed and the barn;
   - one day and one night, 2 players, proximity chat;
@@ -672,11 +672,17 @@ Live clips come last because they're the hardest piece, and lobby lines plus cha
 
 Free and open source (MIT), with no royalties.
 
+**Distribution:** exported desktop builds shared directly with friends. No Steam or store page.
+
 ### Networking
 
-- **Steam:** GodotSteam and SteamMultiplayerPeer handle lobbies, invites and relays.
-  - ENet over LAN is for development only.
-  - Use test AppID 480 until the game has its own.
+- **Transport:** Godot's built-in ENet (`ENetMultiplayerPeer`), with no third-party services or servers.
+- **Hosting:** the host's game opens its port automatically with Godot's built-in `UPNP` and reads its public address.
+- **Joining:** the host shares a short join code that encodes their address and port. A friend enters the code, or types an IP directly.
+- **When UPnP fails:**
+  - the host forwards one port by hand (the game shows which one);
+  - or the group uses a free VPN such as Tailscale or ZeroTier and joins by VPN IP.
+  - The host screen shows clearly whether UPnP worked.
 - **Authority:**
   - **Clients own** their movement and camera.
   - **The host owns** the creature, AI Director, traps, pegboard, economy (no client-side selling), Taint, deaths and the cart, and validates every interaction.
@@ -684,18 +690,19 @@ Free and open source (MIT), with no royalties.
 
 ### Voice
 
-- **Backends:** one interface with two backends: Steam voice (shipping) and Opus-over-ENet (development, can be fed from WAV files).
+- **Codec and transport:** mic audio is captured with `AudioEffectCapture`, compressed with Opus (via a GDExtension, since Godot has no built-in Opus) and sent over ENet. The host relays each speaker to the others.
+- **Test input:** the voice input can be fed from WAV files for testing.
 - **Mic mode:** open mic with voice activity detection is the default; push-to-talk is an option and doubles as stealth.
 - **Positional voice:** each player's voice plays from an `AudioStreamPlayer3D` on their character.
 - **The creature's fakes:** played from the creature through the same voice chain, so they don't sound cleaner. Fakes of the dead use the ghost static chain.
 - **Lures:** clips are sent to every peer at session start, so a lure is a host message ("play clip X at P for player Y"), not streamed audio.
-- **Weak localization:** Godot's stock 3D audio is weak front-to-back. If the Phase 1 test fails, evaluate the Steam Audio GDExtension, or add per-source occlusion and reverb.
+- **Weak localization:** Godot's stock 3D audio is weak front-to-back. If the Phase 1 test fails, evaluate the Steam Audio GDExtension (Valve's free spatial-audio library, which doesn't need Steam), or add per-source occlusion and reverb.
 
 ---
 
 ## Testing
 
-- **Local multiplayer:** Debug > Customize Run Instances runs 2 to 4 copies on the ENet dev backend.
+- **Local multiplayer:** Debug > Customize Run Instances runs 2 to 4 copies over local ENet.
 - **Fake input:** a mic-from-WAV input per copy, plus simulated latency and packet loss.
 - **Bot teammates:** walk, do chores, play clips and can be killed.
 - **Voices:** your own recordings, plus consenting friends.
@@ -710,7 +717,7 @@ Free and open source (MIT), with no royalties.
 
 ## Open Issues
 
-1. **Scope is large.** Voice, mimicry, trap AI, the AI Director, economy and netcode, all from scratch. Voice is the biggest risk, so it comes first.
+1. **Scope is large.** Voice, mimicry, trap AI, the AI Director, economy and netcode, all from scratch. Voice and connecting over the internet are the biggest risks, so they come first. If UPnP fails for too many friends, reconsider a relay (for example Epic Online Services, or our own server).
 2. **Numbers are untested.** Most store prices are still open. The simulator gates Phase 4.
 3. **Can players place sounds by ear?** The whistle, the wrong-place tell and Stalk direction depend on it. Tested in Phase 1; fixes are better spatial audio or the whistle flash.
 4. **Do the four bodies feel different enough?** If not, give each one small quirk (the husk quieter in corn, the boar louder but faster). Check after Phase 3.
@@ -718,5 +725,5 @@ Free and open source (MIT), with no royalties.
 ## Next Steps
 
 1. Set up the Godot project in this repo.
-2. Get Steam voice working between two machines (AppID 480), with the dev backend alongside it.
+2. Get Opus voice over ENet working between two machines on different home networks, connected through UPnP and a join code.
 3. Build Phase 1 and playtest it.
