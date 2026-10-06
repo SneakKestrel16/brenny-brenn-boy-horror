@@ -192,12 +192,16 @@ Lines read from a menu come out calm and flat, which makes fakes easy to spot. F
 - **Lobby lines first:** Record lobby voice lines and replay them from the creature's position. This is the first version of mimicry.
 - **Live clips later:** Only push-to-talk speech is kept, at most 3 seconds a clip. Each player can see and delete their kept clips from the pause menu. There is no word filter, since that would need speech-to-text.
 - **Fallback:** Players with mics off, or who opt out, get pre-recorded generic lines instead.
-- **[CHANGED] Consent: a checkbox at first boot.** The first time the game starts, each player sees a short notice that their voice will be recorded and replayed by the creature to the other players in the match, with an unticked checkbox to agree. Rules for the checkbox:
+- **[CHANGED] Consent: a checkbox at first boot.** The first time the game starts, each player sees an accept screen with an unticked checkbox. The notice says plainly that:
+  - their voice will be recorded during play;
+  - **anything they say, including off-guard remarks, may be replayed** by the creature to the other players, in the Dawn Report, and on any stream or recording a player makes of the match.
+
+  Rules for the checkbox:
   - **Not ticked by default**, and the game still plays if it's left unticked: that player gets the fallback generic voices and their voice is never captured.
   - **Every player ticks their own box** on their own machine, including friends who drop in late. The host can't agree for anyone.
   - **Changeable any time** from the settings menu, and the lobby shows who has voice replay on.
   - **Clips are kept only for that match** and deleted when it ends.
-- **What the checkbox doesn't cover:** It settles whether players agreed to be recorded. It doesn't stop the creature from replaying something a player said off-guard, such as a private remark or a slur, to the group, the Dawn Report or a stream. Fixed lobby lines can't carry that; live clips can (see Open Issues).
+- **Optional safeguards, kept as player choices:** push-to-talk only, 3-second clips, reviewing and deleting your clips from the pause menu, the "no live clips" lobby toggle and streamer-safe mode. Players who agreed to replay don't need them, but they cost little and are there for groups that want them.
 
 ---
 
@@ -520,7 +524,7 @@ A review sits between each phase and the next:
 - **Phase 5 (later):** Live voice clips from proximity chat, spliced clips, the next season, cosmetics.
 - **Fake it first:** Scripted trap spots and simple timers can stand in for smart AI until the core loop is proven.
 
-**Why live clips moved to Phase 5:** they're the hardest technical piece (capturing, trimming and splicing speech), they can replay things players said off-guard, and staged lobby recordings may be scary enough on their own. Prove the game is fun without them first.
+**Why live clips moved to Phase 5:** they're the hardest technical piece (capturing, trimming and splicing speech), and staged lobby recordings may be scary enough on their own. Prove the game is fun without them first.
 
 ---
 
@@ -569,7 +573,7 @@ Settled in this design review:
 - **Lobby lines came out calm:** recorded through staged moments in the barn. See Recording Lines That Sound Scared.
 - **Players couldn't place a quiet teammate:** the whistle gives an honest, costly answer. See How Players Fight Back.
 - **Ghosts had little to do without trap sight:** the crow. See Dead Players Stay Involved.
-- **Consent to voice recording:** an unticked checkbox at first boot that each player ticks for themselves, changeable in settings. See Build Notes.
+- **Consent to voice recording and replay:** an accept screen at first boot that says the voice is recorded and that anything said, off-guard remarks included, may be replayed to the group, in the Dawn Report and on streams. Each player ticks it for themselves and can change it in settings. See Build Notes.
 
 Settled in the original concept (kept): Discord groups weaken mimicry but don't break the game; the day is a small sabotage pool with a daily budget; corn is permanent cover, not a crop; nights always give a reason to go out; the medical bill has a cheap first death, a cap and a floor; trapped players can free themselves; bear traps off the pegboard at nightfall are the creature's; voice tells are random and sometimes absent; mimicry supports the pitch rather than leading it; the creature is only ever glimpsed; dawn saves and a short season.
 
@@ -583,23 +587,19 @@ Problems that still need solving, most important first.
 
 Voice chat, voice recording and playback, a trap-setting AI that lures players, the Director, jumpscares, a farming economy and online multiplayer add up to a lot, starting from nothing. The phased Build Plan and moving live clips to Phase 5 help. Biggest risk: voice chat. Build it in Phase 1, not later.
 
-### 2. Live clips can carry anything
-
-Consent is settled by the first-boot checkbox (see Build Notes). What's left is content: once live clips arrive (Phase 5), a friend's offhand private remark or a slur could be replayed by the creature, or shown in the Dawn Report or on a stream. Push-to-talk only, 3-second clips, reviewable and deletable, and the "no live clips" and streamer-safe toggles help, but it isn't fully solved. Needs settling before Phase 5.
-
-### 3. The numbers are untested
+### 2. The numbers are untested
 
 Every price, payment and trap count is a first guess, and the Economy Check only covers the first payment. Rebuild a season simulator spreadsheet before Phase 4 and tune from the logs once Phase 4 is playable.
 
-### 4. Can the whistle be abused?
+### 3. Can the whistle be abused?
 
 A whistle with a position marker could make voice tells pointless if teams whistle constantly. The cooldown and the fact that the creature hears it should balance it. Check in Phase 3's playtest; if players whistle every few seconds, lengthen the cooldown or drop the marker.
 
-### 5. Is the Prize Pumpkin too punishing to forget?
+### 4. Is the Prize Pumpkin too punishing to forget?
 
 A team that forgets to water it early may feel the season is lost. The "Sad" payout keeps it from being a loss on its own. Check in Phase 4.
 
-### 6. Do sound signatures make the four bodies feel different enough?
+### 5. Do sound signatures make the four bodies feel different enough?
 
 All four bodies hunt the same way. If players stop caring which one they got, consider one small behavior quirk each (the husk is quieter in corn, the boar is louder but faster). Check after Phase 3.
 
