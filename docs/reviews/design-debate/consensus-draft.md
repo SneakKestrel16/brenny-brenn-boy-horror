@@ -1,4 +1,4 @@
-# Consensus Change List (v3, for round 5)
+# Consensus Change List (v4)
 
 Compiled by the Director from rounds 1 and 2. Each item merges the original issue with the amendments the designers made. **Status** marks where it stands after round 2:
 
@@ -19,12 +19,16 @@ In round 3 every designer votes on every item.
 - **A9 rewritten:** it now uses Mara's corrected formula (the v2 formula undercounted the final payment) and adds Priya's P18 (below two players).
 - **A9 is the only item still open.**
 
+**v4 changes (after round 5):**
+- **A9 accepted:** all three designers accepted A9.
+- **Errata:** A1's scaled first payments now match A9's split rule (3p 204, 2p 153), and A9's 2p row reads 153 + 627.
+
 ---
 
 ## A. Economy
 
 **A1. First payment** (M1, P11) · *Agreed*
-- **Amounts:** the first payment is 4p **255**, 3p 205, 2p 155.
+- **Amounts:** the first payment is 4p **255**, 3p 204, 2p 153 (from A9's split rule).
 - **Check:** a median simulated team, with scheduled sabotage and 1 trampled plot a night (2 on unattended nights), clears it with about 15% margin.
 - **Why this number:** Mara's 240 sits on top of the A2 safety net, which softens the game twice (Theo). Theo's 270 leaves about 10% margin, which a single sabotage roll can wipe out. 255 splits the difference.
 
@@ -80,7 +84,7 @@ In round 3 every designer votes on every item.
   | Case | Calculation | Owed |
   |---|---|---|
   | 4p, no change, after the first payment | 1,300 − 255 | 1,045 |
-  | 2p, full season | 1,300 × 0.6 | 780 (155 + 625) |
+  | 2p, full season | 1,300 × 0.6 | 780 (153 + 627) |
   | 4p, one player drops before dawn 2 | 185.7 + 6 × 148.6 | 1,077; first payment 211 |
 
 - **Players who drop** count as absent from the next dawn. Their idle NPC farmhand doesn't count toward headcount.
