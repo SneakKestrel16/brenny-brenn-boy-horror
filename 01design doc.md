@@ -170,7 +170,7 @@ The creature can copy players' voices. Proximity voice chat becomes both the tea
 
 Groups of friends often talk on Discord or a party chat instead. The design gives in-game voice real jobs so it's worth using, and makes sure the creature still has voices if a group doesn't.
 
-- **Lobby voice lines:** Before a match, each player can record a short fixed list of lines (see Recording Lines That Sound Scared below). The creature always has clips to use. This is opt-in, and players can hear their recordings back.
+- **Lobby voice lines:** Before a match, each player can record a short fixed list of lines (see Recording Lines That Sound Scared below). The creature always has clips to use. Recording the lines is optional, and players can hear their recordings back.
 - **Proximity chat carries position:** In-game voice is 3D, so it's the only way to hear where a teammate is and how far away.
 - **Radios run on in-game chat:** Long-range talk only works through walkie-talkies, so coordinating across the farm needs the in-game system.
 - **The dead are only heard in-game:** Dead players' static voices exist only in proximity chat.
@@ -191,15 +191,15 @@ Lines read from a menu come out calm and flat, which makes fakes easy to spot. F
 
 - **Lobby lines first:** Record lobby voice lines and replay them from the creature's position. This is the first version of mimicry.
 - **Live clips later:** Only push-to-talk speech is kept, at most 3 seconds a clip. Each player can see and delete their kept clips from the pause menu. There is no word filter, since that would need speech-to-text.
-- **Fallback:** Players with mics off, or who opt out, get pre-recorded generic lines instead.
-- **[CHANGED] Consent: a checkbox at first boot.** The first time the game starts, each player sees an accept screen with an unticked checkbox. The notice says plainly that:
+- **Fallback:** Players with no mic, or who skip the lobby lines, get pre-recorded generic lines instead.
+- **[CHANGED] Consent: required to play.** The first time the game starts, each player sees an accept screen with an unticked checkbox. The notice says plainly that:
   - their voice will be recorded during play;
   - **anything they say, including off-guard remarks, may be replayed** by the creature to the other players, in the Dawn Report, and on any stream or recording a player makes of the match.
 
   Rules for the checkbox:
-  - **Not ticked by default**, and the game still plays if it's left unticked: that player gets the fallback generic voices and their voice is never captured.
+  - **Not ticked by default, and required.** The Accept button stays greyed out until the box is ticked. Declining closes the game. Nobody reaches the main menu without agreeing.
   - **Every player ticks their own box** on their own machine, including friends who drop in late. The host can't agree for anyone.
-  - **Changeable any time** from the settings menu, and the lobby shows who has voice replay on.
+  - **Withdrawing consent:** a "Withdraw voice consent" button in settings deletes any kept clips and lobby lines, then returns the player to the accept screen. They can't play again until they re-accept.
   - **Clips are kept only for that match** and deleted when it ends.
 - **Optional safeguards, kept as player choices:** push-to-talk only, 3-second clips, reviewing and deleting your clips from the pause menu, the "no live clips" lobby toggle and streamer-safe mode. Players who agreed to replay don't need them, but they cost little and are there for groups that want them.
 
@@ -486,7 +486,7 @@ At every dawn, before the money screen, a short newspaper-style card shows the n
 - **"Cause of Death"**: written like a small-town obituary. *"Jordan, 2nd night. Survived by 11 turnips."*
 - **"Hero of the Night"**: whoever refueled the generator or freed a teammate.
 
-Players can skip it, and it only replays clips from players who allowed replay. This is where the "remember when..." moments come from, and it's what makes people want to play another night.
+Players can skip it, and it can replay any player's clips, since everyone agreed to replay at boot. This is where the "remember when..." moments come from, and it's what makes people want to play another night.
 
 ### Season Awards
 
@@ -573,7 +573,7 @@ Settled in this design review:
 - **Lobby lines came out calm:** recorded through staged moments in the barn. See Recording Lines That Sound Scared.
 - **Players couldn't place a quiet teammate:** the whistle gives an honest, costly answer. See How Players Fight Back.
 - **Ghosts had little to do without trap sight:** the crow. See Dead Players Stay Involved.
-- **Consent to voice recording and replay:** an accept screen at first boot that says the voice is recorded and that anything said, off-guard remarks included, may be replayed to the group, in the Dawn Report and on streams. Each player ticks it for themselves and can change it in settings. See Build Notes.
+- **Consent to voice recording and replay:** a required accept screen at first boot that says the voice is recorded and that anything said, off-guard remarks included, may be replayed to the group, in the Dawn Report and on streams. The game can't be played without accepting. See Build Notes.
 
 Settled in the original concept (kept): Discord groups weaken mimicry but don't break the game; the day is a small sabotage pool with a daily budget; corn is permanent cover, not a crop; nights always give a reason to go out; the medical bill has a cheap first death, a cap and a floor; trapped players can free themselves; bear traps off the pegboard at nightfall are the creature's; voice tells are random and sometimes absent; mimicry supports the pitch rather than leading it; the creature is only ever glimpsed; dawn saves and a short season.
 
