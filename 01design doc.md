@@ -192,7 +192,12 @@ Lines read from a menu come out calm and flat, which makes fakes easy to spot. F
 - **Lobby lines first:** Record lobby voice lines and replay them from the creature's position. This is the first version of mimicry.
 - **Live clips later:** Only push-to-talk speech is kept, at most 3 seconds a clip. Each player can see and delete their kept clips from the pause menu. There is no word filter, since that would need speech-to-text.
 - **Fallback:** Players with mics off, or who opt out, get pre-recorded generic lines instead.
-- **Consent:** Tell players up front that the game records their voice for this, keep the clips only for that match, and include an opt-out setting. Any player can block their voice from replay, entirely or to players they choose. Fixed lobby lines can't carry slurs or private remarks; live clips can, which is still open (see Open Issues).
+- **[CHANGED] Consent: a checkbox at first boot.** The first time the game starts, each player sees a short notice that their voice will be recorded and replayed by the creature to the other players in the match, with an unticked checkbox to agree. Rules for the checkbox:
+  - **Not ticked by default**, and the game still plays if it's left unticked: that player gets the fallback generic voices and their voice is never captured.
+  - **Every player ticks their own box** on their own machine, including friends who drop in late. The host can't agree for anyone.
+  - **Changeable any time** from the settings menu, and the lobby shows who has voice replay on.
+  - **Clips are kept only for that match** and deleted when it ends.
+- **What the checkbox doesn't cover:** It settles whether players agreed to be recorded. It doesn't stop the creature from replaying something a player said off-guard, such as a private remark or a slur, to the group, the Dawn Report or a stream. Fixed lobby lines can't carry that; live clips can (see Open Issues).
 
 ---
 
@@ -515,7 +520,7 @@ A review sits between each phase and the next:
 - **Phase 5 (later):** Live voice clips from proximity chat, spliced clips, the next season, cosmetics.
 - **Fake it first:** Scripted trap spots and simple timers can stand in for smart AI until the core loop is proven.
 
-**Why live clips moved to Phase 5:** they're the hardest technical piece (capturing, trimming and splicing speech), they carry the open consent problem, and staged lobby recordings may be scary enough on their own. Prove the game is fun without them first.
+**Why live clips moved to Phase 5:** they're the hardest technical piece (capturing, trimming and splicing speech), they can replay things players said off-guard, and staged lobby recordings may be scary enough on their own. Prove the game is fun without them first.
 
 ---
 
@@ -564,6 +569,7 @@ Settled in this design review:
 - **Lobby lines came out calm:** recorded through staged moments in the barn. See Recording Lines That Sound Scared.
 - **Players couldn't place a quiet teammate:** the whistle gives an honest, costly answer. See How Players Fight Back.
 - **Ghosts had little to do without trap sight:** the crow. See Dead Players Stay Involved.
+- **Consent to voice recording:** an unticked checkbox at first boot that each player ticks for themselves, changeable in settings. See Build Notes.
 
 Settled in the original concept (kept): Discord groups weaken mimicry but don't break the game; the day is a small sabotage pool with a daily budget; corn is permanent cover, not a crop; nights always give a reason to go out; the medical bill has a cheap first death, a cap and a floor; trapped players can free themselves; bear traps off the pegboard at nightfall are the creature's; voice tells are random and sometimes absent; mimicry supports the pitch rather than leading it; the creature is only ever glimpsed; dawn saves and a short season.
 
@@ -579,7 +585,7 @@ Voice chat, voice recording and playback, a trap-setting AI that lures players, 
 
 ### 2. Live clips can carry anything
 
-Once live clips arrive (Phase 5), a friend's offhand private remark or a slur could be replayed by the creature, or shown in the Dawn Report. Push-to-talk only, 3-second clips, reviewable and deletable, and the "no live clips" toggle help, but it isn't solved. Needs settling before Phase 5.
+Consent is settled by the first-boot checkbox (see Build Notes). What's left is content: once live clips arrive (Phase 5), a friend's offhand private remark or a slur could be replayed by the creature, or shown in the Dawn Report or on a stream. Push-to-talk only, 3-second clips, reviewable and deletable, and the "no live clips" and streamer-safe toggles help, but it isn't fully solved. Needs settling before Phase 5.
 
 ### 3. The numbers are untested
 
