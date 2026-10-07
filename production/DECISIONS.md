@@ -157,3 +157,10 @@ stalk-to-chase uses the sensed position and not by day outside day death or trap
 only after `chase_commit_s`; regions are `Area3D` nodes linked within 2 m); navmesh baked from
 layer 1 only. **Why:** each removes an ambiguity or exploit (sprint quieter in corn, undefined
 homing) that would otherwise surface during DD Phase 3 build.
+
+### D-022 · 2026-10-07 · CEO · PP-12 approved, pre-production closed
+CEO approved the pre-production review. Q-031 answered: stranger lines stay SuperCollider formant
+synthesis (no TTS, revisit if DD Phase 1 testers cannot understand them); menu music yes, day music
+undecided (not needed for DD Phase 1); whistle `max_distance` 220 m and `unit_size` 20 m accepted,
+DD Phase 1 spatial test may retune. **Why:** none of these blocks DD Phase 1. Next: Director writes
+the `P1-` tasks in `TASKS.md`.
