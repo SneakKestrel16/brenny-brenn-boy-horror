@@ -1,0 +1,32 @@
+{
+  "name": "free-delegate",
+  "version": "0.1.0",
+  "description": "Offloads simple, self-contained tasks to a free model on any OpenAI-compatible endpoint (OpenRouter free models, Groq, Gemini, local Ollama).",
+  "userConfig": {
+    "baseUrl": {
+      "type": "string",
+      "title": "API base URL",
+      "description": "OpenAI-compatible base URL. OpenRouter: https://openrouter.ai/api/v1 · Ollama: http://localhost:11434/v1 · Groq: https://api.groq.com/openai/v1",
+      "default": "https://openrouter.ai/api/v1"
+    },
+    "apiKey": {
+      "type": "string",
+      "title": "API key",
+      "description": "Key for the endpoint (free OpenRouter key from openrouter.ai/keys). Leave empty for Ollama, or set OPENROUTER_API_KEY / FREE_MODEL_API_KEY instead.",
+      "sensitive": true,
+      "default": ""
+    },
+    "model": {
+      "type": "string",
+      "title": "Model",
+      "description": "Model id. On OpenRouter pick one ending in :free (run /free-models to list them).",
+      "default": "meta-llama/llama-3.3-70b-instruct:free"
+    },
+    "nudge": {
+      "type": "boolean",
+      "title": "Nudge Claude to delegate",
+      "description": "Add a short system-prompt note telling Claude when to use the delegate tool.",
+      "default": true
+    }
+  }
+}
