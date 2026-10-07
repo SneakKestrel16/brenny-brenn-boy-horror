@@ -123,3 +123,11 @@ of the cart route; input actions and the log event list live in doc 05 and CONTR
 dev-only `apply_debug_state` message for the client debug view (never in release builds);
 `apply_refused(verb, reason)` is accepted pending Network & Voice's reply (Q-023). **Why:** each
 removes an ambiguity two roles hit (Q-002, Q-006, Q-014 item 6, Q-016) with the least new surface.
+
+### D-019 · 2026-10-07 · CEO · Voice subtitles and Doc 07 asks (Q-024, Q-029)
+
+No voice subtitles for now (a missing speaker name would expose a creature fake); Gameplay edits doc 05
+section 16 to match. Q-029 item 1 approved: Technical Artist may download open-licensed serif fonts for
+the Dawn Report, with source and license listed in doc 07. Items 2 and 3 (night screenshot check, corn
+profile on the CEO's machine) stay as future asks once a render exists. **Why:** subtitles undercut the
+wrong-place tell; fonts are needed for the Dawn Report card.
