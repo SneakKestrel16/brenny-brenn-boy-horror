@@ -9,7 +9,7 @@ Director, not resolved in the lower doc.
 | [01](01_design_doc.md) | Design Doc | CEO | Approved |
 | 02 | Systems & Economy | Game Designer | Not started (task PP-04) |
 | 03 | Creature, AI Director & Scares | Game Designer | Not started (task PP-06) |
-| 04 | Farm Layout | Level Designer | Not started (task PP-05) |
+| [04](04_farm_layout.md) | Farm Layout | Level Designer | Done (PP-05) |
 | 05 | Technical Design | Gameplay Programmer | Not started (task PP-07) |
 | [06](06_networking_and_voice.md) | Networking & Voice | Network & Voice Programmer | Done (PP-01) |
 | 07 | Art Direction & Asset List | Technical Artist | Not started (task PP-08) |

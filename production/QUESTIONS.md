@@ -235,3 +235,110 @@ Not blocking; settles before DD Phase 2 (recording) and DD Phase 3 (ghosts).
 **Answer (Director, 2026-10-06):** 1 to 3 become acceptance criteria on the DD Phase 1 `game/net/`
 tasks, written at PP-12. 4: not fixed; the spike is throwaway (D-004). 5: `.gitignore` now ignores
 `*.wav`, `*.ogg` and `*.vclip` everywhere except `assets/audio/`.
+
+### Q-014 · 2026-10-07 · Level Designer → Director, Game Designer, Gameplay Programmer, Audio Designer · open
+**Doc 04 (PP-05) items other roles settle.** Each is marked `placeholder` or inference in doc 04.
+1. **Director: marker group names** for CONTRACTS (doc 04 section 7): `trap_spots`,
+   `creature_cover`, `crow_perches`, `scarecrow_spots`, `animal_escape_spots`,
+   `spatial_audio_markers`, each a `Marker3D` named as in doc 04. Blocks the gray-box build, not
+   doc 04.
+2. **Game Designer (PP-04): walking speed, can refills, plots per player.** Doc 04 section 8.7 times
+   walks at 4 m/s (`placeholder`). Doc 01 doesn't say where watering cans fill; if only at the well,
+   field A is a 117 m round trip and field B about 200 m. Please give the walk speed, the refill
+   point and plots per can, and check about 6 plots per player against doc 04's walks.
+3. **Director: the generator's place.** TASKS PP-05 says "generator and fuel drum by the shed"; doc
+   01 "Nights" puts only the drum there ("the walk is the cost"). Doc 04 puts the generator by the
+   barn, 33 m from the drum. Confirm, or say if the TASKS wording was meant literally.
+4. **Audio Designer (PP-09): whistle range.** Doc 04 section 8.2 suggests at least 171 m, the
+   farm's longest distance, so "carries far" reaches everywhere; voices stop at 80 m (doc 06).
+5. **Director: the DD Phase 1 sell point.** Doc 01 Phase 1 sells turnips but doesn't list the town
+   stand. Doc 04 section 9 uses a stand-in sell box at (40, 20). Or build the real stand and its
+   sanctuary into Phase 1?
+6. **Gameplay Programmer (PP-07): fences and scarecrows on the cart route.** Doc 04 section 6.1
+   suggests the host refuses player placements within 3 m of the route so the cart can't be
+   blocked.
+
+**Answer to 1, 3 and 5 (Director, 2026-10-07):** 1. Accepted as named; they go into CONTRACTS
+when the gray-box task starts. 3. The generator stays by the barn. Doc 01 "Nights" ("the drum by
+the shed is free and infinite; the walk is the cost") outranks the TASKS wording, which was a
+loose summary. 5. A stand-in sell box at (40, 20) for DD Phase 1: doc 01's Phase 1 list sells
+turnips but names no town stand, so the stand and its sanctuary come later. See D-016. Items 2, 4
+and 6 stay with their roles.
+
+**Reply to item 2 (Game Designer, 2026-10-07):** doc 02 section 2 (PP-04). Walk 3.0 m/s
+(`placeholder`; the Gameplay Programmer owns speeds, Q-016). Cans fill at the well only (inference:
+doc 01 names no other water), 2 plots per fill, 4 s fill hold; carry 4 crops. With those, doc 04's
+walks give about 11 plots per player at field A and 9 at field B (doc 02 section 2.4), so the walks
+are shorter than "about 6" needs, not longer. Nothing in doc 04 has to move for now; which knob
+moves is Q-015 item 4.
+
+### Q-015 · 2026-10-07 · Game Designer → Director · open
+**Doc 01 readings and two findings from doc 02 (PP-04).** Each is marked inference in doc 02;
+items 1, 2, 4 and 5 change the economy and may need the CEO.
+1. **Missed first payment** (doc 02 7.4): read as a partial payment, the bank taking every coin
+   down to the 4-coin floor; shortfall × 1.5 to the final. The alternative (bank takes nothing)
+   leaves the team far richer after a Foreclosure.
+2. **Pumpkins "unlock at dawn 4, as the first-payment reward"** (doc 01 Crops): do they unlock if
+   the first payment is missed? Doc 02 leaves it as a data switch (`unlock_rule`).
+3. **The shipping crate** is read as the store only (seeds and items); selling is at the town
+   stand and at dawn cash-in. Doc 04 asks the same.
+4. **Labor vs "about 6" plots per player** (doc 02 2.3, 2.4): with "a few seconds" holds, 6 plots
+   needs about 90 s per plot per day, mostly walking (around 80 s). Doc 04's farm gives 9 to 11.
+   Labor, not the field (16 plots at every headcount), is what holds 2 players to "8 of 12". Which
+   moves: longer holds, smaller can and carry capacities, a longer trade loop in doc 04, or accept
+   P near 10 and cap 2p another way (fewer starting plots at 2p would be a doc 01 change)? Not
+   blocking: the simulator takes P = 6 as an input until DD Phase 1 logs measure it.
+5. **2 players look structurally poorer over the season** (doc 02 17.2, a deterministic
+   projection, not the simulator): income scales 50% at 2p (4 plots and 1 moonflower per player)
+   while the debt scales 60%. Projected margins at dawn 8: perfect play +274 (4p), +58 (2p); rough
+   median −77 (4p), −247 (2p). Likely breaks the 10-point spread target. For the simulator to
+   confirm; flagged now because the fix may be a doc 01 number.
+6. **The Prize Pumpkin seed is free**, and day 1 at 4p buys 15 turnips, not 16: the only
+   assumptions under which doc 01's 322 and 194 reproduce exactly (doc 02 17.1).
+7. **Debt rounds to the nearest coin**, unlike the round-up rule for other scaled values; rounding
+   up gives 1,078 and 212 against doc 01's 1,077 and 211 (doc 02 7.2).
+8. **Walkie-talkies "craftable"** (doc 01 How players fight back) read as bought at the store; no
+   crafting system.
+9. **Gnawing** ("any night nobody is within 20 m") read by the simulator as "not guarded that
+   night" (60 s within 20 m). Doc 03 owns the creature's rule.
+10. **Prize Pumpkin size** read from the count of watered days (the payout table); "shrinks or
+    rots on days it isn't" read as what players see, not a second rule.
+
+### Q-016 · 2026-10-07 · Game Designer → Gameplay Programmer (doc 05, PP-07) · open
+**Movement speeds.** Doc 02 section 2.2 assumes walk 3.0 m/s, crouch-walk 1.2 m/s, sprint 5.0 m/s
+for 6 s refilling over 10 s (all `placeholder`; doc 04 timed walks at 4 m/s). Labor and the
+simulator depend on them. Will doc 05 own these, or read them from `data/labor.json` (proposed in
+doc 02 Appendix A.3)? Either is fine; the simulator needs one source. Not blocking doc 02.
+
+**Answer (Director, 2026-10-07):** readings 1, 3 and 6 to 10 accepted as written, and 2 with a
+default; see D-017. 2. `unlock_rule` defaults to "only if the first payment was made" (doc 01
+calls it the first-payment reward); the simulator runs both. 4 and 5 aren't readings but possible
+doc 01 changes, so they wait for the simulator: P = 6 stays an input, and if the simulator confirms
+the 2-player gap or P near 10, the fix goes to the CEO at the pre-production review (PP-12) as a
+FOR CEO item with the numbers.
+
+### Q-017 · 2026-10-07 · QA → Director · closed
+**PP-05 (doc 04) fails QA review on five false distance statements.** Details and the numbers are in
+`production/handoffs/PP-05.md` "QA review". Must-fix, all text in doc 04 unless the Level Designer
+moves a point: 1. the cart route's last leg passes 3.7 m from corn at the gate (doc says 10.3, "open
+ground"); 2. cover_16 is 24.5 m from the pumpkin, not inside its 20 m circle; 3. barn to field B is
+72.2 m, so "every needed call is at most 60 m" is false; 4. barn door to generator is 12.5 m, a third
+under-15 m pair; 5. escape_01 is 37.9 m from the pen gate, against "60 m or more except escape_03".
+Seven should-fix items follow in the handoff (walk lengths not reproducible, D-016 not cited, Phase 1
+marker list, trap_12, SVG circle style, 10 m band, unmarked thresholds).
+
+**Reply (Level Designer, 2026-10-07):** all five must-fix and all seven should-fix items are done in
+doc 04; the details are under "Fixes after QA" in `production/handoffs/PP-05.md`. Layout changes:
+escape_01 moved to (35, -40), 60.2 m from the pen gate, and trap_12 to (60, -20). The other must-fix
+items were false claims, now corrected, with the layout kept:
+- The gate is described as a corn pinch, kept for the "guaranteed peak".
+- cover_16 is listed as outside the pumpkin's 20 m circle.
+- Barn to field B (72.2 m) is beyond the tested 60 m, kept so the fields stay distant.
+- Barn door to generator (12.5 m) is listed as a third pair under 15 m.
+
+Walks are now shortest paths with a stated 1 m clearance, waypoints listed, at doc 02's 3.0 m/s. For
+the Game Designer: two of doc 02 section 2.4's inputs changed slightly (doc 04 section 8.7). PP-05
+stays `in review` for QA's re-review.
+
+**Closed (QA, 2026-10-07):** re-review passed; every must-fix and should-fix item checked by
+recomputing (`production/handoffs/PP-05.md`, "Re-review").

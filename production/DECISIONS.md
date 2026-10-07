@@ -94,3 +94,22 @@ Designer must generate placeholders in code (doc 01; no downloaded audio without
 SuperCollider renders in non-real-time with no audio device, the way Blender runs headless for
 models, so every sound is reproducible from a text file. 48 kHz matches the CEO's WASAPI mix rate
 (doc 06 section 8).
+
+### D-016 · 2026-10-07 · Director · Doc 04 placements (Q-014)
+The generator stands by the barn, about 33 m from the fuel drum by the shed, so refuelling is a
+walk. DD Phase 1 sells turnips at a stand-in sell box at (40, 20); the town stand and its 10 m
+sanctuary come in a later phase. Doc 04's marker groups (`trap_spots`, `creature_cover`,
+`crow_perches`, `scarecrow_spots`, `animal_escape_spots`, `spatial_audio_markers`, each a
+`Marker3D`) are accepted, for CONTRACTS when the gray box starts. **Why:** doc 01 "Nights" puts
+only the drum by the shed ("the walk is the cost"), and doc 01's Phase 1 list names no town stand.
+
+### D-017 · 2026-10-07 · Director · Doc 02 readings of doc 01 (Q-015)
+A missed first payment is a partial payment: the bank takes every coin down to the 4-coin floor,
+and the shortfall × 1.5 goes onto the final. Pumpkins unlock at dawn 4 only if the first payment
+was made (`unlock_rule`, a data switch the simulator also runs the other way). The shipping crate is
+the store only; selling is at the town stand and the dawn cash-in. The Prize Pumpkin seed is free.
+The debt rounds to the nearest coin (other scaled values round up). Walkie-talkies are bought, not
+crafted. The simulator reads gnawing as "not guarded that night" until doc 03 sets the rule. The
+pumpkin's size comes from its count of watered days. **Why:** each is the reading that reproduces
+doc 01's worked numbers (1,077 / 211; 322 / 194) or the stricter, simpler one. Q-015 items 4 and 5
+(plots per player, the 2-player gap) wait for the simulator and may go to the CEO at PP-12.

@@ -1,0 +1,260 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 660" width="1040" height="660" font-family="sans-serif">
+<style>
+.bg{fill:#f4f1e6}.corn{fill:#9bb86a;stroke:#6f8a45;stroke-width:1}.clear{fill:#efe6c8}
+.bldg{fill:#8c5a3c;stroke:#3b2416;stroke-width:2}.field{fill:#c9a46b;stroke:#7a5a2c;stroke-width:1.5}
+.plotline{stroke:#7a5a2c;stroke-width:0.8}.upg{fill:#e3cfa3;stroke:#7a5a2c;stroke-width:1;stroke-dasharray:4 3}
+.moon{fill:#b9b4e6;stroke:#55508f;stroke-width:1.5}.pen{fill:none;stroke:#6b4a2a;stroke-width:2;stroke-dasharray:6 3}
+.route{fill:none;stroke:#c0392b;stroke-width:3;stroke-dasharray:10 5}.lane{fill:#d9cfae}
+.circle30{fill:none;stroke:#7f8c8d;stroke-width:2;stroke-dasharray:2 4}.circle20{fill:none;stroke:#d35400;stroke-width:2;stroke-dasharray:6 4}.sanct{fill:#3498db;fill-opacity:0.15;stroke:#2471a3;stroke-width:2}
+.p1{fill:none;stroke:#1a5276;stroke-width:3;stroke-dasharray:14 6}.grid{stroke:#000;stroke-opacity:0.08;stroke-width:1}
+.trap{fill:#000}.cover{fill:#7d3c98}.crow{fill:#222}.scare{fill:#b9770e}.esc{fill:#16a085}.aud{fill:#2471a3}
+.pt{fill:#fff;stroke:#000;stroke-width:1.5}
+.lbl{font-size:13px;fill:#111}.sm{font-size:10px;fill:#333}.big{font-size:16px;font-weight:bold;fill:#111}
+.mk{font-size:9px;fill:#222}
+</style>
+<rect class="bg" x="0" y="0" width="1040" height="660"/>
+<rect class="corn" x="80" y="20" width="880" height="600"/>
+<rect class="clear" x="180" y="120" width="680" height="400"/>
+<rect class="lane" x="860" y="264" width="180" height="32"/>
+<line class="grid" x1="40" y1="0" x2="40" y2="660"/>
+<line class="grid" x1="80" y1="0" x2="80" y2="660"/>
+<line class="grid" x1="120" y1="0" x2="120" y2="660"/>
+<line class="grid" x1="160" y1="0" x2="160" y2="660"/>
+<line class="grid" x1="200" y1="0" x2="200" y2="660"/>
+<line class="grid" x1="240" y1="0" x2="240" y2="660"/>
+<line class="grid" x1="280" y1="0" x2="280" y2="660"/>
+<line class="grid" x1="320" y1="0" x2="320" y2="660"/>
+<line class="grid" x1="360" y1="0" x2="360" y2="660"/>
+<line class="grid" x1="400" y1="0" x2="400" y2="660"/>
+<line class="grid" x1="440" y1="0" x2="440" y2="660"/>
+<line class="grid" x1="480" y1="0" x2="480" y2="660"/>
+<line class="grid" x1="520" y1="0" x2="520" y2="660"/>
+<line class="grid" x1="560" y1="0" x2="560" y2="660"/>
+<line class="grid" x1="600" y1="0" x2="600" y2="660"/>
+<line class="grid" x1="640" y1="0" x2="640" y2="660"/>
+<line class="grid" x1="680" y1="0" x2="680" y2="660"/>
+<line class="grid" x1="720" y1="0" x2="720" y2="660"/>
+<line class="grid" x1="760" y1="0" x2="760" y2="660"/>
+<line class="grid" x1="800" y1="0" x2="800" y2="660"/>
+<line class="grid" x1="840" y1="0" x2="840" y2="660"/>
+<line class="grid" x1="880" y1="0" x2="880" y2="660"/>
+<line class="grid" x1="920" y1="0" x2="920" y2="660"/>
+<line class="grid" x1="960" y1="0" x2="960" y2="660"/>
+<line class="grid" x1="1000" y1="0" x2="1000" y2="660"/>
+<line class="grid" x1="0" y1="20" x2="1040" y2="20"/>
+<line class="grid" x1="0" y1="60" x2="1040" y2="60"/>
+<line class="grid" x1="0" y1="100" x2="1040" y2="100"/>
+<line class="grid" x1="0" y1="140" x2="1040" y2="140"/>
+<line class="grid" x1="0" y1="180" x2="1040" y2="180"/>
+<line class="grid" x1="0" y1="220" x2="1040" y2="220"/>
+<line class="grid" x1="0" y1="260" x2="1040" y2="260"/>
+<line class="grid" x1="0" y1="300" x2="1040" y2="300"/>
+<line class="grid" x1="0" y1="340" x2="1040" y2="340"/>
+<line class="grid" x1="0" y1="380" x2="1040" y2="380"/>
+<line class="grid" x1="0" y1="420" x2="1040" y2="420"/>
+<line class="grid" x1="0" y1="460" x2="1040" y2="460"/>
+<line class="grid" x1="0" y1="500" x2="1040" y2="500"/>
+<line class="grid" x1="0" y1="540" x2="1040" y2="540"/>
+<line class="grid" x1="0" y1="580" x2="1040" y2="580"/>
+<line class="grid" x1="0" y1="620" x2="1040" y2="620"/>
+<rect class="corn" x="240" y="460" width="24" height="60"/>
+<rect class="corn" x="488" y="120" width="24" height="188"/>
+<rect class="corn" x="624" y="240" width="24" height="280"/>
+<rect class="corn" x="404" y="452" width="24" height="68"/>
+<text class="sm" x="500" y="180" text-anchor="middle">Strip 2</text>
+<text class="sm" x="636" y="480" text-anchor="middle">Strip 3</text>
+<text class="sm" x="252" y="500" text-anchor="middle">Strip 1</text>
+<text class="sm" x="416" y="500" text-anchor="middle">Strip 4</text>
+<text class="big" x="520" y="60" text-anchor="middle">WILD CORN RING (25 m deep)</text>
+<rect class="field" x="536" y="260" width="48" height="24"/>
+<rect class="upg" x="536" y="284" width="48" height="12"/>
+<line class="plotline" x1="548" y1="260" x2="548" y2="296"/>
+<line class="plotline" x1="560" y1="260" x2="560" y2="296"/>
+<line class="plotline" x1="572" y1="260" x2="572" y2="296"/>
+<line class="plotline" x1="536" y1="272" x2="584" y2="272"/>
+<line class="plotline" x1="536" y1="284" x2="584" y2="284"/>
+<text class="lbl" x="560.0" y="254.0" text-anchor="middle">Field A</text>
+<rect class="field" x="704" y="260" width="48" height="24"/>
+<rect class="upg" x="704" y="284" width="48" height="12"/>
+<line class="plotline" x1="716" y1="260" x2="716" y2="296"/>
+<line class="plotline" x1="728" y1="260" x2="728" y2="296"/>
+<line class="plotline" x1="740" y1="260" x2="740" y2="296"/>
+<line class="plotline" x1="704" y1="272" x2="752" y2="272"/>
+<line class="plotline" x1="704" y1="284" x2="752" y2="284"/>
+<text class="lbl" x="728.0" y="254.0" text-anchor="middle">Field B</text>
+<rect class="moon" x="668" y="376" width="24" height="24"/>
+<line class="plotline" x1="680" y1="376" x2="680" y2="400"/>
+<line class="plotline" x1="668" y1="388" x2="692" y2="388"/>
+<text class="lbl" x="680" y="414.0" text-anchor="middle">Moonflower bed</text>
+<rect class="pen" x="320" y="148" width="48" height="40"/>
+<text class="sm" x="344" y="140" text-anchor="middle">Animal pen</text>
+<rect class="bldg" x="408" y="220" width="64" height="80"/>
+<text class="lbl" x="440.0" y="264.0" text-anchor="middle" fill="#fff" style="fill:#fff">Barn</text>
+<rect class="bldg" x="236" y="260" width="48" height="40"/>
+<text class="lbl" x="260.0" y="284.0" text-anchor="middle" fill="#fff" style="fill:#fff">Farmhouse</text>
+<rect class="bldg" x="368" y="404" width="24" height="20"/>
+<text class="lbl" x="380.0" y="418.0" text-anchor="middle" fill="#fff" style="fill:#fff">Shed</text>
+<polyline class="route" points="440,300 440,332 500,336 600,320 604,204 672,204 704,244 768,244 860,280"/>
+<text class="sm" x="680" y="192" text-anchor="middle">cart route</text>
+<line x1="752" y1="220" x2="752" y2="268" stroke="#c0392b" stroke-width="1.5"/>
+<text class="sm" x="756" y="216" text-anchor="start">past the fields (x = 78)</text>
+<circle class="circle20" cx="252" cy="432" r="80"/>
+<circle class="circle30" cx="260" cy="300" r="120"/>
+<circle class="sanct" cx="920" cy="280" r="40"/>
+<text class="sm" x="920" y="336" text-anchor="middle">sanctuary 10 m</text>
+<rect class="p1" x="312" y="120" width="312" height="400"/>
+<text class="lbl" x="468" y="112" text-anchor="middle">DD Phase 1 area (x -32 to 46)</text>
+<circle class="pt" cx="440" cy="300" r="4"/>
+<text class="sm" x="440" y="314.0" text-anchor="middle">barn door</text>
+<circle class="pt" cx="260" cy="300" r="4"/>
+<text class="sm" x="260" y="314.0" text-anchor="middle">farmhouse door</text>
+<circle class="pt" cx="380" cy="404" r="4"/>
+<text class="sm" x="356" y="400" text-anchor="middle">shed door</text>
+<circle class="pt" cx="380" cy="422.0" r="4"/>
+<text class="sm" x="380" y="436" text-anchor="middle">pegboard</text>
+<circle class="pt" cx="396" cy="276" r="4"/>
+<text class="sm" x="368" y="276" text-anchor="middle">generator</text>
+<circle class="pt" cx="400" cy="408" r="4"/>
+<text class="sm" x="428" y="416" text-anchor="middle">fuel drum</text>
+<circle class="pt" cx="340" cy="340" r="4"/>
+<text class="sm" x="340" y="328" text-anchor="middle">well</text>
+<circle class="pt" cx="728" cy="320" r="4"/>
+<text class="sm" x="728" y="336" text-anchor="middle">shipping crate + store</text>
+<circle class="pt" cx="252" cy="432" r="4"/>
+<text class="sm" x="288" y="428" text-anchor="middle">Prize Pumpkin</text>
+<circle class="pt" cx="344" cy="188" r="4"/>
+<circle class="pt" cx="860" cy="280" r="4"/>
+<text class="sm" x="840" y="264" text-anchor="middle">farm gate</text>
+<circle class="pt" cx="920" cy="280" r="4"/>
+<text class="sm" x="920" y="268" text-anchor="middle">town stand</text>
+<circle class="pt" cx="600" cy="380" r="4"/>
+<text class="sm" x="600" y="396" text-anchor="middle">Phase 1 sell box</text>
+<text class="sm" x="192" y="396" text-anchor="start">pumpkin 20 m</text>
+<text class="sm" x="208" y="196" text-anchor="start">30 m from farmhouse door</text>
+<rect class="trap" x="497" y="321" width="6" height="6"/>
+<text class="mk" x="500" y="318.0" text-anchor="middle">01</text>
+<rect class="trap" x="521" y="281" width="6" height="6"/>
+<text class="mk" x="524" y="278.0" text-anchor="middle">02</text>
+<rect class="trap" x="501" y="241" width="6" height="6"/>
+<text class="mk" x="504" y="238.0" text-anchor="middle">03</text>
+<rect class="trap" x="493" y="201" width="6" height="6"/>
+<text class="mk" x="496" y="198.0" text-anchor="middle">04</text>
+<rect class="trap" x="497" y="69" width="6" height="6"/>
+<text class="mk" x="500" y="66.0" text-anchor="middle">05</text>
+<rect class="trap" x="597" y="273" width="6" height="6"/>
+<text class="mk" x="600" y="270.0" text-anchor="middle">06</text>
+<rect class="trap" x="629" y="257" width="6" height="6"/>
+<text class="mk" x="632" y="254.0" text-anchor="middle">07</text>
+<rect class="trap" x="633" y="193" width="6" height="6"/>
+<text class="mk" x="636" y="190.0" text-anchor="middle">08</text>
+<rect class="trap" x="637" y="297" width="6" height="6"/>
+<text class="mk" x="640" y="294.0" text-anchor="middle">09</text>
+<rect class="trap" x="677" y="561" width="6" height="6"/>
+<text class="mk" x="680" y="558.0" text-anchor="middle">10</text>
+<rect class="trap" x="693" y="357" width="6" height="6"/>
+<text class="mk" x="696" y="354.0" text-anchor="middle">11</text>
+<rect class="trap" x="677" y="217" width="6" height="6"/>
+<text class="mk" x="680" y="214.0" text-anchor="middle">12</text>
+<rect class="trap" x="757" y="105" width="6" height="6"/>
+<text class="mk" x="760" y="102.0" text-anchor="middle">13</text>
+<rect class="trap" x="797" y="529" width="6" height="6"/>
+<text class="mk" x="800" y="526.0" text-anchor="middle">14</text>
+<rect class="trap" x="413" y="461" width="6" height="6"/>
+<text class="mk" x="416" y="458.0" text-anchor="middle">15</text>
+<rect class="trap" x="381" y="441" width="6" height="6"/>
+<text class="mk" x="384" y="438.0" text-anchor="middle">16</text>
+<rect class="trap" x="249" y="473" width="6" height="6"/>
+<text class="mk" x="252" y="470.0" text-anchor="middle">17</text>
+<rect class="trap" x="205" y="417" width="6" height="6"/>
+<text class="mk" x="208" y="414.0" text-anchor="middle">18</text>
+<rect class="trap" x="341" y="109" width="6" height="6"/>
+<text class="mk" x="344" y="106.0" text-anchor="middle">19</text>
+<rect class="trap" x="297" y="569" width="6" height="6"/>
+<text class="mk" x="300" y="566.0" text-anchor="middle">20</text>
+<rect class="trap" x="837" y="337" width="6" height="6"/>
+<text class="mk" x="840" y="334.0" text-anchor="middle">21</text>
+<rect class="trap" x="557" y="77" width="6" height="6"/>
+<text class="mk" x="560" y="74.0" text-anchor="middle">22</text>
+<polygon class="cover" points="492,271 497,280 487,280"/>
+<text class="mk" x="492" y="288.8" text-anchor="middle">c01</text>
+<polygon class="cover" points="508,263 513,272 503,272"/>
+<text class="mk" x="508" y="280.8" text-anchor="middle">c02</text>
+<polygon class="cover" points="628,279 633,288 623,288"/>
+<text class="mk" x="628" y="296.8" text-anchor="middle">c03</text>
+<polygon class="cover" points="644,271 649,280 639,280"/>
+<text class="mk" x="644" y="288.8" text-anchor="middle">c04</text>
+<polygon class="cover" points="636,243 641,252 631,252"/>
+<text class="mk" x="636" y="260.8" text-anchor="middle">c05</text>
+<polygon class="cover" points="644,367 649,376 639,376"/>
+<text class="mk" x="644" y="384.8" text-anchor="middle">c06</text>
+<polygon class="cover" points="728,107 733,116 723,116"/>
+<text class="mk" x="728" y="124.8" text-anchor="middle">c07</text>
+<polygon class="cover" points="760,523 765,532 755,532"/>
+<text class="mk" x="760" y="540.8" text-anchor="middle">c08</text>
+<polygon class="cover" points="416,455 421,464 411,464"/>
+<text class="mk" x="416" y="472.8" text-anchor="middle">c09</text>
+<polygon class="cover" points="252,463 257,472 247,472"/>
+<text class="mk" x="252" y="480.8" text-anchor="middle">c10</text>
+<polygon class="cover" points="172,415 177,424 167,424"/>
+<text class="mk" x="172" y="432.8" text-anchor="middle">c11</text>
+<polygon class="cover" points="344,107 349,116 339,116"/>
+<text class="mk" x="344" y="124.8" text-anchor="middle">c12</text>
+<polygon class="cover" points="868,327 873,336 863,336"/>
+<text class="mk" x="868" y="344.8" text-anchor="middle">c13</text>
+<polygon class="cover" points="404,107 409,116 399,116"/>
+<text class="mk" x="404" y="124.8" text-anchor="middle">c14</text>
+<polygon class="cover" points="560,523 565,532 555,532"/>
+<text class="mk" x="560" y="540.8" text-anchor="middle">c15</text>
+<polygon class="cover" points="272,523 277,532 267,532"/>
+<text class="mk" x="272" y="540.8" text-anchor="middle">c16</text>
+<path class="crow" d="M555,304 L560,307 L565,304 L560,302 Z"/>
+<path class="crow" d="M723,252 L728,255 L733,252 L728,250 Z"/>
+<path class="crow" d="M487,308 L492,311 L497,308 L492,306 Z"/>
+<path class="crow" d="M247,452 L252,455 L257,452 L252,450 Z"/>
+<path class="crow" d="M675,368 L680,371 L685,368 L680,366 Z"/>
+<path class="crow" d="M339,192 L344,195 L349,192 L344,190 Z"/>
+<path class="crow" d="M619,420 L624,423 L629,420 L624,418 Z"/>
+<path class="crow" d="M187,300 L192,303 L197,300 L192,298 Z"/>
+<path class="crow" d="M343,344 L348,347 L353,344 L348,342 Z"/>
+<path d="M555,275.0 H565 M560,272.0 V283.0" stroke="#b9770e" stroke-width="2.5"/>
+<path d="M723,275.0 H733 M728,272.0 V283.0" stroke="#b9770e" stroke-width="2.5"/>
+<path d="M515,377 H525 M520,374 V385" stroke="#b9770e" stroke-width="2.5"/>
+<path d="M275,377 H285 M280,374 V385" stroke="#b9770e" stroke-width="2.5"/>
+<path d="M675,177 H685 M680,174 V185" stroke="#b9770e" stroke-width="2.5"/>
+<path d="M795,377 H805 M800,374 V385" stroke="#b9770e" stroke-width="2.5"/>
+<path d="M403,169 H413 M408,166 V177" stroke="#b9770e" stroke-width="2.5"/>
+<circle class="esc" cx="580" cy="140" r="4"/>
+<circle class="esc" cx="820" cy="140" r="4"/>
+<circle class="esc" cx="580" cy="500" r="4"/>
+<circle class="esc" cx="200" cy="500" r="4"/>
+<circle class="aud" cx="336" cy="364" r="3.5"/>
+<circle class="aud" cx="376" cy="364" r="3.5"/>
+<circle class="aud" cx="456" cy="364" r="3.5"/>
+<circle class="aud" cx="576" cy="364" r="3.5"/>
+<text class="sm" x="456" y="378.0" text-anchor="middle">spatial audio test: listener, 10, 30, 60 m</text>
+<line x1="336" y1="364" x2="576" y2="364" stroke="#2471a3" stroke-width="1" stroke-dasharray="3 3"/>
+<path d="M40,80 l8,20 h-16 z" fill="#111"/>
+<text class="lbl" x="40" y="72" text-anchor="middle">N (-z)</text>
+<line x1="40" y1="588" x2="240" y2="588" stroke="#111" stroke-width="3"/>
+<line x1="40" y1="584" x2="40" y2="594.0" stroke="#111" stroke-width="2"/>
+<line x1="80" y1="584" x2="80" y2="594.0" stroke="#111" stroke-width="2"/>
+<line x1="120" y1="584" x2="120" y2="594.0" stroke="#111" stroke-width="2"/>
+<line x1="160" y1="584" x2="160" y2="594.0" stroke="#111" stroke-width="2"/>
+<line x1="200" y1="584" x2="200" y2="594.0" stroke="#111" stroke-width="2"/>
+<line x1="240" y1="584" x2="240" y2="594.0" stroke="#111" stroke-width="2"/>
+<text class="lbl" x="140" y="580" text-anchor="middle">50 m (grid 10 m, 1 m = 4 px)</text>
+<text class="sm" x="40" y="610.0" text-anchor="start">origin (0, 0) = barn door; x east, z south</text>
+<rect x="772" y="404" width="160" height="120" fill="#fff" fill-opacity="0.85" stroke="#999"/>
+<rect class="trap" x="780" y="415" width="8" height="8" style="fill:#000"/>
+<text class="sm" x="792" y="423.2" text-anchor="start">trap spot (number)</text>
+<rect class="cover" x="780" y="431" width="8" height="8" style="fill:#7d3c98"/>
+<text class="sm" x="792" y="439.2" text-anchor="start">creature cover point</text>
+<rect class="crow" x="780" y="447" width="8" height="8" style="fill:#222"/>
+<text class="sm" x="792" y="455.2" text-anchor="start">crow perch</text>
+<rect class="scare" x="780" y="463" width="8" height="8" style="fill:#b9770e"/>
+<text class="sm" x="792" y="471.2" text-anchor="start">scarecrow spot</text>
+<rect class="esc" x="780" y="479" width="8" height="8" style="fill:#16a085"/>
+<text class="sm" x="792" y="487.2" text-anchor="start">animal escape spot</text>
+<rect class="aud" x="780" y="495" width="8" height="8" style="fill:#2471a3"/>
+<text class="sm" x="792" y="503.2" text-anchor="start">spatial audio marker</text>
+</svg>
