@@ -1,0 +1,26 @@
+{
+  "table": "crops",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "turnip",
+      "source": "doc01",
+      "cite": "doc 01 Crops; doc 02 section 5 (Phase 1: turnip only)",
+      "name": "Turnip",
+      "grow_days": 1,
+      "seed": 4,
+      "sell": 10,
+      "unlock_day": 1,
+      "unlock_rule": "day",
+      "harvest_phase": "day",
+      "wilts_at_dawn": false,
+      "dead_plot_taints": false,
+      "sources": {
+        "unlock_rule": "placeholder",
+        "harvest_phase": "placeholder",
+        "wilts_at_dawn": "placeholder",
+        "dead_plot_taints": "placeholder"
+      }
+    }
+  ]
+}

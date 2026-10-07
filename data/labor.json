@@ -1,0 +1,191 @@
+{
+  "table": "labor",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "plant",
+      "source": "placeholder",
+      "cite": "doc 02 2.1; doc 01 Crops: a few seconds",
+      "kind": "hold",
+      "hold_s": 3
+    },
+    {
+      "id": "water",
+      "source": "placeholder",
+      "cite": "doc 02 2.1; doc 01 Farming Meets Horror: loud",
+      "kind": "hold",
+      "hold_s": 3
+    },
+    {
+      "id": "water_quiet",
+      "source": "placeholder",
+      "cite": "doc 02 2.1; doc 01 Store: slower, heard less far",
+      "kind": "hold",
+      "hold_s": 5
+    },
+    {
+      "id": "harvest",
+      "source": "placeholder",
+      "cite": "doc 02 2.1; doc 01 Crops: a few seconds",
+      "kind": "hold",
+      "hold_s": 2
+    },
+    {
+      "id": "fill_can",
+      "source": "placeholder",
+      "cite": "doc 02 2.1; doc 01 Senses: well pump heard",
+      "kind": "hold",
+      "hold_s": 4
+    },
+    {
+      "id": "wash",
+      "source": "doc01",
+      "cite": "doc 01 The Taint: about 10 seconds of noisy pumping",
+      "kind": "hold",
+      "hold_s": 10
+    },
+    {
+      "id": "water_prize_pumpkin",
+      "source": "placeholder",
+      "cite": "doc 02 section 2.1",
+      "kind": "hold",
+      "hold_s": 3
+    },
+    {
+      "id": "sell",
+      "source": "placeholder",
+      "cite": "doc 02 section 2.1",
+      "kind": "hold",
+      "hold_s": 2
+    },
+    {
+      "id": "buy",
+      "source": "placeholder",
+      "cite": "doc 02 section 2.1",
+      "kind": "hold",
+      "hold_s": 2
+    },
+    {
+      "id": "disarm_bear",
+      "source": "placeholder",
+      "cite": "doc 02 2.1; doc 01 Night Traps: a few seconds",
+      "kind": "hold",
+      "hold_s": 5
+    },
+    {
+      "id": "pry",
+      "source": "placeholder",
+      "cite": "doc 02 2.1; helped_mult doc 01 Day deaths: shortens the pry",
+      "kind": "hold",
+      "hold_s": 4,
+      "helped_mult": 0.6
+    },
+    {
+      "id": "fill_pit",
+      "source": "placeholder",
+      "cite": "doc 02 section 2.1",
+      "kind": "hold",
+      "hold_s": 4
+    },
+    {
+      "id": "cut_bells",
+      "source": "placeholder",
+      "cite": "doc 02 2.1; doc 01 Night Traps: cheap",
+      "kind": "hold",
+      "hold_s": 1
+    },
+    {
+      "id": "hang_trap",
+      "source": "placeholder",
+      "cite": "doc 02 section 2.1",
+      "kind": "hold",
+      "hold_s": 1
+    },
+    {
+      "id": "place_flag",
+      "source": "placeholder",
+      "cite": "doc 02 2.1; doc 01 Night Traps: flags free",
+      "kind": "hold",
+      "hold_s": 1
+    },
+    {
+      "id": "fill_fuel",
+      "source": "placeholder",
+      "cite": "doc 02 2.1; doc 01 Nights: drum free and infinite",
+      "kind": "hold",
+      "hold_s": 3
+    },
+    {
+      "id": "refuel",
+      "source": "placeholder",
+      "cite": "doc 02 section 2.1",
+      "kind": "hold",
+      "hold_s": 4
+    },
+    {
+      "id": "repair_generator",
+      "source": "placeholder",
+      "cite": "doc 02 section 2.1",
+      "kind": "hold",
+      "hold_s": 6
+    },
+    {
+      "id": "repair_fence",
+      "source": "placeholder",
+      "cite": "doc 02 section 2.1",
+      "kind": "hold",
+      "hold_s": 5
+    },
+    {
+      "id": "clear_plot",
+      "source": "placeholder",
+      "cite": "doc 02 2.1; doc 01 The Taint: touching Taints",
+      "kind": "hold",
+      "hold_s": 3
+    },
+    {
+      "id": "place_scarecrow",
+      "source": "placeholder",
+      "cite": "doc 02 section 2.1",
+      "kind": "hold",
+      "hold_s": 3
+    },
+    {
+      "id": "walk",
+      "source": "placeholder",
+      "cite": "doc 02 2.2",
+      "kind": "move",
+      "speed_mps": 3.0
+    },
+    {
+      "id": "crouch",
+      "source": "placeholder",
+      "cite": "doc 02 2.2; doc 01 Hiding verbs: silent and slow",
+      "kind": "move",
+      "speed_mps": 1.2
+    },
+    {
+      "id": "sprint",
+      "source": "placeholder",
+      "cite": "doc 02 2.2",
+      "kind": "move",
+      "speed_mps": 5.0,
+      "max_s": 6,
+      "refill_s": 10
+    },
+    {
+      "id": "can",
+      "source": "placeholder",
+      "cite": "doc 02 2.2",
+      "kind": "capacity",
+      "capacity": 2
+    },
+    {
+      "id": "carry",
+      "source": "placeholder",
+      "cite": "doc 02 2.2",
+      "kind": "capacity",
+      "capacity": 4
+    }
+  ]
+}

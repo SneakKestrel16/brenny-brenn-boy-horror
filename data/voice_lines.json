@@ -1,0 +1,171 @@
+{
+  "table": "voice_lines",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "over_here",
+      "source": "doc01",
+      "cite": "doc 01 Recording > Lines; doc 03 section 16",
+      "kind": "line",
+      "text": "over here",
+      "staged_moment": "a bang on the door first",
+      "phase1": false
+    },
+    {
+      "id": "help_me",
+      "source": "doc01",
+      "cite": "doc 01 Recording > Lines; doc 03 section 16",
+      "kind": "line",
+      "text": "help me",
+      "staged_moment": "the lantern blows out first",
+      "phase1": false
+    },
+    {
+      "id": "come_look_at_this",
+      "source": "doc01",
+      "cite": "doc 01 Recording > Lines; doc 03 section 16",
+      "kind": "line",
+      "text": "come look at this",
+      "staged_moment": null,
+      "phase1": false
+    },
+    {
+      "id": "i_found_something",
+      "source": "doc01",
+      "cite": "doc 01 Recording > Lines; doc 03 section 16",
+      "kind": "line",
+      "text": "I found something",
+      "staged_moment": null,
+      "phase1": false
+    },
+    {
+      "id": "where_are_you",
+      "source": "doc01",
+      "cite": "doc 01 Recording > Lines; doc 03 section 16",
+      "kind": "line",
+      "text": "where are you?",
+      "staged_moment": null,
+      "phase1": false
+    },
+    {
+      "id": "wait_for_me",
+      "source": "doc01",
+      "cite": "doc 01 Recording > Lines; doc 03 section 16",
+      "kind": "line",
+      "text": "wait for me",
+      "staged_moment": null,
+      "phase1": false
+    },
+    {
+      "id": "its_fine_come_on",
+      "source": "doc01",
+      "cite": "doc 01 Recording > Lines; doc 03 section 16",
+      "kind": "line",
+      "text": "it's fine, come on",
+      "staged_moment": null,
+      "phase1": false
+    },
+    {
+      "id": "stranger_over_here",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 generic lines; doc 01 Build Plan Phase 1",
+      "kind": "stranger",
+      "text": "over here",
+      "staged_moment": null,
+      "phase1": true
+    },
+    {
+      "id": "stranger_help",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 generic lines; doc 01 Build Plan Phase 1",
+      "kind": "stranger",
+      "text": "somebody, please",
+      "staged_moment": null,
+      "phase1": true
+    },
+    {
+      "id": "stranger_anyone",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 generic lines; doc 01 Build Plan Phase 1",
+      "kind": "stranger",
+      "text": "is anyone out there?",
+      "staged_moment": null,
+      "phase1": true
+    },
+    {
+      "id": "stranger_come",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 generic lines; doc 01 Build Plan Phase 1",
+      "kind": "stranger",
+      "text": "come quick",
+      "staged_moment": null,
+      "phase1": true
+    },
+    {
+      "id": "stranger_lost",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 generic lines; doc 01 Build Plan Phase 1",
+      "kind": "stranger",
+      "text": "I'm lost",
+      "staged_moment": null,
+      "phase1": true
+    },
+    {
+      "id": "stranger_hello",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 generic lines; doc 01 Build Plan Phase 1",
+      "kind": "stranger",
+      "text": "hello?",
+      "staged_moment": null,
+      "phase1": true
+    },
+    {
+      "id": "step_walk_fake",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 sound lures; doc 06 section 7",
+      "kind": "sound_lure",
+      "sound_id": "step_walk_fake",
+      "phase1": true
+    },
+    {
+      "id": "step_run_fake",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 sound lures; doc 06 section 7",
+      "kind": "sound_lure",
+      "sound_id": "step_run_fake",
+      "phase1": true
+    },
+    {
+      "id": "hoe_fake",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 sound lures; doc 06 section 7",
+      "kind": "sound_lure",
+      "sound_id": "hoe_fake",
+      "phase1": true
+    },
+    {
+      "id": "watering_can_fake",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 sound lures; doc 06 section 7",
+      "kind": "sound_lure",
+      "sound_id": "watering_can_fake",
+      "phase1": true
+    },
+    {
+      "id": "shovel_fake",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 sound lures; doc 06 section 7",
+      "kind": "sound_lure",
+      "sound_id": "shovel_fake",
+      "phase1": true
+    },
+    {
+      "id": "door_fake",
+      "source": "placeholder",
+      "cite": "doc 03 section 16 sound lures; doc 06 section 7",
+      "kind": "sound_lure",
+      "sound_id": "door_fake",
+      "phase1": true
+    }
+  ]
+}

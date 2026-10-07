@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/crops.schema.json",
+  "title": "Crops (doc 02 section 5)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "table",
+    "schema_version",
+    "records"
+  ],
+  "properties": {
+    "table": {
+      "const": "crops"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/id"
+          },
+          "source": {
+            "$ref": "#/$defs/source"
+          },
+          "cite": {
+            "type": "string"
+          },
+          "sources": {
+            "$ref": "#/$defs/sources"
+          },
+          "name": {
+            "type": "string"
+          },
+          "grow_days": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "seed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sell": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unlock_day": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 7
+          },
+          "unlock_rule": {
+            "enum": [
+              "day",
+              "first_payment_made"
+            ]
+          },
+          "harvest_phase": {
+            "enum": [
+              "day",
+              "night"
+            ]
+          },
+          "wilts_at_dawn": {
+            "type": "boolean"
+          },
+          "dead_plot_taints": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "name",
+          "grow_days",
+          "seed",
+          "sell",
+          "unlock_day",
+          "unlock_rule",
+          "harvest_phase",
+          "wilts_at_dawn",
+          "dead_plot_taints"
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "id": {
+                "const": "turnip"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "source": {
+      "enum": [
+        "doc01",
+        "sim",
+        "placeholder"
+      ]
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "doc01",
+          "sim",
+          "placeholder"
+        ]
+      }
+    }
+  }
+}

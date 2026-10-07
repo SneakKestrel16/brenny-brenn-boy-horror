@@ -1,0 +1,313 @@
+{
+  "table": "creature",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "body_gaunt",
+      "source": "doc01",
+      "cite": "doc 01 The Creature > Bodies; doc 03 section 2",
+      "kind": "body",
+      "signature_sound": "clicks",
+      "quirk": null
+    },
+    {
+      "id": "body_scarecrow",
+      "source": "doc01",
+      "cite": "doc 01 The Creature > Bodies; doc 03 section 2",
+      "kind": "body",
+      "signature_sound": "coat flaps",
+      "quirk": null
+    },
+    {
+      "id": "body_boar",
+      "source": "doc01",
+      "cite": "doc 01 The Creature > Bodies; doc 03 section 2",
+      "kind": "body",
+      "signature_sound": "chain drags",
+      "quirk": null
+    },
+    {
+      "id": "body_husk",
+      "source": "doc01",
+      "cite": "doc 01 The Creature > Bodies; doc 03 section 2",
+      "kind": "body",
+      "signature_sound": "dry rattle",
+      "quirk": null
+    },
+    {
+      "id": "lurk_speed_mps",
+      "source": "placeholder",
+      "cite": "doc 03 section 4.1",
+      "kind": "speed",
+      "speed_mps": 2.0
+    },
+    {
+      "id": "stalk_speed_mps",
+      "source": "placeholder",
+      "cite": "doc 03 section 4.1",
+      "kind": "speed",
+      "speed_mps": 2.5
+    },
+    {
+      "id": "trap_race_speed_mps",
+      "source": "placeholder",
+      "cite": "doc 03 section 4.1",
+      "kind": "speed",
+      "speed_mps": 3.5
+    },
+    {
+      "id": "chase_speed_mps",
+      "source": "placeholder",
+      "cite": "doc 03 section 4.1",
+      "kind": "speed",
+      "speed_mps": 5.5
+    },
+    {
+      "id": "chase_speed_tainted_mps",
+      "source": "placeholder",
+      "cite": "doc 03 section 4.1",
+      "kind": "speed",
+      "speed_mps": 5.5
+    },
+    {
+      "id": "lure_wait_s",
+      "source": "doc01",
+      "cite": "doc 03 4.1; doc 01 Voice mimicry",
+      "kind": "timer",
+      "seconds": 8
+    },
+    {
+      "id": "stalk_max_s",
+      "source": "placeholder",
+      "cite": "doc 03 4.1",
+      "kind": "timer",
+      "seconds": 25
+    },
+    {
+      "id": "chase_commit_s",
+      "source": "placeholder",
+      "cite": "doc 03 4.1",
+      "kind": "timer",
+      "seconds": 6
+    },
+    {
+      "id": "retreat_s",
+      "source": "placeholder",
+      "cite": "doc 03 4.1",
+      "kind": "timer",
+      "seconds": 30
+    },
+    {
+      "id": "retreat_after_flare_s",
+      "source": "doc01",
+      "cite": "doc 03 4.1; doc 01 Store",
+      "kind": "timer",
+      "seconds": 30
+    },
+    {
+      "id": "hearing_memory_s",
+      "source": "placeholder",
+      "cite": "doc 03 3.1",
+      "kind": "timer",
+      "seconds": 12
+    },
+    {
+      "id": "chase_lose_quiet_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 5",
+      "kind": "timer",
+      "seconds": 4
+    },
+    {
+      "id": "taint_trail_s",
+      "source": "placeholder",
+      "cite": "doc 03 3.3",
+      "kind": "timer",
+      "seconds": 20
+    },
+    {
+      "id": "reach_m",
+      "source": "placeholder",
+      "cite": "doc 03 4.1",
+      "kind": "distance",
+      "metres": 1.5
+    },
+    {
+      "id": "corn_damp_mult",
+      "source": "placeholder",
+      "cite": "doc 03 3.1",
+      "kind": "mult",
+      "mult": 0.7
+    },
+    {
+      "id": "taint_tracking_radius_m",
+      "source": "placeholder",
+      "cite": "doc 03 3.3",
+      "kind": "distance",
+      "metres": 60
+    },
+    {
+      "id": "sight_day_m",
+      "source": "placeholder",
+      "cite": "doc 03 3.2",
+      "kind": "distance",
+      "metres": 25
+    },
+    {
+      "id": "sight_night_m",
+      "source": "placeholder",
+      "cite": "doc 03 3.2",
+      "kind": "distance",
+      "metres": 15
+    },
+    {
+      "id": "sight_light_m",
+      "source": "placeholder",
+      "cite": "doc 03 3.2",
+      "kind": "distance",
+      "metres": 40
+    },
+    {
+      "id": "sight_still_crouch_m",
+      "source": "placeholder",
+      "cite": "doc 03 3.2",
+      "kind": "distance",
+      "metres": 6
+    },
+    {
+      "id": "noise_step_walk",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 12
+    },
+    {
+      "id": "noise_step_crouch",
+      "source": "doc01",
+      "cite": "doc 03 section 3.1; doc 01 Hiding verbs: crouch-walking is silent",
+      "kind": "noise",
+      "radius_m": 0
+    },
+    {
+      "id": "noise_step_sprint",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 30
+    },
+    {
+      "id": "noise_step_sprint_corn",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 40
+    },
+    {
+      "id": "noise_tool_till",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 15
+    },
+    {
+      "id": "noise_tool_plant",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 15
+    },
+    {
+      "id": "noise_tool_water",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 15
+    },
+    {
+      "id": "noise_tool_harvest",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 15
+    },
+    {
+      "id": "noise_tool_shovel",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 25
+    },
+    {
+      "id": "noise_tool_pry",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 25
+    },
+    {
+      "id": "noise_tool_repair",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 25
+    },
+    {
+      "id": "noise_tool_disarm",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 8
+    },
+    {
+      "id": "noise_well_pump",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 45
+    },
+    {
+      "id": "noise_door",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 20
+    },
+    {
+      "id": "noise_generator_dead",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 80
+    },
+    {
+      "id": "noise_bells",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 60
+    },
+    {
+      "id": "noise_flare",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 70
+    },
+    {
+      "id": "noise_whistle",
+      "source": "placeholder",
+      "cite": "doc 03 section 3.1",
+      "kind": "noise",
+      "radius_m": 50
+    },
+    {
+      "id": "noise_voice",
+      "source": "placeholder",
+      "cite": "doc 03 3.1; byte is doc 01 Senses",
+      "kind": "noise",
+      "radius_m": 60,
+      "exponent": 2,
+      "byte_max": 255
+    }
+  ]
+}

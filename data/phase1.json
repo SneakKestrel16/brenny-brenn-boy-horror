@@ -1,0 +1,120 @@
+{
+  "table": "phase1",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "night_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 18; doc 02 section 3",
+      "seconds": 300
+    },
+    {
+      "id": "trap_set_at_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 18",
+      "seconds_list": [
+        40,
+        100,
+        160,
+        220
+      ]
+    },
+    {
+      "id": "traps_bear_per_night",
+      "source": "placeholder",
+      "cite": "doc 03 section 18",
+      "count": 1
+    },
+    {
+      "id": "traps_pit_per_night",
+      "source": "placeholder",
+      "cite": "doc 03 section 18",
+      "count": 1
+    },
+    {
+      "id": "scripted_lurk_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 18",
+      "seconds": 60
+    },
+    {
+      "id": "scripted_stalk_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 18",
+      "seconds": 20
+    },
+    {
+      "id": "scripted_chase_after_stalk_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 18 (inference: ambiguous vs scripted_stalk_s, see handoff)",
+      "seconds": 15
+    },
+    {
+      "id": "scripted_retreat_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 18",
+      "seconds": 10
+    },
+    {
+      "id": "trap_race_distance_m",
+      "source": "placeholder",
+      "cite": "doc 03 section 18; doc 03 section 7",
+      "metres": 25
+    },
+    {
+      "id": "scripted_trap_spots",
+      "source": "placeholder",
+      "cite": "doc 03 section 18; doc 04",
+      "ids": [
+        "trap_01",
+        "trap_02",
+        "trap_03",
+        "trap_04",
+        "trap_05",
+        "trap_06",
+        "trap_15",
+        "trap_16",
+        "trap_19",
+        "trap_22"
+      ]
+    },
+    {
+      "id": "day_trap_spot",
+      "source": "placeholder",
+      "cite": "doc 03 section 18",
+      "ids": [
+        "trap_03"
+      ]
+    },
+    {
+      "id": "stranger_voice_spots",
+      "source": "placeholder",
+      "cite": "doc 03 section 18; doc 01 Build Plan Phase 1",
+      "ids": [
+        "crow_01",
+        "crow_03",
+        "crow_06",
+        "crow_07",
+        "crow_09"
+      ]
+    },
+    {
+      "id": "lure_gate_pct",
+      "source": "doc01",
+      "cite": "doc 03 section 18; doc 01 Build Plan Phase 1",
+      "percent": 30
+    },
+    {
+      "id": "taint_enabled",
+      "source": "placeholder",
+      "cite": "doc 03 section 18",
+      "flag": false
+    },
+    {
+      "id": "ai_director_enabled",
+      "source": "doc01",
+      "cite": "doc 03 section 18; doc 01 Build Plan Phase 1",
+      "flag": false
+    }
+  ]
+}
