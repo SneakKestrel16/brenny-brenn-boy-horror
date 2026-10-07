@@ -2,8 +2,8 @@ extends Node
 ## Doc 05 section 5: day, phase, time. The host advances `t_phase` and sends `apply_clock` on each
 ## phase change and every 5 s; clients advance by delta and snap to the host value, never decide a
 ## phase change. Lengths from season.json (doc 02 section 3); --phase1 uses phase1.json night_s.
-## Stopgap: the rpc is on this node because `Net` (Network & Voice) does not exist yet; move it to
-## `Net` when it lands. The Harvest Moon (final night) is not built in Phase 1.
+## The `apply_clock` RPC is on `Net`, which calls `apply_clock` here. The Harvest Moon (final night)
+## is not built in Phase 1.
 
 signal phase_changed(phase: StringName)
 signal day_changed(day: int)
@@ -75,11 +75,10 @@ func _advance() -> void:
 
 func _broadcast() -> void:
 	_since_sync = 0.0
-	if multiplayer.has_multiplayer_peer() and multiplayer.get_peers().size() > 0:
-		apply_clock.rpc(day, phase, t_phase)
+	Net.to_peers(&"apply_clock", [day, phase, t_phase])
 
 
-@rpc("authority", "call_remote", "reliable")
+## Client: from `Net.apply_clock`.
 func apply_clock(p_day: int, p_phase: StringName, t: float) -> void:
 	running = true
 	t_phase = t
