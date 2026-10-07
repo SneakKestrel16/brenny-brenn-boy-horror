@@ -29,5 +29,9 @@ func _ready() -> void:
 	bots.set_script(load("res://game/bots/bots.gd"))
 	bots.name = "Bots"
 	add_child(bots)
+	var creature := CharacterBody3D.new()  # AI Programmer P1-08: the Phase 1 creature (game/creature/)
+	creature.set_script(load("res://game/creature/creature.gd"))
+	creature.name = "Creature"
+	add_child(creature)
 	add_child(DebugView.new())  # P1-12: hidden unless --debug-view or F3 (host)
 	Log.event(&"main_ready", {"players": Game.players.keys()})

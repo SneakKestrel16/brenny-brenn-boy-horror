@@ -248,3 +248,17 @@ func apply_money_changed(coins: int) -> void:
 @rpc("authority", "call_remote", "reliable")
 func apply_generator(fuel_s: float, damaged: bool) -> void:
 	apply_received.emit(&"generator", [fuel_s, damaged])
+
+
+# --- Creature (doc 03 section 4, doc 06 section 7); added in P1-08 -------------------------------
+
+## Host to all on change: the creature's state (lurk, lure, stalk, chase, retreat) and body id.
+@rpc("authority", "call_remote", "reliable")
+func apply_creature_state(state: StringName, body: StringName) -> void:
+	apply_received.emit(&"creature_state", [state, body])
+
+
+## Host to the target (day) or all (night, target_slot -1): play a lure at `position` (doc 03 section 12).
+@rpc("authority", "call_remote", "reliable")
+func apply_lure(lure_id: String, source: String, position: Vector3, target_slot: int, tell: StringName, ghost: bool) -> void:
+	apply_received.emit(&"lure", [lure_id, source, position, target_slot, tell, ghost])
