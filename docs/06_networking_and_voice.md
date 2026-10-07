@@ -880,8 +880,8 @@ The CEO approved TwoVoIP v6.5 (Q-003, D-009) after the comparison below, and PP-
   - **Until it's fixed,** a clean-checkout import is run twice or the file is seeded first (Q-008
     answer). QA's `tools/qa/smoke.py --clean-import` now seeds the file for every
     `addons/*/*.gdextension` (Q-010).
-  - Whether an exported build is affected is untested: no export templates are installed (Q-009).
-    An export shouldn't run the editor import (inference).
+  - An exported build isn't affected: it never runs the editor import, and the voice spike's export
+    (D-014) loads TwoVoIP from a folder with no `.godot/` (**measured**, 2026-10-06).
 - **A plain run never loads the addon without `.godot/extension_list.cfg`.** A fresh folder that
   never had an editor import fails to parse `TwovoipOpusEncoder` and hangs. Anything shipped as a
   project folder (the spike's friend package) seeds the file.
@@ -1108,7 +1108,7 @@ Current state of the questions this doc raised or depends on ([QUESTIONS.md](../
 | Q-006 `project.godot` entries and the ghost's voice position | Gameplay Programmer | **Open**; not blocking DD Phase 1 design |
 | Q-007 Who creates the `Mic` and voice chain buses | Audio Designer | **Open** |
 | Q-008 First-import crash, FEC, log identity | Director | Answered (D-012); crash diagnosed in PP-02 (section 15), v6.5 stays pinned |
-| Q-009 Export templates, upstream bug reports, router UPnP, silent mic | CEO | **Open** (FOR CEO); STOP 1 |
+| Q-009 Export templates, upstream bug reports, router UPnP, silent mic | CEO | Templates answered (D-014); the rest **open** (FOR CEO), STOP 1 |
 | Q-010 Seed `extension_list.cfg` in `smoke.py` | QA | Done: `smoke.py --clean-import` seeds it |
 | Q-011 Spike findings for this doc, `*.dll binary` | Director | Answered; findings folded in here |
 | Q-012 Readings added in this revision: initial voice setting, volume relative to calibrated level, what "capture is live" means, freeing a leaver's clips, ghosts and walkies, discarding a take when someone switches to Off | Director | Answered: all six accepted (D-013); D-013 also confirms the section 7 verbs |

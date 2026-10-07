@@ -73,3 +73,12 @@ writing mic audio to a clip; a leaver's clips are freed from peers' memory; ghos
 walkies; switching to Off during someone's capture discards it. The lantern, scarecrow and fence
 placement, and role verbs added to doc 06 section 7 are part of the D-010 message list. **Why:**
 each is the stricter or simpler reading of doc 01, and DD Phase 2 and 3 playtests can revisit them.
+
+### D-014 · 2026-10-06 · Director · Windows export of the voice spike
+`export_presets.cfg` is owned by Network & Voice for now (CONTRACTS section 2). Its "Voice spike
+(Windows)" preset sets the custom feature `voice_spike`, and `project.godot` gains one line,
+`run/main_scene.voice_spike`, so that export opens the spike; other runs still start at
+`game/core/boot.tscn`. `spikes/voice/package_for_friend.py` exports and zips it; the friend needs no
+Godot. A game preset comes with DD Phase 1, which drops the spike line. **Why:** Q-009 item 1. A
+feature override is the one way to give an exported build its own main scene, and it doesn't touch
+the game's.

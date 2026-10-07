@@ -147,6 +147,12 @@ use peer ids (CONTRACTS section 10 `peer`), never slots; `lure_played` and `lure
    access is allowed). Probably the G535 headset was off. Real-mic capture is untested until you run
    the spike with it on.
 
+**Answer to 1 (CEO, 2026-10-06):** yes. The official 4.7.2 templates are installed (release
+download, SHA-512 checked against its `SHA512-SUMS.txt`). The export is D-014; it was verified from a
+folder outside the repo: it opens the spike, loads TwoVoIP, and a host and a joiner on loopback
+exchanged voice with 0 loss. An exported build never runs the editor import, so the first-import
+crash can't happen in one. Items 2 to 4 stay open for STOP 1.
+
 ### Q-010 · 2026-10-06 · Network & Voice → QA · open
 **A cleaner workaround for the first-import crash (Q-008) in `smoke.py`.** Writing
 `.godot/extension_list.cfg` with the single line `res://addons/twovoip/twovoip.gdextension` before

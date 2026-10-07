@@ -13,6 +13,7 @@ config_version=5
 config/name="Brenny Brenn Boy Horror"
 config/description="2 to 4 player online co-op farming horror. See docs/01_design_doc.md."
 run/main_scene="res://game/core/boot.tscn"
+run/main_scene.voice_spike="res://spikes/voice/voice_spike.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 
 [display]

@@ -44,6 +44,7 @@ in QUESTIONS.md or a task from the Director.
 | `production/OPEN_ISSUES.md` | QA and Director append; Director edits | |
 | `production/handoffs/<task-id>.md` | The task's owner | QA appends its review verdict |
 | `project.godot` | Gameplay Programmer | Autoloads, input map, layers. Others request entries |
+| `export_presets.cfg` | Network & Voice Programmer | Voice spike preset only, until DD Phase 1 (D-014) |
 | `default_bus_layout.tres` | Audio Designer | |
 | `game/core/` | Gameplay Programmer | Autoloads: `Game`, `Log`, `Data`, `Settings`, `Clock` |
 | `game/player/`, `game/interaction/`, `game/farming/`, `game/items/`, `game/traps_player/`, `game/ghost/`, `game/ui/`, `game/debug/` | Gameplay Programmer | |

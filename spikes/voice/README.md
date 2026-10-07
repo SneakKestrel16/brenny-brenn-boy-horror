@@ -176,22 +176,23 @@ mid-speech, which is what crackling from buffer starvation sounds like.
 
 ## Sending it to a friend
 
-There is **no Windows export**: Godot's export templates aren't installed on the CEO's PC, and
-installing them is a download for the CEO to approve. Instead:
+The friend gets a Windows export and needs no Godot. It needs Godot 4.7.2's official export
+templates on the machine that builds it (installed on the CEO's PC 2026-10-06, Q-009):
 
 ```bash
-uv run spikes/voice/package_for_friend.py     # writes builds/voice_spike_friend.zip (gitignored)
+uv run spikes/voice/package_for_friend.py     # exports, then writes builds/voice_spike_friend.zip (gitignored)
 ```
 
-The zip (about 11 MB) holds `project.godot`, the TwoVoIP addon with all five license files, this
-spike, `Voice spike.bat`, `START HERE.txt` and the seeded `.godot/extension_list.cfg`. The friend:
+The script seeds `.godot/extension_list.cfg` if it's missing (Q-008), exports the
+**Voice spike (Windows)** preset to `builds/voice_spike/`, and zips (about 44 MB) `Voice spike.exe`
+with the project packed inside, the TwoVoIP release DLL, the five license files under `licenses/`
+and `START HERE.txt`. The preset's `voice_spike` feature makes the spike the main scene
+(`run/main_scene.voice_spike` in `project.godot`, D-014), so double-clicking the exe opens it; the
+arguments above still work after `--`. The friend:
 
-1. Downloads **Godot 4.7.2, standard Windows build** from
-   https://godotengine.org/download/archive/4.7.2-stable/ (the same engine the studio uses) and
-   puts `Godot_v4.7.2-stable_win64.exe` in the unzipped `voice_spike` folder.
-2. Double-clicks `Voice spike.bat`, allows it through Windows Firewall on Private networks, and
-   joins with the code or IP.
-3. Afterwards sends back the newest folder from
+1. Unzips it and double-clicks `Voice spike.exe`, allows it through Windows Firewall on Private
+   networks (and past SmartScreen: the build isn't signed), and joins with the code or IP.
+2. Afterwards sends back the newest folder from
    `%APPDATA%\Godot\app_userdata\Brenny Brenn Boy Horror\logs` (statistics only, no audio).
 
 ## Gotchas found here
