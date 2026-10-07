@@ -17,6 +17,8 @@ name "AI Director" for the game system.
 | Godot | 4.7.2 stable (standard, GDScript) | `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_win64_console.exe` |
 | Blender | 5.2.2 LTS | `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe` |
 | Python | 3.13 via `uv` | `uv run` from `tools/` |
+| SuperCollider | 3.x (record the exact version when installed) | `C:\Program Files\SuperCollider-<version>\sclang.exe` (found by `tools/audio/render.py`; D-015) |
+| SoX | 14.4.2 | `C:\Program Files (x86)\sox-14-4-2\sox.exe` (D-015) |
 | C++ toolchain | **none installed** | Needed only to build a GDExtension; see Q-001 |
 
 - Git Bash for shell work, native Windows paths, no WSL.
@@ -59,6 +61,7 @@ in QUESTIONS.md or a task from the Director.
 | `data/` | Game Designer | JSON game data (section 6) |
 | `tools/sim/` | Game Designer | Season simulator |
 | `tools/blender/` | 3D Artist | Export scripts |
+| `tools/audio/` | Audio Designer | Render pipeline for generated sounds (D-015). Sources in `assets/audio/src/` |
 | `tools/qa/`, `tests/` | QA / Reviewer | Test runner and checks. Code owners add tests under `tests/<their area>/` |
 | `spikes/voice/` | Network & Voice Programmer | Throwaway; not imported by `game/` |
 | `addons/` | Director assigns per addon | Third-party code only after CEO license approval |

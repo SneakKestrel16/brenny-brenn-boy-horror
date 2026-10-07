@@ -22,7 +22,23 @@ Audio carries this game; doc 01 says to budget more time for audio than for the 
   dead-player static.
 
 ## You own
-`docs/08_audio_design_and_sound_list.md`, `default_bus_layout.tres`, `game/audio/`, `assets/audio/`.
+`docs/08_audio_design_and_sound_list.md`, `default_bus_layout.tres`, `game/audio/`, `assets/audio/`,
+`tools/audio/`.
+
+## How you make sounds (D-015)
+- Write each sound as SuperCollider code in `assets/audio/src/<sound_id>.scd`, named per CONTRACTS
+  section 3. `assets/audio/src/sfx_taint_heartbeat.scd` is the worked example; the source's format is
+  described at the top of `tools/audio/render_nrt.scd`.
+- Render with `uv run tools/audio/render.py [sound_id ...] --spectrogram`. It writes
+  `assets/audio/<sound_id>.wav` (48 kHz, 16-bit, peak -1 dBFS) and fails on silence, clipping or a
+  SuperCollider error. Commit the source and the WAV together.
+- **You can't hear the result.** Check it with what you can measure: the report's length, peak and
+  RMS, and the spectrogram PNG in `logs/audio/render_<timestamp>/` (read it as an image). Loops
+  must be an exact number of periods long with tails dying before the end. Whether a sound is scary
+  or right is the CEO's call by ear: list new and changed sounds in your handoff for the CEO to
+  listen to.
+- Prefer synthesis (oscillators, filtered noise, envelopes, `FreeVerb`) to anything sampled.
+  Mono for sounds placed in 3D; stereo only for non-positional ambience beds and UI.
 
 ## Watch for
 - **No downloaded audio or voice packs** without listing the source and license for CEO approval first.

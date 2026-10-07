@@ -82,3 +82,15 @@ each is the stricter or simpler reading of doc 01, and DD Phase 2 and 3 playtest
 Godot. A game preset comes with DD Phase 1, which drops the spike line. **Why:** Q-009 item 1. A
 feature override is the one way to give an exported build its own main scene, and it doesn't touch
 the game's.
+
+### D-015 · 2026-10-07 · CEO · Generated sounds are rendered from SuperCollider sources
+Placeholder sounds are written as SuperCollider sources, `assets/audio/src/<sound_id>.scd`, and
+rendered headless by `uv run tools/audio/render.py` to 48 kHz 16-bit WAV at
+`assets/audio/<sound_id>.wav`, peak-normalized to -1 dBFS by SoX and checked for silence and
+clipping. Sources and rendered WAVs are both committed. `--spectrogram` writes a PNG per sound so a
+reviewer who can't listen can still check pitch range, timing and tails. SuperCollider and SoX are
+free; both are added to CONTRACTS section 1, and `tools/audio/` to section 2. **Why:** the Audio
+Designer must generate placeholders in code (doc 01; no downloaded audio without CEO approval).
+SuperCollider renders in non-real-time with no audio device, the way Blender runs headless for
+models, so every sound is reproducible from a text file. 48 kHz matches the CEO's WASAPI mix rate
+(doc 06 section 8).
