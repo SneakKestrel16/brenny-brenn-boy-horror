@@ -352,7 +352,7 @@ stays `in review` for QA's re-review.
 **Closed (QA, 2026-10-07):** re-review passed; every must-fix and should-fix item checked by
 recomputing (`production/handoffs/PP-05.md`, "Re-review").
 
-### Q-018 · 2026-10-07 · Game Designer → Director, AI Programmer · open
+### Q-018 · 2026-10-07 · Game Designer → Director, AI Programmer · open (AI Programmer part answered)
 **PP-06 (doc 03) written, in review. AI Programmer consult needed on buildability.** Please check
 `docs/03_creature_ai_director_and_scares.md`: (1) sensing tick and the `Noise.emit` radii table
 (section 3.1); (2) the region graph for the AI Director's region-only nudges (section 11.6, region
@@ -364,7 +364,51 @@ lose a chase by quiet alone (section 5), "earshot" = 23 m (7.1), "bodies" = dead
 (section 15), public scares not counting as "big" (11.4); (c) gnaw rule in section 10 resolves
 Q-015 item 9. No FOR CEO items. Data files (section 19) are proposed, not yet created.
 
-### Q-019 · 2026-10-07 · Gameplay Programmer → AI Programmer · open
+**Answer (AI Programmer, 2026-10-07), items (1) to (4):** buildable as written, with the doc 03
+edits below. Items (a) to (c) stay open for the Director. No edit to doc 03 has been made; the Game
+Designer applies these or rejects them.
+1. **Sensing tick.** Senses run on the host at 10 Hz (`sense_tick_s` 0.1, placeholder, new
+   `creature.json` value). `noise_emitted` handlers only buffer the emit; the tick applies corn
+   damping, memory and target choice. Sight is two rays per living player inside range (head, feet),
+   at most 8 rays per tick. Corn damping is one ray on layer 5 per emit, only when the distance is
+   within the undamped radius. Radii table: buildable. Three edits:
+   - **`step_sprint_corn` double damping.** Sprinting in corn almost always has corn between, so
+     40 x 0.7 = 28 m is below open `step_sprint` (30 m), and the corn row does nothing. Edit 3.1 after
+     the table: "Corn damping does not apply to `step_sprint_corn`; its 40 m already includes the
+     corn."
+   - **"Loudest, radius-weighted" is undefined.** Edit 3.1 bullet "The creature chooses the loudest
+     source" to: "The creature homes on the memory entry with the largest margin, `effective_radius_m
+     - distance_m` (the radius after corn damping), ties to the newest."
+   - **Tension from footsteps.** 11.1 "Noise heard: + radius_m / 10 per emit" gives a sprinting
+     player about 2.5 strides/s x 3 = +7.5 /s, so the meter peaks in about 10 s. Edit that row to:
+     "+ (radius_m / 10) per emit, except `step_*` kinds, which count at most +1 / s per player
+     (placeholder)".
+2. **Region graph.** Regions are `Area3D` nodes, one per region id, under a `Regions` node in the
+   level scene (the Level Designer's; I ask them in a new question when DD Phase 3 starts, since the
+   AI Director is not built before then). Regions must not overlap; a point outside every region
+   belongs to the nearest one. Adjacency is computed at load (two regions within 2 m of each other
+   are linked), so no adjacency data is needed. A nudge moves the wander region one hop along the
+   graph per nudge (BFS), never a jump; the creature then picks wander points on the navmesh inside
+   the region. `town_road` excludes the 10 m sanctuary circle. No doc 03 edit needed beyond 11.6
+   "until the AI Programmer fixes a graph" -> "as `Area3D` nodes in the level scene; adjacency is
+   computed at load (regions within 2 m are linked); a nudge moves one hop".
+3. **Pathing in corn.** One `NavigationRegion3D` over the farm, baked from layer 1 only, so the
+   layer 5 corn sight-blockers (doc 07 section 10, Q-026) are walkable for the creature and block
+   only sight and sound. Building doors are `NavigationLink3D`s the creature may use only for a dark
+   building after the 3 s bang (section 6). Stalk positions are navmesh points with layer 5 between
+   them and the target's **sensed** position. The debug view in doc 05 section 19 is buildable as
+   written (Q-019 item 6).
+4. **State timers (4.1, 4.2).** Buildable; values go in `creature.json`. Two edits so hunting never
+   reads true positions and the day rule holds:
+   - 4.2 row `stalk -> chase`: "target within sight range, or heard sprinting, or at night the
+     target is within 12 m" -> "target seen, or heard sprinting, or at night the target's **sensed**
+     position is within 12 m; by day only inside a day death or a trap race (section 7)".
+   - 5, after the table: "A chase can be lost only after `chase_commit_s` (6 s) has passed; the 4 s
+     of `chase_lose_quiet_s` may run during it."
+   - Retreat destination (my reading, no edit needed): the region farthest by graph hops from the
+     target's sensed position.
+
+### Q-019 · 2026-10-07 · Gameplay Programmer → AI Programmer · answered
 Doc 05 sections 8 and 19 propose the Noise interface. Please confirm or amend: (1) `Noise` is an
 autoload with `emit(position, radius_m, kind, source_peer)`, helpers `emit_kind(kind, position,
 source_peer, mult)` and `emit_voice(position, volume_byte, source_peer)`, and signal `noise_emitted`
@@ -376,6 +420,42 @@ start?); (5) the emote scream is `voice` at byte 255; (6) the creature exposes `
 `debug_state()` and the AI Director `debug_state()` (fields in doc 05 section 19) for the sensed-vs-true
 view; (7) creature and AI Director cross-day state is plain serialisable data for the dawn save
 (doc 05 section 17). Also: the cart transform cadence is Network & Voice's, not mine.
+
+**Answer (AI Programmer, 2026-10-07):** confirmed with small amendments. No doc edited.
+1. **Confirmed.** The signal, not a queue. My handler only appends to a buffer that the 10 Hz sense
+   tick drains (Q-018 answer item 1), so emits stay cheap. Amend doc 05 section 8: "`emit` with
+   `radius_m <= 0` (for example `step_crouch`) does not fire the signal; it only bumps the debug
+   counter."
+2. **Confirmed.** `creature.json` holds the table; `Noise` only reads it. The Taint x1.5 applies to
+   `step_*` kinds only (doc 03 3.1 "Tainted footsteps"; doc 02 section 13's pry x1.5 is time, not
+   noise). Corn damping, the 12 s memory, louder-replaces-quieter within 4 s and the margin pick are
+   mine.
+3. **Confirmed.** Doc 05 section 8's 20 kinds match doc 03 section 3.1 exactly. Drop doc 05's
+   sentence "(The exact spelling comes from doc 03; ... confirm the list.)". Doc 03 has no cart squeak
+   kind for the Harvest Moon knock-offs (doc 03 section 14 "senses loudest"); that waits for DD
+   Phase 4, and I will ask the Game Designer then.
+4. **Both.** Every tool hold emits at completion. Loud tools (`tool_shovel`, `tool_pry`,
+   `tool_repair`) also emit once at hold start. `tool_disarm` emits at completion only. Edit doc 05
+   section 8 "Tool holds" note to: "Quiet can x0.5; all emit at completion; `tool_shovel`, `tool_pry`
+   and `tool_repair` also emit once at hold start (AI Programmer, Q-019)". Edit doc 03 3.1, new bullet:
+   "**When tools emit:** at hold completion; loud tools (25 m) also at hold start (placeholder)."
+5. **Confirmed.** Scream = `emit_voice(position, 255, screamer_peer)`, 60 m, after the host's 1 s
+   emote rate limit. Edit doc 03 3.1, add row: "| emote `scream` | as `voice` at byte 255, 60 m |
+   inference (doc 01 "Emotes": the scream gives you away) |".
+6. **Confirmed,** fields as doc 05 section 19, plus these. Accessors return copies; the view finds
+   the nodes by group `creature` and `ai_director` (host only).
+   - `Creature.debug_sensed()`: `source_kind` is one of `heard`, `seen`, `taint`, `trail`.
+   - `Creature.debug_state()` adds `position` (true), `region`, `wander_region`.
+   - `AiDirector.debug_state()`: `tension`, `phase` (`build_up`, `peak`, `fade`, `relax`), `profile`,
+     `phase_time_s`, `next_scare_s`, `nudge_region`, `nudge_cooldown_s`, `budget_left` (disturbance
+     points), `scares` (`{peer: {big_today, last_big_s}}`). Edit doc 05 section 19 "exposes
+     `AiDirector.debug_state()`" to list these fields.
+7. **Confirmed.** `Creature.to_save() -> Dictionary` / `from_save(d)` and the same on `AiDirector`,
+   JSON types only, positions as `[x, y, z]`, players keyed by `player_uid`, never peer id. Saved:
+   body id and `quirk` (null); day, ramp-up row, disturbance budget carry, pegboard theft and lock
+   state, traps carried off the farm, flags moved, per-`player_uid` `own_voice_used` (doc 03 section
+   13: once a season). Never saved: sensed state, noise memory, tension (resets each day; my
+   reading, doc 01 gives no carry). Cart cadence: noted, not mine.
 
 ### Q-020 · 2026-10-07 · Gameplay Programmer → Director · closed
 Doc 05 answers Q-002 (`lure_result.within_s` = actual seconds, plus `window_s`; spatial trial fields),
@@ -404,10 +484,18 @@ Please confirm, and name the DD Phase 1 gray-box scene path.
 
 **Answer (Level Designer, 2026-10-07):** Confirmed. `Path3D` `CartRoute`, points R0 to R8 (doc 04 s6.1), y = 0, in `res://game/world/farm.tscn` (DD Phase 2). 3 m clearance accepted (`blocks_cart_route`). DD Phase 1 gray-box scene: `res://game/world/farm_phase1.tscn`; no cart there, so no `CartRoute`. Scene not built yet (`game/world/` empty); these are the names the build will use. Doc 04 s6.1 updated.
 
-### Q-023 · 2026-10-07 · Gameplay Programmer → Network & Voice · open
+### Q-023 · 2026-10-07 · Gameplay Programmer → Network & Voice · answered
 Answers to Q-006 are in doc 05 sections 3 and 14. Please confirm the hold framework needs no message
 beyond doc 06 section 7 (plus `apply_refused(verb, reason)`, which I add: tell me if it clashes), that
 `Net.rtt_ms(peer)` exists for the half-RTT credit, and that `Voice` calls `Noise.emit_voice`.
+
+**Answer (Network & Voice, 2026-10-07):** Confirmed, no clash. The hold framework needs no message
+beyond doc 06 section 7; `apply_refused(verb, reason)` is already there (and in CONTRACTS s7).
+`Net.rtt_ms(peer: int) -> int` is ENet's smoothed RTT (`PEER_ROUND_TRIP_TIME`), 0 for peer 1 and
+for unknown peers (doc 06 section 6). `Voice` calls `Noise.emit_voice` at most every 100 ms per
+speaker, never for ghosts (doc 06 section 8). Cart cadence (Q-019): `request_push_cart(on)`,
+`apply_cart(loaded, pushers)` on change, transform in the 20 Hz `moves` batch (doc 06 section 7).
+Doc 05 s13 cites "doc 06 section 12 table" for `apply_cart`: it is section 7.
 
 ### Q-024 · 2026-10-07 · QA → Director · answered D-019
 PP-07 QA passed with minor findings (handoff PP-07 "QA review"). One needs a design call: doc 05 sec 16 shows speaker-name subtitles only for real teammates, so a missing name exposes a creature fake and undercuts the wrong-place tell. Recommend no voice subtitles in Phases 1-3. Other findings (request_step, apply_cart wording, Log/Clock order) are doc 05 edits for Gameplay.
@@ -442,8 +530,10 @@ Doc 08 s10. Please add autoload `Soundscape` (`game/audio/soundscape.gd`, mine) 
 
 **Gameplay answer:** Doc 05 s3 has the `Soundscape` row (order 9) and project.godot entry; s16 has six volume sliders plus `reduce_scares`. Calls wired as listed when code lands. Pen animal species is the Game Designer's. `stalk_scope`: host-only playtest flag, `--stalk-scope global|near` read by Boot (default global); not a player setting.
 
-### Q-033 · 2026-10-07 · Audio Designer → Network & Voice Programmer · open (bus split settled by D-020; crackle player still to confirm)
+### Q-033 · 2026-10-07 · Audio Designer → Network & Voice Programmer · answered
 Answers Q-007: layout file holds the 7 base buses; `Mic` and the `Voice` children are created at runtime by `game/voice/`; levels come from `game/audio/mix_levels.gd` (doc 08 s2.2, s7.2). Please confirm, and that `vox_crackle_loop` attaches as a second player on `VoiceEmitter` (s7.2).
+
+**Answer (Network & Voice, 2026-10-07):** Confirmed both. `game/voice/` creates `Mic` and the `Voice*` children at runtime and reads levels from `game/audio/mix_levels.gd`. `vox_crackle_loop` plays on a second `AudioStreamPlayer3D` child of `VoiceEmitter`, on the voice's bus, -34 dB below voice RMS, stopped for `no_crackle` (doc 06 section 9).
 
 ### Q-034 · 2026-10-07 · QA → Audio Designer · answered
 PP-09 passed with five doc 08 nits (details in production/handoffs/PP-09.md "QA review"): (1) s2.3 rule 5 drops `Ambience` 10 dB on pause but s4.4 rule 2 says a pause never touches bed/wind; same for s4.5 dark building vs s4.4 rule 1, make the layer-vs-bus exemption explicit; (2) `sfx_coins` sits on UI against "bus by ID prefix" (s3.1), rename `ui_coins`; (3) F3 debug view is host-only (doc 05 s19), so clients get no layer-gain readout (s10.4), add a log event or client overlay; (4) s1 item 7 cites CONTRACTS s3 for mono 3D, which does not say it; (5) s11.7 file counts are not derived, mark inference. Prefix list (`cre`, `vox`, `mus`, `ui`, `amb`) missing from CONTRACTS s3 is for the Director in PP-11.

@@ -288,7 +288,19 @@ player on or near the threshold).
    the host still sees them in the doorway. **No answer within the timeout (300 ms plus the
    victim's RTT, `placeholder`) is a miss.** Lag can only save a player, never kill one.
 4. **Trap race and pry holds:** the host credits the victim with their one-way latency (half RTT)
-   when it compares a finished pry against the race deadline (doc 01 "Day deaths").
+   when it compares a finished pry against the race deadline (doc 01 "Day deaths"). Doc 05
+   section 7 applies the credit by stamping the pry's `started_at` with the host's receive time
+   minus `Net.rtt_ms(peer) / 2`.
+
+### `Net.rtt_ms(peer)`
+
+`Net.rtt_ms(peer: int) -> int` returns ENet's smoothed round-trip time in milliseconds
+(`ENetPacketPeer.get_statistic(PEER_ROUND_TRIP_TIME)`, the value the spike logged as `net_rtt`,
+**measured (PP-02)**). On the host it takes any connected client's peer id and returns 0 for
+peer 1 (the host's own actions have no network hop). On a client only `rtt_ms(1)` is meaningful;
+other ids return 0. An unknown or disconnected peer returns 0, so a missing value never adds
+credit. The close-call timeout (item 3) uses the same call. `request_ping` / `apply_pong` stay only
+for the host screen's per-player ping, which clients also show.
 
 Trusting the victim's answer means a modified client could dodge kills. This is co-op among
 friends; doc 01 doesn't ask for cheat resistance (inference: settled by the CEO if it ever matters).
@@ -327,7 +339,7 @@ CONTRACTS section 7 and needs the Director (D-010). D-013 confirms `request_lant
 | Message | Direction | Validated by | Notes |
 |---|---|---|---|
 | `move` (position, yaw, pitch, crouch, sprint, seq) | client → host, 20 Hz | host: speed, stillness | Clients own movement |
-| `moves` (all players' latest) | host → all, 20 Hz | — | Batched per tick |
+| `moves` (all players' latest, plus the cart's position, yaw and seq while it exists) | host → all, 20 Hz | — | Batched per tick. The festival cart (doc 05 section 13) rides this batch during the Harvest Moon, not a message of its own; clients interpolate it like a player |
 | `creature` (transform, state, seq) | host → all, 15 Hz (`placeholder`) | — | State is one of `lurk`, `lure`, `stalk`, `chase`, `retreat` (CONTRACTS section 7) |
 | `apply_teleport(position)` | host → one, channel 0 | — | Only for gross speed violations, respawn |
 
@@ -335,7 +347,9 @@ CONTRACTS section 7 and needs the Director (D-010). D-013 confirms `request_lant
 
 Every one is `request_<verb>(target_id, ...)` sent when a hold starts, plus `request_hold_cancel()`
 on release; the host checks range, timing and state, runs the hold timer, and answers with
-`apply_<result>` to all, or `apply_refused(verb, reason)` to the sender.
+`apply_<result>` to all, or `apply_refused(verb, reason)` to the sender (CONTRACTS section 7; the
+client rolls back its prediction). Doc 05 section 7 (hold framework) uses only these messages plus
+`apply_hold_cancelled`; it adds none.
 
 | Request (client → host) | Host result (host → all) | Doc 01 source |
 |---|---|---|
@@ -351,7 +365,7 @@ on release; the host checks range, timing and state, runs the hold timer, and an
 | `request_wash` | `apply_taint_changed` | "The Taint" |
 | `request_refuel`, `request_repair_generator` | `apply_generator` | "Nights > Generator" |
 | `request_door`, `request_repair_fence`, `request_round_up` | `apply_door`, `apply_fence`, `apply_animal` | "Light is the rule", "Daytime Threats" |
-| `request_push_cart` | `apply_cart` | "The Harvest Moon" |
+| `request_push_cart(on)` | `apply_cart(loaded, pushers)`, on change only; the transform rides `moves` | "The Harvest Moon" |
 | `request_fire_flare` | `apply_flare` | "Store" |
 | `request_whistle` | `apply_whistle(slot, position)` | "How players fight back > Whistle" |
 | `request_emote(emote_id)` | `apply_emote` | "Emotes and physical comedy" |
@@ -452,13 +466,16 @@ Doc 01 "Senses": "Only the volume is sent, one byte per voice frame, and nothing
   Accepted in D-013; DD Phase 1 and 2 playtests can revisit it.
 - **0 means not transmitting.** A frame is only sent while VAD or push-to-talk is open, so muted,
   push-to-talk released and Discord-only players are silent to the creature.
-- The host reads it from each client frame and reports it through the Noise interface (CONTRACTS
-  section 8) at the speaker's position, at most every 100 ms using the loudest frame since the last
-  report (`placeholder`, agreed in doc 05 with the AI Programmer). How far a volume carries is
-  doc 03's.
+- The host reads it from each client frame, and `Voice` calls
+  `Noise.emit_voice(position, volume_byte, source_peer)` (CONTRACTS section 8, doc 05 section 8)
+  at the speaker's position, at most every 100 ms using the loudest frame since the last report
+  (`placeholder`). The host's own mic takes the same call. How far a volume carries is doc 03's;
+  `Noise` converts the byte to a radius.
 - **Nothing is stored:** the host never logs volume values or keeps a history. The relay form of the
   frame drops the byte, so clients never see it.
-- **Ghost frames don't feed the creature** (D-011): ghosts aren't in the world.
+- **Ghost frames don't feed the creature** (D-011): ghosts aren't in the world. `Voice` never calls
+  `emit_voice` for a ghost speaker; `Noise` rejects ghost sources as a second guard (doc 05
+  section 8).
 
 ### Frame format (channel 2, `send_bytes`)
 
@@ -600,8 +617,15 @@ speech.
 - **Implementation:** effects live on audio buses, so the chain is a small set of buses under
   `Voice` (CONTRACTS section 9): `VoiceBase`, `VoiceEcho`, `VoicePitchUp`, `VoicePitchDown`,
   `VoiceGhost`, `VoiceGhostEcho`, `VoiceGhostPitchUp`, `VoiceGhostPitchDown`, `VoiceRadio`. An
-  emitter picks its bus per playback. The bus layout file is the Audio Designer's; whether these
-  are created at runtime by `game/voice/` or added to `default_bus_layout.tres` is Q-007.
+  emitter picks its bus per playback. **`game/voice/` creates them, and `Mic`, at runtime** (D-020,
+  Q-007, Q-033); `default_bus_layout.tres` (Audio Designer) holds only the base buses, and the
+  levels come from `game/audio/mix_levels.gd` (doc 08 sections 2.2 and 7.2), never constants in
+  `game/voice/`.
+- **The crackle player** is `vox_crackle_loop` (doc 08 section 7.2) on a second
+  `AudioStreamPlayer3D` child of `VoiceEmitter`, at -34 dB relative to the voice's RMS envelope.
+  It uses the same bus as the voice, so ghost static, echo and pitch apply to it too, and it is
+  stopped for the `no_crackle` tell. It is part of `VoiceEmitter`, so a spatialiser swap
+  (section 8) moves it with the voice.
 - **Who hears ghosts** (D-011): the living hear them through static; ghosts hear each other clean.
 
 ## 10. Walkie-talkies
@@ -1105,11 +1129,13 @@ Current state of the questions this doc raised or depends on ([QUESTIONS.md](../
 | Q-003 Approve TwoVoIP v6.5 | CEO | Answered: approved (D-009) |
 | Q-004 Channel 3, `send_bytes`, `server_relay = false`, the message list | Director | Answered: approved (D-010) |
 | Q-005 Doc 01 readings (crackle, ghosts, walkie, recording light, speaker bleed) | Director | Answered (D-011); folded into sections 8 to 11 |
-| Q-006 `project.godot` entries and the ghost's voice position | Gameplay Programmer | **Open**; not blocking DD Phase 1 design |
-| Q-007 Who creates the `Mic` and voice chain buses | Audio Designer | **Open** |
+| Q-006 `project.godot` entries and the ghost's voice position | Gameplay Programmer | Answered by doc 05 sections 3 and 14 (D-018) |
+| Q-007 Who creates the `Mic` and voice chain buses | Audio Designer | Answered (D-020): `game/voice/` creates them at runtime; levels from `mix_levels.gd` (section 9) |
 | Q-008 First-import crash, FEC, log identity | Director | Answered (D-012); crash diagnosed in PP-02 (section 15), v6.5 stays pinned |
 | Q-009 Export templates, upstream bug reports, router UPnP, silent mic | CEO | Answered: templates installed (D-014); no upstream reports; Tailscale and the headset mic worked at STOP 1 |
 | Q-010 Seed `extension_list.cfg` in `smoke.py` | QA | Done: `smoke.py --clean-import` seeds it |
 | Q-011 Spike findings for this doc, `*.dll binary` | Director | Answered; findings folded in here |
 | Q-012 Readings added in this revision: initial voice setting, volume relative to calibrated level, what "capture is live" means, freeing a leaver's clips, ghosts and walkies, discarding a take when someone switches to Off | Director | Answered: all six accepted (D-013); D-013 also confirms the section 7 verbs |
 | Q-013 PP-02 review bugs (host-quit poll `ERROR`, host-supplied `session_id` path, wrong-length codes) | Director | Answered: items 1 to 3 become DD Phase 1 `game/net/` acceptance criteria (written at PP-12); item 3 is in section 4 |
+| Q-023 Hold messages, `Net.rtt_ms`, `Voice` calls `Noise.emit_voice` | from Gameplay Programmer | Answered: sections 6, 7 and 8 (cart transform rides `moves`) |
+| Q-033 Runtime voice buses, crackle player | from Audio Designer | Answered: section 9 |
