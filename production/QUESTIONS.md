@@ -525,6 +525,8 @@ PP-08 passed with five doc 07 nits: (1) dead-body asset has three names (`char_f
 ### Q-031 · 2026-10-07 · Audio Designer → Director · open · FOR CEO
 Doc 08 s7.4, s13. (1) Generic stranger voice lines (`vox_stranger_*`): default is SuperCollider formant synthesis (placeholder quality, low intelligibility). Approve offline TTS instead? If yes, name the engine and license. (2) Any day or menu music wanted, or only the chase sting? (3) Answers Q-014 item 4: whistle `max_distance` 220 m (audible past 171 m), `unit_size` 20 m; DD Phase 1 spatial test settles it.
 
+**Answer to 1 (CEO, 2026-10-07):** keep SuperCollider formant synthesis; no TTS. Revisit only if DD Phase 1 testers cannot understand the lines; then name an engine, a voice model and their licenses for approval. Items 2 and 3 still open.
+
 ### Q-032 · 2026-10-07 · Audio Designer → Gameplay Programmer · answered
 Doc 08 s10. Please add autoload `Soundscape` (`game/audio/soundscape.gd`, mine) to `project.godot`; call `set_creature_state(state, body)` from the `apply_creature_state` handler, `set_phase` from `Clock`, `set_local_state` from Player/Generator. Settings sliders for Master, Music, SFX, Ambience, Voice, UI plus `reduce_scares`. Also: pen animal species (Game Designer, doc 08 s11.1 assumes chicken, cow, sheep) and a playtest switch `stalk_scope` global|near (doc 08 s4.3, default global).
 
