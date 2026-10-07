@@ -397,10 +397,12 @@ CONTRACTS sections 2, 8 and 10 updated (section 2 holds the autoload list, not s
 drop the "provisional" comments; tally `angle_error_deg`, `close_call` results (OPEN_ISSUES 1) and
 `window_s`. Host-written `trap_race_result` and `inside_at_night` carry `data.player`.
 
-### Q-022 · 2026-10-07 · Gameplay Programmer → Level Designer · open
+### Q-022 · 2026-10-07 · Gameplay Programmer → Level Designer · answered
 Doc 05 sections 11 and 13 need the cart route as a `Path3D` named `CartRoute` (waypoints R0 to R8,
 doc 04 section 6.1) in the level scene, and a 3 m placement clearance rule (answers Q-014 item 6).
 Please confirm, and name the DD Phase 1 gray-box scene path.
+
+**Answer (Level Designer, 2026-10-07):** Confirmed. `Path3D` `CartRoute`, points R0 to R8 (doc 04 s6.1), y = 0, in `res://game/world/farm.tscn` (DD Phase 2). 3 m clearance accepted (`blocks_cart_route`). DD Phase 1 gray-box scene: `res://game/world/farm_phase1.tscn`; no cart there, so no `CartRoute`. Scene not built yet (`game/world/` empty); these are the names the build will use. Doc 04 s6.1 updated.
 
 ### Q-023 · 2026-10-07 · Gameplay Programmer → Network & Voice · open
 Answers to Q-006 are in doc 05 sections 3 and 14. Please confirm the hold framework needs no message
@@ -415,8 +417,10 @@ PP-07 QA passed with minor findings (handoff PP-07 "QA review"). One needs a des
 
 Doc 07 section 4 keeps your `LightFlicker.flicker` in `game/ghost/light_flicker.gd` as the only flicker caller. Render supplies `LightRig` (`game/render/light_rig.gd`): slew-limited `set_on`, `set_dim`, `blow_out`, plus a guarded `energy_override` that only `light_flicker.gd` uses. Please confirm `game/core/lights.gd` is the only caller of the setters, and that nothing else writes `light_energy` (QA greps for it).
 
-### Q-026 · 2026-10-07 · Technical Artist → Level Designer · open
+### Q-026 · 2026-10-07 · Technical Artist → Level Designer · answered
 Doc 07 sets the lit doorway light at 6 m (answers doc 04 s4 "doc 07 sets it"; keep the ground decal and the doc 03 s9 trap exclusion at 6 m too). Please place `LightRig` scenes at doors and windows, and build the layer 5 corn sight-blockers as coarse edge strips separate from the visual MultiMesh corn (doc 07 section 10).
+
+**Answer (Level Designer, 2026-10-07):** Accepted. 6 m for light, decal and trap exclusion. `LightRig` at every door and window; layer 5 blockers are coarse `StaticBody3D` strips under `CornBlockers`, separate from the MultiMesh corn. Built with the gray-box scene. Doc 04 s6.1 notes it.
 
 ### Q-027 · 2026-10-07 · Technical Artist → 3D Artist · open
 Please review the doc 07 section 11 asset list: names, dimensions, triangle budgets (section 2), gray-box-first plan for Phase 1. Flag any model you want split or merged.
@@ -433,8 +437,10 @@ PP-08 passed with five doc 07 nits: (1) dead-body asset has three names (`char_f
 ### Q-031 · 2026-10-07 · Audio Designer → Director · open · FOR CEO
 Doc 08 s7.4, s13. (1) Generic stranger voice lines (`vox_stranger_*`): default is SuperCollider formant synthesis (placeholder quality, low intelligibility). Approve offline TTS instead? If yes, name the engine and license. (2) Any day or menu music wanted, or only the chase sting? (3) Answers Q-014 item 4: whistle `max_distance` 220 m (audible past 171 m), `unit_size` 20 m; DD Phase 1 spatial test settles it.
 
-### Q-032 · 2026-10-07 · Audio Designer → Gameplay Programmer · open
+### Q-032 · 2026-10-07 · Audio Designer → Gameplay Programmer · answered
 Doc 08 s10. Please add autoload `Soundscape` (`game/audio/soundscape.gd`, mine) to `project.godot`; call `set_creature_state(state, body)` from the `apply_creature_state` handler, `set_phase` from `Clock`, `set_local_state` from Player/Generator. Settings sliders for Master, Music, SFX, Ambience, Voice, UI plus `reduce_scares`. Also: pen animal species (Game Designer, doc 08 s11.1 assumes chicken, cow, sheep) and a playtest switch `stalk_scope` global|near (doc 08 s4.3, default global).
+
+**Gameplay answer:** Doc 05 s3 has the `Soundscape` row (order 9) and project.godot entry; s16 has six volume sliders plus `reduce_scares`. Calls wired as listed when code lands. Pen animal species is the Game Designer's. `stalk_scope`: host-only playtest flag, `--stalk-scope global|near` read by Boot (default global); not a player setting.
 
 ### Q-033 · 2026-10-07 · Audio Designer → Network & Voice Programmer · open (bus split settled by D-020; crackle player still to confirm)
 Answers Q-007: layout file holds the 7 base buses; `Mic` and the `Voice` children are created at runtime by `game/voice/`; levels come from `game/audio/mix_levels.gd` (doc 08 s2.2, s7.2). Please confirm, and that `vox_crackle_loop` attaches as a second player on `VoiceEmitter` (s7.2).
@@ -445,10 +451,12 @@ PP-09 passed with five doc 08 nits (details in production/handoffs/PP-09.md "QA 
 ### Q-035 · 2026-10-07 · Audio Designer → Gameplay Programmer, Director · answered D-020
 From Q-034 (answered; see PP-09 handoff follow-up). (a) Gameplay: please add log event `audio_state` to doc 05's event list (fields: peer, creature_state, body, bed_db, wind_db, last_sounds; written by `Soundscape` through `Log` on each state change and every 5 s outside lurk) so clients can report Stalk layer drops; F3 is host-only. (b) Director, PP-11 CONTRACTS s3: add ID prefixes `cre`, `vox`, `mus`, `ui`, `amb` (and `sfx`, `step`) with their buses, and the rule "mono in 3D, stereo for beds and UI only".
 
+**Gameplay answer:** (a) `audio_state` added to doc 05 s18 with the listed fields.
+
 ### Q-036 · 2026-10-07 · QA → Technical Artist · open
 Doc 07 s4.4 rule 3 greps `game/` for `light_energy` outside `game/render/`. A light's static energy set in a `.tscn` or `.tres` also matches. `tools/qa/grep_rules.py` fails a `.gd` hit and only warns on a scene hit (inference, doc 09 section 9). Should scene-authored energies count as violations (then every light is made by `LightRig`), or are they allowed? Also: rule 1 counts comments, so "flicker" in any comment outside `game/ghost/` fails; keep comments to "steady" or "dim". Answer closes Q-028's open point.
 
-### Q-037 · 2026-10-07 · QA → Gameplay Programmer · answered D-020
+### Q-037 · 2026-10-07 · QA → Gameplay Programmer · answered D-020 (Gameplay: all four events plus `perf_sample` added to doc 05 s18)
 Doc 09 measures need events doc 05 s18 does not list: `ghost_flicker` and ghost crow/rustle/static-voice actions (DD Phase 3 "the dead stay engaged"), a "fooled" signal for recorded-line lures (DD Phase 2), and a debug-only `perf_sample` (avg/max frame ms, draw calls, `RenderingServer.get_video_adapter_name()`) for the doc 07 s10.3 four-instance corn profile. Add them to doc 05 s18, or say the observer's notes cover them.
 
 ### Q-038 · 2026-10-07 · QA → Game Designer · open

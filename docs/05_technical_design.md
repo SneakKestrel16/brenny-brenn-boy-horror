@@ -125,6 +125,7 @@ for CONTRACTS). Load order matters because later ones use earlier ones:
 | 6 | `Game` | `game/core/game.gd` | Gameplay | Session state, player registry, ghost list, scene switching, save/load calls |
 | 7 | `Noise` | `game/core/noise.gd` | Gameplay (API), AI Programmer (consumer) | Section 8 |
 | 8 | `Voice` | `game/voice/voice.gd` | Network & Voice | Capture, relay, playback |
+| 9 | `Soundscape` | `game/audio/soundscape.gd` | Audio Designer (D-020) | Beds, creature-state layers, 3D/2D sound API (doc 08 section 10). Every peer, no network. Reads `Settings` volumes and `reduce_scares`. Gameplay calls `set_creature_state` (from the `apply_creature_state` handler), `set_phase` (from `Clock`), `set_local_state` (Player, Generator) (Q-032) |
 
 `Game` exposes the small shared facts other code needs: `Game.is_host() -> bool`,
 `Game.local_peer() -> int`, `Game.players: Dictionary` (peer id to `PlayerState`),
@@ -173,7 +174,7 @@ res://game/player/ghost.tscn       Ghost body: spectator camera, no collision wi
   `lantern` (F), `whistle` (Q), `emote_wheel` (hold Z), `voice_push_to_talk` (V),
   `voice_radio` (B), `toggle_debug_view` (F3), `pause` (Esc), `spectate_next/prev` (E/Q while a
   ghost).
-- Autoloads, in the order above.
+- Autoloads, in the order above (`Soundscape` last; Q-032).
 - `physics/3d/default_gravity`, the layer names (1 to 8) from CONTRACTS section 3.
 - `run/main_scene` stays `res://game/core/boot.tscn`. The `run/main_scene.voice_spike` line (D-014)
   is dropped when DD Phase 1 adds a game export preset.
@@ -606,7 +607,7 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
 - **Settings** live in `user://settings.cfg` (a `ConfigFile`) on **each client's disk and never in
   the host's save** (doc 01 "Voice settings > Storage"; CONTRACTS section 5). Contents: audio
   volumes, mouse sensitivity, FOV, keybinds, toggle crouch, push-to-talk vs open mic and its
-  threshold, denoise, voice setting (`off` / `lobby_lines` / unchosen), streamer-safe, subtitles for
+  threshold, denoise, six volume sliders `volume_master`, `volume_music`, `volume_sfx`, `volume_ambience`, `volume_voice`, `volume_ui` (0 to 1, each sets its bus; Q-032, doc 08 section 10), `reduce_scares` (bool, default false; `Soundscape` softens stingers and sudden creature cues, read live; accessibility, inference: no doc 01 number), voice setting (`off` / `lobby_lines` / unchosen), streamer-safe, subtitles for
   none (no voice subtitles, D-019).
 - **Difficulty and group options** are chosen in the lobby by the host and saved in the season
   (`Easy`, `Normal`, `Hard`, `Nightmare`, `difficulty.json`; "no live clips" and "streamer-safe" are
@@ -744,6 +745,11 @@ the QA changes.
 | `net_*`, `voice_stats` | each peer | doc 06 section 14 (including `net_join_code_rejected` with `reason` `typo` or `length`) | Network |
 | `settings_changed` | each peer | `key` (never a voice file path) | Debugging |
 | `save_written` | host | `path_name` (file name only), `day`, `bytes` | Save |
+| `audio_state` | `Soundscape` on every peer, through `Log`, on each creature-state change and every 5 s while the state is not `lurk` | `creature_state`, `body`, `bed_db`, `wind_db`, `last_sounds` (last 8 sound IDs) | Clients report Stalk layer drops; F3 is host-only (Q-035, CONTRACTS section 10) |
+| `ghost_flicker` | host | `player`, `light_id`, `cooldown_s` | Doc 01 Phase 3 "the dead stay engaged"; QA flicker checks (Q-037) |
+| `ghost_action` | host | `player`, `action` (`crow`, `rustle`, `static_voice`), `target` (id or null) | Same (Q-037) |
+| `lure_fooled` | host, when a recorded-line lure has `lure_result.worked` | `lure_id`, `target`, `line_id` | Doc 01 Phase 2 voice lure check (Q-037) |
+| `perf_sample` | each peer, debug runs only (`--debug-view` or `--bots`) | `avg_ms`, `max_ms`, `draw_calls`, `adapter` (`RenderingServer.get_video_adapter_name()`) | Doc 07 section 10.3 four-instance corn profile (Q-037) |
 
 The event names and fields in the first table are final; the second table is a proposal
 (`placeholder`) and adding an event never needs the Director (CONTRACTS section 10 asks only that
