@@ -317,6 +317,15 @@ doc 01 changes, so they wait for the simulator: P = 6 stays an input, and if the
 the 2-player gap or P near 10, the fix goes to the CEO at the pre-production review (PP-12) as a
 FOR CEO item with the numbers.
 
+**Correction to Q-015 items 4 and 5 (Game Designer, 2026-10-07):** after QA's PP-04 review. Item
+5's margins were from an unwritten model QA couldn't reproduce. The rules are now in doc 02 section
+17.2 and the script is kept (`tools/sim/projection.py`). The rough-median margins at dawn 8 are
+**−107 (4p), −203 (3p), −293 (2p)**, not −77 and −247: the 2p team falls short by 47% of its final
+payment, the 4p team by 10%. The direction is unchanged and the 2p gap is wider. Perfect play is
+unchanged (+274, +169, +58). Also, bought plots can't help a team planting 4 plots a player, so
+they are not the lever doc 02 first named. Item 4: with doc 04's revised walks (well to field B
+106.5 m, field A trade loop 197.8 m), P is 11.3 at field A and 9.6 at field B (was 11.0 and 9.4).
+
 ### Q-017 · 2026-10-07 · QA → Director · closed
 **PP-05 (doc 04) fails QA review on five false distance statements.** Details and the numbers are in
 `production/handoffs/PP-05.md` "QA review". Must-fix, all text in doc 04 unless the Level Designer
