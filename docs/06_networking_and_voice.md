@@ -1003,7 +1003,7 @@ from the cited source.
   `PEER_PACKET_THROTTLE` and `_LIMIT` showed each client's bandwidth throttle drop its limit to 1
   about 1 s after joining; unreliable packets were then dropped until the RTT throttle climbed back
   at about 16 s: 20 to 40% voice loss on loopback. Call `create_server(port, max_clients)` and let
-  clients ask for the channels. Not reported upstream (needs the CEO's GitHub account, Q-009).
+  clients ask for the channels. Not reported upstream (the CEO declined, Q-009).
 - **ENet's RTT throttle drops unreliable packets after a hitch (measured (PP-02)).** One slow round
   trip (a frame hitch, a Wi-Fi blip) makes ENet drop a share of unreliable packets for seconds. A
   windowed start-up hitch cost 37 frames once. Pin it with `throttle_configure(5000, 2, 0)`.
@@ -1108,7 +1108,7 @@ Current state of the questions this doc raised or depends on ([QUESTIONS.md](../
 | Q-006 `project.godot` entries and the ghost's voice position | Gameplay Programmer | **Open**; not blocking DD Phase 1 design |
 | Q-007 Who creates the `Mic` and voice chain buses | Audio Designer | **Open** |
 | Q-008 First-import crash, FEC, log identity | Director | Answered (D-012); crash diagnosed in PP-02 (section 15), v6.5 stays pinned |
-| Q-009 Export templates, upstream bug reports, router UPnP, silent mic | CEO | Templates answered (D-014); the rest **open** (FOR CEO), STOP 1 |
+| Q-009 Export templates, upstream bug reports, router UPnP, silent mic | CEO | Answered: templates installed (D-014); no upstream reports; Tailscale and the headset mic worked at STOP 1 |
 | Q-010 Seed `extension_list.cfg` in `smoke.py` | QA | Done: `smoke.py --clean-import` seeds it |
 | Q-011 Spike findings for this doc, `*.dll binary` | Director | Answered; findings folded in here |
 | Q-012 Readings added in this revision: initial voice setting, volume relative to calibrated level, what "capture is live" means, freeing a leaver's clips, ghosts and walkies, discarding a take when someone switches to Off | Director | Answered: all six accepted (D-013); D-013 also confirms the section 7 verbs |

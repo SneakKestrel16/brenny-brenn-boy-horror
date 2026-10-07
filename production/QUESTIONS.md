@@ -127,7 +127,7 @@ handling is PLC only; doc 06 drops FEC and `fec_recovered`; PP-02 measures loss 
 use peer ids (CONTRACTS section 10 `peer`), never slots; `lure_played` and `lure_result` share
 `lure_id`, and `lure_played` adds `sound_id` and `position`. See D-012.
 
-### Q-009 · 2026-10-06 · Network & Voice → CEO · **FOR CEO** · open
+### Q-009 · 2026-10-06 · Network & Voice → CEO · answered
 **Four things from the voice spike (PP-02) only the CEO can do.** None blocks QA's review of PP-02.
 1. **Export templates (a download).** No Windows export exists because Godot 4.7.2's export
    templates aren't installed. Without them the friend runs the spike folder with the official
@@ -158,8 +158,10 @@ friend joined the host's Tailscale address by code), and the headset mic worked.
 "everything else worked great", but voice chat was "a little quiet" (OPEN_ISSUES, found by the
 studio, 2). Measured from the logs, kept outside git in `logs/stop1/` (host `peer_1.jsonl` from
 session `voice_spike_20261006T212323`; the friend sent only their console `godot.log`): RTT 86 to
-184 ms; the host lost 0 of 991 frames, the friend 5 of 1772 (0.3%); packets at most 84 bytes. Item 2
-(filing the upstream bugs) stays open.
+184 ms; the host lost 0 of 991 frames, the friend 5 of 1772 (0.3%); packets at most 84 bytes.
+
+**Answer to 2 (CEO, 2026-10-06):** no. Neither bug is reported upstream; the workarounds in doc 06
+stay.
 
 ### Q-010 · 2026-10-06 · Network & Voice → QA · open
 **A cleaner workaround for the first-import crash (Q-008) in `smoke.py`.** Writing
