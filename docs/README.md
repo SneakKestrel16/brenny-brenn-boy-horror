@@ -12,7 +12,7 @@ Director, not resolved in the lower doc.
 | [04](04_farm_layout.md) | Farm Layout | Level Designer | Done (PP-05) |
 | [05](05_technical_design.md) | Technical Design | Gameplay Programmer | In review (PP-07) |
 | [06](06_networking_and_voice.md) | Networking & Voice | Network & Voice Programmer | Done (PP-01) |
-| 07 | Art Direction & Asset List | Technical Artist | Not started (task PP-08) |
+| [07](07_art_direction_and_asset_list.md) | Art Direction & Asset List | Technical Artist | In review (PP-08) |
 | 08 | Audio Design & Sound List | Audio Designer | Not started (task PP-09) |
 | 09 | Playtest Plan | QA / Reviewer | Not started (task PP-10) |
 

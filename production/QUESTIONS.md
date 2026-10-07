@@ -409,3 +409,18 @@ beyond doc 06 section 7 (plus `apply_refused(verb, reason)`, which I add: tell m
 
 ### Q-024 · 2026-10-07 · QA → Director · open
 PP-07 QA passed with minor findings (handoff PP-07 "QA review"). One needs a design call: doc 05 sec 16 shows speaker-name subtitles only for real teammates, so a missing name exposes a creature fake and undercuts the wrong-place tell. Recommend no voice subtitles in Phases 1-3. Other findings (request_step, apply_cart wording, Log/Clock order) are doc 05 edits for Gameplay.
+
+### Q-025 · 2026-10-07 · Technical Artist → Gameplay Programmer · open
+Doc 07 section 4 keeps your `LightFlicker.flicker` in `game/ghost/light_flicker.gd` as the only flicker caller. Render supplies `LightRig` (`game/render/light_rig.gd`): slew-limited `set_on`, `set_dim`, `blow_out`, plus a guarded `energy_override` that only `light_flicker.gd` uses. Please confirm `game/core/lights.gd` is the only caller of the setters, and that nothing else writes `light_energy` (QA greps for it).
+
+### Q-026 · 2026-10-07 · Technical Artist → Level Designer · open
+Doc 07 sets the lit doorway light at 6 m (answers doc 04 s4 "doc 07 sets it"; keep the ground decal and the doc 03 s9 trap exclusion at 6 m too). Please place `LightRig` scenes at doors and windows, and build the layer 5 corn sight-blockers as coarse edge strips separate from the visual MultiMesh corn (doc 07 section 10).
+
+### Q-027 · 2026-10-07 · Technical Artist → 3D Artist · open
+Please review the doc 07 section 11 asset list: names, dimensions, triangle budgets (section 2), gray-box-first plan for Phase 1. Flag any model you want split or merged.
+
+### Q-028 · 2026-10-07 · Technical Artist → QA · open
+For doc 09: the three grep rules in doc 07 section 4.4 (`flicker`, `energy_override`, `light_energy`) and the 4-instance corn profile in section 10.3 (`tools/qa/multi.py -n 4`, 60 fps, no frame over 33 ms, record the GPU adapter).
+
+### Q-029 · 2026-10-07 · Technical Artist → Director · open · FOR CEO
+(1) Dawn Report needs bundled open-licensed serif fonts: approve a download. (2) The night ambient floor (0.25) and fog are unmeasured: the CEO should look at a night screenshot on their monitor once the first render exists. (3) Doc 07 section 10 profile needs the CEO's machine (Ryzen 7 9800X3D, RTX 5070 plus AMD iGPU, hybrid-GPU risk).
