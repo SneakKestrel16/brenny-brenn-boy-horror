@@ -26,3 +26,5 @@ reviews and are proposed to the CEO for doc 01 when they change it.
    gain (doc 06): it should raise a normal voice to a target level, a number for a playtest to set.
    Inference: the 6 m inverse-distance falloff (`UNIT_SIZE`) adds to it at range; a peak measured
    after the `AudioStreamPlayer3D` would separate the two.
+   **Settled for now (CEO, 2026-10-06).** No change to the spike; the numbers above are a starting
+   point for the mic check's gain target, and a later playtest reopens it if chat is still quiet.
