@@ -14,7 +14,7 @@ registering TwoVoIP mid-scan (Q-008, Q-010). --no-seed-extensions reproduces tha
 
 Steps (CONTRACTS section 1 headless checks, plus a parse check):
   1. import      "$GODOT" --headless --editor --quit --path .
-  2. parse_check "$GODOT" --headless --path . -s res://tests/qa/parse_check.gd
+  2. parse_check "$GODOT" --headless --path . res://tests/qa/parse_check.tscn
   3. run         "$GODOT" --headless --path . --quit-after <frames> [scene] [-- user args]
 A step fails on: any ERROR / SCRIPT ERROR / crash line, a non-zero exit code, or a timeout.
 Outputs go to logs/qa/smoke_<timestamp>/<step>.log. Exit code 0 = pass, 1 = fail.
@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
 
     steps: list[tuple[str, list[str]]] = [("import", [godot, "--headless", "--editor", "--quit", "--path", root])]
     if not args.skip_parse_check:
-        steps.append(("parse_check", [godot, "--headless", "--path", root, "-s", "res://tests/qa/parse_check.gd"]))
+        steps.append(("parse_check", [godot, "--headless", "--path", root, "res://tests/qa/parse_check.tscn"]))
     run_cmd = [godot, "--headless", "--path", root, "--quit-after", str(args.frames)]
     if args.scene:
         run_cmd.append(args.scene)

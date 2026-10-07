@@ -28,7 +28,7 @@ uv run tools/qa/smoke.py -- --some-game-flag   # after --: passed to the game
 | Step | Command |
 |---|---|
 | `import` | `"$GODOT" --headless --editor --quit --path .` (CONTRACTS section 1) |
-| `parse_check` | `"$GODOT" --headless --path . -s res://tests/qa/parse_check.gd` |
+| `parse_check` | `"$GODOT" --headless --path . res://tests/qa/parse_check.tscn` |
 | `run` | `"$GODOT" --headless --path . --quit-after <frames> [scene] [-- args]` (CONTRACTS section 1) |
 
 A step fails on any of these:
@@ -181,7 +181,7 @@ committed.
 | `tools/qa/godot_qa.py` | Shared code: finds Godot, runs it, scans for errors, asks for `user://` |
 | `tools/qa/smoke.py`, `multi.py`, `check_logs.py` | The three commands |
 | `tools/qa/grep_rules.py`, `tests/qa/test_grep_rules.py` | Review greps and their self-test (doc 09 section 9) |
-| `tests/qa/parse_check.gd` | Loads every script so parse errors print |
+| `tests/qa/parse_check.tscn` + `.gd` | Loads every script so parse errors print; a scene run because autoloads are not registered under `-s` (Q-040) |
 | `tests/qa/print_user_dir.gd` | Prints `OS.get_user_data_dir()` |
 | `tests/qa/fake_peer.gd` | ENet fake peer for the launcher self-check |
 | `tests/qa/test_harness.py`, `tests/qa/fixtures/` | Self-test |
