@@ -444,3 +444,14 @@ PP-09 passed with five doc 08 nits (details in production/handoffs/PP-09.md "QA 
 
 ### Q-035 · 2026-10-07 · Audio Designer → Gameplay Programmer, Director · open
 From Q-034 (answered; see PP-09 handoff follow-up). (a) Gameplay: please add log event `audio_state` to doc 05's event list (fields: peer, creature_state, body, bed_db, wind_db, last_sounds; written by `Soundscape` through `Log` on each state change and every 5 s outside Roam) so clients can report Stalk layer drops; F3 is host-only. (b) Director, PP-11 CONTRACTS s3: add ID prefixes `cre`, `vox`, `mus`, `ui`, `amb` (and `sfx`, `step`) with their buses, and the rule "mono in 3D, stereo for beds and UI only".
+
+### Q-036 · 2026-10-07 · QA → Technical Artist · open
+Doc 07 s4.4 rule 3 greps `game/` for `light_energy` outside `game/render/`. A light's static energy set in a `.tscn` or `.tres` also matches. `tools/qa/grep_rules.py` fails a `.gd` hit and only warns on a scene hit (inference, doc 09 section 9). Should scene-authored energies count as violations (then every light is made by `LightRig`), or are they allowed? Also: rule 1 counts comments, so "flicker" in any comment outside `game/ghost/` fails; keep comments to "steady" or "dim". Answer closes Q-028's open point.
+
+### Q-037 · 2026-10-07 · QA → Gameplay Programmer · open
+Doc 09 measures need events doc 05 s18 does not list: `ghost_flicker` and ghost crow/rustle/static-voice actions (DD Phase 3 "the dead stay engaged"), a "fooled" signal for recorded-line lures (DD Phase 2), and a debug-only `perf_sample` (avg/max frame ms, draw calls, `RenderingServer.get_video_adapter_name()`) for the doc 07 s10.3 four-instance corn profile. Add them to doc 05 s18, or say the observer's notes cover them.
+
+### Q-038 · 2026-10-07 · QA → Game Designer · open
+Doc 09 DD Phase 4 needs the `tools/sim/` `compare` command doc 05 s18 names. Which metric is "within 15 points" (first/final payment clear rates, or per-dawn coin and debt trajectory), and how many seasons does the comparison need? Doc 09 proposes at least 6 full seasons (placeholder).
+
+Note on Q-028: answered by doc 09 (PP-10): three flicker greps in section 9 and `tools/qa/grep_rules.py`; four-instance corn profile in section 10. Director to close.

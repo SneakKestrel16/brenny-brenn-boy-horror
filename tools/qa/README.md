@@ -9,7 +9,9 @@ through `--godot`, then `$GODOT`, then the CONTRACTS section 1 path.
 | `uv run tools/qa/smoke.py` | Headless import, parse check and timed run. Fails on any `ERROR` / `SCRIPT ERROR` line |
 | `uv run tools/qa/multi.py -n 2` | Starts 2 to 4 local instances and collects their console output and section 10 logs into one folder |
 | `uv run tools/qa/check_logs.py <folder>` | Reports the doc 01 measures found in section 10 JSONL logs |
+| `uv run tools/qa/grep_rules.py` | Review greps: flicker (doc 07 s4.4), energy_override, light_energy, rpc outside `game/net/`, voice files in git. Exit 1 on violation |
 | `uv run tests/qa/test_harness.py` | Self-test of the three tools on fixtures. Needs no Godot |
+| `uv run tests/qa/test_grep_rules.py` | Self-test of `grep_rules.py` on temp git trees. Needs no Godot |
 
 Every output goes under `logs/qa/` (gitignored), in one folder per run named by its timestamp.
 
@@ -178,6 +180,7 @@ committed.
 |---|---|
 | `tools/qa/godot_qa.py` | Shared code: finds Godot, runs it, scans for errors, asks for `user://` |
 | `tools/qa/smoke.py`, `multi.py`, `check_logs.py` | The three commands |
+| `tools/qa/grep_rules.py`, `tests/qa/test_grep_rules.py` | Review greps and their self-test (doc 09 section 9) |
 | `tests/qa/parse_check.gd` | Loads every script so parse errors print |
 | `tests/qa/print_user_dir.gd` | Prints `OS.get_user_data_dir()` |
 | `tests/qa/fake_peer.gd` | ENet fake peer for the launcher self-check |
