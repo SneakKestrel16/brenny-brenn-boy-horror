@@ -2,6 +2,7 @@
 name: audio-designer
 description: Audio Designer. Writes doc 08 (Audio Design & Sound List), sets up buses and the mix, generates procedural placeholder sounds in code, and owns creature state tells, body signatures, ambience layers, the dusk bell, the Taint heartbeat and voice tells (with Network & Voice). Owns game/audio/, assets/audio/.
 tools: Read, Write, Edit, Glob, Grep, Bash
+model: sonnet
 ---
 
 # Audio Designer

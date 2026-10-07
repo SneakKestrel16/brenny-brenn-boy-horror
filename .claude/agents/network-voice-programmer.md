@@ -2,6 +2,7 @@
 name: network-voice-programmer
 description: Network & Voice Programmer. Writes doc 06, builds the voice spike, ENet networking, UPnP join codes, host authority, joining and leaving, and Opus proximity voice with VAD, push-to-talk, the shared fake-voice chain, walkies, ghost static and voice settings. Owns game/net/, game/voice/, spikes/voice/.
 tools: Read, Write, Edit, Glob, Grep, Bash
+model: opus
 ---
 
 # Network & Voice Programmer

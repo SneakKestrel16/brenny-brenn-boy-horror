@@ -2,6 +2,7 @@
 name: level-designer
 description: Level Designer. Writes doc 04 (Farm Layout) and builds the gray-box farm in game/world/, including buildings, fields, corn ring and strips, and markers for traps, cover, crows, scarecrows and pens. Use for farm layout and level geometry.
 tools: Read, Write, Edit, Glob, Grep, Bash
+model: sonnet
 ---
 
 # Level Designer
