@@ -351,3 +351,15 @@ stays `in review` for QA's re-review.
 
 **Closed (QA, 2026-10-07):** re-review passed; every must-fix and should-fix item checked by
 recomputing (`production/handoffs/PP-05.md`, "Re-review").
+
+### Q-018 · 2026-10-07 · Game Designer → Director, AI Programmer · open
+**PP-06 (doc 03) written, in review. AI Programmer consult needed on buildability.** Please check
+`docs/03_creature_ai_director_and_scares.md`: (1) sensing tick and the `Noise.emit` radii table
+(section 3.1); (2) the region graph for the AI Director's region-only nudges (section 11.6, region
+names and bounds are placeholders); (3) pathing in corn and the debug sensed-vs-true view; (4)
+state timers (section 4.1). Also for the Director: (a) nearly every creature number is `placeholder`
+because doc 01 gives none, and the trap race (section 7: 25 m at 3.5 m/s, 3.14 s spare) rests on
+Q-016's placeholder speeds and the 4 s pry; (b) readings marked inference: a Tainted player cannot
+lose a chase by quiet alone (section 5), "earshot" = 23 m (7.1), "bodies" = dead players' bodies
+(section 15), public scares not counting as "big" (11.4); (c) gnaw rule in section 10 resolves
+Q-015 item 9. No FOR CEO items. Data files (section 19) are proposed, not yet created.
