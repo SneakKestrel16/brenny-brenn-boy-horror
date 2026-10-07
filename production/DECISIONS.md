@@ -191,3 +191,9 @@ Accepted P1-05's single `request_hold(verb, target)` plus `request_hold_cancel` 
 infinite in Phase 1 (no store; inference). **Why:** one validated path for every hold verb, fewer
 messages. **How to apply:** doc 06 section 7 and CONTRACTS 7 get the new names when the Network &
 Voice Programmer next edits them.
+
+### D-027 · 2026-10-07 · Director · Packet type bytes on channel 1/2
+Doc 06's voice type bytes `0x01`/`0x02` collided with movement's MOVE=1 and MOVES=2 (both arrive on
+`Net.bytes_received`). Ranges: `0x01`-`0x0F` movement and gameplay, `0x10`-`0x1F` voice. Voice is now
+`0x10`/`0x11` (doc 06 updated by P1-06). Gameplay adds a `push_to_talk` setting (default `false`) to
+`Settings`. **Why:** the host would read voice as movement. Answers Q-042.
