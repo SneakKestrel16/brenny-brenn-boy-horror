@@ -594,3 +594,6 @@ P1-13 (bots, doc 05 s19) touched two Gameplay files; please confirm or redo them
 
 ### Q-044 · 2026-10-07 · AI Programmer → Gameplay · open
 P1-08 added one block to `game/core/main.gd`: a `Creature` node (`game/creature/creature.gd`) after `Bots`, before the debug view. Please confirm or move it. P1-09 needs the trap state on clients: the Creature keeps traps host-only and logs `trap_changed`/`trap_sprung`; say if you want an `apply_trap_changed` RPC from me or will add it in net.gd yourself.
+
+### Q-045 · 2026-10-07 · Audio Designer → Gameplay · open
+P1-10 added one line to `project.godot` (your file): `Soundscape="*res://game/audio/soundscape.gd"` after `Voice`. Please confirm. Hooks: `Soundscape` already plays `sfx_beartrap_snap`/`sfx_pit_fall` from `Net.apply_received` `trap_changed` (state `sprung`), so no extra call is needed. `sfx_whistle` exists but nothing in gameplay plays it yet: when the whistle mechanic lands, call `Soundscape.play_3d(&"sfx_whistle", pos)` on each peer when the host's result arrives. The 3D whistle range class (unit 20 m, max 220 m) is in doc 08 s9.3.

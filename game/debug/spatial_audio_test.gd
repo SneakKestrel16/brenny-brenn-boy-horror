@@ -233,8 +233,10 @@ func _voice_stream(wav_path: String) -> AudioStream:
 	return _wav(s)
 
 
-## Placeholder whistle: a 2 to 3 kHz chirp, 1.1 s (doc 09 section 5).
+## Whistle: `sfx_whistle` (Audio Designer, P1-10); falls back to a 2 to 3 kHz chirp, 1.1 s (doc 09 section 5).
 func _whistle_stream() -> AudioStream:
+	if ResourceLoader.exists("res://assets/audio/sfx_whistle.wav"):  # P1-10 placeholder from doc 08 section 9.3
+		return load("res://assets/audio/sfx_whistle.wav")
 	var n := int(MIX * 1.1)
 	var s := PackedFloat32Array()
 	s.resize(n)

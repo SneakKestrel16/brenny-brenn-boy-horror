@@ -507,6 +507,14 @@ immediate feedback (a tool swing sound) may play on request and is cancelled by 
 
 ### 10.3 Catalog
 
+**P1-10 status (as built):** the emitter is a script, `game/audio/sound_emitter.gd` (`SoundEmitter`,
+`AudioStreamPlayer3D`, doppler off, inverse distance), not a scene. The catalog is a `CATALOG` const in
+`game/audio/soundscape.gd`, not JSON (a JSON file and `check_catalog.py` come when the list grows past
+Phase 1). Built: four ambience loops, the dusk/night crossfade, stalk/chase/retreat/lurk fades, footsteps
+(derived from replicated player positions), trap sounds (on `trap_changed` sprung), stranger lines (on
+`lure`), `sfx_whistle` file. Not built: chase sting, bell, signatures, generator hum, heartbeat wiring,
+`set_local_state`, `set_building`. All P1-10 sounds are `placeholder`, unheard by the author.
+
 `game/audio/sound_catalog.json` is one record per sound ID: bus, `positional`, range class (section
 3.2), `volume_db` trim, variants, loop flag and the Noise `kind` it pairs with (documentation only;
 `NoiseBus` is the host's). The section 11 list is its source and the first task is to generate the file

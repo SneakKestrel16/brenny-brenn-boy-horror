@@ -39,6 +39,7 @@ Clock="*res://game/core/clock.gd"
 Game="*res://game/core/game.gd"
 NoiseBus="*res://game/core/noise_bus.gd"
 Voice="*res://game/voice/voice.gd"
+Soundscape="*res://game/audio/soundscape.gd"
 
 [audio]
 
