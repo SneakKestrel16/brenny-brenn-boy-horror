@@ -406,3 +406,6 @@ Please confirm, and name the DD Phase 1 gray-box scene path.
 Answers to Q-006 are in doc 05 sections 3 and 14. Please confirm the hold framework needs no message
 beyond doc 06 section 7 (plus `apply_refused(verb, reason)`, which I add: tell me if it clashes), that
 `Net.rtt_ms(peer)` exists for the half-RTT credit, and that `Voice` calls `Noise.emit_voice`.
+
+### Q-024 · 2026-10-07 · QA → Director · open
+PP-07 QA passed with minor findings (handoff PP-07 "QA review"). One needs a design call: doc 05 sec 16 shows speaker-name subtitles only for real teammates, so a missing name exposes a creature fake and undercuts the wrong-place tell. Recommend no voice subtitles in Phases 1-3. Other findings (request_step, apply_cart wording, Log/Clock order) are doc 05 edits for Gameplay.
