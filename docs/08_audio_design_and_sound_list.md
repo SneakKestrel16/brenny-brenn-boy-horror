@@ -517,7 +517,7 @@ from it (kept in sync by `tools/audio/check_catalog.py`, DD Phase 1 task). Varia
 
 `F3` debug view (doc 05 s19) is host-only by default, but clients are the ones who hear the drop.
 So `Soundscape` also writes a log event `audio_state` (through `Log`, CONTRACTS s10) on every
-creature-state change it applies and every 5 s while the state is not `Roam`: peer id, creature
+creature-state change it applies and every 5 s while the state is not `lurk` (the baseline, doc 03 s4; there is no `roam` state, D-020): peer id, creature
 state and body last received, the gain in dB of each `bed`/`wind` layer, and the last 8 sound IDs
 played. A tester reports "the bed didn't drop" by quoting the client's `peer_<id>.jsonl`. The event
 needs a line in doc 05's event list (Q-035). The F3 overlay shows the same numbers on the host.
