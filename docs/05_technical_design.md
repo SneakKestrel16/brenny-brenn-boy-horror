@@ -370,6 +370,7 @@ func emit_kind(kind: StringName, position: Vector3, source_peer: int, mult: floa
 func emit_voice(position: Vector3, volume_byte: int, source_peer: int) -> void
 ```
 
+- **Name clash (P1-04):** `Noise` is also a native Godot class, so GDScript resolves the identifier `Noise` to the class, not the autoload (`Noise.emit_kind` fails to parse). Reach the autoload with `get_node("/root/Noise")` (cache it in a variable), as `Data.scaled` does for `Game`. A rename (for example `NoiseBus`) needs a CONTRACTS section 8 change (Q-041).
 - **`emit`** is the raw call and the one CONTRACTS names. `radius_m` is already final (all
   multipliers applied). `kind` is a `StringName` from doc 03's table. `source_peer` is the ENet peer
   id of whoever caused it, or 0 for the world (a generator running dry). `emit` with `radius_m <= 0`

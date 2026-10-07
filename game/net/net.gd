@@ -14,6 +14,11 @@ const MAX_CLIENTS := 4  ## one more than allowed, to say "the farm is full" (doc
 const CHANNELS := 4  ## CONTRACTS section 7
 const CONNECT_TIMEOUT_S := 10.0  ## placeholder
 
+## A `send_bytes` packet arrived (doc 06 section 2: byte 0 is the message type). Added in P1-04.
+signal bytes_received(from_peer: int, packet: PackedByteArray)
+## The host sent `apply_teleport` (doc 06 section 7). Added in P1-04.
+signal teleport_received(position: Vector3)
+
 var port := 0  ## the port actually opened (host) or dialled (client)
 var _join_target := ""
 
@@ -24,6 +29,8 @@ func _ready() -> void:
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
+	(multiplayer as SceneMultiplayer).peer_packet.connect(func(id: int, packet: PackedByteArray) -> void:
+		bytes_received.emit(id, packet))
 
 
 ## Host only. Opens the ENet server, trying the next ports if one is taken (doc 06 section 2).
@@ -74,6 +81,14 @@ func to_peers(method: StringName, args: Array = [], targets: Array = []) -> void
 		return
 	for id in targets:
 		callv(&"rpc_id", [id, method] + args)
+
+
+## Raw packet on `channel` (doc 06 section 2; movement uses 1). `peer` 0 means every peer. Unreliable
+## and ordered; a no-op with no peers. Added in P1-04; the full framing/net-sim queue is still P1-later.
+func send_bytes(peer: int, packet: PackedByteArray, channel: int = 1) -> void:
+	if not multiplayer.has_multiplayer_peer() or multiplayer.get_peers().is_empty():
+		return
+	(multiplayer as SceneMultiplayer).send_bytes(packet, peer, MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED, channel)
 
 
 func _use(peer: ENetMultiplayerPeer) -> void:
@@ -135,3 +150,8 @@ func apply_roster(peers: Array) -> void:
 @rpc("authority", "call_remote", "reliable")
 func apply_clock(p_day: int, p_phase: StringName, t: float) -> void:
 	Clock.apply_clock(p_day, p_phase, t)
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_teleport(position: Vector3) -> void:
+	teleport_received.emit(position)

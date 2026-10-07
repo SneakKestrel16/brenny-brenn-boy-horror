@@ -161,7 +161,7 @@ the CEO playtest.
 | P1-02 | Gameplay | Core: `Log`, `Data`, `Settings`, `Clock`, `Game`, boot to main; 2 instances join over ENet | done | P1-01 |
 | P1-03 | Level Designer | Gray-box Phase 1 farm (`farm_phase1.tscn`, x -32..46) with all markers | done | — |
 | P1-15 | Network & Voice | Move the ENet host/join, roster, handshake and `apply_clock` rpc from `Game`/`Clock` into `game/net/Net` (doc 06); raw-IP join (Tailscale, D-024); `grep_rules` `rpc_outside_net` clean | done | P1-02 |
-| P1-04 | Gameplay | Player controller, crouch, sprint, remote proxies, host speed check, `Noise.emit_kind` | todo | P1-02, P1-03, P1-15 |
+| P1-04 | Gameplay | Player controller, crouch, sprint, remote proxies, host speed check, `Noise.emit_kind` | in review | P1-02, P1-03, P1-15 |
 | P1-05 | Gameplay | Hold framework + turnips: plant, water (noisy can), harvest, sell at (40, 20), `hold_completed` | todo | P1-04 |
 | P1-06 | Network & Voice | Move the spike voice into `game/`: proximity voice, VAD/PTT, `VoiceEmitter`, voice reports to `Noise` | todo | P1-04 |
 | P1-07 | Gameplay | Generator, fuel drum, lights, go-still ring, crouch noise | todo | P1-05 |
