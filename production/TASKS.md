@@ -169,8 +169,8 @@ the CEO playtest.
 | P1-09 | Gameplay | Trap race, death, ghost spectate, `apply_creature_state` hooks | todo | P1-08 |
 | P1-10 | Audio Designer | Three ambience layers from creature state, trap and step sounds, whistle, stranger-line synthesis | todo | P1-08 |
 | P1-11 | Technical Artist | Day, dusk, night lighting, dark buildings, fog, corn render budget | done (corn budget unmeasured, check in P1-14) | P1-03 |
-| P1-12 | Gameplay | Spatial audio test scene with `spatial_audio_trial` logging; debug view | in review | P1-06, P1-03 |
-| P1-13 | AI Programmer | Bot that walks and does chores | in review | P1-05 |
+| P1-12 | Gameplay | Spatial audio test scene with `spatial_audio_trial` logging; debug view | done | P1-06, P1-03 |
+| P1-13 | AI Programmer | Bot that walks and does chores | done | P1-05 |
 | P1-14 | QA | Review each P1 task; 2-instance run; `check_logs.py` on a full session; run the doc 09 gate | todo | all above |
 
 Each owner turns their row into acceptance from the cited doc sections when starting; every task
