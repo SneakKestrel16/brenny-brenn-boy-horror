@@ -21,10 +21,10 @@ Order (kickoff): 06 and the voice spike first, then 02 and 04 together, then 03,
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
 | PP-01 | Network & Voice | Doc 06 Networking & Voice | done | — |
-| PP-02 | Network & Voice | Voice spike: Opus over ENet, UPnP and join code | done (CEO test at STOP 1) | — |
+| PP-02 | Network & Voice | Voice spike: Opus over ENet, UPnP and join code | done (STOP 1 passed 2026-10-06) | — |
 | PP-03 | QA | Test harness: headless smoke run, multi-instance launcher, log checker | done | — |
-| PP-04 | Game Designer | Doc 02 Systems & Economy, data schemas | todo | STOP 1 |
-| PP-05 | Level Designer | Doc 04 Farm Layout | todo | STOP 1 |
+| PP-04 | Game Designer | Doc 02 Systems & Economy, data schemas | in progress | STOP 1 (passed) |
+| PP-05 | Level Designer | Doc 04 Farm Layout | in progress | STOP 1 (passed) |
 | PP-06 | Game Designer | Doc 03 Creature, AI Director & Scares | todo | PP-04 |
 | PP-07 | Gameplay | Doc 05 Technical Design | todo | PP-01, PP-04, PP-06 |
 | PP-08 | Technical Artist | Doc 07 Art Direction & Asset List | todo | PP-05, PP-06 |
