@@ -1,8 +1,7 @@
 # Contracts
 
 Formats more than one role depends on. **Changing anything here needs Director approval and a
-DECISIONS.md entry before any dependent work starts.** Sections marked *Draft* are placeholders that
-a named task fills in; until then, nobody builds against them.
+DECISIONS.md entry before any dependent work starts.** All sections are final as of PP-11 (D-020).
 
 Source of truth for rules and numbers: [docs/01_design_doc.md](../docs/01_design_doc.md). Doc 01's
 "AI Director" is the in-game pacing system; the studio role is "the Director". Always write the full
@@ -53,7 +52,7 @@ in QUESTIONS.md or a task from the Director.
 | `game/net/`, `game/voice/` | Network & Voice Programmer | Includes the voice chain the creature's fakes use |
 | `game/creature/`, `game/ai_director/`, `game/bots/` | AI Programmer | |
 | `game/world/` | Level Designer | Farm scenes, markers, gray-box geometry |
-| `game/audio/` | Audio Designer | Ambience, placeholder generators, mix logic |
+| `game/audio/` | Audio Designer | Ambience, placeholder generators, mix logic, `Soundscape` autoload (D-020) |
 | `game/render/` | Technical Artist | Shaders, materials, environments, post, light rigs |
 | `assets/models/`, `assets/blender/` | 3D Artist | `.glb` exports and `.blend` sources |
 | `assets/textures/`, `assets/materials/` | Technical Artist | |
@@ -80,7 +79,17 @@ in QUESTIONS.md or a task from the Director.
 - Assets: `<category>_<name>[_<part>][_<variant>].glb`, for example `crop_turnip_stage2.glb`,
   `creature_scarecrow_head.glb`, `prop_pegboard.glb`, `trap_bear_open.glb`.
   Categories: `creature`, `char`, `crop`, `pumpkin`, `corn`, `bldg`, `prop`, `tool`, `trap`, `animal`.
-- Sounds: `<bus>_<name>[_<variant>]`, for example `sfx_well_pump_01`, `amb_insect_bed`.
+- Sounds: `<prefix>_<name>[_<variant>]`, for example `sfx_well_pump_01`, `amb_insect_bed`. The prefix
+  picks the bus (Q-035, doc 08 section 3.1):
+
+  | Prefix | Bus | Prefix | Bus |
+  |---|---|---|---|
+  | `sfx`, `step` (tool sounds too) | `SFX` | `vox` | `Voice` |
+  | `amb` | `Ambience` | `mus` | `Music` |
+  | `cre` | `Creature` | `ui` | `UI` |
+
+- **Mono in 3D, stereo for beds and UI only.** A sound placed in 3D is mono, so the engine pans it;
+  stereo files are for `amb` beds and `ui` only (doc 08 section 1, Q-034).
 
 ## 4. Scale and space
 
@@ -118,32 +127,59 @@ single-player is not done.
 | Close calls (lunges, kills, doorway reaches) | Host, **resolved in the victim's favour** | Lag never kills |
 | Save at dawn | Host | |
 
-## 6. Game data (*Draft*, filled by PP-04 and PP-06)
+## 6. Game data
 
-JSON under `data/`, read by the game (`Data` autoload) and by `tools/sim/`. One file per table.
-Every record has an `id`. Numbers are copied from doc 01; a value doc 01 doesn't give is marked
-`"source": "sim"` or `"source": "placeholder"`.
+JSON under `data/`, read by the game (`Data` autoload, [doc 05 section 4](../docs/05_technical_design.md#4-data-loading))
+and by `tools/sim/`. One file per table. **Schemas are final as written in
+[doc 02 Appendix A](../docs/02_systems_and_economy.md#appendix-a-proposed-json-schemas-contracts-section-6)
+(A.1 shared rules, A.2 to A.14 per file) and [doc 03 section 19](../docs/03_creature_ai_director_and_scares.md#19-data-files-this-doc-adds);
+this section does not copy them.** The files do not exist yet; the Game Designer creates them with
+`data/*.schema.json` when DD Phase 1 starts (D-020).
 
-Planned files: `crops.json`, `traps.json`, `ramp_up.json`, `player_scaling.json`, `medical_bill.json`,
-`debt.json`, `store.json`, `pumpkin.json`, `taint.json`, `sabotage.json`, `ai_director.json`,
-`voice_lines.json`, `dawn_report_templates.json`, `roles.json`. Schemas: *to be written by PP-04/PP-06
-and approved here.*
+- **Files (18):** `season`, `labor`, `crops`, `pumpkin`, `debt`, `medical_bill`, `player_scaling`,
+  `difficulty`, `store`, `ramp_up`, `traps`, `taint`, `roles` (doc 02); `creature`, `sabotage`,
+  `ai_director`, `voice_lines`, `dawn_report_templates` (doc 03).
+- **Envelope:** `{"table": "<file name>", "schema_version": 1, "records": [{"id", "source", "cite", ...}]}`.
+  `season.json` records are `{id, value, unit, source}`.
+- **Ids:** `snake_case`, unique per file (the `Data` loader and the simulator reject duplicates; JSON
+  Schema cannot).
+- **`source`:** `doc01`, `sim` or `placeholder`; `sources` overrides it per field.
+- **Suffixes:** `_s`, `_m`, `_mps`, `_pct` (integer percent), `_mult`; `_4p` is a 4-player value scaled
+  by `player_scaling.json`, rounded up (debt rounds to nearest, D-017). Coins are integers.
+- **One home per value:** a multiplier or rule lives in one file only (doc 02 section 19).
+- **Load checks** (in `Data`, doc 05 section 4): envelope, duplicate ids, required ids present,
+  `source` valid. A missing file fails loudly. The simulator runs the full schemas.
+- Movement speeds, capacities and hold seconds come from `labor.json` for both game and simulator
+  (D-018).
 
 ## 7. Network messages (D-010)
 
-Full list and frame formats: [doc 06 section 7](../docs/06_networking_and_voice.md#7-message-list).
+Full list, arguments and frame formats: [doc 06 section 7](../docs/06_networking_and_voice.md#7-message-list).
+A message not on that list needs Director approval and a DECISIONS entry.
 
 - ENet channels: 0 reliable gameplay, 1 unreliable ordered movement, 2 unreliable voice, 3 reliable
   bulk (lobby-line clips, dawn save copy).
 - Naming: client-to-host requests `request_<verb>` (`@rpc("any_peer", "call_remote", "reliable")`,
-  host validates); host-to-all results `apply_<event>`. RPCs live on the `Net` autoload.
+  host validates); host-to-all results `apply_<event>` (`@rpc("authority", ...)`). RPCs live on the
+  `Net` autoload.
 - Movement and voice frames use `SceneMultiplayer.send_bytes()` with a one-byte type prefix.
 - `SceneMultiplayer.server_relay = false`: clients talk only to the host and learn the roster from
-  `apply_roster`.
-- Creature state is replicated as one of `lurk`, `lure`, `stalk`, `chase`, `retreat`.
+  `apply_roster`. Messages name players by slot; logs name them by peer id (D-012).
+- Creature state is replicated as one of `lurk`, `lure`, `stalk`, `chase`, `retreat` (doc 03
+  section 4). `lurk` is the baseline; there is no `roam` state (D-020).
+- **`apply_refused(verb, reason)`** (host to the sender only): the host's answer to a refused
+  `request_*`. The client rolls back its prediction; the host logs `hold_refused` (doc 05 section 7).
+  Doc 06 section 7 lists it.
+- **`apply_debug_state`** (dev only, host to a client that started with `--debug-view` and the host
+  with `--debug-share`): snapshot for the client debug view (doc 05 section 19). Not in release
+  builds; the handler is not compiled into them.
+- Doc 01's verb list is the source for gameplay requests; their arguments and checks are in docs 02,
+  03 and 05, with no new message families.
 
-## 8. Shared runtime interfaces (*Draft*)
+## 8. Shared runtime interfaces
 
+- **Autoloads**, in load order (doc 05 section 3): `Log`, `Data`, `Settings`, `Net`, `Clock`, `Game`,
+  `Noise`, `Voice`, `Soundscape`.
 - **Noise (D-018):** autoload `Noise` (`game/core/noise.gd`), host-side only. Final API in
   [doc 05 section 8](../docs/05_technical_design.md#8-the-noise-interface):
   `emit(position: Vector3, radius_m: float, kind: StringName, source_peer: int)` (raw, radius final),
@@ -151,13 +187,34 @@ Full list and frame formats: [doc 06 section 7](../docs/06_networking_and_voice.
   applies Taint and quiet-can multipliers) and `emit_voice(position, volume_byte, source_peer)`
   (converts the one-byte voice volume to a radius). Signal `noise_emitted` is what the creature
   connects to. The AI Programmer's confirmation is Q-019.
+- **Soundscape (D-020):** autoload `Soundscape` (`game/audio/soundscape.gd`, Audio Designer), runs on
+  every peer, never talks to the network. API in
+  [doc 08 section 10](../docs/08_audio_design_and_sound_list.md#10-runtime-api-soundscape):
+  `set_creature_state(state, body)` from the `apply_creature_state` handler, `set_creature_position`,
+  `set_phase` from `Clock`, `play_3d`, `play_2d`, `set_local_state`, `set_building`. Footstep, tool,
+  door and trap sounds play when the host's `apply_*` arrives. `project.godot` entry is Gameplay's.
+- **Debug accessors:** creature and AI Director expose `debug_sensed()` and `debug_state()` (doc 05
+  section 19).
+- **Input actions:** listed in doc 05 (sections 3 and 6); not copied here.
 - **Day phase IDs:** `day`, `dusk`, `night`, `dawn`, `harvest_moon`.
 - **Log events:** section 10.
 
-## 9. Audio buses (*Draft*, filled by PP-09)
+## 9. Audio buses
 
-`Master` with children `Music`, `SFX`, `Ambience`, `Creature`, `Voice`, `UI`. Voice includes real
-teammates, ghosts and the creature's fakes, which run through the same chain (doc 01).
+Full rules, levels and layers: [doc 08 sections 2 and 3](../docs/08_audio_design_and_sound_list.md#2-buses-and-mixing-rules).
+
+- **Layout file** (`default_bus_layout.tres`, Audio Designer): `Master` (limiter) with children
+  `Music`, `SFX`, `Ambience`, `Creature`, `Voice`, `UI`. Mix rate 48 kHz (D-015).
+- **Runtime buses** (D-020, answers Q-007): `game/voice/` creates `Mic` and the `Voice` children
+  `VoiceBase`, `VoiceEcho`, `VoicePitchUp`, `VoicePitchDown`, `VoiceGhost`, `VoiceGhostEcho`,
+  `VoiceGhostPitchUp`, `VoiceGhostPitchDown`, `VoiceRadio`. Their levels come from
+  `game/audio/mix_levels.gd`. Real teammates, ghosts and the creature's fakes run through the same
+  chain (doc 01).
+- **Which bus:** by sound ID prefix (section 3). Crows and livestock are `SFX`, not `Ambience`; the
+  Stalk drop is per-layer gain on `Ambience` beds, never a bus mute.
+- **Sliders:** Master, Music, SFX, Ambience, Voice, UI; `Creature` has none. `reduce_scares` lowers
+  `Creature` and `Music` stings (doc 08 section 2.1).
+- Non-voice 3D sound is placed only by `game/audio/sound_emitter.tscn`; voice by `VoiceEmitter`.
 
 ## 10. Logs
 
@@ -175,6 +232,16 @@ seconds_spare), `death`, `money_changed`, `inside_at_night` (seconds), `spatial_
 Full list and field names: [doc 05 section 18](../docs/05_technical_design.md). Host-written
 `trap_race_result` and `inside_at_night` carry `data.player` (D-018). `lure_result.within_s` is
 actual seconds; `window_s` is the allowed window (D-018).
+
+Added by D-020 (Q-035, Q-037); Gameplay adds them to doc 05 section 18 with the rest:
+
+| Event | Written by | `data` |
+|---|---|---|
+| `audio_state` | `Soundscape` on every peer, through `Log`, on each creature-state change and every 5 s while the state is not `lurk` | `creature_state`, `body`, `bed_db`, `wind_db`, `last_sounds` (last 8 sound IDs) |
+| `ghost_flicker` | host | `player`, `light_id`, `cooldown_s` |
+| `ghost_action` | host | `player`, `action` (`crow`, `rustle`, `static_voice`), `target` (id or null) |
+| `lure_fooled` | host, when a recorded-line lure has `lure_result.worked` | `lure_id`, `target`, `line_id` |
+| `perf_sample` | each peer, debug runs only | `avg_ms`, `max_ms`, `draw_calls`, `adapter` |
 
 ## 11. Voice and recordings
 

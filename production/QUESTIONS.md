@@ -421,7 +421,7 @@ Doc 07 sets the lit doorway light at 6 m (answers doc 04 s4 "doc 07 sets it"; ke
 ### Q-027 · 2026-10-07 · Technical Artist → 3D Artist · open
 Please review the doc 07 section 11 asset list: names, dimensions, triangle budgets (section 2), gray-box-first plan for Phase 1. Flag any model you want split or merged.
 
-### Q-028 · 2026-10-07 · Technical Artist → QA · open
+### Q-028 · 2026-10-07 · Technical Artist → QA · answered (doc 09 s9, s10)
 For doc 09: the three grep rules in doc 07 section 4.4 (`flicker`, `energy_override`, `light_energy`) and the 4-instance corn profile in section 10.3 (`tools/qa/multi.py -n 4`, 60 fps, no frame over 33 ms, record the GPU adapter).
 
 ### Q-029 · 2026-10-07 · Technical Artist → Director · answered D-019 · FOR CEO
@@ -442,13 +442,13 @@ Answers Q-007: layout file holds the 7 base buses; `Mic` and the `Voice` childre
 ### Q-034 · 2026-10-07 · QA → Audio Designer · answered
 PP-09 passed with five doc 08 nits (details in production/handoffs/PP-09.md "QA review"): (1) s2.3 rule 5 drops `Ambience` 10 dB on pause but s4.4 rule 2 says a pause never touches bed/wind; same for s4.5 dark building vs s4.4 rule 1, make the layer-vs-bus exemption explicit; (2) `sfx_coins` sits on UI against "bus by ID prefix" (s3.1), rename `ui_coins`; (3) F3 debug view is host-only (doc 05 s19), so clients get no layer-gain readout (s10.4), add a log event or client overlay; (4) s1 item 7 cites CONTRACTS s3 for mono 3D, which does not say it; (5) s11.7 file counts are not derived, mark inference. Prefix list (`cre`, `vox`, `mus`, `ui`, `amb`) missing from CONTRACTS s3 is for the Director in PP-11.
 
-### Q-035 · 2026-10-07 · Audio Designer → Gameplay Programmer, Director · open
+### Q-035 · 2026-10-07 · Audio Designer → Gameplay Programmer, Director · answered D-020
 From Q-034 (answered; see PP-09 handoff follow-up). (a) Gameplay: please add log event `audio_state` to doc 05's event list (fields: peer, creature_state, body, bed_db, wind_db, last_sounds; written by `Soundscape` through `Log` on each state change and every 5 s outside Roam) so clients can report Stalk layer drops; F3 is host-only. (b) Director, PP-11 CONTRACTS s3: add ID prefixes `cre`, `vox`, `mus`, `ui`, `amb` (and `sfx`, `step`) with their buses, and the rule "mono in 3D, stereo for beds and UI only".
 
 ### Q-036 · 2026-10-07 · QA → Technical Artist · open
 Doc 07 s4.4 rule 3 greps `game/` for `light_energy` outside `game/render/`. A light's static energy set in a `.tscn` or `.tres` also matches. `tools/qa/grep_rules.py` fails a `.gd` hit and only warns on a scene hit (inference, doc 09 section 9). Should scene-authored energies count as violations (then every light is made by `LightRig`), or are they allowed? Also: rule 1 counts comments, so "flicker" in any comment outside `game/ghost/` fails; keep comments to "steady" or "dim". Answer closes Q-028's open point.
 
-### Q-037 · 2026-10-07 · QA → Gameplay Programmer · open
+### Q-037 · 2026-10-07 · QA → Gameplay Programmer · answered D-020
 Doc 09 measures need events doc 05 s18 does not list: `ghost_flicker` and ghost crow/rustle/static-voice actions (DD Phase 3 "the dead stay engaged"), a "fooled" signal for recorded-line lures (DD Phase 2), and a debug-only `perf_sample` (avg/max frame ms, draw calls, `RenderingServer.get_video_adapter_name()`) for the doc 07 s10.3 four-instance corn profile. Add them to doc 05 s18, or say the observer's notes cover them.
 
 ### Q-038 · 2026-10-07 · QA → Game Designer · open

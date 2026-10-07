@@ -131,3 +131,18 @@ section 16 to match. Q-029 item 1 approved: Technical Artist may download open-l
 the Dawn Report, with source and license listed in doc 07. Items 2 and 3 (night screenshot check, corn
 profile on the CEO's machine) stay as future asks once a render exists. **Why:** subtitles undercut the
 wrong-place tell; fonts are needed for the Dawn Report card.
+
+### D-020 · 2026-10-07 · Director · CONTRACTS sections 6 to 9 filled (PP-11)
+CONTRACTS sections 6 to 9 now point at docs 02 (Appendix A), 03 (section 19), 05, 06 and 08 instead of
+copying them; no section is Draft. Where docs disagreed: (1) data files are 18, not doc 02's 13:
+doc 05 section 4 adds `creature` and doc 03's four, and `season`, `labor`, `difficulty` are doc 02's
+additions. (2) Doc 08 section 10.4 says "not `Roam`"; there is no such state, the baseline is `lurk`
+(doc 03 section 4), so `audio_state` is written outside `lurk`; Audio Designer fixes doc 08. (3) Doc 05
+section 3's autoload table lacks `Soundscape`; accepted as a ninth autoload after `Voice` (Q-032), Gameplay
+adds the row and the `project.godot` entry. (4) Doc 06 section 8 leaves the voice-chain buses to Q-007;
+doc 08 section 2.2 answered it: `game/voice/` creates `Mic` and the `Voice` children at runtime, the layout
+file holds the seven base buses. (5) Sound ID prefixes `sfx`, `step`, `amb`, `cre`, `vox`, `mus`, `ui` and
+the rule "mono in 3D, stereo for beds and UI only" go in section 3 (Q-035). (6) Q-037 events accepted:
+`audio_state`, `ghost_flicker`, `ghost_action`, `lure_fooled`, debug-only `perf_sample` (section 10).
+(7) `apply_refused` and dev-only `apply_debug_state` are in section 7 (D-018). **Why:** each is the
+reading with the fewest new parts that lets two roles build against one file.
