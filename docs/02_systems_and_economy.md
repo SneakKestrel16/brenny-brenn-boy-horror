@@ -792,7 +792,7 @@ every id below; values are set in the sections cited.
           "cite": {"type": "string"},
           "sources": {"$ref": "#/$defs/sources"},
           "value": {"type": ["number", "string", "boolean", "array"], "items": {"type": "string"}},
-          "unit": {"enum": ["s", "m", "coins", "pct", "count", "mult", "dawn"]}
+          "unit": {"enum": ["s", "m", "coins", "pct", "count", "none", "mult", "dawn"]}
         },
         "required": ["id", "source", "value"]
       },

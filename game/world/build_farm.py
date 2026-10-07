@@ -1,4 +1,4 @@
-"""Generates game/world/farm.tscn (DD Phase 1 gray box, x -32..46) from doc 04 coordinates.
+"""Generates game/world/farm_phase1.tscn (DD Phase 1 gray box, x -32..46) from doc 04 coordinates.
 
     python game/world/build_farm.py
 
@@ -162,5 +162,5 @@ out = ["[gd_scene format=3]\n"]
 for k, v in subs.items():
     out.append(v.replace('id="@"', f'id="{k}"'))
 out += nodes
-Path(__file__).with_name("farm.tscn").write_text("\n".join(out), encoding="utf-8", newline="\n")
+Path(__file__).with_name("farm_phase1.tscn").write_text("\n".join(out), encoding="utf-8", newline="\n")
 print(len(nodes), "nodes,", len(subs), "resources")

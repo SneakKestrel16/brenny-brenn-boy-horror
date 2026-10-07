@@ -164,3 +164,12 @@ synthesis (no TTS, revisit if DD Phase 1 testers cannot understand them); menu m
 undecided (not needed for DD Phase 1); whistle `max_distance` 220 m and `unit_size` 20 m accepted,
 DD Phase 1 spatial test may retune. **Why:** none of these blocks DD Phase 1. Next: Director writes
 the `P1-` tasks in `TASKS.md`.
+
+### D-023 · 2026-10-07 · Director · P1-01 and P1-03 checked
+Approved: `phase1.json` as its own file (loaded only with `--phase1`); the proposed `creature` and
+`voice_lines` schemas; `none` added to the `unit` enum (strings and booleans). Level scene groups
+beyond D-016 added to CONTRACTS section 4. Phase 1 scene is `farm_phase1.tscn` (renamed from
+`farm.tscn`, per Q-022; Phase 2 keeps `farm.tscn`). Corn on layer 5 blocks players; the creature
+ignores it for movement. Open, inference: doc 03 section 18 stalk 20 s with chase at 15 s; a
+playtest settles it. Retreat is 10 s in Phase 1 (`phase1.json`). **Why:** removes the ambiguities
+P1-04, P1-05 and P1-08 would otherwise hit.

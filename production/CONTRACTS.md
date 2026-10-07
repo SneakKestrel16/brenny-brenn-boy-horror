@@ -101,6 +101,11 @@ in QUESTIONS.md or a task from the Director.
 - Physics layers (owner: Gameplay Programmer, set in `project.godot`):
   1 `world`, 2 `player`, 3 `creature`, 4 `interactable`, 5 `corn` (sight and sound occluder),
   6 `trap`, 7 `item`, 8 `trigger`.
+- Level scene groups (D-016, D-023): `trap_spots`, `creature_cover`, `crow_perches`, `scarecrow_spots`,
+  `animal_escape_spots`, `spatial_audio_markers`; plus `player_spawns`, `plot_spots`, `sell_box`,
+  `generator`, `fuel_drum`, `well`, `pegboard_spots`, `pen_gates`, `doors`, `lightrig_spots`. DD Phase 1
+  scene: `res://game/world/farm_phase1.tscn`; DD Phase 2: `farm.tscn`. Corn blockers sit on layer 5 and
+  block players; the creature ignores layer 5 for movement.
 
 ## 5. Host and client authority
 
@@ -136,9 +141,11 @@ and by `tools/sim/`. One file per table. **Schemas are final as written in
 this section does not copy them.** The files do not exist yet; the Game Designer creates them with
 `data/*.schema.json` when DD Phase 1 starts (D-020).
 
-- **Files (18):** `season`, `labor`, `crops`, `pumpkin`, `debt`, `medical_bill`, `player_scaling`,
+- **Files (18, plus `phase1`):** `season`, `labor`, `crops`, `pumpkin`, `debt`, `medical_bill`, `player_scaling`,
   `difficulty`, `store`, `ramp_up`, `traps`, `taint`, `roles` (doc 02); `creature`, `sabotage`,
-  `ai_director`, `voice_lines`, `dawn_report_templates` (doc 03).
+  `ai_director`, `voice_lines`, `dawn_report_templates` (doc 03). `phase1.json` (scripted DD Phase 1 timers,
+  doc 03 section 18) is loaded by `Data` only with `--phase1` (D-023). `creature` and `voice_lines`
+  schemas are as written in `data/*.schema.json` (D-023).
 - **Envelope:** `{"table": "<file name>", "schema_version": 1, "records": [{"id", "source", "cite", ...}]}`.
   `season.json` records are `{id, value, unit, source}`.
 - **Ids:** `snake_case`, unique per file (the `Data` loader and the simulator reject duplicates; JSON

@@ -157,9 +157,9 @@ the CEO playtest.
 
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
-| P1-01 | Game Designer | Data files for Phase 1: `labor`, `crops` (turnip), `creature`, `voice_lines`, timers; Director approves schemas in CONTRACTS 6 | in review | — |
+| P1-01 | Game Designer | Data files for Phase 1: `labor`, `crops` (turnip), `creature`, `voice_lines`, timers; Director approves schemas in CONTRACTS 6 | done | — |
 | P1-02 | Gameplay | Core: `Log`, `Data`, `Settings`, `Clock`, `Game`, boot to main; 2 instances join over ENet | todo | P1-01 |
-| P1-03 | Level Designer | Gray-box Phase 1 farm (`farm.tscn`, x -32..46) with all markers | in review | — |
+| P1-03 | Level Designer | Gray-box Phase 1 farm (`farm_phase1.tscn`, x -32..46) with all markers | done | — |
 | P1-04 | Gameplay | Player controller, crouch, sprint, remote proxies, host speed check, `Noise.emit_kind` | todo | P1-02, P1-03 |
 | P1-05 | Gameplay | Hold framework + turnips: plant, water (noisy can), harvest, sell at (40, 20), `hold_completed` | todo | P1-04 |
 | P1-06 | Network & Voice | Move the spike voice into `game/`: proximity voice, VAD/PTT, `VoiceEmitter`, voice reports to `Noise` | todo | P1-04 |
