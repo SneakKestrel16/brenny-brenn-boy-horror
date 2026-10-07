@@ -352,7 +352,7 @@ stays `in review` for QA's re-review.
 **Closed (QA, 2026-10-07):** re-review passed; every must-fix and should-fix item checked by
 recomputing (`production/handoffs/PP-05.md`, "Re-review").
 
-### Q-018 · 2026-10-07 · Game Designer → Director, AI Programmer · open (AI Programmer part answered)
+### Q-018 · 2026-10-07 · Game Designer → Director, AI Programmer · answered D-021 (doc 03 edits applied by Game Designer)
 **PP-06 (doc 03) written, in review. AI Programmer consult needed on buildability.** Please check
 `docs/03_creature_ai_director_and_scares.md`: (1) sensing tick and the `Noise.emit` radii table
 (section 3.1); (2) the region graph for the AI Director's region-only nudges (section 11.6, region
@@ -530,6 +530,8 @@ Doc 08 s10. Please add autoload `Soundscape` (`game/audio/soundscape.gd`, mine) 
 
 **Gameplay answer:** Doc 05 s3 has the `Soundscape` row (order 9) and project.godot entry; s16 has six volume sliders plus `reduce_scares`. Calls wired as listed when code lands. Pen animal species is the Game Designer's. `stalk_scope`: host-only playtest flag, `--stalk-scope global|near` read by Boot (default global); not a player setting.
 
+**Game Designer answer (2026-10-07), pen species:** chicken, pig, cow (the doc 07 models `animal_chicken`, `animal_pig`, `animal_cow`). Drop sheep from doc 08 s11.1 and swap its bleat for a pig grunt (Audio Designer). Inference: doc 01 names no pen animals; the CEO can overrule.
+
 ### Q-033 · 2026-10-07 · Audio Designer → Network & Voice Programmer · answered
 Answers Q-007: layout file holds the 7 base buses; `Mic` and the `Voice` children are created at runtime by `game/voice/`; levels come from `game/audio/mix_levels.gd` (doc 08 s2.2, s7.2). Please confirm, and that `vox_crackle_loop` attaches as a second player on `VoiceEmitter` (s7.2).
 
@@ -549,8 +551,10 @@ Doc 07 s4.4 rule 3 greps `game/` for `light_energy` outside `game/render/`. A li
 ### Q-037 · 2026-10-07 · QA → Gameplay Programmer · answered D-020 (Gameplay: all four events plus `perf_sample` added to doc 05 s18)
 Doc 09 measures need events doc 05 s18 does not list: `ghost_flicker` and ghost crow/rustle/static-voice actions (DD Phase 3 "the dead stay engaged"), a "fooled" signal for recorded-line lures (DD Phase 2), and a debug-only `perf_sample` (avg/max frame ms, draw calls, `RenderingServer.get_video_adapter_name()`) for the doc 07 s10.3 four-instance corn profile. Add them to doc 05 s18, or say the observer's notes cover them.
 
-### Q-038 · 2026-10-07 · QA → Game Designer · open
+### Q-038 · 2026-10-07 · QA → Game Designer · answered
 Doc 09 DD Phase 4 needs the `tools/sim/` `compare` command doc 05 s18 names. Which metric is "within 15 points" (first/final payment clear rates, or per-dawn coin and debt trajectory), and how many seasons does the comparison need? Doc 09 proposes at least 6 full seasons (placeholder).
+
+**Answer (Game Designer, 2026-10-07):** doc 02 s18.5. Gating metric: per dawn 2 to 8, live median coins as a percentage of the next payment due vs the sim median for the same player count, within 15 points. Clear rates are reported, not gating (6 seasons gives a band far wider than 15 points). Seasons: at least 6 live (2 per player count, placeholder, doc 09 accepted); sim 1,000+ per count. `compare` is built in DD Phase 4 prep once real logs exist (inference; first logs settle it).
 
 Note on Q-028: answered by doc 09 (PP-10): three flicker greps in section 9 and `tools/qa/grep_rules.py`; four-instance corn profile in section 10. Director to close.
 
