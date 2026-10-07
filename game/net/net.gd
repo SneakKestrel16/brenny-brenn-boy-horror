@@ -5,8 +5,8 @@ extends Node
 ## stay in spikes/voice/ until a task asks for them.
 ##
 ## Not built yet (doc 06): request_join / apply_join_accepted / apply_join_refused (build id, full
-## farm), slots, player_uid, host-left card, throttle pin, peer timeouts, rtt_ms, to_host, send_bytes,
-## the --net-sim-* queue. Add each with the task that first needs it.
+## farm), slots, player_uid, host-left card, peer timeouts, rtt_ms, the --net-sim-* queue. Add each
+## with the task that first needs it.
 
 const DEFAULT_PORT := 45120  ## doc 06 section 2; 45121..45124 if taken locally
 const PORT_TRIES := 4
@@ -83,12 +83,31 @@ func to_peers(method: StringName, args: Array = [], targets: Array = []) -> void
 		callv(&"rpc_id", [id, method] + args)
 
 
-## Raw packet on `channel` (doc 06 section 2; movement uses 1). `peer` 0 means every peer. Unreliable
-## and ordered; a no-op with no peers. Added in P1-04; the full framing/net-sim queue is still P1-later.
+## Raw packet on `channel` (doc 06 section 2: movement 1 unreliable ordered, voice 2 unreliable).
+## `peer` 0 means every peer. A no-op with no peers, or when `peer` is mid-disconnect (PP-02: sending
+## then prints "Unable to send packet"). Added in P1-04; the net-sim queue is still P1-later.
 func send_bytes(peer: int, packet: PackedByteArray, channel: int = 1) -> void:
 	if not multiplayer.has_multiplayer_peer() or multiplayer.get_peers().is_empty():
 		return
-	(multiplayer as SceneMultiplayer).send_bytes(packet, peer, MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED, channel)
+	if peer != 0 and not _connected(peer):
+		return
+	var mode := MultiplayerPeer.TRANSFER_MODE_UNRELIABLE if channel == 2 else MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED
+	(multiplayer as SceneMultiplayer).send_bytes(packet, peer, mode, channel)
+
+
+func _connected(peer: int) -> bool:
+	var e := multiplayer.multiplayer_peer as ENetMultiplayerPeer
+	var pp: ENetPacketPeer = e.get_peer(peer) if e else null
+	return pp != null and pp.get_state() == ENetPacketPeer.STATE_CONNECTED
+
+
+## Doc 06 section 2: both ends pin ENet's RTT throttle, or one slow round trip drops voice for seconds
+## (PP-02: a forced 300 ms hitch lost 4 and 13 frames with the default, 0 and 0 pinned).
+func _pin_throttle(peer: int) -> void:
+	var e := multiplayer.multiplayer_peer as ENetMultiplayerPeer
+	var pp: ENetPacketPeer = e.get_peer(peer) if e else null
+	if pp:
+		pp.throttle_configure(5000, 2, 0)  # ENet default (5000, 2, 2)
 
 
 func _use(peer: ENetMultiplayerPeer) -> void:
@@ -100,6 +119,7 @@ func _use(peer: ENetMultiplayerPeer) -> void:
 # --- Host side ----------------------------------------------------------------------------------
 
 func _on_peer_connected(id: int) -> void:
+	_pin_throttle(id)
 	if not Game.is_host():
 		return
 	Game.players[id] = {}
@@ -122,6 +142,7 @@ func _on_peer_disconnected(id: int) -> void:
 # --- Client side --------------------------------------------------------------------------------
 
 func _on_connected_to_server() -> void:
+	_pin_throttle(1)
 	Log.event(&"net_connected", {"target": _join_target})
 
 

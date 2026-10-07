@@ -38,6 +38,7 @@ Net="*res://game/net/net.gd"
 Clock="*res://game/core/clock.gd"
 Game="*res://game/core/game.gd"
 NoiseBus="*res://game/core/noise_bus.gd"
+Voice="*res://game/voice/voice.gd"
 
 [audio]
 

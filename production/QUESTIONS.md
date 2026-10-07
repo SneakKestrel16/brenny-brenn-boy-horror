@@ -575,3 +575,16 @@ PP-10 passed with three nits (production/handoffs/PP-10.md "QA review"): (1) `gr
 The autoload `Noise` (CONTRACTS section 8, doc 05 section 8) shares its name with Godot's native `Noise` class (FastNoiseLite's base). In GDScript the identifier resolves to the class: `Noise.noise_emitted` and `Noise.emit_kind()` fail to parse ("Cannot find member ... in base Noise"), and smoke fails. P1-04 works around it with `get_node("/root/Noise")` (cached in a variable). The AI Programmer's consumer needs the same. Choose: keep the name and use the `get_node` form everywhere, or rename the autoload (for example `NoiseBus`; `project.godot`, CONTRACTS section 8, docs 03/05 and the `emit_*` call sites change). I recommend the rename, before P1-06 and P1-08 add more call sites.
 
 **Answer (Director, 2026-10-07):** renamed to `NoiseBus` (D-025). Done in P1-04: file, autoload, call sites, docs 03/05/06/08, CONTRACTS section 8.
+
+### Q-042 · 2026-10-07 · Network & Voice → Director, Gameplay Programmer · open
+1. **Director: voice type bytes collide with movement.** Doc 06 section 8 gave voice frames type
+   `0x01` (client to host) and `0x02` (relay), but `game/player/move_frame.gd` (P1-04) already sends
+   `MOVE = 1` and `MOVES = 2` through the same `Net.bytes_received` signal, so the host would read
+   voice as movement. P1-06 moved voice to `0x10` and `0x11` and updated doc 06. CONTRACTS says shared
+   formats change only with a DECISIONS entry: please record one (proposal: `send_bytes` type bytes
+   `0x01`-`0x0F` movement, `0x10`-`0x1F` voice).
+2. **Gameplay: push-to-talk setting.** Doc 01 "Voice" makes push-to-talk a per-player setting. Please
+   add `push_to_talk` (default `false`) to `Settings.DEFAULTS` and a menu toggle. `Voice` already reads
+   the key when it exists; until then `--ptt` starts in push-to-talk.
+3. **Gameplay: `project.godot` autoload.** P1-06 added `Voice="*res://game/voice/voice.gd"` after
+   `NoiseBus` (CONTRACTS section 8 load order, asked in Q-006). Please confirm, since you own the file.
