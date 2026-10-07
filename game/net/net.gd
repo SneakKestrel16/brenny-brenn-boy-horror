@@ -155,3 +155,67 @@ func apply_clock(p_day: int, p_phase: StringName, t: float) -> void:
 @rpc("authority", "call_remote", "reliable")
 func apply_teleport(position: Vector3) -> void:
 	teleport_received.emit(position)
+
+
+# --- Holds and farming (doc 05 section 7, doc 06 section 7); added in P1-05 ----------------------
+# Deviation from doc 06's per-verb `request_<verb>`: one `request_hold(verb, target)` carries every
+# verb (inference: the table lists the same shape for each; settled when the Network & Voice
+# Programmer wants per-verb names).
+
+## Host-side requests: (`hold` | `hold_cancel` | `farm_state`, sender peer, args).
+signal request_received(what: StringName, peer: int, args: Array)
+## Client-side results: (`refused` | `hold_cancelled` | `hold_done` | `plot_changed` | `money_changed`, args).
+signal apply_received(what: StringName, args: Array)
+
+
+## Client to host; the host calls its own handler directly (sender 0 means the host itself).
+func to_host(method: StringName, args: Array = []) -> void:
+	if Game.is_host():
+		callv(method, args)
+	elif multiplayer.has_multiplayer_peer():
+		callv(&"rpc_id", [1, method] + args)
+
+
+func _sender() -> int:
+	var s := multiplayer.get_remote_sender_id()
+	return 1 if s == 0 else s
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_hold(verb: StringName, target: String) -> void:
+	request_received.emit(&"hold", _sender(), [verb, target])
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_hold_cancel() -> void:
+	request_received.emit(&"hold_cancel", _sender(), [])
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_farm_state() -> void:
+	request_received.emit(&"farm_state", _sender(), [])
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_refused(verb: StringName, reason: StringName) -> void:
+	apply_received.emit(&"refused", [verb, reason])
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_hold_cancelled(verb: StringName, reason: StringName) -> void:
+	apply_received.emit(&"hold_cancelled", [verb, reason])
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_hold_done(verb: StringName, target: String) -> void:
+	apply_received.emit(&"hold_done", [verb, target])
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_plot_changed(id: String, state: StringName, watered: bool, age: int) -> void:
+	apply_received.emit(&"plot_changed", [id, state, watered, age])
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_money_changed(coins: int) -> void:
+	apply_received.emit(&"money_changed", [coins])

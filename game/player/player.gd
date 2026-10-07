@@ -19,6 +19,7 @@ var pitch := 0.0
 var crouching := false
 var stamina := 0.0  ## seconds of sprint left (doc 02 section 2.2)
 
+var nav_path: Array = []  ## QA waypoints for `--autochore` (HoldController fills it)
 var _cam: Camera3D
 var _shape: CollisionShape3D
 var _mesh: MeshInstance3D
@@ -52,6 +53,10 @@ func _ready() -> void:
 		if DisplayServer.get_name() != "headless":
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		Net.teleport_received.connect(func(p: Vector3) -> void: global_position = p)
+		var hc := Node.new()
+		hc.set_script(preload("res://game/interaction/hold_controller.gd"))
+		hc.name = "HoldController"
+		add_child(hc)
 	Log.event(&"player_spawned", {"peer": peer, "local": is_local})
 
 
@@ -114,6 +119,15 @@ func _local(delta: float) -> void:
 		yaw = _t * 0.5
 		dir = Vector2(0, -1)
 		want_sprint = fmod(_t, 8.0) > 4.0
+	if not nav_path.is_empty():  # QA: walk to the next waypoint (`--autochore`), facing it
+		var d: Vector3 = nav_path[0] - global_position
+		d.y = 0.0
+		if d.length() < 0.3:
+			nav_path.pop_front()
+		else:
+			yaw = atan2(-d.x, -d.z)
+			dir = Vector2(0, -1)
+			want_sprint = false  # walking: a stamina-flipping sprint trips the host speed check
 	if not bool(Settings.get_value(&"toggle_crouch")):
 		_set_crouch(Input.is_action_pressed(&"crouch"))
 	if still:
