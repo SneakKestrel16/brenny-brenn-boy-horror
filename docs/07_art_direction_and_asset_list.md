@@ -63,8 +63,10 @@ resource, so a re-grade is one file.
 | Taint | oil black `#0A0710` with a purple sheen `#3A1F4A` | same |
 | Creature eyes and ember | orange-red `#FF5A1F` | same |
 
-Rule: no object is pure black or pure white. Rule: only three things ever glow at night: warm light
-sources, moonflowers, and Taint-free spirit tones. If something else glows, players will misread it.
+Rule: no object is pure black or pure white. Rule: only these things ever glow at night: warm light
+sources, moonflowers, and Taint-free spirit tones, plus two fixed exceptions that are part of the
+creature's tell: the creature's ember eyes and the corn husk heart. Nothing else glows. If something
+else glows, players will misread it.
 
 **Low-poly budgets** (all `placeholder`, tune after the first full-farm render):
 
@@ -113,8 +115,8 @@ may enter a dark one.
 - **Lit building.** A warm interior light, a porch light on the door, and window glow cards (emissive
   quads, not lights). Doorway light is an `OmniLight3D` of **radius 6 m** at the door (doc 04 s4
   leaves this to doc 07: I keep the 6 m, which doc 03 s9 already uses for "no traps near a lit
-  doorway"). It is not larger, because it would otherwise overlap the 20 m pumpkin circle rule and
-  the player must be able to tell where safety ends. A painted ground decal (warm light pool) matches
+  doorway"). It is not larger, because a bigger pool would blur with the 20 m pumpkin circle
+  (doc 04 s4) and the player must be able to tell where safety ends. A painted ground decal (warm light pool) matches
   the 6 m edge so the player can see it from outside.
 - **Dark building (generator dead).** All building lights off (via `apply_lights`, doc 05 s12). The
   windows go black, the door is the darkest rectangle in the wall. Interior is lit only by moonlight
@@ -146,7 +148,8 @@ owns one or more `Light3D` and emissive meshes). `game/core/lights.gd` (doc 05 s
 that calls its setters. Nothing else touches `Light3D.light_energy`.
 
 - `LightRig.set_on(on: bool)`: on or off. Ramps over 0.2 s (a smooth step, never instant), except
-  `blow_out()`.
+  `blow_out()`. The dead-generator fade (4.2) is the one slower exception: 0.6 s, which is below the
+  slew cap, so it never breaks the 0.2 s rule.
 - `LightRig.set_dim(fraction: float)`: smooth multiplier from 0 to 1. The generator curve below.
 - `LightRig.blow_out()`: instant off with a smoke puff (doc 01 "Ghosts"; doc 06 s11). The only
   instant-off, and it is a one-way event (the player must relight).
@@ -294,7 +297,7 @@ vertex offsets or UV scroll, which are position or texture changes, not brightne
   animated rig to a ragdoll (Jolt physical bones, CONTRACTS) for about 1.5 s (`placeholder`), the
   camera drops to ground level and the vision tilts. Lunges cut to black, then fade up on the
   ragdoll (doc 01 "The creature"): the cut hides the creature's close-up. The dead player's body
-  stays in the world as a ragdoll prop (`char_farmer_body`), same mesh, no animation.
+  stays in the world as a ragdoll prop (`char_farmer_ragdoll.glb`), same mesh, no animation.
 - **Ghost look.** A dead player becomes a ghost (doc 01 "Ghosts"): translucent cold-blue body, no
   shadow, fades to nothing in light. Ghosts see the creature as a smeared silhouette within about
   20 m (doc 01; doc 05 s14): the creature gets `mat_ghost_rim` and a motion-smear on its outline, only
@@ -433,11 +436,11 @@ follow section 2.
 | `prop_flag.glb` | 0.5 x 0.05 x 1.2 | P3 | placeable marker (doc 01) |
 | `prop_scarecrow_field.glb` | 0.8 x 0.8 x 2 | P1 | start scarecrow (doc 04 s7: 2 at start) |
 | `prop_scarecrow_player.glb` | 0.8 x 0.8 x 2 | P2 | store item |
-| `prop_church_bell.glb` | not seen, audio only | P3 | doc 01: heard, not seen |
+| `prop_church_bell` | no asset | none | doc 01: heard, not seen; audio only, no model |
 | `prop_dead_crow.glb` | 0.3 x 0.15 x 0.1 | P3 | doc 01 |
 | `prop_strange_seeds.glb` | 0.15 x 0.1 x 0.02 | P3 | doc 01 |
-| `prop_stolen_tool_marker.glb` | none (tool drop) | P3 | uses the tool model |
-| `prop_player_body.glb` | 1.8 long ragdoll | P2 | dead body, shares the farmer rig |
+| `prop_stolen_tool_marker` | no asset | none | tool drop; uses the tool model |
+| `char_farmer_ragdoll.glb` | 1.8 long ragdoll | P2 | dead body; listed in s11.7, same file, not a second asset |
 
 ### 11.3 Tools and items (`tool`)
 

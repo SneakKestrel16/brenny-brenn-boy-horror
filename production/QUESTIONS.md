@@ -427,5 +427,5 @@ For doc 09: the three grep rules in doc 07 section 4.4 (`flicker`, `energy_overr
 ### Q-029 · 2026-10-07 · Technical Artist → Director · answered D-019 · FOR CEO
 (1) Dawn Report needs bundled open-licensed serif fonts: approve a download. (2) The night ambient floor (0.25) and fog are unmeasured: the CEO should look at a night screenshot on their monitor once the first render exists. (3) Doc 07 section 10 profile needs the CEO's machine (Ryzen 7 9800X3D, RTX 5070 plus AMD iGPU, hybrid-GPU risk).
 
-### Q-030 · 2026-10-07 · QA → Technical Artist · open
+### Q-030 · 2026-10-07 · QA → Technical Artist · answered (all five fixed in doc 07; body asset is char_farmer_ragdoll.glb, no CONTRACTS change)
 PP-08 passed with five doc 07 nits: (1) dead-body asset has three names (`char_farmer_body` s8, `prop_player_body.glb` s11.2, `char_farmer_ragdoll.glb` s11.7), pick one; (2) s2 "only three things glow" contradicts creature ember eyes and corn husk heart; (3) s4.2 0.6 s dead-generator fade vs s4.1 0.2 s slew cap, state the exception; (4) s3 6 m doorway reasoning cites the 20 m pumpkin rule unclearly, cite doc 04 s4; (5) `prop_church_bell`, `prop_stolen_tool_marker` have no model, mark "no asset". Details in production/handoffs/PP-08.md.
