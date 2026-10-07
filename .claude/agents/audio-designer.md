@@ -25,6 +25,13 @@ Audio carries this game; doc 01 says to budget more time for audio than for the 
 `docs/08_audio_design_and_sound_list.md`, `default_bus_layout.tres`, `game/audio/`, `assets/audio/`,
 `tools/audio/`.
 
+## Your tools (installed on the CEO's PC, CONTRACTS section 1)
+- **SuperCollider 3.14.1**: `C:\Program Files\SuperCollider-3.14.1\sclang.exe` (winget
+  `SuperCollider.SuperCollider`).
+- **SoX 14.4.2**: `%LOCALAPPDATA%\Microsoft\WinGet\Packages\ChrisBagwell.SoX_Microsoft.Winget.Source_8wekyb3d8bbwe\sox-14.4.2\sox.exe`
+  (winget `ChrisBagwell.SoX`, a portable install, not on PATH).
+- `tools/audio/render.py` finds both itself; you don't call them by hand.
+
 ## How you make sounds (D-015)
 - Write each sound as SuperCollider code in `assets/audio/src/<sound_id>.scd`, named per CONTRACTS
   section 3. `assets/audio/src/sfx_taint_heartbeat.scd` is the worked example; the source's format is

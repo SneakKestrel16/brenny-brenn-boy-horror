@@ -18,7 +18,8 @@ report lists length, channels, peak and RMS. Raw renders, logs and spectrograms 
 logs/audio/render_<timestamp>/ (gitignored). Exit code 0 = all passed, 1 = any failed.
 
 sclang is found through --sclang, then $SCLANG, then PATH, then C:/Program Files/SuperCollider*/.
-sox through --sox, then $SOX, then PATH, then C:/Program Files (x86)/sox-*/. Standard library only.
+sox through --sox, then $SOX, then PATH, then C:/Program Files (x86)/sox-*/, then
+winget's ChrisBagwell.SoX package folder under %LOCALAPPDATA%. Standard library only.
 """
 
 from __future__ import annotations
@@ -83,9 +84,13 @@ def render_one(sound_id: str, sclang: Path, sox: Path | None, run_dir: Path, arg
     errors: list[str] = []
     if not SOUND_ID.match(sound_id):
         errors.append("name must be <bus>_<name>[_<variant>] in snake_case (CONTRACTS section 3)")
-    # sclang's Qt layer on Linux: no display, and Chromium refuses to start as root without this.
-    env = dict(os.environ, QT_QPA_PLATFORM="offscreen")
-    env.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--no-sandbox")
+    env = dict(os.environ)
+    if sys.platform != "win32":
+        # sclang's Qt layer on Linux: no display, and Chromium refuses to start as root without this.
+        # Not on Windows: SuperCollider 3.14.1 ships only Qt's qwindows plugin, and sclang crashes
+        # while compiling the class library (exit 0xC0000409) when asked for "offscreen".
+        env["QT_QPA_PLATFORM"] = "offscreen"
+        env.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--no-sandbox")
     cmd = [str(sclang), str(DRIVER), str(src.resolve()), str(raw.resolve())]
     try:
         # cwd = sclang's folder so it finds scsynth and its class library on Windows.
@@ -132,7 +137,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     sclang = find_tool("sclang", args.sclang, "SCLANG", ["C:/Program Files/SuperCollider*/sclang.exe"])
-    sox = find_tool("sox", args.sox, "SOX", ["C:/Program Files (x86)/sox-*/sox.exe", "C:/Program Files/sox-*/sox.exe"])
+    sox = find_tool("sox", args.sox, "SOX", [
+        "C:/Program Files (x86)/sox-*/sox.exe",
+        "C:/Program Files/sox-*/sox.exe",
+        os.path.expandvars("%LOCALAPPDATA%/Microsoft/WinGet/Packages/ChrisBagwell.SoX_*/sox-*/sox.exe"),
+    ])
     if not sclang:
         print("sclang not found. Install SuperCollider (tools/audio/README.md) or pass --sclang.", file=sys.stderr)
         return 1

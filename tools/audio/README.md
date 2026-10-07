@@ -13,11 +13,16 @@ assets/audio/src/sfx_taint_heartbeat.scd  --render.py-->  assets/audio/sfx_taint
 
 Both tools are free.
 
-1. **SuperCollider.** Download the Windows 64-bit installer from
-   https://supercollider.github.io/downloads and run it with the default options. It installs to
-   `C:\Program Files\SuperCollider-<version>\`. Record the version in CONTRACTS section 1.
-2. **SoX.** Download `sox-14.4.2-win32.exe` from https://sourceforge.net/projects/sox/files/sox/14.4.2/
-   and run it with the default options. It installs to `C:\Program Files (x86)\sox-14-4-2\`.
+The pinned versions are in CONTRACTS section 1: SuperCollider 3.14.1 and SoX 14.4.2.
+
+1. **SuperCollider.** `winget install --id SuperCollider.SuperCollider --version 3.14.1 -e`, or the
+   Windows 64-bit installer from https://supercollider.github.io/downloads. It installs to
+   `C:\Program Files\SuperCollider-3.14.1\`.
+2. **SoX.** `winget install --id ChrisBagwell.SoX --version 14.4.2 -e`. This is a portable install:
+   it lands in `%LOCALAPPDATA%\Microsoft\WinGet\Packages\ChrisBagwell.SoX_*\sox-14.4.2\` and is not
+   put on PATH. The SourceForge installer (`sox-14.4.2-win32.exe` from
+   https://sourceforge.net/projects/sox/files/sox/14.4.2/) installs to
+   `C:\Program Files (x86)\sox-14-4-2\` instead. `render.py` looks in both.
 3. **Check it.** In Git Bash at the repo root:
 
    ```bash
@@ -32,6 +37,16 @@ Both tools are free.
 
 If Windows Firewall asks about `scsynth.exe` the first time, you can choose **Cancel**. Rendering
 uses no network.
+
+## Gotchas
+
+- **No `QT_QPA_PLATFORM=offscreen` on Windows.** It keeps sclang headless on Linux, but SuperCollider
+  3.14.1 for Windows ships only Qt's `qwindows` plugin, and with `offscreen` sclang dies while
+  "compiling class library..." with exit code 3221226505 (0xC0000409) and no other message.
+  `render.py` sets it only off Windows (measured 2026-10-07).
+- **Renders with noise aren't bit-identical.** A source using `WhiteNoise` and the like gets a new
+  random seed each run, so re-rendering changes the WAV's bytes but not its length, peak or
+  spectrogram. Don't commit a re-render of a source you didn't change.
 
 ## Use
 
