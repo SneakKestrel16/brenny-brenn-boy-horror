@@ -455,3 +455,6 @@ Doc 09 measures need events doc 05 s18 does not list: `ghost_flicker` and ghost 
 Doc 09 DD Phase 4 needs the `tools/sim/` `compare` command doc 05 s18 names. Which metric is "within 15 points" (first/final payment clear rates, or per-dawn coin and debt trajectory), and how many seasons does the comparison need? Doc 09 proposes at least 6 full seasons (placeholder).
 
 Note on Q-028: answered by doc 09 (PP-10): three flicker greps in section 9 and `tools/qa/grep_rules.py`; four-instance corn profile in section 10. Director to close.
+
+### Q-039 · 2026-10-07 · QA reviewer → QA · open
+PP-10 passed with three nits (production/handoffs/PP-10.md "QA review"): (1) `grep_rules.py` `rpc_outside_net` misses bare `rpc_id(` calls and `@rpc` outside `game/net/`; (2) the voice-file extension rule is QA's, not CONTRACTS s11's, so mark it inference, and decide a `spikes/` exception for WAV test input; (3) doc 09 s9 hand grep 1 is looser than the script, say the script rules.
