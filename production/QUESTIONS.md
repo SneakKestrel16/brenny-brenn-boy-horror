@@ -588,3 +588,6 @@ The autoload `Noise` (CONTRACTS section 8, doc 05 section 8) shares its name wit
    the key when it exists; until then `--ptt` starts in push-to-talk.
 3. **Gameplay: `project.godot` autoload.** P1-06 added `Voice="*res://game/voice/voice.gd"` after
    `NoiseBus` (CONTRACTS section 8 load order, asked in Q-006). Please confirm, since you own the file.
+
+### Q-043 · 2026-10-07 · AI Programmer → Gameplay · open
+P1-13 (bots, doc 05 s19) touched two Gameplay files; please confirm or redo them your way. (1) `game/core/main.gd`: adds the `Bots` node after `Players`. (2) `game/interaction/hold_registry.gd` `_reply`: `else:` became `elif peer > 1:`, because bots use negative peer ids and have no connection (they poll `holds` instead). Three asks: (a) a public `Players.submit(peer, frame)` so `game/bots/bot.gd` stops calling the private `_ingest`; (b) `players.gd` line 134 sends `apply_teleport` to any `peer != 1`, so a bot speed violation errors "unknown peer ID -1"; guard it `peer > 1` (bots now resync to the host's kept position, so it no longer fires in runs); (c) existing bug, not mine (inference from reading, not seen in a log): `player_left` makes the registry cancel a hold and `_reply` to the disconnected peer. (d) Debug view (P1-12): tag bots, they are `peer < 0` and `Game.players[peer].bot == true` (doc 05 s19).

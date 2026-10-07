@@ -80,7 +80,7 @@ func _complete(peer: int, h: Dictionary) -> void:
 func _reply(peer: int, what: StringName, args: Array) -> void:
 	if peer == 1:
 		Net.apply_received.emit(what, args)  # the host is its own client
-	else:
+	elif peer > 1:  # bots (negative ids, game/bots/) have no connection; they read `holds` instead
 		Net.to_peers(StringName("apply_" + what), args, [peer])
 
 

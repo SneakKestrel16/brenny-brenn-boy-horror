@@ -25,5 +25,9 @@ func _ready() -> void:
 	players.set_script(load("res://game/player/players.gd"))
 	players.name = "Players"
 	add_child(players)
+	var bots := Node.new()  # AI Programmer P1-13: `--bots <n>` teammates (game/bots/), after Players
+	bots.set_script(load("res://game/bots/bots.gd"))
+	bots.name = "Bots"
+	add_child(bots)
 	add_child(DebugView.new())  # P1-12: hidden unless --debug-view or F3 (host)
 	Log.event(&"main_ready", {"players": Game.players.keys()})
