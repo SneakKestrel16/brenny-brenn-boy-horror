@@ -27,7 +27,7 @@ Order (kickoff): 06 and the voice spike first, then 02 and 04 together, then 03,
 | PP-05 | Level Designer | Doc 04 Farm Layout | done | STOP 1 (passed) |
 | PP-06 | Game Designer | Doc 03 Creature, AI Director & Scares | done | PP-04 |
 | PP-07 | Gameplay | Doc 05 Technical Design | done | PP-01, PP-04, PP-06 |
-| PP-08 | Technical Artist | Doc 07 Art Direction & Asset List | in review | PP-05, PP-06 |
+| PP-08 | Technical Artist | Doc 07 Art Direction & Asset List | done | PP-05, PP-06 |
 | PP-09 | Audio Designer | Doc 08 Audio Design & Sound List | todo | PP-06, PP-01 |
 | PP-10 | QA | Doc 09 Playtest Plan | todo | PP-01 to PP-09 drafts |
 | PP-11 | Director | Fill CONTRACTS sections 6 to 9 from docs 02, 03, 05, 06, 08 | todo | PP-04, PP-06, PP-07, PP-09 |
