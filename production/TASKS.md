@@ -31,7 +31,7 @@ Order (kickoff): 06 and the voice spike first, then 02 and 04 together, then 03,
 | PP-09 | Audio Designer | Doc 08 Audio Design & Sound List | done | PP-06, PP-01 |
 | PP-10 | QA | Doc 09 Playtest Plan | done | PP-01 to PP-09 drafts |
 | PP-11 | Director | Fill CONTRACTS sections 6 to 9 from docs 02, 03, 05, 06, 08 | done | PP-04, PP-06, PP-07, PP-09 |
-| PP-12 | Director | Pre-production review: Open Issues, settle what DD Phase 1 needs, CEO approval | todo | all above |
+| PP-12 | Director | Pre-production review: Open Issues, settle what DD Phase 1 needs, CEO approval | awaiting CEO approval (2026-10-07) | all above |
 
 ### PP-01 Doc 06 Networking & Voice
 Owner: Network & Voice. Output: `docs/06_networking_and_voice.md`.

@@ -236,7 +236,7 @@ Not blocking; settles before DD Phase 2 (recording) and DD Phase 3 (ghosts).
 tasks, written at PP-12. 4: not fixed; the spike is throwaway (D-004). 5: `.gitignore` now ignores
 `*.wav`, `*.ogg` and `*.vclip` everywhere except `assets/audio/`.
 
-### Q-014 · 2026-10-07 · Level Designer → Director, Game Designer, Gameplay Programmer, Audio Designer · open
+### Q-014 · 2026-10-07 · Level Designer → Director, Game Designer, Gameplay Programmer, Audio Designer · answered D-016
 **Doc 04 (PP-05) items other roles settle.** Each is marked `placeholder` or inference in doc 04.
 1. **Director: marker group names** for CONTRACTS (doc 04 section 7): `trap_spots`,
    `creature_cover`, `crow_perches`, `scarecrow_spots`, `animal_escape_spots`,
@@ -272,7 +272,7 @@ walks give about 11 plots per player at field A and 9 at field B (doc 02 section
 are shorter than "about 6" needs, not longer. Nothing in doc 04 has to move for now; which knob
 moves is Q-015 item 4.
 
-### Q-015 · 2026-10-07 · Game Designer → Director · open
+### Q-015 · 2026-10-07 · Game Designer → Director · answered D-017
 **Doc 01 readings and two findings from doc 02 (PP-04).** Each is marked inference in doc 02;
 items 1, 2, 4 and 5 change the economy and may need the CEO.
 1. **Missed first payment** (doc 02 7.4): read as a partial payment, the bank taking every coin
