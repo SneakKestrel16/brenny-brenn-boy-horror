@@ -37,7 +37,7 @@ Settings="*res://game/core/settings.gd"
 Net="*res://game/net/net.gd"
 Clock="*res://game/core/clock.gd"
 Game="*res://game/core/game.gd"
-Noise="*res://game/core/noise.gd"
+NoiseBus="*res://game/core/noise_bus.gd"
 
 [audio]
 

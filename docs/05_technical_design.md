@@ -112,7 +112,7 @@ Two refinements the table implies:
 
 CONTRACTS section 4 names `Game`, `Log`, `Data`, `Settings`, `Clock` in `game/core/`, plus `Net`
 (`game/net/net.gd`) and `Voice` (`game/voice/voice.gd`) owned by Network & Voice. This doc adds one
-autoload, **`Noise`** (`game/core/noise.gd`), the Noise interface (section 8, Q-019 to the Director
+autoload, **`NoiseBus`** (`game/core/noise_bus.gd`), the Noise interface (section 8, Q-019 to the Director
 for CONTRACTS). Load order matters because later ones use earlier ones:
 
 | Order | Autoload | File | Owner | Job |
@@ -123,7 +123,7 @@ for CONTRACTS). Load order matters because later ones use earlier ones:
 | 4 | `Net` | `game/net/net.gd` | Network & Voice | Transport, sends, roster, `Net.to_host` / `Net.to_peers` |
 | 5 | `Clock` | `game/core/clock.gd` | Gameplay | Day, phase, time (section 5) |
 | 6 | `Game` | `game/core/game.gd` | Gameplay | Session state, player registry, ghost list, scene switching, save/load calls |
-| 7 | `Noise` | `game/core/noise.gd` | Gameplay (API), AI Programmer (consumer) | Section 8 |
+| 7 | `NoiseBus` | `game/core/noise_bus.gd` | Gameplay (API), AI Programmer (consumer) | Section 8 |
 | 8 | `Voice` | `game/voice/voice.gd` | Network & Voice | Capture, relay, playback |
 | 9 | `Soundscape` | `game/audio/soundscape.gd` | Audio Designer (D-020) | Beds, creature-state layers, 3D/2D sound API (doc 08 section 10). Every peer, no network. Reads `Settings` volumes and `reduce_scares`. Gameplay calls `set_creature_state` (from the `apply_creature_state` handler), `set_phase` (from `Clock`), `set_local_state` (Player, Generator) (Q-032) |
 
@@ -357,12 +357,12 @@ table and live in `data/labor.json`; this doc repeats none of them.
 
 ## 8. The Noise interface
 
-CONTRACTS section 8: "Noise.emit(position: Vector3, radius_m: float, kind: StringName, source_peer:
+CONTRACTS section 8: "NoiseBus.emit(position: Vector3, radius_m: float, kind: StringName, source_peer:
 int)", host-side. Doc 03 section 3.1 sets what the creature does with it. **Final** (confirmed by the AI
 Programmer, Q-019, D-021):
 
 ```gdscript
-# game/core/noise.gd  (autoload "Noise"; host-side only; a client call is a no-op with a warning)
+# game/core/noise_bus.gd  (autoload "NoiseBus"; host-side only; a client call is a no-op with a warning)
 signal noise_emitted(position: Vector3, radius_m: float, kind: StringName, source_peer: int)
 
 func emit(position: Vector3, radius_m: float, kind: StringName, source_peer: int) -> void
@@ -370,7 +370,7 @@ func emit_kind(kind: StringName, position: Vector3, source_peer: int, mult: floa
 func emit_voice(position: Vector3, volume_byte: int, source_peer: int) -> void
 ```
 
-- **Name clash (P1-04):** `Noise` is also a native Godot class, so GDScript resolves the identifier `Noise` to the class, not the autoload (`Noise.emit_kind` fails to parse). Reach the autoload with `get_node("/root/Noise")` (cache it in a variable), as `Data.scaled` does for `Game`. A rename (for example `NoiseBus`) needs a CONTRACTS section 8 change (Q-041).
+- **Name (D-025):** the autoload is `NoiseBus`, not `Noise`: `Noise` is a native Godot class and the identifier would resolve to it, not the autoload (Q-041).
 - **`emit`** is the raw call and the one CONTRACTS names. `radius_m` is already final (all
   multipliers applied). `kind` is a `StringName` from doc 03's table. `source_peer` is the ENet peer
   id of whoever caused it, or 0 for the world (a generator running dry). `emit` with `radius_m <= 0`
@@ -380,22 +380,22 @@ func emit_voice(position: Vector3, volume_byte: int, source_peer: int) -> void
   Taint multiplier (x1.5 on footsteps, doc 03 section 3.1; read from `taint.json` through `Game`),
   then calls `emit`. The quiet watering can is `mult = 0.5` on `tool_water` (doc 03 section 3.1).
   **Who owns the radius table** is `creature.json` (the Game Designer's number, the AI Programmer's
-  consumer); `Noise` only reads it.
+  consumer); `NoiseBus` only reads it.
 - **`emit_voice`** is called by `Voice` (`game/voice/`) for each speaker at most every 100 ms using
   the loudest frame since the last report (doc 06 section 8, doc 03 section 3). Radius is
   `60 * (volume_byte / 255)^2` m (doc 03 `voice` row: 159 gives 23 m, 255 gives 60 m, `placeholder`).
   The 60 m cap and the exponent are `creature.json` values, not constants in code. Ghost speakers
-  never reach `emit_voice` (D-011): `Voice` does not call it for them, and `Noise` also rejects any
+  never reach `emit_voice` (D-011): `Voice` does not call it for them, and `NoiseBus` also rejects any
   emit whose `source_peer` is a ghost (`Game.is_ghost`) as a second guard.
-- **Nothing is stored.** `Noise` keeps no history. The AI Programmer's `noise_emitted` consumer keeps
+- **Nothing is stored.** `NoiseBus` keeps no history. The AI Programmer's `noise_emitted` consumer keeps
   its own 12 s hearing memory (doc 03 section 3.1). The volume byte is never logged (doc 06
   section 8).
 - **Kinds** are exactly doc 03 section 3.1's ids: `step_walk, step_crouch, step_sprint,
   step_sprint_corn, tool_till, tool_plant, tool_water, tool_harvest, tool_shovel, tool_pry,
   tool_repair, tool_disarm, well_pump, door, generator_dead, bells, flare, whistle, voice, walkie`.
 - **Corn damping (x0.7 between sound and creature), hearing memory, "louder replaces quieter within
-  4 s" and picking the loudest radius-weighted source** all belong to the consumer, not to `Noise`
-  (doc 03 section 3.1). `Noise` is a plain fan-out; a debug counter per `kind` is kept for the debug
+  4 s" and picking the loudest radius-weighted source** all belong to the consumer, not to `NoiseBus`
+  (doc 03 section 3.1). `NoiseBus` is a plain fan-out; a debug counter per `kind` is kept for the debug
   view.
 
 Who calls it, per source:
@@ -823,7 +823,7 @@ that DD Phase 1 builds, in order (each step is playable on its own with 2 instan
    test: two instances join each other's session over ENet from the command line (the `Net` side is
    Network & Voice's).
 2. **Player controller:** movement, camera, crouch, sprint, the `move`/`moves` stream, remote proxies,
-   host speed check, `Noise.emit_kind` from steps. The Phase 1 gray box from the Level Designer
+   host speed check, `NoiseBus.emit_kind` from steps. The Phase 1 gray box from the Level Designer
    (doc 04 section 9).
 3. **Hold framework and farming:** `HoldController`, `HoldRegistry`, `Interactable`, `plant`, `water`
    (the noisy can), `harvest`, `sell` at the (40, 20) box, `hold_completed` logged. Turnips only.
@@ -861,7 +861,7 @@ polish, carrying teammates, flags and pegboard. Their message names are reserved
 - **Unit-level checks** (`tests/gameplay/`, GDScript run by `--script`): `Data` rejects duplicate ids;
   `Data.scaled` reproduces doc 02 section 4's rounding; the hold rate maths with a helper; the
   stillness ring (0.19 m vs 0.21 m moved in 1 s); the `place_defense` cart-route clearance;
-  `Noise.emit_voice` radius at 159 and 255; the save contains no voice keys. These are written with
+  `NoiseBus.emit_voice` radius at 159 and 255; the save contains no voice keys. These are written with
   the code, not in PP-07.
 
 ## 22. Gotchas
@@ -873,7 +873,7 @@ accordingly.
   through the wrapper (doc 06 section 14). A direct call also bypasses `apply_*` naming.
 - **Autoload order is a dependency order.** `Data` before anything that reads it; `Log` first so
   every other autoload can log. Reordering them in the editor breaks startup silently.
-- **A client calling `Noise.emit` is a bug.** It is a no-op with a warning, and QA greps for it.
+- **A client calling `NoiseBus.emit` is a bug.** It is a no-op with a warning, and QA greps for it.
 - **Stillness must come from transforms, not from a client flag.** A client flag lets a hacked client
   hide; also a flag is wrong on packet loss. (Reasoning, not measured.)
 - **Never branch on peer id for the host.** Use `Game.is_host()` or `multiplayer.is_server()`; a
@@ -913,10 +913,10 @@ Raised in `production/QUESTIONS.md` (Q-019 onward):
 
 1. **AI Programmer, Noise interface** (Q-019): confirm section 8's signature, `emit_kind` /
    `emit_voice` helpers and the `noise_emitted` signal; who applies the Taint and quiet-can
-   multipliers (proposed: `Noise.emit_kind`); the kind list spelling; when tool noises fire (at
+   multipliers (proposed: `NoiseBus.emit_kind`); the kind list spelling; when tool noises fire (at
    completion, or also at hold start); emote scream as a `voice` 255 emission; the debug accessors
    (`debug_sensed`, `debug_state`); serialisable creature and AI Director save state.
-2. **Director:** add the `Noise` autoload to CONTRACTS section 4, the `apply_debug_state` development
+2. **Director:** add the `NoiseBus` autoload to CONTRACTS section 4, the `apply_debug_state` development
    message to section 7, and record the Q-002, Q-006 and Q-016 answers; add the doc 05 index row in
    `docs/README.md` (Director's file).
 3. **QA:** no change to `check_logs.py` is required; optionally tally `angle_error_deg`, `close_call`

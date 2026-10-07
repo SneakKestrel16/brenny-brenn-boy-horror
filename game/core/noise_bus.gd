@@ -13,7 +13,7 @@ var counts: Dictionary = {}  ## kind -> emissions, for the debug view
 
 func emit(position: Vector3, radius_m: float, kind: StringName, source_peer: int) -> void:
 	if not Game.is_host():
-		push_warning("Noise.emit(%s) called on a client; ignored" % kind)
+		push_warning("NoiseBus.emit(%s) called on a client; ignored" % kind)
 		return
 	counts[kind] = int(counts.get(kind, 0)) + 1
 	if radius_m <= 0.0 or (source_peer != 0 and Game.is_ghost(source_peer)):

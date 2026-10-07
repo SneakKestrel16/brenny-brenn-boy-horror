@@ -47,7 +47,7 @@ in QUESTIONS.md or a task from the Director.
 | `project.godot` | Gameplay Programmer | Autoloads, input map, layers. Others request entries |
 | `export_presets.cfg` | Network & Voice Programmer | Voice spike preset only, until DD Phase 1 (D-014) |
 | `default_bus_layout.tres` | Audio Designer | |
-| `game/core/` | Gameplay Programmer | Autoloads: `Game`, `Log`, `Data`, `Settings`, `Clock`, `Noise` (D-018) |
+| `game/core/` | Gameplay Programmer | Autoloads: `Game`, `Log`, `Data`, `Settings`, `Clock`, `NoiseBus` (D-018) |
 | `game/player/`, `game/interaction/`, `game/farming/`, `game/items/`, `game/traps_player/`, `game/ghost/`, `game/ui/`, `game/debug/` | Gameplay Programmer | |
 | `game/net/`, `game/voice/` | Network & Voice Programmer | Includes the voice chain the creature's fakes use |
 | `game/creature/`, `game/ai_director/`, `game/bots/` | AI Programmer | |
@@ -186,8 +186,8 @@ A message not on that list needs Director approval and a DECISIONS entry.
 ## 8. Shared runtime interfaces
 
 - **Autoloads**, in load order (doc 05 section 3): `Log`, `Data`, `Settings`, `Net`, `Clock`, `Game`,
-  `Noise`, `Voice`, `Soundscape`.
-- **Noise (D-018):** autoload `Noise` (`game/core/noise.gd`), host-side only. Final API in
+  `NoiseBus`, `Voice`, `Soundscape`.
+- **Noise (D-018):** autoload `NoiseBus` (`game/core/noise_bus.gd`), host-side only. Final API in
   [doc 05 section 8](../docs/05_technical_design.md#8-the-noise-interface):
   `emit(position: Vector3, radius_m: float, kind: StringName, source_peer: int)` (raw, radius final),
   `emit_kind(kind, position, source_peer, mult = 1.0)` (looks up the radius in `creature.json`,

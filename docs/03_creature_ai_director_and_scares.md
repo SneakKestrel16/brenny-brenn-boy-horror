@@ -70,7 +70,7 @@ further. Hunting uses only these (doc 01 "AI Director > Hunting and presentation
 
 ### 3.1 Noise kinds and hearing radii
 
-Every sound reaches the creature as `Noise.emit(position, radius_m, kind, source_peer)`
+Every sound reaches the creature as `NoiseBus.emit(position, radius_m, kind, source_peer)`
 (CONTRACTS section 8). The creature hears an emit if it is within `radius_m` of the position. Corn
 (layer 5) between sound and creature shortens the radius by 30% (`placeholder`, `corn_damp_mult`
 0.7; doc 01 says only that corn blocks sight). Doc 01 gives no radii, so all are `placeholder`

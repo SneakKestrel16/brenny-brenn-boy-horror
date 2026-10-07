@@ -46,7 +46,7 @@ section 14.
 4. **Protect the contrast** (doc 01 pillar "Cozy day, terrifying night"). Day is warm and busy
    (birds, livestock, wind, insects); night is sparse, so each hit lands. Never loud by default.
 5. **What the creature hears, you can hear.** Audible range of a player-made sound is at least 1.5x
-   its `Noise` radius (section 3.2), so a careful player can predict danger. `placeholder`.
+   its `NoiseBus` radius (section 3.2), so a careful player can predict danger. `placeholder`.
 6. **Everything is a placeholder.** Every sound in section 11 is generated in code by this studio
    (D-015). Each is replaceable one for one: same ID, same duration class, same bus, same loop
    rule. The `Placeholder` column is "yes" for all rows. Nothing is sampled or downloaded.
@@ -447,7 +447,7 @@ huge `unit_size`, so I set `unit_size` 80 and `max_distance` 700 and, if it is s
 barn, fall back to a non-positional stereo bell with a 4 kHz low-pass (`placeholder`; the bell
 doesn't need to be placed). It plays at the start of dusk, as the "one introduction" of dusk (doc 01
 "Onboarding"). **It rings in every phase transition to dusk, including from inside buildings, and is
-not a creature tell.** It is not a `Noise` kind: the creature does not hear it.
+not a creature tell.** It is not a `NoiseBus` kind: the creature does not hear it.
 
 ### 9.2 Generator (doc 01 "Nights"; doc 07 s4.1)
 
@@ -509,7 +509,7 @@ immediate feedback (a tool swing sound) may play on request and is cancelled by 
 
 `game/audio/sound_catalog.json` is one record per sound ID: bus, `positional`, range class (section
 3.2), `volume_db` trim, variants, loop flag and the Noise `kind` it pairs with (documentation only;
-`Noise` is the host's). The section 11 list is its source and the first task is to generate the file
+`NoiseBus` is the host's). The section 11 list is its source and the first task is to generate the file
 from it (kept in sync by `tools/audio/check_catalog.py`, DD Phase 1 task). Variants use
 `AudioStreamRandomizer` (random pitch +/-5%, volume +/-2 dB, no immediate repeat).
 

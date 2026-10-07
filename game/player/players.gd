@@ -12,12 +12,10 @@ const STRIDE_M := 1.6  ## doc 05 section 6 `step_stride_m` (placeholder)
 
 var _send_t := 0.0
 var _players: Dictionary = {}  ## peer -> Player
-var noise: Node  ## the Noise autoload; the identifier `Noise` is Godot's native Noise class (see QUESTIONS.md)
 var _log_moves := false
 
 
 func _ready() -> void:
-	noise = get_node("/root/Noise")
 	_log_moves = OS.get_cmdline_user_args().has("--log-moves")
 	for p in Game.players:
 		_spawn(p)
@@ -25,7 +23,7 @@ func _ready() -> void:
 	Game.player_left.connect(_despawn)
 	Net.bytes_received.connect(_on_bytes)
 	if Game.is_host() and OS.get_cmdline_user_args().has("--log-noise"):  # doc 05 section 8: debug runs only
-		noise.noise_emitted.connect(func(p: Vector3, r: float, k: StringName, s: int) -> void:
+		NoiseBus.noise_emitted.connect(func(p: Vector3, r: float, k: StringName, s: int) -> void:
 			Log.event(&"noise_emitted", {"kind": String(k), "radius_m": r, "peer": s, "x": snappedf(p.x, 0.1), "z": snappedf(p.z, 0.1)}))
 
 
@@ -138,7 +136,7 @@ func _ingest(peer: int, f: Dictionary) -> void:
 		st.stride = float(st.stride) + Vector2(pos.x - st.pos.x, pos.z - st.pos.z).length()
 		while st.stride >= STRIDE_M:
 			st.stride -= STRIDE_M
-			noise.emit_kind(_step_kind(f, pos), pos, peer)
+			NoiseBus.emit_kind(_step_kind(f, pos), pos, peer)
 	else:
 		st.stride = 0.0
 	st.pos = pos

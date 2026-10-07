@@ -180,3 +180,6 @@ manual fallback) is the supported path for DD Phase 1. UPnP and join codes stay 
 but get no new work until the CEO asks. **Why:** removes router and UPnP failures from playtests
 (Open Issue 1 in doc 01 stays tracked). **How to apply:** Network & Voice does not prioritise join
 codes; QA tests two-machine sessions over Tailscale.
+
+### D-025 · 2026-10-07 · Director · Noise autoload renamed NoiseBus
+Autoload `Noise` becomes `NoiseBus` (`game/core/noise_bus.gd`) because `Noise` is a native Godot class and the identifier resolves to the class. API unchanged (`emit`, `emit_kind`, `emit_voice`, signal and log event `noise_emitted`). Answers Q-041. **Why:** removes the `get_node("/root/Noise")` workaround. **How to apply:** call `NoiseBus.emit*`; "Noise" stays the name of the concept and the doc 03 kind table.

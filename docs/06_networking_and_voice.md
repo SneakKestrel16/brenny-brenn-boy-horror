@@ -467,14 +467,14 @@ Doc 01 "Senses": "Only the volume is sent, one byte per voice frame, and nothing
 - **0 means not transmitting.** A frame is only sent while VAD or push-to-talk is open, so muted,
   push-to-talk released and Discord-only players are silent to the creature.
 - The host reads it from each client frame, and `Voice` calls
-  `Noise.emit_voice(position, volume_byte, source_peer)` (CONTRACTS section 8, doc 05 section 8)
+  `NoiseBus.emit_voice(position, volume_byte, source_peer)` (CONTRACTS section 8, doc 05 section 8)
   at the speaker's position, at most every 100 ms using the loudest frame since the last report
   (`placeholder`). The host's own mic takes the same call. How far a volume carries is doc 03's;
-  `Noise` converts the byte to a radius.
+  `NoiseBus` converts the byte to a radius.
 - **Nothing is stored:** the host never logs volume values or keeps a history. The relay form of the
   frame drops the byte, so clients never see it.
 - **Ghost frames don't feed the creature** (D-011): ghosts aren't in the world. `Voice` never calls
-  `emit_voice` for a ghost speaker; `Noise` rejects ghost sources as a second guard (doc 05
+  `emit_voice` for a ghost speaker; `NoiseBus` rejects ghost sources as a second guard (doc 05
   section 8).
 
 ### Frame format (channel 2, `send_bytes`)
@@ -1137,5 +1137,5 @@ Current state of the questions this doc raised or depends on ([QUESTIONS.md](../
 | Q-011 Spike findings for this doc, `*.dll binary` | Director | Answered; findings folded in here |
 | Q-012 Readings added in this revision: initial voice setting, volume relative to calibrated level, what "capture is live" means, freeing a leaver's clips, ghosts and walkies, discarding a take when someone switches to Off | Director | Answered: all six accepted (D-013); D-013 also confirms the section 7 verbs |
 | Q-013 PP-02 review bugs (host-quit poll `ERROR`, host-supplied `session_id` path, wrong-length codes) | Director | Answered: items 1 to 3 become DD Phase 1 `game/net/` acceptance criteria (written at PP-12); item 3 is in section 4 |
-| Q-023 Hold messages, `Net.rtt_ms`, `Voice` calls `Noise.emit_voice` | from Gameplay Programmer | Answered: sections 6, 7 and 8 (cart transform rides `moves`) |
+| Q-023 Hold messages, `Net.rtt_ms`, `Voice` calls `NoiseBus.emit_voice` | from Gameplay Programmer | Answered: sections 6, 7 and 8 (cart transform rides `moves`) |
 | Q-033 Runtime voice buses, crackle player | from Audio Designer | Answered: section 9 |
