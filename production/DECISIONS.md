@@ -173,3 +173,10 @@ beyond D-016 added to CONTRACTS section 4. Phase 1 scene is `farm_phase1.tscn` (
 ignores it for movement. Open, inference: doc 03 section 18 stalk 20 s with chase at 15 s; a
 playtest settles it. Retreat is 10 s in Phase 1 (`phase1.json`). **Why:** removes the ambiguities
 P1-04, P1-05 and P1-08 would otherwise hit.
+
+### D-024 · 2026-10-07 · CEO · Joining over Tailscale
+CEO: players join over Tailscale. Joining by raw IP (a Tailscale address works like any VPN IP, doc 06
+manual fallback) is the supported path for DD Phase 1. UPnP and join codes stay as built in the spike
+but get no new work until the CEO asks. **Why:** removes router and UPnP failures from playtests
+(Open Issue 1 in doc 01 stays tracked). **How to apply:** Network & Voice does not prioritise join
+codes; QA tests two-machine sessions over Tailscale.
