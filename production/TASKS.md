@@ -163,7 +163,7 @@ the CEO playtest.
 | P1-15 | Network & Voice | Move the ENet host/join, roster, handshake and `apply_clock` rpc from `Game`/`Clock` into `game/net/Net` (doc 06); raw-IP join (Tailscale, D-024); `grep_rules` `rpc_outside_net` clean | done | P1-02 |
 | P1-04 | Gameplay | Player controller, crouch, sprint, remote proxies, host speed check, `NoiseBus.emit_kind` | done | P1-02, P1-03, P1-15 |
 | P1-05 | Gameplay | Hold framework + turnips: plant, water (noisy can), harvest, sell at (40, 20), `hold_completed` | done | P1-04 |
-| P1-06 | Network & Voice | Move the spike voice into `game/`: proximity voice, VAD/PTT, `VoiceEmitter`, voice reports to `Noise` | in review | P1-04 |
+| P1-06 | Network & Voice | Move the spike voice into `game/`: proximity voice, VAD/PTT, `VoiceEmitter`, voice reports to `Noise` | done (Q-042 push_to_talk setting owed by Gameplay) | P1-04 |
 | P1-07 | Gameplay | Generator, fuel drum, lights, go-still ring, crouch noise | in review | P1-05 |
 | P1-08 | AI Programmer | Scripted creature: Lurk/Stalk/Chase/Retreat timers, wander and chase by sound, scripted traps and pits, stranger lines from the corn, lure logging | todo | P1-04, P1-06 |
 | P1-09 | Gameplay | Trap race, death, ghost spectate, `apply_creature_state` hooks | todo | P1-08 |
