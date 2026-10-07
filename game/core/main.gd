@@ -25,4 +25,5 @@ func _ready() -> void:
 	players.set_script(load("res://game/player/players.gd"))
 	players.name = "Players"
 	add_child(players)
+	add_child(DebugView.new())  # P1-12: hidden unless --debug-view or F3 (host)
 	Log.event(&"main_ready", {"players": Game.players.keys()})

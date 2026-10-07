@@ -8,6 +8,7 @@ const DEFAULTS := {
 	"fov": 75.0,  ## degrees, placeholder
 	"toggle_crouch": false,
 	"reduce_scares": false,
+	"push_to_talk": false,  ## doc 01 "Mic mode": open mic by default; Voice reads it (Q-042, D-027)
 	"vol_master": 1.0, "vol_music": 1.0, "vol_sfx": 1.0, "vol_ambience": 1.0, "vol_voice": 1.0,
 	"vol_ui": 1.0,
 	"player_name": "Farmer",

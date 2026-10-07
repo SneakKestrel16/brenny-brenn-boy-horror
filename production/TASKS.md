@@ -165,12 +165,12 @@ the CEO playtest.
 | P1-05 | Gameplay | Hold framework + turnips: plant, water (noisy can), harvest, sell at (40, 20), `hold_completed` | done | P1-04 |
 | P1-06 | Network & Voice | Move the spike voice into `game/`: proximity voice, VAD/PTT, `VoiceEmitter`, voice reports to `Noise` | done (Q-042 push_to_talk setting owed by Gameplay) | P1-04 |
 | P1-07 | Gameplay | Generator, fuel drum, lights, go-still ring, crouch noise | done | P1-05 |
-| P1-08 | AI Programmer | Scripted creature: Lurk/Stalk/Chase/Retreat timers, wander and chase by sound, scripted traps and pits, stranger lines from the corn, lure logging | todo | P1-04, P1-06 |
+| P1-08 | AI Programmer | Scripted creature: Lurk/Stalk/Chase/Retreat timers, wander and chase by sound, scripted traps and pits, stranger lines from the corn, lure logging | in progress | P1-04, P1-06 |
 | P1-09 | Gameplay | Trap race, death, ghost spectate, `apply_creature_state` hooks | todo | P1-08 |
 | P1-10 | Audio Designer | Three ambience layers from creature state, trap and step sounds, whistle, stranger-line synthesis | todo | P1-08 |
 | P1-11 | Technical Artist | Day, dusk, night lighting, dark buildings, fog, corn render budget | done (corn budget unmeasured, check in P1-14) | P1-03 |
-| P1-12 | Gameplay | Spatial audio test scene with `spatial_audio_trial` logging; debug view | todo | P1-06, P1-03 |
-| P1-13 | AI Programmer | Bot that walks and does chores | todo | P1-05 |
+| P1-12 | Gameplay | Spatial audio test scene with `spatial_audio_trial` logging; debug view | in review | P1-06, P1-03 |
+| P1-13 | AI Programmer | Bot that walks and does chores | in progress | P1-05 |
 | P1-14 | QA | Review each P1 task; 2-instance run; `check_logs.py` on a full session; run the doc 09 gate | todo | all above |
 
 Each owner turns their row into acceptance from the cited doc sections when starting; every task
