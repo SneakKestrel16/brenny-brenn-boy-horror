@@ -358,8 +358,8 @@ table and live in `data/labor.json`; this doc repeats none of them.
 ## 8. The Noise interface
 
 CONTRACTS section 8: "Noise.emit(position: Vector3, radius_m: float, kind: StringName, source_peer:
-int)", host-side. Doc 03 section 3.1 sets what the creature does with it. **Proposed final** (the AI
-Programmer confirms in Q-019):
+int)", host-side. Doc 03 section 3.1 sets what the creature does with it. **Final** (confirmed by the AI
+Programmer, Q-019, D-021):
 
 ```gdscript
 # game/core/noise.gd  (autoload "Noise"; host-side only; a client call is a no-op with a warning)
@@ -372,7 +372,8 @@ func emit_voice(position: Vector3, volume_byte: int, source_peer: int) -> void
 
 - **`emit`** is the raw call and the one CONTRACTS names. `radius_m` is already final (all
   multipliers applied). `kind` is a `StringName` from doc 03's table. `source_peer` is the ENet peer
-  id of whoever caused it, or 0 for the world (a generator running dry).
+  id of whoever caused it, or 0 for the world (a generator running dry). `emit` with `radius_m <= 0`
+  (for example `step_crouch`) does not fire the signal; it only bumps the debug counter.
 - **`emit_kind`** is what gameplay code calls: it looks up the base radius in `creature.json`
   (`noise_radius` records, doc 03 section 3.1 and section 19) by `kind`, multiplies by `mult` and the
   Taint multiplier (x1.5 on footsteps, doc 03 section 3.1; read from `taint.json` through `Game`),
@@ -391,8 +392,6 @@ func emit_voice(position: Vector3, volume_byte: int, source_peer: int) -> void
 - **Kinds** are exactly doc 03 section 3.1's ids: `step_walk, step_crouch, step_sprint,
   step_sprint_corn, tool_till, tool_plant, tool_water, tool_harvest, tool_shovel, tool_pry,
   tool_repair, tool_disarm, well_pump, door, generator_dead, bells, flare, whistle, voice, walkie`.
-  (The exact spelling comes from doc 03; where doc 03 spells a kind differently, doc 03 wins and Q-019
-  asks the AI Programmer to confirm the list.)
 - **Corn damping (x0.7 between sound and creature), hearing memory, "louder replaces quieter within
   4 s" and picking the loudest radius-weighted source** all belong to the consumer, not to `Noise`
   (doc 03 section 3.1). `Noise` is a plain fan-out; a debug counter per `kind` is kept for the debug
@@ -403,7 +402,7 @@ Who calls it, per source:
 | Source | Emitter | Kind | Notes |
 |---|---|---|---|
 | Footsteps | Host movement handler, once per stride from `move` frames (section 6) | `step_*` | Tainted x1.5; crouch radius 0 |
-| Tool holds | `Interactable.complete` of the verb | `tool_till/plant/water/harvest` 15 m, `tool_shovel/pry/repair` 25 m, `tool_disarm` 8 m | Quiet can x0.5; emitted at completion and (placeholder) once at hold start for loud tools (inference: doc 03 does not say when; settled by AI Programmer, Q-019) |
+| Tool holds | `Interactable.complete` of the verb | `tool_till/plant/water/harvest` 15 m, `tool_shovel/pry/repair` 25 m, `tool_disarm` 8 m | Quiet can x0.5; all emit at completion; `tool_shovel`, `tool_pry` and `tool_repair` also emit once at hold start (AI Programmer, Q-019) |
 | Well | Wash and fill-can at the well | `well_pump` 45 m | |
 | Doors | Door handler | `door` 20 m | |
 | Generator | Generator when dead and when fuel runs out | `generator_dead` 80 m | World source, `source_peer` 0 |
@@ -526,7 +525,7 @@ Harvest Moon only (doc 01 "The Harvest Moon", doc 02 section 9). Host-owned `Car
 - Players load crops into it in the barn and push it: `request_push_cart(on)` as a hold-like
   continuous action (while held and within range the cart advances; speed by pusher count is
   doc 02's or doc 03's; `placeholder` until they say). `apply_cart(loaded, pushers)` (doc 06
-  section 12 table) is sent on change only; the cart's transform rides the normal object update
+  section 7) is sent on change only; the cart's transform rides the normal object update
   (inference: the Network & Voice Programmer owns the cadence, Q-019).
 - "Out" is the host check `cart.position.x > 78` (doc 04 section 6.1: "past the fields", an inference
   of doc 04's; settled when the Game Designer fixes doc 02 section 9). At the cap, a cart still short
@@ -783,13 +782,17 @@ presets for release (inference: settled by the Director when a release preset ex
     seconds and a line to the true position, so the gap between sensed and true is visible. The
     AI Programmer exposes `Creature.debug_sensed() -> Array[Dictionary]` (`{peer, position, age_s,
     source_kind}`) and `Creature.debug_state() -> Dictionary` (`state`, `body`, `timers`,
-    `target`, `noise_memory` (list of `{position, radius, kind, age_s}`)). Without these the debug
-    view can show only true positions. Q-019 asks for them.
+    `target`, `noise_memory` (list of `{position, radius, kind, age_s}`), plus true `position`,
+    `region`, `wander_region`). `source_kind` is `heard`, `seen`, `taint` or `trail`. Accessors return
+    copies; the view finds the nodes by group `creature` and `ai_director` (host only). Without these
+    the debug view can show only true positions (AI Programmer, Q-019, D-021).
   - **Noise:** each `noise_emitted` as an expanding ring at the position, radius to scale, coloured
     by `kind`, fading in 2 s.
   - **Hearing and sight radii** of the creature on demand (hold H).
   - **Tension meter** (AI Director, 0 to 100) as a bar and a rolling graph, plus the current phase
-    profile and the next scare timer. The AI Programmer exposes `AiDirector.debug_state()`.
+    profile and the next scare timer. `AiDirector.debug_state()` returns `tension`, `phase` (`build_up`, `peak`, `fade`, `relax`),
+    `profile`, `phase_time_s`, `next_scare_s`, `nudge_region`, `nudge_cooldown_s`, `budget_left`
+    (disturbance points) and `scares` (`{peer: {big_today, last_big_s}}`).
   - **Traps:** every trap spot from `trap_spots`, its trap kind, set/sprung state, and flags. Spots
     never used are grey.
   - **World:** the region graph (doc 03 section 11.6) as coloured polygons, the cart route polyline
