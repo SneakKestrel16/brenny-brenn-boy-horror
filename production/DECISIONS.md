@@ -146,3 +146,14 @@ the rule "mono in 3D, stereo for beds and UI only" go in section 3 (Q-035). (6) 
 `audio_state`, `ghost_flicker`, `ghost_action`, `lure_fooled`, debug-only `perf_sample` (section 10).
 (7) `apply_refused` and dev-only `apply_debug_state` are in section 7 (D-018). **Why:** each is the
 reading with the fewest new parts that lets two roles build against one file.
+
+### D-021 · 2026-10-07 · Director · AI Programmer proposals (Q-018, Q-019)
+
+Accepted as written in the Q-018 and Q-019 answers: Noise API amendments (radius <= 0 emits nothing,
+Taint x1.5 on `step_*` only, tool noise on hold complete plus on start for shovel, pry and repair,
+scream = `emit_voice` at byte 255); doc 03 edits (corn damping not applied to `step_sprint_corn`;
+home on largest `effective_radius_m - distance_m`; footstep tension capped at +1/s per player;
+stalk-to-chase uses the sensed position and not by day outside day death or trap race; chase lost
+only after `chase_commit_s`; regions are `Area3D` nodes linked within 2 m); navmesh baked from
+layer 1 only. **Why:** each removes an ambiguity or exploit (sprint quieter in corn, undefined
+homing) that would otherwise surface during DD Phase 3 build.
