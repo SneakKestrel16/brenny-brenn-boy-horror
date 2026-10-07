@@ -117,7 +117,7 @@ for CONTRACTS). Load order matters because later ones use earlier ones:
 
 | Order | Autoload | File | Owner | Job |
 |---|---|---|---|---|
-| 1 | `Log` | `game/core/log.gd` | Gameplay | JSONL writer (section 18) |
+| 1 | `Log` | `game/core/log.gd` | Gameplay | JSONL writer (section 18); reads `Clock` lazily for `day` and `phase` (null until `Clock` loads) |
 | 2 | `Data` | `game/core/data.gd` | Gameplay | Loads and validates `data/*.json` (section 4) |
 | 3 | `Settings` | `game/core/settings.gd` | Gameplay | Local settings file (section 16) |
 | 4 | `Net` | `game/net/net.gd` | Network & Voice | Transport, sends, roster, `Net.to_host` / `Net.to_peers` |
@@ -186,8 +186,7 @@ section 17). `Data` is the only loader.
 
 - **Files** (CONTRACTS section 6, doc 02 appendix, doc 03 section 19): `season, labor, crops,
   pumpkin, debt, medical_bill, player_scaling, difficulty, store, ramp_up, traps, taint, roles,
-  creature, sabotage, ai_director, voice_lines, dawn_report_templates` (plus `ramp_up` and
-  `pumpkin`). The files do not exist yet; the Game Designer creates them from the doc 02 and 03
+  creature, sabotage, ai_director, voice_lines, dawn_report_templates`. The files do not exist yet; the Game Designer creates them from the doc 02 and 03
   appendices when DD Phase 1 starts. Until a file exists the code that needs it fails loudly in
   `Data` (below), never silently with a default.
 - **Envelope** (doc 02 A.1): `{"table", "schema_version": 1, "records": [{ "id", "source",
@@ -277,7 +276,7 @@ Clients own movement and camera (doc 01 "Authority"). The controller is a `Chara
   (doc 01 "Diegetic"). The bell on a trap, the flag on a pole, the pegboard in the shed are the
   information.
 - **Footstep Noise.** Each step event (a distance-based footstep timer, not an animation event) calls
-  `request_step` locally for the visual and plays the local sound; the host emits the Noise from the
+  plays the local sound and bob only (no message is sent); the host emits the Noise from the
   `move` stream (section 8): the host decides `step_walk`, `step_crouch`, `step_sprint` or
   `step_sprint_corn` from the frame's crouch and sprint flags and the position (is it inside a corn
   region), once per `step_stride_m` metres moved (`placeholder` 1.6 m, doc 03 gives only radii, not
@@ -327,8 +326,9 @@ table and live in `data/labor.json`; this doc repeats none of them.
    x0.6), Tainted x1.5 on pry only, role multipliers (Mechanic x0.6 on `repair_generator`, `refuel`,
    `repair_fence`; Tracker x0.6 on `disarm_bear`), all from their own tables (doc 02 section 2.3).
 4. **Cancel.** The hold ends without effect if: the client sends `request_hold_cancel`, the player
-   leaves `range_m` plus 0.5 m (`placeholder`), the target becomes invalid, the player is Shaken
-   into a state that forbids it, or the player dies. The host replies `apply_hold_cancelled` and logs
+   leaves `range_m` plus 0.5 m (`placeholder`), the target becomes invalid, the verb's `labor.json`
+   entry sets `blocked_when_shaken` and the player becomes Shaken (none set until doc 02 says so,
+   inference), or the player dies. The host replies `apply_hold_cancelled` and logs
    `hold_cancelled`. Releasing the key is a cancel; there is no partial progress kept unless the
    verb says so (doc 02 gives none, so none).
 5. **Complete (host).** At progress 1 the host calls `complete`, which changes the state and
@@ -498,13 +498,17 @@ Traps are host-owned (doc 03 section 8). The player side is:
   a smooth intensity curve driven by `apply_generator(fuel_fraction)`, not an animation.
 - **Lights.** `Light` nodes (`game/world/` places them, `game/core/lights.gd` is the shared
   controller) are host-owned: on or off with `apply_lights`, and dimming from `apply_generator`.
-  They never flicker on their own.
+  They never flicker on their own. Each light is a `LightRig` (`game/render/light_rig.gd`, doc 07
+  section 4) with slew-limited `set_on`, `set_dim`, `blow_out`. `lights.gd` is the **only** caller of
+  those setters, and nothing else in `game/` writes `light_energy` (QA greps `light_energy`).
+  `LightRig.energy_override` is guarded and written only by `light_flicker.gd`.
 - **Only ghosts flicker lights (doc 01 "Ghosts > Lantern flicker").** Enforced in one place:
   `LightFlicker.flicker(light_id, caller_peer)` in `game/ghost/light_flicker.gd` is the **only**
   function in the codebase that animates a light's energy as a flicker. The host's
   `request_flicker` handler checks `Game.is_ghost(caller_peer)` first and rejects otherwise. The
   generator, lantern, trap, creature and AI Director never call it; a grep for `flicker` in `game/`
-  outside `game/ghost/` is a review finding (QA's checklist, doc 09). The lantern "blows out"
+  outside `game/ghost/` is a review finding (QA's checklist, doc 09), except the `request_flicker` and
+  `apply_flicker` handler glue in `Net`. The lantern "blows out"
   (instant off with a puff) and never flickers (doc 06 section 11, doc 01 "Ghosts"). A dying
   generator dims. Neither is the flicker.
 - **Lanterns** are carried lights (`request_lantern(on)`); the creature sees lit lanterns at 40 m at
@@ -520,8 +524,8 @@ Harvest Moon only (doc 01 "The Harvest Moon", doc 02 section 9). Host-owned `Car
 
 - Players load crops into it in the barn and push it: `request_push_cart(on)` as a hold-like
   continuous action (while held and within range the cart advances; speed by pusher count is
-  doc 02's or doc 03's; `placeholder` until they say). `apply_cart(position, loaded, pushers)` at
-  10 Hz on channel 0 is **not** adopted; the cart's transform rides a normal object update instead
+  doc 02's or doc 03's; `placeholder` until they say). `apply_cart(loaded, pushers)` (doc 06
+  section 12 table) is sent on change only; the cart's transform rides the normal object update
   (inference: the Network & Voice Programmer owns the cadence, Q-019).
 - "Out" is the host check `cart.position.x > 78` (doc 04 section 6.1: "past the fields", an inference
   of doc 04's; settled when the Game Designer fixes doc 02 section 9). At the cap, a cart still short
@@ -603,7 +607,7 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   the host's save** (doc 01 "Voice settings > Storage"; CONTRACTS section 5). Contents: audio
   volumes, mouse sensitivity, FOV, keybinds, toggle crouch, push-to-talk vs open mic and its
   threshold, denoise, voice setting (`off` / `lobby_lines` / unchosen), streamer-safe, subtitles for
-  voice (a diegetic text, not a HUD marker).
+  none (no voice subtitles, D-019).
 - **Difficulty and group options** are chosen in the lobby by the host and saved in the season
   (`Easy`, `Normal`, `Hard`, `Nightmare`, `difficulty.json`; "no live clips" and "streamer-safe" are
   flags; doc 01 "Difficulty and group settings"). They go in the save (section 17); the voice
@@ -611,8 +615,8 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
 - **No HUD markers.** There is no minimap, no objective marker, no player name tag over a head, no
   health bar. Information is diegetic (doc 01 "Diegetic"): the pegboard shows what tools are out, the
   flag shows a trap, a wrinkled leaf shows a thirsty crop, the generator hums lower.
-- **Accessibility** (inference, unscoped in doc 01): subtitles for the creature's voice fakes would
-  defeat the "wrong place" tell, so voice subtitles show only speaker names for real teammates. A
+- **Accessibility** (inference, unscoped in doc 01): there are no voice subtitles at all (D-019): a
+  missing speaker name on a creature fake would expose it and defeat the "wrong place" tell. A
   colour-blind option for the Taint visual. Settled by the CEO if it matters.
 
 ## 17. Save at dawn

@@ -410,7 +410,9 @@ beyond doc 06 section 7 (plus `apply_refused(verb, reason)`, which I add: tell m
 ### Q-024 · 2026-10-07 · QA → Director · answered D-019
 PP-07 QA passed with minor findings (handoff PP-07 "QA review"). One needs a design call: doc 05 sec 16 shows speaker-name subtitles only for real teammates, so a missing name exposes a creature fake and undercuts the wrong-place tell. Recommend no voice subtitles in Phases 1-3. Other findings (request_step, apply_cart wording, Log/Clock order) are doc 05 edits for Gameplay.
 
-### Q-025 · 2026-10-07 · Technical Artist → Gameplay Programmer · open
+### Q-025 · 2026-10-07 · Technical Artist → Gameplay Programmer · answered
+**Answer (Gameplay, 2026-10-07):** Confirmed. `game/core/lights.gd` is the only caller of `LightRig.set_on`/`set_dim`/`blow_out`; `light_flicker.gd` is the only writer of `energy_override`; nothing else writes `light_energy`. Doc 05 section 12 updated, including the `Net` handler-glue exception for QA's grep.
+
 Doc 07 section 4 keeps your `LightFlicker.flicker` in `game/ghost/light_flicker.gd` as the only flicker caller. Render supplies `LightRig` (`game/render/light_rig.gd`): slew-limited `set_on`, `set_dim`, `blow_out`, plus a guarded `energy_override` that only `light_flicker.gd` uses. Please confirm `game/core/lights.gd` is the only caller of the setters, and that nothing else writes `light_energy` (QA greps for it).
 
 ### Q-026 · 2026-10-07 · Technical Artist → Level Designer · open
