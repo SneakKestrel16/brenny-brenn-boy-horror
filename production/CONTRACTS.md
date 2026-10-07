@@ -48,7 +48,7 @@ in QUESTIONS.md or a task from the Director.
 | `project.godot` | Gameplay Programmer | Autoloads, input map, layers. Others request entries |
 | `export_presets.cfg` | Network & Voice Programmer | Voice spike preset only, until DD Phase 1 (D-014) |
 | `default_bus_layout.tres` | Audio Designer | |
-| `game/core/` | Gameplay Programmer | Autoloads: `Game`, `Log`, `Data`, `Settings`, `Clock` |
+| `game/core/` | Gameplay Programmer | Autoloads: `Game`, `Log`, `Data`, `Settings`, `Clock`, `Noise` (D-018) |
 | `game/player/`, `game/interaction/`, `game/farming/`, `game/items/`, `game/traps_player/`, `game/ghost/`, `game/ui/`, `game/debug/` | Gameplay Programmer | |
 | `game/net/`, `game/voice/` | Network & Voice Programmer | Includes the voice chain the creature's fakes use |
 | `game/creature/`, `game/ai_director/`, `game/bots/` | AI Programmer | |
@@ -144,10 +144,13 @@ Full list and frame formats: [doc 06 section 7](../docs/06_networking_and_voice.
 
 ## 8. Shared runtime interfaces (*Draft*)
 
-- **Noise:** gameplay code reports sounds the creature can hear through one host-side call,
-  roughly `Noise.emit(position: Vector3, radius_m: float, kind: StringName, source_peer: int)`.
-  Voice volume (one byte per voice frame, doc 01) feeds the same call. Final signature in doc 05
-  (PP-07), agreed with the AI Programmer.
+- **Noise (D-018):** autoload `Noise` (`game/core/noise.gd`), host-side only. Final API in
+  [doc 05 section 8](../docs/05_technical_design.md#8-the-noise-interface):
+  `emit(position: Vector3, radius_m: float, kind: StringName, source_peer: int)` (raw, radius final),
+  `emit_kind(kind, position, source_peer, mult = 1.0)` (looks up the radius in `creature.json`,
+  applies Taint and quiet-can multipliers) and `emit_voice(position, volume_byte, source_peer)`
+  (converts the one-byte voice volume to a radius). Signal `noise_emitted` is what the creature
+  connects to. The AI Programmer's confirmation is Q-019.
 - **Day phase IDs:** `day`, `dusk`, `night`, `dawn`, `harvest_moon`.
 - **Log events:** section 10.
 
@@ -169,7 +172,9 @@ file is authoritative for gameplay events.
 `hold_completed` (verb, seconds), `lure_played`, `lure_result` (worked = moved more than 10 m toward
 the source within 8 s), `trap_sprung`, `trap_race_result` (solo, tainted, pried_at_once, survived,
 seconds_spare), `death`, `money_changed`, `inside_at_night` (seconds), `spatial_audio_trial`.
-Full list in doc 05 (PP-07).
+Full list and field names: [doc 05 section 18](../docs/05_technical_design.md). Host-written
+`trap_race_result` and `inside_at_night` carry `data.player` (D-018). `lure_result.within_s` is
+actual seconds; `window_s` is the allowed window (D-018).
 
 ## 11. Voice and recordings
 

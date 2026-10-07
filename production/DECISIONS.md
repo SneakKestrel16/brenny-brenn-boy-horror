@@ -113,3 +113,13 @@ crafted. The simulator reads gnawing as "not guarded that night" until doc 03 se
 pumpkin's size comes from its count of watered days. **Why:** each is the reading that reproduces
 doc 01's worked numbers (1,077 / 211; 322 / 194) or the stricter, simpler one. Q-015 items 4 and 5
 (plots per player, the 2-player gap) wait for the simulator and may go to the CEO at PP-12.
+
+### D-018 · 2026-10-07 · Director · Doc 05 interfaces (Q-020)
+Accepted as doc 05 writes them: autoload `Noise` with `emit`, `emit_kind`, `emit_voice` and signal
+`noise_emitted`; `data.player` on host-written `trap_race_result` and `inside_at_night`;
+`lure_result.within_s` is actual seconds with a new `window_s`; movement speeds and hold times read
+from `labor.json` (one source for the game and the simulator); the host refuses defenses within 3 m
+of the cart route; input actions and the log event list live in doc 05 and CONTRACTS refers to them;
+dev-only `apply_debug_state` message for the client debug view (never in release builds);
+`apply_refused(verb, reason)` is accepted pending Network & Voice's reply (Q-023). **Why:** each
+removes an ambiguity two roles hit (Q-002, Q-006, Q-014 item 6, Q-016) with the least new surface.

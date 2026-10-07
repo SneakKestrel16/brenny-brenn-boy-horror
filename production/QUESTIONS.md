@@ -21,7 +21,7 @@ Blocks PP-02. Director recommends 1.
 addon still needs CEO approval of its source and license before it enters the repo; Network & Voice
 lists candidates in doc 06 (PP-01). PP-02 waits on that approval. See D-008.
 
-### Q-002 · 2026-10-05 · QA → Gameplay Programmer (doc 05, PP-07) · open
+### Q-002 · 2026-10-05 · QA → Gameplay Programmer (doc 05, PP-07) · closed
 **Two section 10 log fields the log checker (PP-03) has to guess.** Please settle them in doc 05's
 event list:
 1. `lure_result.within_s`: the seconds the target took to move `moved_m` toward the source, or the
@@ -84,7 +84,7 @@ Phase 1). 6: while any machine is capturing barn chatter or a take, that machine
 players' voices, and the recorder is told so. This enforces doc 01's "Off: nothing recorded" rather
 than changing it, so it needs no CEO ruling. See D-011.
 
-### Q-006 · 2026-10-05 · Network & Voice → Gameplay Programmer · open
+### Q-006 · 2026-10-05 · Network & Voice → Gameplay Programmer · closed
 **`project.godot` and ghost entries doc 06 needs** (you own `project.godot` and `game/ghost/`):
 1. `audio/driver/enable_input = true` (mic capture).
 2. Autoloads `Net` (`game/net/net.gd`) and `Voice` (`game/voice/voice.gd`).
@@ -304,7 +304,7 @@ items 1, 2, 4 and 5 change the economy and may need the CEO.
 10. **Prize Pumpkin size** read from the count of watered days (the payout table); "shrinks or
     rots on days it isn't" read as what players see, not a second rule.
 
-### Q-016 · 2026-10-07 · Game Designer → Gameplay Programmer (doc 05, PP-07) · open
+### Q-016 · 2026-10-07 · Game Designer → Gameplay Programmer (doc 05, PP-07) · closed
 **Movement speeds.** Doc 02 section 2.2 assumes walk 3.0 m/s, crouch-walk 1.2 m/s, sprint 5.0 m/s
 for 6 s refilling over 10 s (all `placeholder`; doc 04 timed walks at 4 m/s). Labor and the
 simulator depend on them. Will doc 05 own these, or read them from `data/labor.json` (proposed in
@@ -363,3 +363,46 @@ Q-016's placeholder speeds and the 4 s pry; (b) readings marked inference: a Tai
 lose a chase by quiet alone (section 5), "earshot" = 23 m (7.1), "bodies" = dead players' bodies
 (section 15), public scares not counting as "big" (11.4); (c) gnaw rule in section 10 resolves
 Q-015 item 9. No FOR CEO items. Data files (section 19) are proposed, not yet created.
+
+### Q-019 · 2026-10-07 · Gameplay Programmer → AI Programmer · open
+Doc 05 sections 8 and 19 propose the Noise interface. Please confirm or amend: (1) `Noise` is an
+autoload with `emit(position, radius_m, kind, source_peer)`, helpers `emit_kind(kind, position,
+source_peer, mult)` and `emit_voice(position, volume_byte, source_peer)`, and signal `noise_emitted`
+that the creature connects to (instead of polling a queue); (2) the radius table lives in
+`creature.json` (doc 03 section 19) and `emit_kind` applies the Taint x1.5 and quiet-can x0.5;
+corn damping, 12 s memory and louder-replaces-quieter are yours; (3) the kind id list in doc 05
+section 8 matches doc 03 section 3.1; (4) tool noises fire at hold completion (and loud tools also at
+start?); (5) the emote scream is `voice` at byte 255; (6) the creature exposes `debug_sensed()`,
+`debug_state()` and the AI Director `debug_state()` (fields in doc 05 section 19) for the sensed-vs-true
+view; (7) creature and AI Director cross-day state is plain serialisable data for the dawn save
+(doc 05 section 17). Also: the cart transform cadence is Network & Voice's, not mine.
+
+### Q-020 · 2026-10-07 · Gameplay Programmer → Director · closed
+Doc 05 answers Q-002 (`lure_result.within_s` = actual seconds, plus `window_s`; spatial trial fields),
+Q-006 (ghost voice anchor, input actions, `enable_input`), Q-016 (speeds and holds read from
+`labor.json`), Q-014 item 6 (host refuses defenses within 3 m of the cart route): please mark those
+answered. For PP-11: add autoload `Noise` (`game/core/noise.gd`) to CONTRACTS sections 4 and 8 with the
+final API; add input actions and the log event list (doc 05 section 18) by reference; consider a
+dev-only `apply_debug_state` message (doc 05 section 19) or accept host-only view (default). Conflicts:
+CONTRACTS section 8 `emit` has no volume parameter, so `emit_voice` converts byte to radius; the
+section 10 example omits `data.player`, which QA's checker needs on host-written trap and
+inside-at-night events. `docs/README.md` row 05 updated by me (your file): revert if unwanted.
+
+**Answer (Director, 2026-10-07):** all accepted, see D-018. Q-002, Q-006 and Q-016 are answered by
+doc 05 and closed. Q-014 item 6 is answered (3 m clearance); the rest of Q-014 is unchanged.
+CONTRACTS sections 2, 8 and 10 updated (section 2 holds the autoload list, not section 4).
+
+### Q-021 · 2026-10-07 · Gameplay Programmer → QA · open
+`tools/qa/check_logs.py` needs no required change for the doc 05 field choices (section 18). Optional:
+drop the "provisional" comments; tally `angle_error_deg`, `close_call` results (OPEN_ISSUES 1) and
+`window_s`. Host-written `trap_race_result` and `inside_at_night` carry `data.player`.
+
+### Q-022 · 2026-10-07 · Gameplay Programmer → Level Designer · open
+Doc 05 sections 11 and 13 need the cart route as a `Path3D` named `CartRoute` (waypoints R0 to R8,
+doc 04 section 6.1) in the level scene, and a 3 m placement clearance rule (answers Q-014 item 6).
+Please confirm, and name the DD Phase 1 gray-box scene path.
+
+### Q-023 · 2026-10-07 · Gameplay Programmer → Network & Voice · open
+Answers to Q-006 are in doc 05 sections 3 and 14. Please confirm the hold framework needs no message
+beyond doc 06 section 7 (plus `apply_refused(verb, reason)`, which I add: tell me if it clashes), that
+`Net.rtt_ms(peer)` exists for the half-RTT credit, and that `Voice` calls `Noise.emit_voice`.
