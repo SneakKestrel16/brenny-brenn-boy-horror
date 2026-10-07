@@ -17,6 +17,10 @@ func _ready() -> void:
 	look.set_script(load("res://game/render/world_look.gd"))
 	look.name = "Look"
 	add_child(look)
+	var gen := Node.new()  # P1-07: generator, fuel drum, building lights (after Farm and Look: it uses both)
+	gen.set_script(load("res://game/core/generator.gd"))
+	gen.name = "Generator"
+	add_child(gen)
 	var players := Node3D.new()
 	players.set_script(load("res://game/player/players.gd"))
 	players.name = "Players"

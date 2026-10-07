@@ -84,7 +84,7 @@ func _look_target() -> Node:
 
 
 func _on_apply(what: StringName, args: Array) -> void:
-	if not _holding or what in [&"money_changed", &"plot_changed"] or args[0] != _verb:
+	if not _holding or what in [&"money_changed", &"plot_changed", &"generator"] or args[0] != _verb:
 		return
 	match what:
 		&"hold_done": _end(&"done")

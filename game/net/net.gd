@@ -240,3 +240,11 @@ func apply_plot_changed(id: String, state: StringName, watered: bool, age: int) 
 @rpc("authority", "call_remote", "reliable")
 func apply_money_changed(coins: int) -> void:
 	apply_received.emit(&"money_changed", [coins])
+
+
+# --- Generator (doc 05 section 12); added in P1-07 ------------------------------------------------
+
+## Host to clients: tank seconds left and whether the generator is damaged (lights follow both).
+@rpc("authority", "call_remote", "reliable")
+func apply_generator(fuel_s: float, damaged: bool) -> void:
+	apply_received.emit(&"generator", [fuel_s, damaged])

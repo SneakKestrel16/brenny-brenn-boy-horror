@@ -5,6 +5,7 @@ extends Node3D
 
 const PlayerScript := preload("res://game/player/player.gd")
 const SpeedCheck := preload("res://game/player/speed_check.gd")
+const StillRing := preload("res://game/player/still_ring.gd")
 
 const Frame := preload("res://game/player/move_frame.gd")
 const SEND_HZ := 20.0  ## doc 06 section 6 (placeholder)
@@ -146,9 +147,21 @@ func _ingest(peer: int, f: Dictionary) -> void:
 	st.sprint = f.sprint
 	st.seq = f.seq
 	st.t_ms = now
+	_update_still(peer, st, pos, now)
 	Game.players[peer] = st
 	if peer != Game.local_peer() and _players.has(peer):
 		_players[peer].set_target(pos, f.yaw, f.pitch, f.crouch)
+
+
+## Doc 05 section 6: `Game.players[peer].is_still` comes from the host's 1 s ring of received positions.
+func _update_still(peer: int, st: Dictionary, pos: Vector3, now: int) -> void:
+	if not st.has("ring"):
+		st.ring = StillRing.new()
+	st.ring.push(now, pos)
+	var still: bool = st.ring.is_still()
+	if still != bool(st.get("is_still", false)):
+		Log.event(&"still_changed", {"player": peer, "still": still, "moved_m": snappedf(st.ring.moved_m(), 0.01)})
+	st.is_still = still
 
 
 func _step_kind(f: Dictionary, pos: Vector3) -> StringName:

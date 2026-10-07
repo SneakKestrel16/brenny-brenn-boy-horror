@@ -164,7 +164,7 @@ the CEO playtest.
 | P1-04 | Gameplay | Player controller, crouch, sprint, remote proxies, host speed check, `NoiseBus.emit_kind` | done | P1-02, P1-03, P1-15 |
 | P1-05 | Gameplay | Hold framework + turnips: plant, water (noisy can), harvest, sell at (40, 20), `hold_completed` | done | P1-04 |
 | P1-06 | Network & Voice | Move the spike voice into `game/`: proximity voice, VAD/PTT, `VoiceEmitter`, voice reports to `Noise` | in review | P1-04 |
-| P1-07 | Gameplay | Generator, fuel drum, lights, go-still ring, crouch noise | todo | P1-05 |
+| P1-07 | Gameplay | Generator, fuel drum, lights, go-still ring, crouch noise | in review | P1-05 |
 | P1-08 | AI Programmer | Scripted creature: Lurk/Stalk/Chase/Retreat timers, wander and chase by sound, scripted traps and pits, stranger lines from the corn, lure logging | todo | P1-04, P1-06 |
 | P1-09 | Gameplay | Trap race, death, ghost spectate, `apply_creature_state` hooks | todo | P1-08 |
 | P1-10 | Audio Designer | Three ambience layers from creature state, trap and step sounds, whistle, stranger-line synthesis | todo | P1-08 |
