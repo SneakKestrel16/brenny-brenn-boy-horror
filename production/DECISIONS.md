@@ -183,3 +183,11 @@ codes; QA tests two-machine sessions over Tailscale.
 
 ### D-025 · 2026-10-07 · Director · Noise autoload renamed NoiseBus
 Autoload `Noise` becomes `NoiseBus` (`game/core/noise_bus.gd`) because `Noise` is a native Godot class and the identifier resolves to the class. API unchanged (`emit`, `emit_kind`, `emit_voice`, signal and log event `noise_emitted`). Answers Q-041. **Why:** removes the `get_node("/root/Noise")` workaround. **How to apply:** call `NoiseBus.emit*`; "Noise" stays the name of the concept and the doc 03 kind table.
+
+### D-026 · 2026-10-07 · Director · Hold RPC shape
+Accepted P1-05's single `request_hold(verb, target)` plus `request_hold_cancel` and
+`request_farm_state`, with results `apply_refused`, `apply_hold_cancelled`, `apply_hold_done`,
+`apply_plot_changed`, `apply_money_changed`, in place of doc 06's per-verb `request_<verb>`. Seeds are
+infinite in Phase 1 (no store; inference). **Why:** one validated path for every hold verb, fewer
+messages. **How to apply:** doc 06 section 7 and CONTRACTS 7 get the new names when the Network &
+Voice Programmer next edits them.
