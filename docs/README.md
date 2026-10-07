@@ -13,7 +13,7 @@ Director, not resolved in the lower doc.
 | [05](05_technical_design.md) | Technical Design | Gameplay Programmer | In review (PP-07) |
 | [06](06_networking_and_voice.md) | Networking & Voice | Network & Voice Programmer | Done (PP-01) |
 | [07](07_art_direction_and_asset_list.md) | Art Direction & Asset List | Technical Artist | In review (PP-08) |
-| 08 | Audio Design & Sound List | Audio Designer | Not started (task PP-09) |
+| [08](08_audio_design_and_sound_list.md) | Audio Design & Sound List | Audio Designer | In review (PP-09) |
 | 09 | Playtest Plan | QA / Reviewer | Not started (task PP-10) |
 
 File names follow `NN_snake_case_title.md`, for example `06_networking_and_voice.md`. Each doc

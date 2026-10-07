@@ -94,7 +94,7 @@ than changing it, so it needs no CEO ruling. See D-011.
    06 section 8 attaches the ghost's `VoiceEmitter` to whatever node the Ghost system names.
 Not blocking PP-02 (the spike sets its own project settings in `spikes/voice/`).
 
-### Q-007 · 2026-10-05 · Network & Voice → Audio Designer · open
+### Q-007 · 2026-10-05 · Network & Voice → Audio Designer · answered (doc 08 s2.2)
 **Voice buses** (you own `default_bus_layout.tres`). Doc 06 section 8 and 9 need a muted `Mic` bus
 with an `AudioEffectCapture`, and the voice chain buses under `Voice`: `VoiceBase`, `VoiceEcho`,
 `VoicePitchUp`, `VoicePitchDown`, the four `VoiceGhost*` variants and `VoiceRadio`. Should
@@ -429,3 +429,12 @@ For doc 09: the three grep rules in doc 07 section 4.4 (`flicker`, `energy_overr
 
 ### Q-030 · 2026-10-07 · QA → Technical Artist · answered (all five fixed in doc 07; body asset is char_farmer_ragdoll.glb, no CONTRACTS change)
 PP-08 passed with five doc 07 nits: (1) dead-body asset has three names (`char_farmer_body` s8, `prop_player_body.glb` s11.2, `char_farmer_ragdoll.glb` s11.7), pick one; (2) s2 "only three things glow" contradicts creature ember eyes and corn husk heart; (3) s4.2 0.6 s dead-generator fade vs s4.1 0.2 s slew cap, state the exception; (4) s3 6 m doorway reasoning cites the 20 m pumpkin rule unclearly, cite doc 04 s4; (5) `prop_church_bell`, `prop_stolen_tool_marker` have no model, mark "no asset". Details in production/handoffs/PP-08.md.
+
+### Q-031 · 2026-10-07 · Audio Designer → Director · open · FOR CEO
+Doc 08 s7.4, s13. (1) Generic stranger voice lines (`vox_stranger_*`): default is SuperCollider formant synthesis (placeholder quality, low intelligibility). Approve offline TTS instead? If yes, name the engine and license. (2) Any day or menu music wanted, or only the chase sting? (3) Answers Q-014 item 4: whistle `max_distance` 220 m (audible past 171 m), `unit_size` 20 m; DD Phase 1 spatial test settles it.
+
+### Q-032 · 2026-10-07 · Audio Designer → Gameplay Programmer · open
+Doc 08 s10. Please add autoload `Soundscape` (`game/audio/soundscape.gd`, mine) to `project.godot`; call `set_creature_state(state, body)` from the `apply_creature_state` handler, `set_phase` from `Clock`, `set_local_state` from Player/Generator. Settings sliders for Master, Music, SFX, Ambience, Voice, UI plus `reduce_scares`. Also: pen animal species (Game Designer, doc 08 s11.1 assumes chicken, cow, sheep) and a playtest switch `stalk_scope` global|near (doc 08 s4.3, default global).
+
+### Q-033 · 2026-10-07 · Audio Designer → Network & Voice Programmer · open
+Answers Q-007: layout file holds the 7 base buses; `Mic` and the `Voice` children are created at runtime by `game/voice/`; levels come from `game/audio/mix_levels.gd` (doc 08 s2.2, s7.2). Please confirm, and that `vox_crackle_loop` attaches as a second player on `VoiceEmitter` (s7.2).
