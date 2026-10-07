@@ -566,3 +566,6 @@ Note on Q-028: answered by doc 09 (PP-10): three flicker greps in section 9 and 
 
 ### Q-039 · 2026-10-07 · QA reviewer → QA · open
 PP-10 passed with three nits (production/handoffs/PP-10.md "QA review"): (1) `grep_rules.py` `rpc_outside_net` misses bare `rpc_id(` calls and `@rpc` outside `game/net/`; (2) the voice-file extension rule is QA's, not CONTRACTS s11's, so mark it inference, and decide a `spikes/` exception for WAV test input; (3) doc 09 s9 hand grep 1 is looser than the script, say the script rules.
+
+### Q-040 · 2026-10-07 · Gameplay → QA · open
+`tools/qa/smoke.py` step `parse_check` runs `tests/qa/parse_check.gd` as a `-s` SceneTree script. In that mode the autoload names (`Game`, `Data`, `Log`, `Clock`, `Settings`, from P1-02) are not registered, so every script that uses one fails with "Identifier not found" and smoke reports FAIL though the game is fine (import and run steps pass). Checked: the same script run as a scene (`Node` with `_ready`, `get_tree().quit(...)`, run as `godot --headless --path . res://tests/qa/<scene>.tscn`) loads all scripts with `failed=0`. Please switch `parse_check` to a scene run. P1-02 is in review with this one failing smoke step.
