@@ -50,7 +50,7 @@ section 14.
 6. **Everything is a placeholder.** Every sound in section 11 is generated in code by this studio
    (D-015). Each is replaceable one for one: same ID, same duration class, same bus, same loop
    rule. The `Placeholder` column is "yes" for all rows. Nothing is sampled or downloaded.
-7. **Mono in 3D, stereo for beds and UI only** (agent brief; CONTRACTS section 3).
+7. **Mono in 3D, stereo for beds and UI only** (Audio Designer brief and D-015; CONTRACTS s3 does not say it, flagged to the Director in Q-035).
 
 ## 2. Buses and mixing rules
 
@@ -102,9 +102,9 @@ move is mechanical.
    sound (section 3). Fakes and real voices use the same levels (doc 01).
 4. **Quiet is the baseline.** At night, with nothing happening, the loudest thing is the wind at
    about -34 dBFS RMS after the Master (target, `placeholder`). Scares are 20+ dB above that.
-5. **Pause menu and Dawn Report** low-pass `Master` at 1.2 kHz and drop `Ambience`+`SFX` by 10 dB
-   with a 0.3 s fade; the Dawn Report plays its jingle on `Music`. A pause never mutes the beds
-   (they resume where they were; section 4.4).
+5. **Pause menu and Dawn Report** low-pass `Master` at 1.2 kHz and drop `SFX` by 10 dB with a
+   0.3 s fade; `Ambience` is not touched, so the bed and wind keep playing at their current
+   gains under the low-pass (section 4.4 rule 2). The Dawn Report plays its jingle on `Music`.
 6. **Simultaneous voice limit** is the game's: 4 real speakers plus at most 2 fakes at once
    (inference: doc 03 allows one lure at a time, ghosts add up to 3). Each is its own player node
    (doc 06 section 8).
@@ -145,7 +145,7 @@ raycast occlusion and reverb, doc 06 section 8) in one place.
 | `doppler_tracking` | **off** | a running creature would pitch-bend, a tell nobody designed; and the wrong-pitch voice tell must stay a tell |
 | `panning_strength` | 1.0 | |
 | `max_polyphony` | 1 for loops; 4 for footsteps and tools | |
-| `bus` | by the sound's ID prefix (section 11) | |
+| `bus` | by the sound's ID prefix (section 11): `sfx`, `step` and tool names to `SFX`; `amb` to `Ambience`; `cre` to `Creature`; `vox` to `Voice`; `mus` to `Music`; `ui` to `UI` | `cre`, `vox`, `mus`, `ui`, `amb` are not in CONTRACTS s3 yet; flagged for the Director's PP-11 update (Q-035) |
 | Occlusion | a ray to the listener hitting layer 5 (corn): low-pass 3 kHz and -6 dB; hitting a wall: low-pass 1.5 kHz and -10 dB | mirrors the Noise corn damping (doc 03 s3.1: x0.7 radius); `placeholder`; the doc 06 contingency |
 
 ### 3.2 Range classes
@@ -251,9 +251,11 @@ Fade times are `placeholder`. `base` is the layer's level for the current phase.
 ### 4.4 Rules that keep the tell honest (QA greps for these)
 
 1. Only `Soundscape.set_creature_state()` may change the gains of layers tagged `bed` or `wind`
-   downward by more than 6 dB. The phase crossfade (dusk, dawn) is the one exception and is a
+   downward by more than 6 dB. This rule is about layer gains. The `Ambience` bus changes for a
+   building (rule 3, section 4.5) are the one named bus-level exemption: they follow where the
+   listener stands, never creature state, and a Stalk drop is still heard on top of them. The phase crossfade (dusk, dawn) is the one exception and is a
    crossfade between two beds, never through silence.
-2. Generator death, a pause, a menu, a slow frame, a disconnect or a host-left card never touch
+2. Generator death, a pause (including the pause low-pass, section 2.3 rule 5), a menu, a slow frame, a disconnect or a host-left card never touch
    `bed` or `wind`.
 3. Entering a building applies the `Indoor` low-pass and -6 dB to `Ambience` (section 4.5), not a
    mute, so the bed is still there to be heard dropping, quietly.
@@ -265,7 +267,7 @@ Fade times are `placeholder`. `base` is the layer's level for the current phase.
 
 Lit building (generator on): `Indoor` low-pass at 2.5 kHz on `Ambience`, `Ambience` -6 dB, bulb hum
 audible, `amb_room_barn` quiet room tone (a lit room is a calm one). Dark building: `Indoor` at
-1.2 kHz, `Ambience` -10 dB, no hum, `amb_room_dark` (a low breath of air and creaks) so a dark
+1.2 kHz, `Ambience` -10 dB (the bus-level exemption of section 4.4 rule 1; layer gains untouched), no hum, `amb_room_dark` (a low breath of air and creaks) so a dark
 room sounds hollow. Entering and leaving cross 0.5 s. `placeholder`. A building is "lit" from
 `LightRig` state (doc 07), read by `Soundscape`.
 
@@ -513,8 +515,12 @@ from it (kept in sync by `tools/audio/check_catalog.py`, DD Phase 1 task). Varia
 
 ### 10.4 Debug
 
-`F3` debug view (doc 05 s19) shows the layer gains, the creature state the audio last received,
-and the last 8 sounds played, so a tester can say "the bed didn't drop" with a number.
+`F3` debug view (doc 05 s19) is host-only by default, but clients are the ones who hear the drop.
+So `Soundscape` also writes a log event `audio_state` (through `Log`, CONTRACTS s10) on every
+creature-state change it applies and every 5 s while the state is not `Roam`: peer id, creature
+state and body last received, the gain in dB of each `bed`/`wind` layer, and the last 8 sound IDs
+played. A tester reports "the bed didn't drop" by quoting the client's `peer_<id>.jsonl`. The event
+needs a line in doc 05's event list (Q-035). The F3 overlay shows the same numbers on the host.
 
 ## 11. Sound list
 
@@ -587,7 +593,7 @@ is generic farm stock and changes without touching the list shape.
 | `sfx_cart_squeak_loop` | S | 3D | 3 | 4 | wheel squeak: 650 Hz sine with chirp + chassis rattle; loops, rate follows pusher speed (doc 01) |
 | `sfx_pegboard_board_loose` | S | 3D | 0.8 | 2 | wood groan + pop ("pried a board loose") |
 | `sfx_lock_break` | S | 3D | 0.6 | 3 | metal snap |
-| `sfx_coins` | U | M | 0.5 | 1 | `Klank` coin ticks 3 to 5 kHz cascade |
+| `ui_coins` | U | M | 0.5 | 1 | `Klank` coin ticks 3 to 5 kHz cascade |
 | `sfx_flare_shot` | S | 3D | 1.2 | 4 | bang (noise decay) + whoosh |
 | `sfx_flare_hiss_loop` | S | 3D | 2 | 4 | hiss: HPF noise, steady |
 
@@ -653,7 +659,7 @@ There is no Phase 1 score: doc 01 mentions only the chase sting (inference, see 
 
 ### 11.7 Counts
 
-About 150 files. The DD Phase 1 set (P = 1) is about 90 files (beds, steps, tools used in turnips,
+About 150 files and about 90 for Phase 1 are inference, not counts: the tables hold about 90 sound IDs (counted by ID prefix, ignoring settings tables) and variants multiply that. `tools/audio/check_catalog.py` (DD Phase 1) will print the real numbers and replace this line. The DD Phase 1 set (P = 1) is about 90 files (beds, steps, tools used in turnips,
 the well, the generator, the bell, the whistle, traps, pits, signatures x 4, sting, strangers).
 Bodies: only the chosen one is loaded per season.
 

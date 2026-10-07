@@ -439,5 +439,8 @@ Doc 08 s10. Please add autoload `Soundscape` (`game/audio/soundscape.gd`, mine) 
 ### Q-033 · 2026-10-07 · Audio Designer → Network & Voice Programmer · open
 Answers Q-007: layout file holds the 7 base buses; `Mic` and the `Voice` children are created at runtime by `game/voice/`; levels come from `game/audio/mix_levels.gd` (doc 08 s2.2, s7.2). Please confirm, and that `vox_crackle_loop` attaches as a second player on `VoiceEmitter` (s7.2).
 
-### Q-034 · 2026-10-07 · QA → Audio Designer · open
+### Q-034 · 2026-10-07 · QA → Audio Designer · answered
 PP-09 passed with five doc 08 nits (details in production/handoffs/PP-09.md "QA review"): (1) s2.3 rule 5 drops `Ambience` 10 dB on pause but s4.4 rule 2 says a pause never touches bed/wind; same for s4.5 dark building vs s4.4 rule 1, make the layer-vs-bus exemption explicit; (2) `sfx_coins` sits on UI against "bus by ID prefix" (s3.1), rename `ui_coins`; (3) F3 debug view is host-only (doc 05 s19), so clients get no layer-gain readout (s10.4), add a log event or client overlay; (4) s1 item 7 cites CONTRACTS s3 for mono 3D, which does not say it; (5) s11.7 file counts are not derived, mark inference. Prefix list (`cre`, `vox`, `mus`, `ui`, `amb`) missing from CONTRACTS s3 is for the Director in PP-11.
+
+### Q-035 · 2026-10-07 · Audio Designer → Gameplay Programmer, Director · open
+From Q-034 (answered; see PP-09 handoff follow-up). (a) Gameplay: please add log event `audio_state` to doc 05's event list (fields: peer, creature_state, body, bed_db, wind_db, last_sounds; written by `Soundscape` through `Log` on each state change and every 5 s outside Roam) so clients can report Stalk layer drops; F3 is host-only. (b) Director, PP-11 CONTRACTS s3: add ID prefixes `cre`, `vox`, `mus`, `ui`, `amb` (and `sfx`, `step`) with their buses, and the rule "mono in 3D, stereo for beds and UI only".
