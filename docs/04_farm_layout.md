@@ -199,7 +199,16 @@ cart counts as out only if it's past the fields" ("Nights > Length").
 - The route keeps ≥ 4 m from every field edge (R3 to R4 passes 4 m east of field A).
 - Player-placed fences and scarecrows ("Farming Meets Horror > Defense") could block it; the host
   should refuse placements within 3 m of the route (inference; doc 05 settles the rule, Q-014 item
-  6).
+  6). Settled: doc 05 sections 11 and 13 adopt 3 m (reason `blocks_cart_route`).
+- **Scene contract (Q-022, Q-026).** The route is a `Path3D` named `CartRoute` in the level scene, with
+  curve points R0 to R8 in order, y = 0, coordinates as in the table. DD Phase 1 gray-box scene:
+  `res://game/world/farm_phase1.tscn` (one field, shed, barn); DD Phase 2: `res://game/world/farm.tscn`.
+  Phase 1 has no cart, so `CartRoute` first exists in `farm.tscn`.
+- **Light and corn nodes (Q-026).** A `LightRig` scene sits at each door and window of every building;
+  lit doorway radius, ground decal and the doc 03 section 9 trap exclusion are all 6 m (doc 07
+  section 3). Layer 5 corn sight-blockers are coarse `StaticBody3D` edge strips under a `CornBlockers`
+  node, separate from the visual MultiMesh corn (doc 07 section 10); blocker bounds follow the ring
+  and strip edges in section 3.
 
 ### 6.2 Farm gate and town stand
 
