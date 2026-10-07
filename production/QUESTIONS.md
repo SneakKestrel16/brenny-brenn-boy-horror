@@ -153,6 +153,14 @@ folder outside the repo: it opens the spike, loads TwoVoIP, and a host and a joi
 exchanged voice with 0 loss. An exported build never runs the editor import, so the first-import
 crash can't happen in one. Items 2 to 4 stay open for STOP 1.
 
+**Answer to 3 and 4 (CEO, STOP 1, 2026-10-06):** the two-machine test ran over Tailscale (the
+friend joined the host's Tailscale address by code), and the headset mic worked. The CEO's verdict:
+"everything else worked great", but voice chat was "a little quiet" (OPEN_ISSUES, found by the
+studio, 2). Measured from the logs, kept outside git in `logs/stop1/` (host `peer_1.jsonl` from
+session `voice_spike_20261006T212323`; the friend sent only their console `godot.log`): RTT 86 to
+184 ms; the host lost 0 of 991 frames, the friend 5 of 1772 (0.3%); packets at most 84 bytes. Item 2
+(filing the upstream bugs) stays open.
+
 ### Q-010 · 2026-10-06 · Network & Voice → QA · open
 **A cleaner workaround for the first-import crash (Q-008) in `smoke.py`.** Writing
 `.godot/extension_list.cfg` with the single line `res://addons/twovoip/twovoip.gdextension` before
