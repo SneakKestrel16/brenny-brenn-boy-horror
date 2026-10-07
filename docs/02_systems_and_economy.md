@@ -658,6 +658,14 @@ A `compare` command reads the host's `money_changed` events (CONTRACTS section 1
 places each live season inside the simulated distribution. Doc 01: logs must land within 15 points
 of the sim before the numbers freeze (`01 Season simulator`).
 
+**Metric (Q-038; inference, doc 01 gives only "within 15 points"):** per dawn, the live median of
+money (coins) as a percentage of the next payment due, against the simulated median for the same
+player count; every dawn from 2 to 8 must be within 15 points. First and final clear rates are
+reported beside it but do not gate: with 6 seasons one rate has a confidence band far wider than 15
+points. **Seasons:** at least 6 full live seasons, 2 per player count (placeholder, QA's proposal
+accepted); the simulator side runs 1,000 or more seasons per count. Settle with the first real logs:
+if live spread exceeds 15 points, widen the sample before touching numbers.
+
 ### 18.6 Tuning
 
 Only `sim` and `placeholder` values move. One knob per change, the seed fixed, before and after

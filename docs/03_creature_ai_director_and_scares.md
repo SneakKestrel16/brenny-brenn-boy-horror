@@ -95,6 +95,9 @@ except the rows marked.
 | `whistle` | 50 m | placeholder (section 13) |
 | `voice` | `60 x (byte/255)^2` m | placeholder shape; the byte is doc 01 "Senses" and doc 06 section 8. Normal speech (159) gives 23 m; a scream (255) gives 60 m |
 | `walkie` | as `voice` | placeholder: the radio is a voice at the speaker's position |
+| emote `scream` | as `voice` at byte 255, 60 m | inference (doc 01 "Emotes": the scream gives you away) |
+
+Corn damping does not apply to `step_sprint_corn`; its 40 m already includes the corn (Q-018, D-021).
 
 - **Nothing stored.** The creature never keeps or replays a heard voice for hunting; it uses the
   byte and the position only (doc 01 "Senses").
@@ -103,7 +106,9 @@ except the rows marked.
 - **Sound memory.** Each heard emit sets `last_heard_position` and `heard_age_s` = 0. Memory lasts
   12 s (`placeholder`, `hearing_memory_s`); then the creature stops homing and wanders in its
   region. Louder emit replaces a quieter one if it arrives within 4 s (`placeholder`).
-- **The creature chooses the loudest source,** radius-weighted, not the nearest.
+- **When tools emit:** at hold completion; loud tools (25 m) also at hold start (placeholder).
+- The creature homes on the memory entry with the largest margin, `effective_radius_m - distance_m`
+  (the radius after corn damping), ties to the newest.
 - **The 10/30/60 m reference.** Doc 04 sec 8 tests players hearing each other at 10, 30 and 60 m;
   the creature's radii above sit beside those but are separate.
 
@@ -187,7 +192,7 @@ placeholder player speeds (Q-016).
 | `lurk` | `stalk` | a target sensed (heard, seen or Tainted) and the AI Director's phase allows presence |
 | `lure` | `stalk` | lure worked (target moved 10 m toward within 8 s) |
 | `lure` | `lurk` | lure failed |
-| `stalk` | `chase` | target within sight range, or heard sprinting, or at night the target is within 12 m |
+| `stalk` | `chase` | target seen, or heard sprinting, or at night the target's **sensed** position is within 12 m; by day only inside a day death or a trap race (section 7) |
 | `stalk` | `lurk` | `stalk_max_s` passes with no commit, or the target joins a group (day) |
 | `stalk` | `retreat` | a jumpscare is played (day only, section 13) |
 | `chase` | `retreat` | kill, jumpscare, flare hit |
@@ -214,6 +219,8 @@ reach a lit building**.
 | Breaking line of sight while sprinting | does not lose it: the creature goes to the last heard position (sprint is loud) | inference from doc 01 "Senses" |
 | Flare hit | creature goes to `retreat` for 30 s | doc 01 "Store"; doc 02 section 10 |
 
+- A chase can be lost only after `chase_commit_s` (6 s) has passed; the 4 s of `chase_lose_quiet_s`
+  may run during it.
 - When a chase is lost the creature goes to the last sensed position, searches for `memory` seconds
   (section 3.1) and returns to `lurk`.
 - **Any Tainted player cannot lose a chase by quiet alone:** Taint tracking keeps giving the
@@ -436,7 +443,7 @@ Left 4 Dead style (doc 01 "AI Director"): build-up, peak, fade, relax.
 |---|---|---|
 | Players outside, per second at night | +0.4 / s each, capped at +1.2 / s | placeholder |
 | Player sprinting | +1.0 / s | placeholder |
-| Noise heard by the creature | + (radius_m / 10) per emit | placeholder |
+| Noise heard by the creature | + (radius_m / 10) per emit, except `step_*` kinds, which count at most +1 / s per player | placeholder |
 | A lure worked | +10 | placeholder |
 | Jumpscare played | -30 and a 45 s `relax` | placeholder |
 | Trap sprung | +15 | placeholder |
@@ -505,7 +512,8 @@ condition (doc 01 "Day Deaths").
 The farm is cut into **regions** (data, doc 04 markers): `yard` (barn, farmhouse, generator, well,
 shed), `field_a`, `field_b`, `corn_ring_north`, `corn_ring_south`, `corn_ring_west`, `corn_ring_east`,
 `pen`, `moonflower`, `pumpkin`, `town_road`. Region bounds come from doc 04's clearing and ring and
-are `placeholder` until the AI Programmer fixes a graph (Q-018).
+are `placeholder`. Regions are `Area3D` nodes in the level scene; adjacency is computed at load
+(regions within 2 m are linked); a nudge moves one hop (Q-018, D-021).
 
 - A nudge sets the creature's **wander region**, never a goal point or a target. The creature
   then hunts inside the region with senses.
