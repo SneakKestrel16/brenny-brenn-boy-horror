@@ -146,6 +146,37 @@ task, including voice settings and recording rules.
 
 ---
 
+## Studio phase 2: DD Phase 1 (prototype)
+
+Source: doc 01 "Build Plan > Phase 1", doc 05 section 20 (build order), doc 03 section 18 (fake it
+first), doc 04 section 9 (small layout), doc 09 section 3 (the gate). Voice between two machines
+already passed (STOP 1). **Done when** (doc 01): the day feels safe, the night tense, at least 30% of
+lures make the target walk toward them, and the spatial audio test (10/30/60 m) is run. Checked in 2
+sessions, one tester who hasn't read doc 01, plus log measures (doc 09). **STOP 2** after P1-14 for
+the CEO playtest.
+
+| ID | Owner | Task | Status | Depends on |
+|---|---|---|---|---|
+| P1-01 | Game Designer | Data files for Phase 1: `labor`, `crops` (turnip), `creature`, `voice_lines`, timers; Director approves schemas in CONTRACTS 6 | todo | — |
+| P1-02 | Gameplay | Core: `Log`, `Data`, `Settings`, `Clock`, `Game`, boot to main; 2 instances join over ENet | todo | P1-01 |
+| P1-03 | Level Designer | Gray-box Phase 1 farm (`farm.tscn`, x -32..46) with all markers | todo | — |
+| P1-04 | Gameplay | Player controller, crouch, sprint, remote proxies, host speed check, `Noise.emit_kind` | todo | P1-02, P1-03 |
+| P1-05 | Gameplay | Hold framework + turnips: plant, water (noisy can), harvest, sell at (40, 20), `hold_completed` | todo | P1-04 |
+| P1-06 | Network & Voice | Move the spike voice into `game/`: proximity voice, VAD/PTT, `VoiceEmitter`, voice reports to `Noise` | todo | P1-04 |
+| P1-07 | Gameplay | Generator, fuel drum, lights, go-still ring, crouch noise | todo | P1-05 |
+| P1-08 | AI Programmer | Scripted creature: Lurk/Stalk/Chase/Retreat timers, wander and chase by sound, scripted traps and pits, stranger lines from the corn, lure logging | todo | P1-04, P1-06 |
+| P1-09 | Gameplay | Trap race, death, ghost spectate, `apply_creature_state` hooks | todo | P1-08 |
+| P1-10 | Audio Designer | Three ambience layers from creature state, trap and step sounds, whistle, stranger-line synthesis | todo | P1-08 |
+| P1-11 | Technical Artist | Day, dusk, night lighting, dark buildings, fog, corn render budget | todo | P1-03 |
+| P1-12 | Gameplay | Spatial audio test scene with `spatial_audio_trial` logging; debug view | todo | P1-06, P1-03 |
+| P1-13 | AI Programmer | Bot that walks and does chores | todo | P1-05 |
+| P1-14 | QA | Review each P1 task; 2-instance run; `check_logs.py` on a full session; run the doc 09 gate | todo | all above |
+
+Each owner turns their row into acceptance from the cited doc sections when starting; every task
+still needs QA pass plus Director check.
+
+---
+
 ## Later phases
 
 Written at the end of the previous phase's review. Not started without CEO approval.
