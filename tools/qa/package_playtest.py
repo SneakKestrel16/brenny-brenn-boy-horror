@@ -67,30 +67,24 @@ PORT = 45120  # Net.DEFAULT_PORT (doc 06 section 2); Net tries the next ports if
 
 # The exe ignores user arguments unless they follow `--`. `--phase1` loads the Phase 1 night
 # (data/phase1.json, D-023); host and joiner must both pass it or the data hash refuses the join.
-# Playtest pacing (D-030): phase lengths in seconds, passed as --day-s, --dusk-s, --night-s. The game's
-# own lengths are day 540, dusk 60, night 300. Night stays 300: the Phase 1 traps are set 40 to 220 s
-# into it and the scripted stalk starts at 60 s. Host and joiner pass the same values (edit both files).
-PACING = {"DAY_S": 180, "DUSK_S": 30, "NIGHT_S": 300}
-_PACING_SET = "".join(f"set {k}={v}\n" for k, v in PACING.items())
-_PACING_ARGS = "--day-s=%DAY_S% --dusk-s=%DUSK_S% --night-s=%NIGHT_S%"
+# Phase lengths are the game's own (D-032): the host changes them in play with the dev console
+# (`skip`, `phase`, `length`). `--day-s`, `--dusk-s`, `--night-s` still exist for scripted runs.
 
 HOST_BAT = r"""@echo off
 cd /d "%~dp0"
-rem Phase lengths in seconds; Join.bat must match. Normal game: 540, 60, 300.
-""" + _PACING_SET + r"""echo Hosting on UDP port {port}. Day %DAY_S% s, dusk %DUSK_S% s, night %NIGHT_S% s.
+echo Hosting on UDP port {port}.
 echo Dev console: press the backquote key (`), then type help.
 echo Give the other player this PC's Tailscale address:
 tailscale ip -4 2>nul || echo   (tailscale not found: open Tailscale and copy the 100.x.y.z address)
-start "" "{exe}" -- --host --phase1 --dev --port={port} """ + _PACING_ARGS + r"""
+start "" "{exe}" -- --host --phase1 --dev --port={port}
 pause
 """
 
 JOIN_BAT = r"""@echo off
 cd /d "%~dp0"
-rem Phase lengths in seconds; must match Host.bat. Normal game: 540, 60, 300.
-""" + _PACING_SET + r"""set /p HOSTIP=Host's Tailscale address (100.x.y.z): 
+set /p HOSTIP=Host's Tailscale address (100.x.y.z): 
 if "%HOSTIP%"=="" exit /b 1
-start "" "{exe}" -- --join=%HOSTIP%:{port} --phase1 """ + _PACING_ARGS + r"""
+start "" "{exe}" -- --join=%HOSTIP%:{port} --phase1
 """
 
 # Zips the section 10 log folders written in the last 12 hours (CONTRACTS s10: user://logs/<session_id>/)

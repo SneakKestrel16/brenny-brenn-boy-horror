@@ -235,3 +235,9 @@ skewed). `Game.console_open` makes Player and HoldController ignore game keys wh
 release:** delete the `Main` line and the file, or gate it on `OS.is_debug_build()` only. Gameplay owns
 `game/debug/` and reviews the edits to `clock.gd`, `game.gd`, `player.gd`, `hold_controller.gd`, `main.gd`.
 
+### D-032 · 2026-10-08 · CEO · Playtest runs at normal length
+Supersedes D-030's launcher pacing. `Host.bat` and `Join.bat` no longer pass `--day-s`/`--dusk-s`/`--night-s`;
+sessions run the game's own lengths (day 540, dusk 60, night 300 s). The host skips or shortens phases with
+the dev console (D-031: `skip`, `phase`, `length`), which logs each use. The `Clock` overrides stay for
+scripted runs. **Why:** CEO prefers normal pacing now that the dev console exists.
+

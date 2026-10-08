@@ -223,11 +223,11 @@ class Package(unittest.TestCase):
         self.assertIn("abc1234", start)
         host = package_playtest.HOST_BAT.format(exe=package_playtest.EXE, port=package_playtest.PORT)
         join = package_playtest.JOIN_BAT.format(exe=package_playtest.EXE, port=package_playtest.PORT)
-        self.assertIn('-- --host --phase1 --dev --port=45120 --day-s=%DAY_S% --dusk-s=%DUSK_S% --night-s=%NIGHT_S%', host)
-        self.assertIn('-- --join=%HOSTIP%:45120 --phase1 --day-s=%DAY_S% --dusk-s=%DUSK_S% --night-s=%NIGHT_S%', join)
+        self.assertIn('-- --host --phase1 --dev --port=45120\n', host)
+        self.assertIn('-- --join=%HOSTIP%:45120 --phase1\n', join)
         self.assertNotIn("--dev", join)  # the dev console is the host's only (D-031)
-        for bat in (host, join):  # same pacing on both sides (D-030)
-            self.assertIn("set DAY_S=180\nset DUSK_S=30\nset NIGHT_S=300\n", bat)
+        for bat in (host, join):  # the game's own phase lengths (D-032)
+            self.assertNotIn("--day-s", bat)
         self.assertIn("\r\n", start)
 
 
