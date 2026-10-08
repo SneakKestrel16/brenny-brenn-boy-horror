@@ -399,3 +399,8 @@ screen accepts a code or an IP. This is the CEO asking for join codes, so D-024'
 codes" ends for this use; Tailscale addresses encode like any IPv4. The rejoiner sees one random
 mocking line from doc 01 "Joining and leaving" (10 lines, data in `data/rejoin_lines.json`). Part of
 P2-16. **Why:** CEO.
+
+### D-050 · 2026-10-08 · CEO · Rejoin lines never repeat early
+Each player sees all 50 rejoin lines (D-049) before any repeats: a shuffle bag kept on the player's
+own PC (`user://rejoin_bag.cfg`), reshuffled when empty, with the new round never opening on the
+line shown last. Docs 01 and 06, task P2-16. **Why:** CEO.

@@ -234,8 +234,11 @@ section says slot; moving them to slots is a later change to the message list.
    clips, spawns as a ghost at once and gets a body at the next dawn. D-049: each client writes
    `user://last_session.cfg` (host address, port, session id) at match start and deletes it on a
    clean Leave or match end; a launch that finds it offers "Rejoin your last match?". The lobby and
-   pause menu show the host's section 4 join code as the fallback. On rejoin the client shows one
-   random line from `data/rejoin_lines.json` (doc 01 "Joining and leaving").
+   pause menu show the host's section 4 join code as the fallback. On rejoin the client shows the next
+   line from a shuffle bag over `data/rejoin_lines.json` (doc 01 "Joining and leaving", D-050): the
+   remaining order lives in `user://rejoin_bag.cfg`, so it survives restarts; an empty bag reshuffles
+   all 50, and the first line of the new round is never the one shown last. Lines added to or removed
+   from the data file are added to or dropped from the bag.
 
 ### Leaving
 
