@@ -441,6 +441,15 @@ instance.
 **Open:** no log event carries frame time or the adapter name (section 13), so the first measurement is
 read from the screen and typed into the handoff.
 
+**Tool (P1-14):** `tests/qa/perf_probe.tscn` boots the game like Boot does, waits `--probe-warm` s (default 15),
+samples `--probe-s` s (default 60) and prints one `perf_probe` line: average fps, worst frame ms, frames over
+33 ms, draw calls, primitives, texture and video MB, adapter, size. Windowed only. Example (4 instances):
+`uv run tools/qa/multi.py -n 4 --no-tile --common "res://tests/qa/perf_probe.tscn -- --phase1 --port=50742 --autowalk"
+--args "--resolution 1280x720 --position 0,0 -- --host" --args "--resolution 1280x720 -- --join=127.0.0.1:50742" ...`.
+The engine prints a leaked-resource error at exit when the probe quits, so `multi.py` reports FAIL on it; read the
+`perf_probe` lines in `instance_<i>.log`. The probe samples wherever the player is (autowalk circle), not the worst
+view.
+
 ## 11. After a session
 
 1. Collect every peer's log folder into one place under `logs/qa/` and run `check_logs.py` on it.

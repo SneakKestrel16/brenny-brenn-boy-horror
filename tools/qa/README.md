@@ -185,5 +185,6 @@ committed.
 | `tests/qa/print_user_dir.gd` | Prints `OS.get_user_data_dir()` |
 | `tests/qa/fake_peer.gd` | ENet fake peer for the launcher self-check |
 | `tests/qa/test_harness.py`, `tests/qa/fixtures/` | Self-test |
+| `tests/qa/perf_probe.tscn` + `.gd` | Windowed frame-time and render-counter probe (doc 09 section 10). Prints one `perf_probe` line; the exit prints a leaked-resource error, so `multi.py` reads FAIL |
 
 Code owners add their own tests under `tests/<area>/` (CONTRACTS section 2).
