@@ -23,10 +23,9 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 }
 const STRANGER_LINES: Array[StringName] = [&"vox_stranger_over_here", &"vox_stranger_help",
 		&"vox_stranger_anyone", &"vox_stranger_come", &"vox_stranger_lost", &"vox_stranger_hello"]
-## Layer levels in dB: [day, night] (doc 08 section 4.1, placeholder). The insect bed has two files.
+## Layer levels in dB: [day, night] (doc 08 section 4.1, placeholder). No day insect bed: day is wind only.
 const LAYERS := {
 	&"wind": {"file": "amb_wind_loop", "day": -26.0, "night": -20.0},
-	&"insect_day": {"file": "amb_insect_bed_day", "day": -24.0, "night": -80.0},
 	&"insect_night": {"file": "amb_insect_bed_night", "day": -80.0, "night": -22.0},
 	&"frog": {"file": "amb_frog_bed", "day": -80.0, "night": -26.0},
 }
@@ -179,17 +178,15 @@ func _process(delta: float) -> void:
 
 func _apply_gains() -> void:
 	var g_night := sin(_night * PI * 0.5)
-	var g_day := cos(_night * PI * 0.5)
 	for id in _players:
 		var cfg: Dictionary = LAYERS[id]
 		var db := SILENT_DB
 		if id == &"wind":
 			db = lerpf(cfg.day, cfg.night, _night) - _tell_db.wind
 		else:
-			var day: bool = id == &"insect_day"
-			var share := g_day if day else g_night
+			var share := g_night
 			if share > 0.001:
-				db = (cfg.day if day else cfg.night) + linear_to_db(share) - _tell_db.bed
+				db = cfg.night + linear_to_db(share) - _tell_db.bed
 		_players[id].volume_db = maxf(db, SILENT_DB)
 
 
@@ -197,7 +194,7 @@ func _apply_gains() -> void:
 func _log_state() -> void:
 	_log_t = 0.0
 	Log.event(&"audio_state", {"state": String(creature_state), "body": String(creature_body),
-			"bed_db": snappedf(maxf(_players[&"insect_night"].volume_db, _players[&"insect_day"].volume_db), 0.1), "wind_db": snappedf(_players[&"wind"].volume_db, 0.1),
+			"bed_db": snappedf(_players[&"insect_night"].volume_db, 0.1), "wind_db": snappedf(_players[&"wind"].volume_db, 0.1),
 			"frog_db": snappedf(_players[&"frog"].volume_db, 0.1), "recent": recent.map(func(s): return String(s))})
 
 
