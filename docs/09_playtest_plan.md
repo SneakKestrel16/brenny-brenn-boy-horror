@@ -138,7 +138,7 @@ section 8 (voice) and doc 08 section 9.3 (whistle).
 
 **Setup.**
 
-- Listener `audio_listener` (-26, 16). Sources `audio_10m` (-16, 16), `audio_30m` (4, 16), `audio_60m`
+- Listener `audio_listener` (-26, 16). Sources `audio_10m`, `audio_30m`, `audio_60m`, `audio_72m` at 10, 30, 60 and 72 m on four bearings 90 degrees apart (CEO 2026-10-08: one line made distance the only cue; the test scene sets them, see `BEARINGS_DEG`). Superseded layout: (-16, 16), (4, 16),
   (34, 16). All on open ground in the DD Phase 1 area. The sources stay put; the listener's heading is
   randomised each trial, so front-to-back confusion is tested without 60 m of open ground in every
   direction (doc 04 section 7.4).
