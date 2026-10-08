@@ -6,6 +6,7 @@ extends Node
 
 const REACH_M := 3.0  ## ray length from the eye (placeholder; the host range check is range_m)
 const PICK_MASK := 8  ## layer 4 "interactable"
+const REFUSED_SHOW_MS := 2000  ## how long a refusal reason stays on screen (placeholder)
 
 var player: CharacterBody3D
 var _cam: Camera3D
@@ -20,6 +21,8 @@ var _need_release := false  ## a refused hold waits for `interact` to be release
 var target_farm: Node  ## the Farm (found lazily); its `carry` is what this player holds
 var _autopry := OS.get_cmdline_user_args().has("--autopry")
 var _pin_t := 0.0
+var refused_reason: StringName = &""  ## HUD: why the host refused the last hold
+var _refused_ms := -REFUSED_SHOW_MS
 var aimed_verb: StringName = &""  ## HUD: first verb of the aimed target, empty if none (set while not holding)
 
 
@@ -89,6 +92,11 @@ func hold_state() -> Array:
 	return [_verb, clampf(_t / maxf(_hold_s, 0.01), 0.0, 1.0)] if _holding else [&"", 0.0]
 
 
+## HUD: the refusal reason while it is fresh, else empty.
+func fresh_refusal() -> StringName:
+	return refused_reason if Time.get_ticks_msec() - _refused_ms < REFUSED_SHOW_MS else &""
+
+
 func start(verb: StringName, target: Node) -> void:
 	_verb = verb
 	_target = target
@@ -128,6 +136,8 @@ func _on_apply(what: StringName, args: Array) -> void:
 		&"hold_done": _end(&"done")
 		&"refused":
 			_need_release = true
+			refused_reason = args[1]
+			_refused_ms = Time.get_ticks_msec()
 			_end(&"refused")
 		&"hold_cancelled": _end(&"cancelled")
 
@@ -179,4 +189,6 @@ func _autochore() -> void:
 	await _do(&"harvest", mine, front)
 	await _do(&"sell", "sell_box", Vector3(-1.6, 0, 0))
 	await _do(&"fill_can", "well", Vector3(1.6, 0, 0))
+	await _do(&"plant", "Plot09", front)  # south row is locked: expect `refused` and a fresh "locked" prompt
+	Log.event(&"autochore_locked_prompt", {"reason": String(fresh_refusal())})
 	Log.event(&"autochore_done", {"coins": farm.coins})

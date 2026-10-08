@@ -7,6 +7,7 @@ const HINT_S := 20.0  ## controls hint stays this long after first spawn (placeh
 const PHASE_TEXT := {&"day": "Daylight", &"dusk": "Dusk", &"night": "NIGHT", &"dawn": "Dawn", &"harvest_moon": "HARVEST MOON"}
 const VERB_TEXT := {&"plant": "Plant", &"water": "Water", &"harvest": "Harvest", &"sell": "Sell the crop",
 		&"fill_can": "Fill the watering can", &"pry": "Pry free", &"refuel": "Refuel"}
+const REFUSED_TEXT := {&"locked": "Locked"}
 
 var player: CharacterBody3D
 var hold: Node  ## the player's HoldController
@@ -98,6 +99,9 @@ func _process(delta: float) -> void:
 		prompt = "%s... %d%%" % [_verb_text(hs[0]), int(hs[1] * 100.0)]
 	elif hold.aimed_verb != &"":
 		prompt = "Hold %s: %s" % [_key(&"interact"), _verb_text(hold.aimed_verb)]
+	var why: StringName = hold.fresh_refusal()
+	if why != &"" and hs[0] == &"":
+		prompt = REFUSED_TEXT.get(why, String(why).capitalize().replace("_", " "))
 	_prompt.text = prompt
 
 
