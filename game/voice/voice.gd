@@ -306,6 +306,23 @@ func log_stats() -> void:
 
 
 func _exit_tree() -> void:
+	# Drop every handle to the mic stream and its playback, or they are still referenced at quit (P1-06).
+	# The AudioServer releases a stopped playback only on its next mix step, and at quit none may come,
+	# so wait (at most 200 ms) for the playback to go. Measured: without the wait both leak at exit.
 	if _source:
+		var playback: WeakRef = weakref(_source.get_stream_playback()) if _source.has_stream_playback() else null
 		_source.stop()
+		_source.stream = null
+		_source.free()
+		_source = null
+		var waited := 0
+		while playback and playback.get_ref() != null and waited < 200:
+			OS.delay_msec(5)
+			waited += 5
+	if _capture:
+		var bus := AudioServer.get_bus_index("Mic")
+		for i in range(AudioServer.get_bus_effect_count(bus) - 1, -1, -1):
+			if AudioServer.get_bus_effect(bus, i) == _capture:
+				AudioServer.remove_bus_effect(bus, i)
+		_capture = null
 	_encoder = null
