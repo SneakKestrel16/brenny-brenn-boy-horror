@@ -411,3 +411,8 @@ opt-in group option: one random quirk per player per season, ten placeholder qui
 quirks use invented names, not real diagnoses, so the joke lands on the farmhand and not on real
 conditions someone in the group may have. The CEO can overrule. Quirks never reveal or harm the
 creature or fake an honest signal. Built after DD Phase 4. **Why:** CEO; naming is the Director's.
+
+### D-052 · 2026-10-08 · CEO · Quirks use real disorder names
+CEO overruled D-051's naming: quirks use real disorder names because it is funnier (for example,
+Nyctophobia, ADHD, Paranoia, Narcolepsy, OCD). The mechanics are unchanged. The option stays opt-in
+per group, so a group can leave it off. **Why:** CEO.
