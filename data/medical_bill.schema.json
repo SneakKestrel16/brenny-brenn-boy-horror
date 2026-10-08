@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/medical_bill.schema.json",
+  "title": "Medical bill (doc 02 section 8)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "table",
+    "schema_version",
+    "records"
+  ],
+  "properties": {
+    "table": {
+      "const": "medical_bill"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "const": "bill"
+          },
+          "source": {
+            "$ref": "#/$defs/source"
+          },
+          "cite": {
+            "type": "string"
+          },
+          "sources": {
+            "$ref": "#/$defs/sources"
+          },
+          "first_4p": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "later_4p": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cap_4p": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "first_4p",
+          "later_4p",
+          "cap_4p"
+        ]
+      },
+      "maxItems": 1
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "source": {
+      "enum": [
+        "doc01",
+        "sim",
+        "placeholder"
+      ]
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "doc01",
+          "sim",
+          "placeholder"
+        ]
+      }
+    }
+  }
+}

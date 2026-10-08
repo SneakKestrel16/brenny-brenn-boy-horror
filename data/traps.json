@@ -1,0 +1,49 @@
+{
+  "table": "traps",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "bear_trap",
+      "source": "placeholder",
+      "cite": "doc 01 Night Traps; doc 02 section 12",
+      "sources": {
+        "slow_mult": "placeholder",
+        "slow_s": "placeholder"
+      },
+      "clear_verb": "disarm_bear",
+      "pinned": true,
+      "drops_carried": false,
+      "slow_mult": 0.6,
+      "slow_s": 60,
+      "starts_race_by_day": true,
+      "unlock_day": 1,
+      "enabled": true
+    },
+    {
+      "id": "pit",
+      "source": "placeholder",
+      "cite": "doc 01 Night Traps; doc 02 section 12",
+      "clear_verb": "fill_pit",
+      "pinned": false,
+      "drops_carried": true,
+      "slow_mult": 1,
+      "slow_s": 0,
+      "starts_race_by_day": false,
+      "unlock_day": 1,
+      "enabled": true
+    },
+    {
+      "id": "tripwire_bells",
+      "source": "placeholder",
+      "cite": "doc 01 Night Traps; D-034 (3): not built in Phase 2, counts as nothing",
+      "clear_verb": "cut_bells",
+      "pinned": false,
+      "drops_carried": false,
+      "slow_mult": 1,
+      "slow_s": 0,
+      "starts_race_by_day": false,
+      "unlock_day": 4,
+      "enabled": false
+    }
+  ]
+}

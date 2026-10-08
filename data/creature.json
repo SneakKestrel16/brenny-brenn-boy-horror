@@ -175,6 +175,27 @@
       "metres": 6
     },
     {
+      "id": "chase_tell_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 4; Q-048 (1a) confirmed P2-12: no lunge in a chase's first 2 s so the tell comes first",
+      "kind": "timer",
+      "seconds": 2
+    },
+    {
+      "id": "scripted_standoff_m",
+      "source": "placeholder",
+      "cite": "doc 03 section 2; Q-048 (1b) confirmed P2-12: scripted stalk holds past sight_night_m (15 m)",
+      "kind": "distance",
+      "metres": 18
+    },
+    {
+      "id": "trap_lure_m",
+      "source": "placeholder",
+      "cite": "doc 01 Behavior states (Lure); Q-048 (1c) confirmed P2-12: a source within 15 m of an armed trap may lure a non-lone player",
+      "kind": "distance",
+      "metres": 15
+    },
+    {
       "id": "noise_step_walk",
       "source": "placeholder",
       "cite": "doc 03 section 3.1",

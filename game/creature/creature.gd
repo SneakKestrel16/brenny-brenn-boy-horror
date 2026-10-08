@@ -32,12 +32,7 @@ const EYE_M := 1.65  ## doc 03 section 3.2, CONTRACTS section 4
 const EYE_CROUCH_M := 0.9  ## placeholder: crouched head height for the sight ray
 const STALK_CHASE_M := 12.0  ## doc 03 section 4.2: at night a sensed target this close starts a chase
 const STALK_STANDOFF_M := 10.0  ## placeholder: a stalk holds back this far ("just out of sight", section 4)
-## Placeholder: the scripted stalk follows the true position, so it holds back past `sight_night_m` (15 m).
-## At 10 m it stood in view for 15 s, then chased from 8 m (Phase 1 playtest, OPEN_ISSUES 8).
-const SCRIPTED_STANDOFF_M := 18.0
-## Placeholder (Q-048): no lunge in a chase's first seconds, so the chase tell (doc 03 section 4) comes
-## before a kill. The playtest kill came 1.2 s after chase_started (OPEN_ISSUES 8).
-const CHASE_TELL_S := 2.0
+# chase_tell_s, scripted_standoff_m and trap_lure_m live in data/creature.json (P2-12, Q-048 (1)).
 const REGION_M := 25.0  ## placeholder: lurk wanders among markers this near the last thing it heard
 const LOUDER_WINS_S := 4.0  ## doc 03 section 3.1 (placeholder)
 const LIT_DOOR_M := 6.0  ## doc 03 section 5 / doc 04 sec 8: lit doorway radius
@@ -46,9 +41,6 @@ const LURE_COOLDOWN_S := 20.0  ## placeholder: no doc number; a playtest settles
 const LURE_MIN_M := 12.0  ## placeholder: a source nearer than this cannot show a 10 m walk
 const LURE_MAX_M := 40.0  ## placeholder: beyond this a stranger line is too faint to follow
 const LONE_M := 15.0  ## inference: doc 03 section 4.2 "a lone player"; reuses the 15 m rule (doc 04 sec 8.3)
-## Inference from doc 01 "Behavior states" (Lure: "near armed traps or lone players"): a source this near
-## an armed trap may lure a player who is not alone. Placeholder number.
-const TRAP_LURE_M := 15.0
 const CLUE_M := 4.0  ## doc 03 section 9: trap clues are seen within 4 m (placeholder)
 const TRAP_SPRING_M := 1.0  ## placeholder: a living player this close to an armed trap springs it
 const ARRIVE_M := 1.0
@@ -128,9 +120,9 @@ func _ready() -> void:
 	_rng.seed = Game.seed_value
 	for id in [&"lurk_speed_mps", &"stalk_speed_mps", &"chase_speed_mps"]:
 		_num[id] = float(Data.value(&"creature", id, &"speed_mps"))
-	for id in [&"lure_wait_s", &"stalk_max_s", &"chase_commit_s", &"retreat_s", &"hearing_memory_s", &"chase_lose_quiet_s"]:
+	for id in [&"lure_wait_s", &"stalk_max_s", &"chase_commit_s", &"retreat_s", &"hearing_memory_s", &"chase_lose_quiet_s", &"chase_tell_s"]:
 		_num[id] = float(Data.value(&"creature", id, &"seconds"))
-	for id in [&"reach_m", &"sight_night_m", &"sight_day_m", &"sight_still_crouch_m"]:
+	for id in [&"reach_m", &"sight_night_m", &"sight_day_m", &"sight_still_crouch_m", &"scripted_standoff_m", &"trap_lure_m"]:
 		_num[id] = float(Data.value(&"creature", id, &"metres"))
 	_num[&"corn_damp_mult"] = float(Data.value(&"creature", &"corn_damp_mult", &"mult"))
 	for id in [&"night_s", &"scripted_lurk_s", &"scripted_chase_after_stalk_s", &"scripted_retreat_s"]:
@@ -243,7 +235,7 @@ func _run_script() -> void:
 		&"stalk", &"chase":
 			if _alive(target):
 				_goal = Game.players[target].pos  # scripted: doc 03 section 18 names the player
-				if state == &"chase" and _t_state >= CHASE_TELL_S and _goal.distance_to(global_position) <= _num[&"reach_m"]:
+				if state == &"chase" and _t_state >= _num[&"chase_tell_s"] and _goal.distance_to(global_position) <= _num[&"reach_m"]:
 					_scripted = false
 					caught.emit(target)
 					_set_state(&"retreat", &"reached", target)
@@ -306,7 +298,7 @@ func _hunt(delta: float) -> void:
 			var sensed := _sensed_pos(target, {})
 			if sensed != Vector3.INF:
 				_goal = sensed
-			if _alive(target) and _t_state >= CHASE_TELL_S and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
+			if _alive(target) and _t_state >= _num[&"chase_tell_s"] and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
 				caught.emit(target)
 				_end_chase(&"retreat", &"reached")
 			elif _alive(target) and _in_lit_doorway(Game.players[target].pos):
@@ -419,7 +411,7 @@ func _blocked(from: Vector3, to: Vector3, mask: int) -> bool:
 # --- lures (doc 03 section 12) -------------------------------------------------------------------
 
 ## Presentation: picks the crow corn edge (doc 03 section 18) from the target's true position. A target
-## with company needs a source near an armed trap (TRAP_LURE_M). Where the target stands (corn or open
+## with company needs a source near an armed trap (`trap_lure_m`). Where the target stands (corn or open
 ## ground) does not matter.
 func _play_lure(p: int) -> bool:
 	var pos: Vector3 = Game.players[p].pos
@@ -429,7 +421,7 @@ func _play_lure(p: int) -> bool:
 	for id in ids:
 		var m := _marker(&"crow_perches", id)
 		var d := m.distance_to(pos)
-		if not lone and not _traps.values().any(func(t: Dictionary) -> bool: return t.armed and t.position.distance_to(m) <= TRAP_LURE_M):
+		if not lone and not _traps.values().any(func(t: Dictionary) -> bool: return t.armed and t.position.distance_to(m) <= _num[&"trap_lure_m"]):
 			continue
 		if d >= LURE_MIN_M and d <= LURE_MAX_M and (src == Vector3.INF or d < src.distance_to(pos)):
 			src = m
@@ -563,7 +555,7 @@ func _move(_delta: float) -> void:
 	var d := Vector3.INF if _goal == Vector3.INF else _goal - global_position
 	var stop := ARRIVE_M
 	if state == &"stalk" and target != 0:
-		stop = SCRIPTED_STANDOFF_M if _scripted else STALK_STANDOFF_M
+		stop = _num[&"scripted_standoff_m"] if _scripted else STALK_STANDOFF_M
 	if _scripted and state == &"stalk" and d != Vector3.INF and Vector2(d.x, d.z).length() < stop - ARRIVE_M:
 		d = -d  # the target walked closer: back off to stay out of sight (doc 03 section 2)
 	elif d == Vector3.INF or Vector2(d.x, d.z).length() < stop:

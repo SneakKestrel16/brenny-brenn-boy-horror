@@ -662,6 +662,16 @@ cart counts out only if it is past the fields (x > 78, doc 04 sec 6).
 | `its_fine_come_on` | "it's fine, come on" | none | calms a player into walking | doc 01 "Recording" |
 | `name:<player_uid>` | the teammate's name | none | a call by name | doc 06 section 11 |
 
+**Staging cue and take scoring (P2-12):** each fixed line has `staging_cue` in `voice_lines.json`: `door_bang`
+(`over_here`), `lantern_out` (`help_me`, blows out, never flickers), else `none`. The record `take_scoring` holds the
+doc 06 s11 weights (`placeholder`): score = 1.0 x mean dB of voiced frames + 3.0 x standard deviation of the pitch
+in semitones, 2 to 3 takes per line. Starting point: the two terms span about 20 and 15 points on a normal voice.
+A recorded session settles it.
+
+**Chase and lure constants (P2-12, Q-048 (1)):** `creature.json` `chase_tell_s` 2 (no lunge in a chase's first
+2 s), `scripted_standoff_m` 18 (scripted stalk holds past `sight_night_m` 15), `trap_lure_m` 15 (a source within
+15 m of an armed trap may lure a player who is not alone). All `placeholder`; a playtest settles them.
+
 **Generic ("stranger") voice lines** (unattributed, for Off players' teams and DD Phase 1, no real
 voice; synthetic only). Doc 01 "Habits" and doc 06 section 7 allow generic voices as "stranger"
 calls:

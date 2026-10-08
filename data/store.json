@@ -1,0 +1,124 @@
+{
+  "table": "store",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "shed_lock",
+      "source": "doc01",
+      "cite": "doc 01 The tool shed; doc 02 section 10 (cap one trap a night; broken from day 5)",
+      "name": "Pegboard lock",
+      "price": 40,
+      "unlock_day": 1,
+      "upgrade": true,
+      "consumable": false,
+      "per_player": false,
+      "effect": {
+        "theft_cap_per_night": 1,
+        "broken_from_day": 5
+      }
+    },
+    {
+      "id": "scrap",
+      "source": "doc01",
+      "cite": "doc 01 Nights; doc 02 section 10",
+      "name": "Scrap",
+      "price": 15,
+      "unlock_day": 1,
+      "upgrade": false,
+      "consumable": true,
+      "per_player": false,
+      "effect": {}
+    },
+    {
+      "id": "quiet_watering_can",
+      "source": "sim",
+      "cite": "doc 02 section 10; effect numbers in labor.json and creature.json",
+      "name": "Quiet watering can",
+      "price": 30,
+      "unlock_day": 1,
+      "upgrade": true,
+      "consumable": false,
+      "per_player": true,
+      "effect": {}
+    },
+    {
+      "id": "walkie_talkie",
+      "source": "sim",
+      "cite": "doc 02 section 10",
+      "name": "Walkie-talkie",
+      "price": 30,
+      "unlock_day": 1,
+      "upgrade": true,
+      "consumable": false,
+      "per_player": true,
+      "effect": {}
+    },
+    {
+      "id": "walkie_battery",
+      "source": "sim",
+      "cite": "doc 02 section 10",
+      "name": "Walkie battery",
+      "price": 10,
+      "unlock_day": 1,
+      "upgrade": false,
+      "consumable": true,
+      "per_player": false,
+      "effect": {
+        "transmit_s": 180
+      },
+      "sources": {
+        "effect": "placeholder"
+      }
+    },
+    {
+      "id": "brighter_lantern",
+      "source": "sim",
+      "cite": "doc 02 section 10; radius is doc 03",
+      "name": "Brighter lantern",
+      "price": 25,
+      "unlock_day": 1,
+      "upgrade": true,
+      "consumable": false,
+      "per_player": true,
+      "effect": {}
+    },
+    {
+      "id": "scarecrow",
+      "source": "sim",
+      "cite": "doc 02 section 10; effect is doc 03",
+      "name": "Scarecrow",
+      "price": 20,
+      "unlock_day": 1,
+      "upgrade": true,
+      "consumable": false,
+      "per_player": false,
+      "effect": {}
+    },
+    {
+      "id": "plot_pair",
+      "source": "sim",
+      "cite": "doc 02 section 10",
+      "name": "Plot pair",
+      "price": 40,
+      "unlock_day": 1,
+      "upgrade": true,
+      "consumable": false,
+      "per_player": false,
+      "effect": {
+        "plots": 2
+      }
+    },
+    {
+      "id": "flare_gun",
+      "source": "sim",
+      "cite": "doc 01 Store; doc 02 section 10",
+      "name": "Flare gun",
+      "price": 50,
+      "unlock_day": 1,
+      "upgrade": true,
+      "consumable": false,
+      "per_player": false,
+      "effect": {}
+    }
+  ]
+}

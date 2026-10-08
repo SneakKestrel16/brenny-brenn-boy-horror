@@ -9,7 +9,8 @@
       "kind": "line",
       "text": "over here",
       "staged_moment": "a bang on the door first",
-      "phase1": false
+      "phase1": false,
+      "staging_cue": "door_bang"
     },
     {
       "id": "help_me",
@@ -18,7 +19,8 @@
       "kind": "line",
       "text": "help me",
       "staged_moment": "the lantern blows out first",
-      "phase1": false
+      "phase1": false,
+      "staging_cue": "lantern_out"
     },
     {
       "id": "come_look_at_this",
@@ -27,7 +29,8 @@
       "kind": "line",
       "text": "come look at this",
       "staged_moment": null,
-      "phase1": false
+      "phase1": false,
+      "staging_cue": "none"
     },
     {
       "id": "i_found_something",
@@ -36,7 +39,8 @@
       "kind": "line",
       "text": "I found something",
       "staged_moment": null,
-      "phase1": false
+      "phase1": false,
+      "staging_cue": "none"
     },
     {
       "id": "where_are_you",
@@ -45,7 +49,8 @@
       "kind": "line",
       "text": "where are you?",
       "staged_moment": null,
-      "phase1": false
+      "phase1": false,
+      "staging_cue": "none"
     },
     {
       "id": "wait_for_me",
@@ -54,7 +59,8 @@
       "kind": "line",
       "text": "wait for me",
       "staged_moment": null,
-      "phase1": false
+      "phase1": false,
+      "staging_cue": "none"
     },
     {
       "id": "its_fine_come_on",
@@ -63,7 +69,8 @@
       "kind": "line",
       "text": "it's fine, come on",
       "staged_moment": null,
-      "phase1": false
+      "phase1": false,
+      "staging_cue": "none"
     },
     {
       "id": "stranger_over_here",
@@ -166,6 +173,16 @@
       "kind": "sound_lure",
       "sound_id": "door_fake",
       "phase1": true
+    },
+    {
+      "id": "take_scoring",
+      "source": "placeholder",
+      "cite": "doc 06 section 11 Takes (weights are placeholders); P2-12",
+      "kind": "take_scoring",
+      "loudness_weight_per_db": 1.0,
+      "pitch_spread_weight_per_semitone": 3.0,
+      "takes_min": 2,
+      "takes_max": 3
     }
   ]
 }

@@ -1,0 +1,117 @@
+{
+  "table": "ramp_up",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "day_1",
+      "source": "doc01",
+      "cite": "doc 01 Ramp-up (4 players); doc 02 section 11",
+      "day": 1,
+      "disturbances_4p": 1,
+      "bear_4p": 2,
+      "pit_4p": 1,
+      "bells_4p": 0,
+      "hunts_all_night": false,
+      "voice": "exact",
+      "new": [
+        "turnips",
+        "prize_pumpkin_planted"
+      ]
+    },
+    {
+      "id": "day_2",
+      "source": "doc01",
+      "cite": "doc 01 Ramp-up (4 players); doc 02 section 11",
+      "day": 2,
+      "disturbances_4p": 1,
+      "bear_4p": 2,
+      "pit_4p": 2,
+      "bells_4p": 0,
+      "hunts_all_night": false,
+      "voice": "exact",
+      "new": []
+    },
+    {
+      "id": "day_3",
+      "source": "doc01",
+      "cite": "doc 01 Ramp-up (4 players); doc 02 section 11",
+      "day": 3,
+      "disturbances_4p": 2,
+      "bear_4p": 3,
+      "pit_4p": 2,
+      "bells_4p": 0,
+      "hunts_all_night": false,
+      "voice": "exact",
+      "new": [
+        "moonflowers",
+        "taint_sources",
+        "pumpkin_damage",
+        "first_payment"
+      ]
+    },
+    {
+      "id": "day_4",
+      "source": "doc01",
+      "cite": "doc 01 Ramp-up (4 players); doc 02 section 11",
+      "day": 4,
+      "disturbances_4p": 2,
+      "bear_4p": 3,
+      "pit_4p": 2,
+      "bells_4p": 1,
+      "hunts_all_night": false,
+      "voice": "spliced",
+      "new": [
+        "pumpkins",
+        "tripwire_bells"
+      ]
+    },
+    {
+      "id": "day_5",
+      "source": "doc01",
+      "cite": "doc 01 Ramp-up (4 players); doc 02 section 11",
+      "day": 5,
+      "disturbances_4p": 3,
+      "bear_4p": 4,
+      "pit_4p": 3,
+      "bells_4p": 1,
+      "hunts_all_night": false,
+      "voice": "spliced",
+      "new": [
+        "lock_breaking",
+        "hallucinations",
+        "flag_moving"
+      ]
+    },
+    {
+      "id": "day_6",
+      "source": "doc01",
+      "cite": "doc 01 Ramp-up (4 players); doc 02 section 11",
+      "day": 6,
+      "disturbances_4p": 3,
+      "bear_4p": 5,
+      "pit_4p": 3,
+      "bells_4p": 2,
+      "hunts_all_night": false,
+      "voice": "spliced",
+      "new": [
+        "light_attack"
+      ]
+    },
+    {
+      "id": "day_7",
+      "source": "doc01",
+      "cite": "doc 01 Ramp-up (4 players); doc 02 section 11",
+      "day": 7,
+      "disturbances_4p": 4,
+      "bear_4p": null,
+      "pit_4p": null,
+      "bells_4p": null,
+      "hunts_all_night": true,
+      "voice": "spliced",
+      "new": [
+        "cart_push",
+        "final_payment"
+      ]
+    }
+  ]
+}

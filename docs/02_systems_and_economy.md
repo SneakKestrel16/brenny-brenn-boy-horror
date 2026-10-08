@@ -364,6 +364,8 @@ final = 1077 - 211 = 866
 - **The cap only bites with 3+ deaths:** 4p 25 + 50 + 50 = 125 → 120; 3p 20 + 40 + 40 = 100 → 96.
   At 2p the most is 15 + 30 = 45, so the 72 cap is never reached (each player dies at most once a
   cycle, since the dead are out until dawn).
+- **Data (P2-12):** `data/medical_bill.json`, one record `bill` (`first_4p` 25, `later_4p` 50, `cap_4p` 120,
+  `doc01`); 3p and 2p come from `player_scaling.json` (ceil) and reproduce the table above.
 
 ## 9. Dawn, in order
 
@@ -399,6 +401,10 @@ stand and at the dawn cash-in (D-017). `sim` prices are the simulator's starting
 | `plot_pair` | 40 | sim | 2 field plots, 16 to 24 |
 | `flare_gun` | 50 | sim | one shot, refilled each dawn; scares the creature off for 30 s (`01 Store`) |
 
+- **Pegboard lock (P2-12):** `data/store.json` `shed_lock`, price 40 (`doc01`), effect
+  `theft_cap_per_night` 1 (one trap a night; without the lock, every bear trap off the board at nightfall is
+  takeable, section 12) and `broken_from_day` 5. All nine rows of the table are in `store.json`; only the lock and
+  the battery (`transmit_s` 180, placeholder) carry `effect` numbers, the rest live in doc 03 or `labor.json`.
 - Cosmetics are DD Phase 5 and out of scope.
 - **Walkies:** doc 01 calls them "craftable" (`01 How players fight back`) and lists them in the
   store. They are bought; no crafting system exists (D-017).
@@ -423,6 +429,12 @@ night" sets no trap count.
 Worked: 3p bear day 5 = ceil(4 × 0.8) = ceil(3.2) = 4; 2p bells day 6 = ceil(2 × 0.6) = ceil(1.2)
 = 2; 2p disturbances day 5 = ceil(3 × 0.6) = ceil(1.8) = 2.
 
+**Phase 2 data and bells (P2-12, D-034 (3)):** `data/ramp_up.json` holds the 4p table above unchanged. Tripwire
+bells are not built in Phase 2, so `traps.json` marks `tripwire_bells` `enabled: false` and the trap setter skips
+any disabled type: bells count as nothing and are not replaced. Nights 4 to 6 therefore read, bear / pit at 4p,
+3 / 2, 4 / 3, 5 / 3 (5, 7, 8 traps, not 6, 8, 10); 3p 3 / 2, 4 / 3, 4 / 3; 2p 2 / 2, 3 / 2, 3 / 2. Setting
+`enabled: true` restores doc 01's counts with no other change. (Placeholder.)
+
 Voice (exact through day 3, spliced from day 4) and the "New" column belong to doc 03 and are not
 scaled. Unlock days used here: moonflowers, Taint sources and pumpkin gnawing day 3; pumpkins and
 bells day 4; lock-breaking and flag-moving day 5 (`01 Ramp-up`).
@@ -446,6 +458,8 @@ How traps are placed, sprung and raced is doc 03. What they cost the economy:
   starting pegboard holds the 4p maximum, 5 bear traps (placeholder, `season.json`
   `pegboard_bear_slots`; inferred from the day 6 count; doc 03 settles theft).
 - **Flags** are free (`01 Night Traps`).
+- **`traps.json` `enabled`** (P2-12, added to schema A.12): optional boolean, default true; `false` for
+  `tripwire_bells` until bells are built (section 11).
 
 ## 13. Taint and Shaken
 
@@ -1460,7 +1474,8 @@ Section 12. Doc 03 (PP-06) adds its fields by amending this schema.
           "slow_mult": {"type": "number", "exclusiveMinimum": 0},
           "slow_s": {"type": "number", "minimum": 0},
           "starts_race_by_day": {"type": "boolean"},
-          "unlock_day": {"type": "integer", "minimum": 1, "maximum": 7}
+          "unlock_day": {"type": "integer", "minimum": 1, "maximum": 7},
+          "enabled": {"type": "boolean"}
         },
         "required": [
           "id", "source", "clear_verb", "pinned", "drops_carried", "slow_mult", "slow_s",

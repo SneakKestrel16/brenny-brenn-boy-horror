@@ -54,6 +54,13 @@
               },
               "phase1": {
                 "type": "boolean"
+              },
+              "staging_cue": {
+                "enum": [
+                  "none",
+                  "door_bang",
+                  "lantern_out"
+                ]
               }
             },
             "required": [
@@ -96,6 +103,52 @@
               "kind",
               "sound_id",
               "phase1"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/id"
+              },
+              "source": {
+                "$ref": "#/$defs/source"
+              },
+              "cite": {
+                "type": "string"
+              },
+              "sources": {
+                "$ref": "#/$defs/sources"
+              },
+              "kind": {
+                "const": "take_scoring"
+              },
+              "loudness_weight_per_db": {
+                "type": "number",
+                "minimum": 0
+              },
+              "pitch_spread_weight_per_semitone": {
+                "type": "number",
+                "minimum": 0
+              },
+              "takes_min": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "takes_max": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "id",
+              "source",
+              "kind",
+              "loudness_weight_per_db",
+              "pitch_spread_weight_per_semitone",
+              "takes_min",
+              "takes_max"
             ]
           }
         ]

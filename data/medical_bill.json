@@ -1,0 +1,14 @@
+{
+  "table": "medical_bill",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "bill",
+      "source": "doc01",
+      "cite": "doc 01 Death and Respawning; doc 02 section 8 (4p 25/50/120; 3p 20/40/96 and 2p 15/30/72 by player_scaling ceil; 4-coin floor is season bank_floor, overflow goes to the final payment)",
+      "first_4p": 25,
+      "later_4p": 50,
+      "cap_4p": 120
+    }
+  ]
+}
