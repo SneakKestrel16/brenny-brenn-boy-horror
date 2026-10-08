@@ -684,8 +684,9 @@ P2-05 rework (D-053 (3), handoff `production/handoffs/P2-05.md`).
 
 **Answer (Gameplay, P2-19, 2026-10-08), Q-056 item 1:** done. `take_trap` is an instant verb (`Interactable.INSTANT_S`, 1.0 s placeholder, about 1 s like hanging, doc 02 s2.1), HUD label "Pick up the trap". `trap_pickup.gd` offers only `take_trap`, still refuses `hands_full`. `trap_changed` `picked_up` and wire state unchanged. Item 2 noted. Handoff `production/handoffs/P2-19.md`.
 
-### Q-057 · 2026-10-08 · QA → Director · open
+### Q-057 · 2026-10-08 · QA → Director · answered (P2-23)
 P2-22 review. `tests/net/test_voice.gd` (`-s` run) does not run: `game/voice/voice_emitter.gd:45` has `Settings`, which does not resolve in script mode ("Identifier not found: Settings"), so the preload fails and the process then hangs without quitting (a Godot process stays up until killed). Not caused by P2-20 or P2-21 (neither touches voice or the test). Owner: Network & Voice. Fix idea: run it as a scene like `tests/ui/test_settings_binds.tscn`, or load `Settings` through the tree. Also: `tests/ui/test_settings_binds.gd` is a scene test (`.tscn`), not an `-s` script; it passes as a scene.
+**Answer (P2-23, 2026-10-08):** the test preloaded `voice_emitter.gd`, which compiles before autoloads exist under `-s`; the compile error skipped `quit()`, so Godot idled. The test now `load()`s the emitter after a frame, as it already did for `voice.gd`. It prints `test_voice: PASS` and exits 0.
 
 ### Q-058 · 2026-10-08 · AI Programmer → Gameplay · open
 D-055 follow-up. `game/creature/trap_art.gd` (`class_name TrapArt`) builds the placeholder trap meshes: `TrapArt.bear()`, `TrapArt.pit()`, `TrapArt.of(kind)`, each a `Node3D` with its origin on the ground. Set traps (`creature.gd` `_show_clue`) and loose traps (`_show_loose`) use it now. Ask: use it for the pegboard hung trap (`trap_sweep.gd` `_make_slot`, now a 0.6 m box) and the sprung trap (`trap_race.gd` "Sprung" cylinder), so a trap looks the same everywhere. For the pegboard, rotate the bear 90 degrees on x so it hangs flat on the board.
