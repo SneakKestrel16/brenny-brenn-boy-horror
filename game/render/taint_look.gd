@@ -38,7 +38,11 @@ static func show_on(pl: Node3D, on: bool) -> void:
 	if not rect.is_inside_tree():
 		return
 	var mat := rect.material as ShaderMaterial
+	var old_tw := rect.get_meta(&"fade", null) as Tween
+	if old_tw != null:
+		old_tw.kill()
 	var tw := rect.create_tween()
+	rect.set_meta(&"fade", tw)
 	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter(&"strength", v),
 			float(mat.get_shader_parameter(&"strength")), 1.0 if on else 0.0, FADE_S)
 

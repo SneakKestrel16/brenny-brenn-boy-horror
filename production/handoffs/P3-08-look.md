@@ -31,7 +31,7 @@ file: `_hands` and `_mark` now call `TaintLook`, minimal hook), `docs/07_art_dir
 - **3D Artist:** `tool_hands.glb` (doc 07 section 11.3) should expose a material slot for
   `taint_hands.gdshader` (`taint_level`, `arm_len`). Then the capsules go and clean hands can show too.
 - **UI Programmer / the Director:** with the look in place, the HUD tester line "Tainted: wash at the well"
-  (`game/ui/hud.gd`) can go under the no-HUD rule (doc 05 section 3). Not touched here.
+  (`game/ui/hud.gd`) can go under the no-HUD rule (doc 05, the diegetic-information rule). Not touched here.
 
 ## Verified
 - Headless import: no ERROR. `test_light_rig`, `test_creature_logic` pass. `grep_rules.py`: flicker,
@@ -53,3 +53,11 @@ file: `_hands` and `_mark` now call `TaintLook`, minimal hook), `docs/07_art_dir
 - Not committed: the worktree guard refused every git command.
 
 ## QA review
+
+## QA review
+Opus `qa-reviewer`, 2026-10-08: PASS, nothing must-fix. Host and client runs confirmed the screen layer shows only
+on the Tainted player's machine, and that death and dawn clear arms and smudge. Taken: a new fade now kills the
+previous one, so a quick on-off cannot leave two tweens fighting over `strength`. Left: other players' arms are
+small at 3 m (placeholder until `tool_hands.glb`); a late joiner does not see existing Taint (from P3-07, sync
+sends only changes); the ghost banner overruns the screen edge (UI). The HUD line "Tainted: wash at the well"
+should go now that the hands and heartbeat exist: a UI Programmer task.
