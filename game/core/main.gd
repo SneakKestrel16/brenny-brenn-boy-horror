@@ -18,6 +18,10 @@ func _ready() -> void:
 	gen.set_script(load("res://game/core/generator.gd"))
 	gen.name = "Generator"
 	add_child(gen)
+	var taint := Node.new()  # P3-07: who is Tainted, and the Taint sources on the ground
+	taint.set_script(load("res://game/player/taint.gd"))
+	taint.name = "Taint"
+	add_child(taint)
 	var players := Node3D.new()
 	players.set_script(load("res://game/player/players.gd"))
 	players.name = "Players"

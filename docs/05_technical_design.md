@@ -473,6 +473,31 @@ dawn (section 17) from `crops.json` (doc 02 section 5).
 - Taint and Shaken are applied on the host and mirrored for the multiplier; the host's speed check
   (section 6) uses the host's copy.
 
+**As built (P3-07).** `game/player/taint.gd` (node `Taint`, group `taint`) owns the flag: host
+`set_taint(peer, on, cause)` writes `Game.players[peer].tainted` and `taint_cause`, logs
+`taint_changed`, and sends `apply_taint_changed`; a second Taint while Tainted changes nothing and
+logs nothing (doc 01). Taint ends with `wash` (cause `well`), at dawn (cause `dawn`), or on death
+(cause `death`; inference: a ghost is never Tainted, doc 01 names only washing and dawn). Causes
+built: touching a source on the ground within 0.8 m (`leavings`, `dead_crow`, `strange_seeds`;
+`add_source` / `remove_source`, `apply_taint_source`, placeholder marks; 0.8 m is a placeholder),
+picking up a stolen can (`stolen_tool`) and picking up a can left more than 4 m from its home at
+dusk (`field_item_at_dusk`; inference: "in the field" uses the creature's can rule,
+`items/cans.gd`). A can Taints its next taker once, then is clean (`can_tainted` logs the mark).
+Moonflowers wait for their task. Leavings are removed at dawn (inference; doc 01 is silent).
+Every peer shows the Tainted player's body black (placeholder for the hands art) and the local
+HUD prints "Tainted: wash at the well" (tester text until the hands model and heartbeat, Q-060).
+The wash hold is offered at the well only while the local player is Tainted (refusal
+`not_tainted`). Pry: `hold_registry.gd` multiplies by `taint.json` `pry_mult`; `trap_race.gd`
+counts the race's pry time the same way. Sprint: `player.sprint_max()` is `labor.json`
+`sprint.max_s` times `taint.json` `sprint_mult` (Taint) times `shaken.sprint_mult` (Shaken), so
+the two stack to x0.36; the HUD bar uses it as its maximum.
+
+Shaken (P3-07) is only the sprint cut: `trap_race.gd` `shake(peer)` runs `taint.json`
+`shaken.duration_s`, restarts on a new cause, sets `Game.players[peer].shaken`, and sends
+`apply_shaken(seconds)` to the Shaken player, who keeps `player.shaken_s`. The bear trap's walk
+x0.6 for 60 s (doc 02) is a separate slow, `slow(peer)` and `apply_slowed(seconds)`; a freed
+player gets both. Dev console: `taint [peer] [off]`, `taint_source [kind]`, `shaken [peer]`.
+
 ## 11. Traps from the player side, flags and defenses
 
 Traps are host-owned (doc 03 section 8). The player side is:
@@ -939,8 +964,10 @@ the QA changes.
 | `session_start` / `session_end` | host | `session_id`, `build_id`, `players` (peer ids), `season_id`, `difficulty`, `phase1` (bool), `bots` (count) | Context |
 | `day_start` / `phase_changed` | host | `day`, `phase` | Time axis |
 | `close_call` | host | `call_id`, `victim`, `kind` (`lunge`, `kill`, `doorway`), `result` (`hit`, `miss_disagree`, `miss_lit`, `miss_timeout`), `rtt_ms`, `answer_ms` | OPEN_ISSUES 1: a laggy player must be killable. `miss_timeout` vs `miss_disagree` per player RTT is the number that settles it |
-| `taint_changed` | host | `player`, `on`, `cause` | Taint rules |
-| `shaken` | host | `player`, `seconds` | Trap race outcome |
+| `taint_changed` | host, and the Tainted client | `player`, `on`, `cause` (a `taint.json` cause, or `well`, `dawn`, `death`, `dev`) | Taint rules |
+| `shaken` | host, and the Shaken client | `player`, `seconds` | Trap race outcome |
+| `taint_source` | host | `id`, `kind` (`leavings`, `dead_crow`, `strange_seeds`), `on`, `pos` [x, z] | Taint sources placed and removed (P3-07) |
+| `can_tainted` | host | `can`, `cause` (`stolen_tool`, `field_item_at_dusk`) | A can that Taints its next taker (P3-07) |
 | `trap_changed` | host | `trap_id`, `state` (`set`, `sprung`, `disarmed`, `filled`, `cut`, `loose`, `picked_up`), `by` | Trap use |
 | `trap_plan` | host | `day`, `players`, `plan` (kinds), `supply` (stolen bear traps in hand after nightfall theft), `armed` | Night trap count and bear supply (D-053) |
 | `trap_stolen` | host | `trap` (`held:<peer>` or `board:<slot>`), `from` (`board`, `outdoor`, `dark_building`), `lock`, `day`, `supply`, `player` (hands only) | Pegboard theft (D-053) |

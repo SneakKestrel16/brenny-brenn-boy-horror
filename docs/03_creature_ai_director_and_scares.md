@@ -145,6 +145,17 @@ Doc 01 "The Taint": the creature tracks a Tainted player "from much further".
 - Taint costs and cure are doc 02 section 13: sprint x0.6, footsteps x1.5, pry x1.5, cure 10 s at
   the well (noisy).
 
+**As built (P3-07).** `creature.gd` `_track_taint()` runs from `_sense` at night only; day tracking
+waits for a creature that hunts by day. Within `taint_tracking_radius_m` (60 m) a Tainted living
+player's true position is the fix. Further out, the creature follows the night trail once it comes
+within 3 m of one of its points, homing on the point 3 steps newer; the trail keeps one point per
+second for `taint_trail_s` (20 s). Trail step 1 s, pickup 3 m and lead 3 are placeholders in
+`creature.gd`; the rule is `creature_logic.gd` `taint_fix` (unit test
+`tests/creature/test_creature_logic.gd`). A fix enters the hearing memory every 0.1 s as kind
+`taint` with margin 0, so any real noise wins the pick and a Tainted chase never goes quiet
+(section 5). Washing or death drops the trail at once. Tracking and leavings are off on the
+Phase 1 farm unless `phase1.json` `taint_enabled` is set. The debug state shows `taint_trails`.
+
 ### 3.4 Sensed against true
 
 The creature has a `sensed` state (what it heard, saw or tracked) and the world has the `true`
@@ -351,6 +362,15 @@ Effects on the player are doc 02 section 13. What the creature does:
 - **Taint never comes from a jumpscare** (doc 01 "Jumpscares").
 - **Shaken** comes from jumpscares and surviving a trap race (doc 01 "The Taint"), never Taints.
 - **Taint leaves a night trail** (section 3.3).
+
+**As built (P3-07).** Leavings: while `lurk` or `stalk` walks at night, every `leavings_every_m`
+(20 m) calls `Taint.add_source(&"leavings", pos)` (`game/player/taint.gd`); touching one within
+0.8 m Taints (placeholder). Leavings are removed at dawn (inference; doc 01 is silent). A can the
+creature moves (`creature_move_cans`) Taints its next taker (`stolen_tool`); a can left more than
+4 m from home at dusk does the same (`field_item_at_dusk`, inference: the creature's can rule).
+Dead crows and strange seeds have the source kinds and a dev command (`taint_source`) but no
+sabotage spawns them yet (Q-061). Moonflowers are not built. The x2 hallucination rate is not
+part of P3-07.
 
 ## 9. Night traps
 

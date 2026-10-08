@@ -32,6 +32,9 @@ const HELP := """Commands (host only unless marked):
   kill [peer]               kill a player (default: you)
   respawn [peer]            bring a ghost back (default: you)
   ghost light|crow|rustle|caw [peer] [id]  a ghost power as that ghost, host rules apply (id: light or perch)
+  taint [peer] [off]        Taint a player, or wash them clean with off (default: you)
+  taint_source [kind]       leavings, dead_crow or strange_seeds 2 m north of you (default leavings)
+  shaken [peer]             Shaken for taint.json's 60 s (default: you)
   debug                     toggle the debug view (F3)
   clear                     clear this console (any peer)"""
 
@@ -291,6 +294,28 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? ghost light|crow|rustle|caw [peer] [id]"
 			var why: String = main.get_node("Death/GhostPowers").act(p, StringName(a[0]), a[2] if a.size() > 2 else "")
 			return "ghost %s by %d%s" % [a[0], p, ": refused, " + why if why else ""]
+		"taint":
+			var p := Game.local_peer() if not a.is_empty() and a[0] == "off" else _peer_arg(a, 0)
+			var on := not a.has("off")
+			if p == 0:
+				return "? no such peer"
+			main.get_node("Taint").set_taint(p, on, &"dev")
+			return "%d %s" % [p, "Tainted" if on else "clean"]
+		"taint_source":
+			var kind := StringName(a[0]) if not a.is_empty() else &"leavings"
+			if not kind in [&"leavings", &"dead_crow", &"strange_seeds"]:
+				return "? taint_source leavings|dead_crow|strange_seeds"
+			var me: Dictionary = Game.players.get(Game.local_peer(), {})
+			if not me.has("pos"):
+				return "? no body"
+			var at: Vector3 = me.pos + Vector3(0, 0, -2)  # 2 m north of you
+			return "%s %d at %s" % [kind, main.get_node("Taint").add_source(kind, at), at]
+		"shaken":
+			var p := _peer_arg(a, 0)
+			if p == 0 or Game.is_ghost(p):
+				return "? no living peer"
+			main.get_node("TrapRace").shake(p)
+			return "%d Shaken" % p
 		"debug":
 			var dv := main.get_node_or_null("DebugView")
 			if dv == null:

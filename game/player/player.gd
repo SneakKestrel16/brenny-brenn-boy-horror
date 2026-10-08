@@ -9,6 +9,7 @@ const EYE_CROUCH := 0.95  ## placeholder
 const RADIUS := 0.35  ## placeholder
 const GRAVITY := 20.0
 const RESUME_S := 1.5  ## placeholder: stamina needed to sprint again after running dry (doc 02 section 2.2 gives max and refill only)
+const TaintScript := preload("res://game/player/taint.gd")
 const PROXY_SMOOTH := 15.0  ## exponential smoothing rate for proxies (ponytail: no snapshot buffer)
 
 var peer := 0
@@ -22,8 +23,9 @@ var stamina := 0.0  ## seconds of sprint left (doc 02 section 2.2)
 var exhausted := false  ## ran dry: no sprint until `stamina` refills to RESUME_S (stops a per-frame flip at 0)
 var ghost := false  ## dead: flies, no collision, no sound (set by Death on every peer)
 var pinned := false  ## caught in a bear trap: cannot move (TrapRace sets it on every peer)
-var speed_mult := 1.0  ## Shaken (doc 01 "Night Traps"), local only; the host mirrors it in Game.players
-var _shaken_s := 0.0
+var speed_mult := 1.0  ## slowed after a bear trap (doc 01 "Night Traps") or locked in the shed; the host mirrors it
+var _shaken_s := 0.0  ## seconds left of `speed_mult` (the name predates P3-07 Shaken, which is `shaken_s`)
+var shaken_s := 0.0  ## P3-07 Shaken (doc 01 "The Taint"): sprint time x0.6 while above 0, host-told
 var _spec := 0  ## ghost: peer being watched, 0 = free flight
 
 var nav_path: Array = []  ## QA waypoints for `--autochore` (HoldController fills it)
@@ -235,7 +237,14 @@ func _peer_gain_db() -> float:
 	return linear_to_db(v) if v > 0.0 else -80.0
 
 
-## Host-told Shaken (TrapRace): all speeds x `mult` for `seconds`.
+## Seconds of sprint a full tank holds now: Taint and Shaken shorten it (doc 02 section 13, P3-07).
+func sprint_max() -> float:
+	return float(Data.value(&"labor", &"sprint", &"max_s")) * TaintScript.sprint_mult(
+			bool(Game.players.get(peer, {}).get("tainted", false)), shaken_s > 0.0,
+			float(Data.value(&"taint", &"taint", &"sprint_mult")), float(Data.value(&"taint", &"shaken", &"sprint_mult")))
+
+
+## Host-told slow (TrapRace after a bear trap, Scares' shed lock): all speeds x `mult` for `seconds`.
 func shake(seconds: float, mult: float) -> void:
 	_shaken_s = seconds
 	speed_mult = mult
@@ -342,6 +351,7 @@ func _local(delta: float) -> void:
 		_shaken_s -= delta
 		if _shaken_s <= 0.0:
 			speed_mult = 1.0
+	shaken_s = maxf(shaken_s - delta, 0.0)
 	var typing := Game.console_open  # D-031: keys go to the dev console, not the body
 	var still := not typing and Input.is_action_pressed(&"go_still")  # doc 05 section 6: freezes the body, sends nothing special
 	var dir := Vector2.ZERO if typing else Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
@@ -373,7 +383,8 @@ func _local(delta: float) -> void:
 		stamina = maxf(stamina - delta, 0.0)
 		exhausted = stamina <= 0.0
 	else:
-		stamina = minf(stamina + float(sprint_rec["max_s"]) / float(sprint_rec["refill_s"]) * delta, float(sprint_rec["max_s"]))
+		stamina = minf(stamina + float(sprint_rec["max_s"]) / float(sprint_rec["refill_s"]) * delta, sprint_max())
+	stamina = minf(stamina, sprint_max())  # Tainted or Shaken mid-sprint: the shorter tank
 	var speed := Data.speed(&"crouch" if crouching else (&"sprint" if sprinting else &"walk")) * speed_mult
 	var wish := (global_transform.basis * Vector3(dir.x, 0, dir.y)).normalized() * speed
 	velocity.x = wish.x

@@ -145,6 +145,25 @@ func take(peer: int, id: int) -> void:
 	Log.event(&"can_taken", {"player": peer, "can": id, "kind": String(c.kind), "charge": c.charge})
 	_changed()
 	farm.send_carry(peer)
+	if c.get("taint_cause", &"") != &"":  # P3-07: a Tainted can Taints whoever picks it up, and is clean after
+		get_tree().get_first_node_in_group(&"taint").set_taint(peer, true, c.taint_cause)
+		c.taint_cause = &""
+
+
+## Host (P3-07, P3-06 sabotage may call it): the can Taints the next player who picks it up. `cause` is a
+## taint.json cause (`stolen_tool`, `field_item_at_dusk`).
+func taint_can(id: int, cause: StringName) -> void:
+	cans[id].taint_cause = cause
+	Log.event(&"can_tainted", {"can": id, "cause": String(cause)})
+
+
+## Host, dusk (taint.gd): doc 01 "The Taint": an item left in the field at dusk turns Tainted until picked up.
+## "In the field" is a can farther than HOME_AWAY_M from its home (inference: the same rule as the creature's).
+func taint_loose_cans() -> void:
+	for id in cans:
+		var c: Dictionary = cans[id]
+		if c.holder == 0 and Vector2(c.pos.x - c.home.x, c.pos.z - c.home.z).length() > HOME_AWAY_M:
+			taint_can(id, &"field_item_at_dusk")
 
 
 ## Host: `peer` puts down what they carry, where they stand (also used on death and leaving).
@@ -167,7 +186,8 @@ func drop(peer: int) -> void:
 
 
 ## Host, nightfall (called from creature.gd, P2-27): the creature moves a can left away from its home; here it
-## goes back home (placeholder for "moves it"). Held cans are not touched.
+## goes back home (placeholder for "moves it"). Held cans are not touched. A stolen can Taints whoever picks
+## it up next (doc 01 "The Taint": picking up a stolen tool, P3-07).
 func creature_move_cans() -> void:
 	if not Game.is_host():
 		return
@@ -176,6 +196,7 @@ func creature_move_cans() -> void:
 		if c.holder == 0 and Vector2(c.pos.x - c.home.x, c.pos.z - c.home.z).length() > HOME_AWAY_M:
 			Log.event(&"can_stolen", {"can": id, "kind": String(c.kind), "from": [snappedf(c.pos.x, 0.1), snappedf(c.pos.z, 0.1)]})
 			c.pos = c.home
+			taint_can(id, &"stolen_tool")
 	_changed()
 
 

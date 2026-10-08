@@ -569,10 +569,28 @@ func apply_trap_race(victim: int, trap_id: String, deadline_s: float, start_dist
 	apply_received.emit(&"trap_race", [victim, trap_id, deadline_s, start_distance_m])
 
 
-## Host to the freed player: slow walk for `seconds` (doc 01 "Night Traps": 40% slower for 60 s).
+## Host to one player: Shaken for `seconds`, sprint time x0.6 (doc 01 "The Taint", P3-07).
 @rpc("authority", "call_remote", "reliable")
 func apply_shaken(seconds: float) -> void:
 	apply_received.emit(&"shaken", [seconds])
+
+
+## Host to the freed player: slow walk for `seconds` (doc 01 "Night Traps": 40% slower for 60 s).
+@rpc("authority", "call_remote", "reliable")
+func apply_slowed(seconds: float) -> void:
+	apply_received.emit(&"slowed", [seconds])
+
+
+## Host to all (P3-07): `peer` is Tainted or clean; `cause` is a taint.json cause, `well` or `dawn`.
+@rpc("authority", "call_remote", "reliable")
+func apply_taint_changed(peer: int, on: bool, cause: StringName) -> void:
+	apply_received.emit(&"taint_changed", [peer, on, cause])
+
+
+## Host to all (P3-07): a Taint source (leavings, dead crow, strange seeds) appears or goes.
+@rpc("authority", "call_remote", "reliable")
+func apply_taint_source(id: int, kind: StringName, position: Vector3, on: bool) -> void:
+	apply_received.emit(&"taint_source", [id, kind, position, on])
 
 
 @rpc("authority", "call_remote", "reliable")

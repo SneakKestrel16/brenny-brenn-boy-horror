@@ -89,17 +89,22 @@ func _physics_process(delta: float) -> void:
 				_complete(peer, h)
 
 
-## Phase 1 multipliers: only the pry helper (doc 01 Day deaths, labor.json `helped_mult`): another living
-## player prying the same trap within 3 m shortens the pry. Roles and Taint come with their tasks.
+## Pry multipliers: the helper (doc 01 Day deaths, labor.json `helped_mult`): another living player prying
+## the same trap within 3 m shortens the pry; Taint lengthens it (taint.json `pry_mult`, P3-07). Roles come
+## with their task.
 func _mults(peer: int, h: Dictionary) -> Array:
 	if h.verb != &"pry":
 		return []
+	var out := []
+	if bool(Game.players[peer].get("tainted", false)):
+		out.append(float(Data.value(&"taint", &"taint", &"pry_mult")))
 	for p in holds:
 		var o: Dictionary = holds[p]
 		if p != peer and o.verb == &"pry" and o.target == h.target and not Game.is_ghost(p) \
 				and _flat_dist(farm.pstate(p).pos, farm.pstate(peer).pos) <= 3.0:
-			return [float(Data.value(&"labor", &"pry", &"helped_mult"))]
-	return []
+			out.append(float(Data.value(&"labor", &"pry", &"helped_mult")))
+			break
+	return out
 
 
 func _complete(peer: int, h: Dictionary) -> void:

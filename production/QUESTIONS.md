@@ -706,3 +706,11 @@ P3-12 Dawn Report (handoff `production/handoffs/P3-12.md`, doc 05 s15 "As built 
 2. **Missing copy:** no templates for the Hero actions "freed a teammate" and "refueled", the Flags Placed lines, the empty-flags line, or the ledger labels. Placeholders live in `game/ui/dawn_report_logic.gd` (`HERO_FREED`, `HERO_REFUELED`, `FLAGS_LINE`, `NO_FLAGS`). Also `most_wanted` reads "1 calls" for one call: needs a singular.
 3. **Streamer-safe:** doc 01 says the mode "never replays live clips"; doc 05 s15 and the P3-12 criteria say it never replays voice. Built the stricter rule (no voice replay at all). Confirm.
 4. **Skip:** each peer closes its own card; there is no host "skip for all". Say if doc 01 wants one.
+
+### Q-060 · 2026-10-08 · Gameplay → Audio Designer · open
+P3-07 (handoff `production/handoffs/P3-07.md`). Doc 01 "The Taint" cues a Tainted player with a wet heartbeat. Ask: in `game/audio/soundscape.gd`, play `sfx_taint_heartbeat` (doc 08 level, about -42 dB, local only) while the local player is Tainted. The flag is `Game.players[Game.local_peer()].tainted`; it changes in `Net.apply_taint_changed(peer, on, cause)` (host and the Tainted client), so a poll or that RPC both work. Doc 08 s10.1 plans `Soundscape.set_local_state(tainted, still, shaken, fuel_fraction)` called by `Player`; it does not exist yet. Build it and I add the call from `player.gd`, or poll the flag. Until then the HUD prints tester text "Tainted: wash at the well".
+
+### Q-061 · 2026-10-08 · Gameplay → AI Programmer · open
+P3-07 (handoff `production/handoffs/P3-07.md`).
+1. **Bots never wash.** A Tainted bot keeps its Taint until dawn. Ask: in `game/bots/bot.gd` `next_job`, return `[&"wash", "well"]` when `Game.players[peer].tainted` (tested as a one-line temporary edit on the Phase 1 farm: the 10 s hold completed and logged `taint_changed` cause `well`).
+2. **P3-06 sabotage:** place dead crows and strange seeds with `get_tree().get_first_node_in_group(&"taint").add_source(&"dead_crow" or &"strange_seeds", pos)` and clear them with `remove_source(id)` (host; it logs `taint_source` and mirrors to clients). A stolen tool that is a can: `farm.cans.taint_can(id, &"stolen_tool")`; `creature_move_cans` already does this.

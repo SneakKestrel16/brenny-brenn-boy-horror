@@ -9,10 +9,11 @@ const VERB_TEXT := {&"plant": "Plant", &"water": "Water", &"harvest": "Harvest",
 		&"fill_can": "Fill the watering can", &"pry": "Pry free", &"refuel": "Refuel",
 		&"disarm_bear": "Disarm the bear trap", &"fill_pit": "Fill the pit", &"place_flag": "Plant a flag",
 		&"hang_trap": "Hang the trap on the board", &"take_shovel": "Take the shovel", &"return_shovel": "Hang the shovel back", &"take_trap": "Pick up the trap",
-		&"take_can": "Pick up the can", &"drop_can": "Put the can down"}
+		&"take_can": "Pick up the can", &"drop_can": "Put the can down", &"wash": "Wash at the well"}
 const REFUSED_TEXT := {&"locked": "Locked: needs more players, or buy it at the store", &"need_shovel": "You need the shovel", &"hands_full": "Your hands are full",
 		&"pegboard_full": "No free hook", &"flag_here": "A flag is already here", &"not_armed": "Nothing set here",
-		&"no_can": "You need a watering can", &"no_fuel_can": "You need the fuel can", &"can_taken": "Someone has it", &"has_fuel_can": "The can is full"}
+		&"no_can": "You need a watering can", &"no_fuel_can": "You need the fuel can", &"can_taken": "Someone has it", &"has_fuel_can": "The can is full",
+		&"not_tainted": "Your hands are clean"}
 
 var player: CharacterBody3D
 var hold: Node  ## the player's HoldController
@@ -24,7 +25,6 @@ var _hint: Label
 var _bar: ProgressBar
 var _dot: ColorRect
 var _t := 0.0
-var _shaken_s := 0.0
 
 
 func _ready() -> void:
@@ -75,9 +75,16 @@ func _ready() -> void:
 	_dot.offset_bottom = 2
 	_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_dot)
-	Net.apply_received.connect(func(what: StringName, args: Array) -> void:
-		if what == &"shaken":
-			_shaken_s = float(args[0]))
+
+
+## P3-07 tester text until the black-hands model and the heartbeat land (doc 01 "The Taint" cues are diegetic).
+func _status() -> String:
+	var out := ""
+	if bool(Game.players.get(Game.local_peer(), {}).get("tainted", false)) and not player.ghost:
+		out += "\nTainted: wash at the well"
+	if player.shaken_s > 0.0:
+		out += "\nShaken: out of breath for %d s" % ceili(player.shaken_s)
+	return out
 
 
 func _label(pos: Vector2, size: int) -> Label:
@@ -93,12 +100,12 @@ func _label(pos: Vector2, size: int) -> Label:
 
 func _process(delta: float) -> void:
 	_t += delta
-	_shaken_s = maxf(_shaken_s - delta, 0.0)
 	var left := maxf(Clock.length_of(Clock.phase) - Clock.t_phase, 0.0)
 	var farm := get_tree().get_first_node_in_group(&"farm")
 	_top.text = "Day %d  %s  %d:%02d left\nCoins %d%s" % [Clock.day, PHASE_TEXT.get(Clock.phase, String(Clock.phase)),
 			int(left) / 60, int(left) % 60, farm.coins if farm else 0,
-			"\nShaken: slow for %d s" % ceili(_shaken_s) if _shaken_s > 0.0 else ""]
+			_status()]
+	_bar.max_value = player.sprint_max()  # Taint and Shaken shorten the sprint (P3-07)
 	_bar.value = player.stamina
 	_dot.visible = bool(Settings.get_value(&"centre_dot")) and not player.ghost
 	_bar.modulate = Color(1, 0.4, 0.3) if player.exhausted else Color.WHITE

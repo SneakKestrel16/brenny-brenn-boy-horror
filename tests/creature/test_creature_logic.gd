@@ -50,6 +50,16 @@ func _init() -> void:
 		dead_n += int(rng.rand_weighted(w) == 3)
 	_check(w[3] > w[2] and w[2] > w[1], "dead outweighs alive outweighs own")
 	_check(dead_n > 10000 / 5, "dead bot voiced more than a fair 1-in-5 share (%d of 10000)" % dead_n)
+	# Taint tracking (P3-07): 60 m radius, trail picked up within 3 m, 3 steps ahead
+	var trail := []
+	for i in 10:
+		trail.append({"position": Vector3(100.0 + 2.0 * i, 0, 0), "t": float(i)})
+	var fix := func(from: Vector3, pos: Vector3) -> Vector3: return Logic.taint_fix(from, pos, trail, 60.0, 3.0, 3)
+	_check(fix.call(Vector3.ZERO, Vector3(59, 0, 0)) == Vector3(59, 0, 0), "a Tainted player within 60 m is tracked where they are")
+	_check(fix.call(Vector3.ZERO, Vector3(130, 0, 0)) == Vector3.INF, "beyond 60 m and off the trail: nothing")
+	_check(fix.call(Vector3(101, 0, 1), Vector3(200, 0, 0)) == Vector3(108, 0, 0), "on the trail: 3 steps newer than the newest point within 3 m")
+	_check(fix.call(Vector3(117, 0, 0), Vector3(200, 0, 0)) == Vector3(118, 0, 0), "near the trail's head: its newest point")
+	_check(Logic.taint_fix(Vector3.ZERO, Vector3(130, 0, 0), [], 60.0, 3.0, 3) == Vector3.INF, "no trail (washed, or by day): nothing")
 	print("test_creature_logic: %s" % ("PASS" if _fails == 0 else "%d FAILED" % _fails))
 	quit(0 if _fails == 0 else 1)
 

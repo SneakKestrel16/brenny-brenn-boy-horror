@@ -10,7 +10,8 @@ extends CharacterBody3D
 ## counts from `ramp_up.json` on spots near where it heard players work; its bear traps are the farm's own,
 ## taken at nightfall from hands, then the pegboard (D-053, section 9, "9.1 As built"). Traps show to every peer as a close-range clue, and it plays lures
 ## (section 12, P2-04: recorded clips, sound lures, stranger lines) from crow corn edges and cover points
-## as world sounds, in the scripted lurk too. Taint is off in Phase 1. After the scripted night the AI
+## as world sounds, in the scripted lurk too. Taint (P3-07, sections 3.3 and 8; off on the Phase 1 farm by
+## `phase1.json` `taint_enabled`): at night it tracks Tainted players and leaves stains. After the scripted night the AI
 ## Director (P3-04, game/ai_director/) gates its lures, stalks, chases and kills and sets its wander region.
 ## Day: it waits in far cover and, from the day's second third, sends a targeted lure now and then from a
 ## trap spot, the target picked by the AI Director's scare budget.
@@ -76,6 +77,11 @@ const WORK_MAX := 64  ## placeholder: heard player noises kept as "where they wo
 const TRAP_SET_FROM := 0.1  ## placeholder: the night's sets spread from 10% to 75% of the night
 const TRAP_SET_SPAN := 0.65
 const TRAP_WAIT_S := 30.0  ## placeholder (P2-28, CEO): a set waits this long for lurk, then lands in any state
+# P3-07 Taint tracking (doc 03 section 3.3) and leavings (section 8).
+const TRAIL_STEP_S := 1.0  ## placeholder: a Tainted player's night trail keeps one point per second
+const TRAIL_PICKUP_M := 3.0  ## placeholder: it finds a trail within this distance of one of its points
+const TRAIL_LEAD := 3  ## placeholder: it homes on the point this many steps newer than the one it stands at
+const TRACK_EVERY_S := 0.1  ## placeholder: a tracked fix goes into its memory this often (keeps a chase from going quiet)
 const TRAP_KINDS := {&"bear": [&"bear_trap", "bear_4p"], &"pit": [&"pit", "pit_4p"]}  ## traps.json id, ramp_up field; bells wait (enabled false)
 
 var state: StringName = &"lurk"
@@ -120,6 +126,10 @@ var _last_heard := Vector3.INF  ## outlives the memory: the region it wanders in
 var _rng := RandomNumberGenerator.new()
 var _num: Dictionary = {}
 var _dir: Node  ## AiDirector (P3-04): asked before lures, stalks, chases and kills
+var _taint := false  ## P3-07: Taint tracking and leavings on (full farm, or phase1.json taint_enabled)
+var _trail: Dictionary = {}  ## Tainted peer -> [{position, t}] tonight, oldest first
+var _track_t: Dictionary = {}  ## peer -> _now of its last tracked fix
+var _leave_m := 0.0  ## lurk and stalk metres walked since the last stain
 
 # client only
 var _target_pos := Vector3.ZERO
@@ -182,6 +192,10 @@ func _ready() -> void:
 		_num[f] = float(Data.value(&"ai_director", &"lures", f))
 	for id in [&"night_s", &"scripted_lurk_s", &"scripted_chase_after_stalk_s", &"scripted_retreat_s"]:
 		_num[id] = float(Data.value(&"phase1", id, &"seconds"))
+	_taint = _full or bool(Data.value(&"phase1", &"taint_enabled", &"flag"))
+	_num[&"taint_tracking_radius_m"] = float(Data.value(&"creature", &"taint_tracking_radius_m", &"metres"))
+	_num[&"leavings_every_m"] = float(Data.value(&"creature", &"leavings_every_m", &"metres"))
+	_num[&"taint_trail_s"] = float(Data.value(&"creature", &"taint_trail_s", &"seconds"))
 	for door in get_tree().get_nodes_in_group(&"doors"):
 		var r := Rect2()
 		var first := true
@@ -256,6 +270,7 @@ func _start_night() -> void:
 	_scripted = true
 	_trap_i = 0
 	_memory.clear()
+	_trail.clear()
 	_set_state(&"lurk", &"night", 0)
 	_goal = Vector3.INF
 	if _full:
@@ -499,6 +514,35 @@ func _sense() -> void:
 			r = minf(r, _num[&"sight_still_crouch_m"])
 		if head.distance_to(global_position) <= r and not _blocked(global_position + Vector3.UP * EYE_M, head, 1 | 16):
 			_seen[p] = {"position": st.pos, "t": _now}
+	if _taint and _night_t >= 0.0:
+		_track_taint()
+
+
+## Doc 03 section 3.3: it knows where a Tainted player is within the tracking radius, and farther off it can
+## follow their last `taint_trail_s` of night trail once it comes across it. A fix goes into the hearing memory
+## as kind `taint` (margin 0, so any real noise wins the pick), which also keeps a chase from going quiet
+## (section 5: a Tainted player cannot lose a chase by quiet alone). Washing drops the trail (inference).
+func _track_taint() -> void:
+	for p in Game.players:
+		if not _alive(p) or not bool(Game.players[p].get("tainted", false)):
+			_trail.erase(p)
+			continue
+		var pos: Vector3 = Game.players[p].pos
+		var tr: Array = _trail.get(p, [])
+		_trail[p] = tr
+		if tr.is_empty() or _now - float(tr[-1].t) >= TRAIL_STEP_S:
+			tr.append({"position": pos, "t": _now})
+		while not tr.is_empty() and _now - float(tr[0].t) > _num[&"taint_trail_s"]:
+			tr.pop_front()
+		if _now - float(_track_t.get(p, -INF)) < TRACK_EVERY_S:
+			continue
+		var fix := Logic.taint_fix(global_position, pos, tr, _num[&"taint_tracking_radius_m"], TRAIL_PICKUP_M, TRAIL_LEAD)
+		if fix == Vector3.INF:
+			continue
+		_track_t[p] = _now
+		_memory.append({"position": fix, "margin": 0.0, "t": _now, "peer": p, "kind": &"taint"})
+		_last_heard = fix
+	_memory = _memory.filter(func(e: Dictionary) -> bool: return _now - float(e.t) <= _num[&"hearing_memory_s"])
 
 
 func _blocked(from: Vector3, to: Vector3, mask: int) -> bool:
@@ -1043,8 +1087,14 @@ func _move(_delta: float) -> void:
 	d.y = 0.0
 	velocity = d.normalized() * speed
 	rotation.y = atan2(-d.x, -d.z)
+	var was := global_position
 	move_and_slide()
 	global_position.y = 0.0
+	if _taint and _night_t >= 0.0 and (state == &"lurk" or state == &"stalk"):  # doc 03 section 8: leavings
+		_leave_m += Vector2(global_position.x - was.x, global_position.z - was.z).length()
+		if _leave_m >= _num[&"leavings_every_m"]:
+			_leave_m = 0.0
+			get_tree().get_first_node_in_group(&"taint").add_source(&"leavings", global_position)
 
 
 ## Lurk: walk between cover points and trap spots in its region (doc 03 section 4): the AI Director's wander
@@ -1163,7 +1213,7 @@ func debug_state() -> Dictionary:
 	return {"state": state, "body": body, "target": target, "position": global_position, "goal": _goal,
 		"scripted": _scripted, "night_t": _night_t, "timers": {"state_s": _t_state, "chase_s": _chase_t, "quiet_s": _lose_t},
 		"noise_memory": _memory.size(), "lure": _lure.duplicate(), "traps": _traps.duplicate(true),
-		"trap_plan": _plan.duplicate(true), "stash": _stash, "work_heard": _work.size()}
+		"trap_plan": _plan.duplicate(true), "stash": _stash, "work_heard": _work.size(), "taint_trails": _trail.size()}
 
 
 # --- QA walker (`-- --creature-test`) ------------------------------------------------------------

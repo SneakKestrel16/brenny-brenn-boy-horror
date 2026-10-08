@@ -49,3 +49,17 @@ static func lure_moved(moved_m: float, start_dist_m: float, now_dist_m: float) -
 ## `ai_director.json` `lures` (`weight_own`, `weight_dead`, `weight_alive`).
 static func voice_weight(owner: int, p: int, dead: bool, w: Dictionary) -> float:
 	return w[&"weight_own"] if owner == p else (w[&"weight_dead"] if dead else w[&"weight_alive"])
+
+
+## Doc 03 section 3.3 (P3-07): where Taint tracking places a Tainted player. Within `radius_m` of the
+## creature: where they are. Farther: a point of their night trail (`trail` oldest first, entries
+## {position, t}, already cut to `taint_trail_s` of age) once the creature stands within `pickup_m` of one,
+## namely the point `lead` steps newer than the newest point near it, so homing on it walks the trail.
+## Vector3.INF when neither.
+static func taint_fix(from: Vector3, pos: Vector3, trail: Array, radius_m: float, pickup_m: float, lead: int) -> Vector3:
+	if from.distance_to(pos) <= radius_m:
+		return pos
+	for i in range(trail.size() - 1, -1, -1):
+		if from.distance_to(trail[i].position) <= pickup_m:
+			return trail[mini(i + lead, trail.size() - 1)].position
+	return Vector3.INF

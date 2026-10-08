@@ -6,18 +6,19 @@ extends Node
 ## (`Death`). A pit only makes the player drop the bag (doc 01 "Night Traps").
 ## P2-11 adds the sweep side: every set trap gets a `TrapTarget` (disarm_bear, fill_pit), `clear_trap`
 ## ends one (`trap_changed` `disarmed` / `filled`), flags and the pegboard are in `trap_sweep.gd`.
-## Not built yet (later phases): bells, Taint, the half-RTT credit (needs `Net.rtt_ms`, so `credit_ms`
+## Not built yet (later phases): bells, the half-RTT credit (needs `Net.rtt_ms`, so `credit_ms`
 ## is logged 0).
 
 const TrapTarget := preload("res://game/traps_player/trap_target.gd")
 const AT_ONCE_S := 0.5  ## doc 03 section 7: "pried at once" = pry hold started within 0.5 s of the spring
-const SHAKEN_S := 60.0  ## doc 01 "Night Traps"
-const SHAKEN_MULT := 0.6  ## doc 01 "Night Traps": 40% slower
+const SLOW_S := 60.0  ## doc 01 "Night Traps": after a bear trap, 40% slower for 60 s
+const SLOW_MULT := 0.6  ## doc 02 section 6: walk x0.6
 
 var traps: Dictionary = {}  ## every peer: trap id -> {kind, state, position}; sprung ones only
 var victims: Dictionary = {}  ## every peer: trap id -> pinned peer
 var races: Dictionary = {}  ## host only: trap id -> {victim, deadline, t, hold_t, helped, start_m}
-var _shaken: Dictionary = {}  ## host: peer -> seconds left
+var _shaken: Dictionary = {}  ## host: peer -> seconds of Shaken left (P3-07, sprint)
+var _slowed: Dictionary = {}  ## host: peer -> seconds of the bear trap slow left (speed)
 var _creature: Node
 var _death: Node
 var _registry: Node
@@ -34,7 +35,8 @@ func _ready() -> void:
 			if victims[id] == p:
 				victims.erase(id)
 				races.erase(id)
-		_shaken.erase(p))
+		_shaken.erase(p)
+		_slowed.erase(p))
 	if not Game.is_host():
 		return
 	_creature = get_parent().get_node("Creature")
@@ -98,6 +100,12 @@ func _physics_process(delta: float) -> void:
 		if _shaken[p] <= 0.0:
 			_shaken.erase(p)
 			if Game.players.has(p):
+				Game.players[p].shaken = false
+	for p in _slowed.keys():
+		_slowed[p] -= delta
+		if _slowed[p] <= 0.0:
+			_slowed.erase(p)
+			if Game.players.has(p):
 				Game.players[p].speed_mult = 1.0
 	for id in races.keys():
 		var r: Dictionary = races[id]
@@ -148,26 +156,44 @@ func on_pry_done(id: String, peer: int) -> void:
 	races.erase(id)
 	Game.players[peer].pinned = false
 	_result(id, r, true, r.deadline - r.t, r.t - maxf(r.hold_t, 0.0))
+	slow(peer)
 	shake(peer)
 	traps[id].state = &"disarmed"
 	_bcast(&"trap_changed", [id, traps[id].kind, &"disarmed", traps[id].position])
 	_creature.force_state(&"retreat" if _night() else &"lurk", &"trap_race_survived", peer)
 
 
-## Host: `peer` is Shaken for SHAKEN_S (a survived trap race; a jumpscare or disarm lunge, P3-05).
+## Host: `peer` is Shaken (a survived trap race; a jumpscare or disarm lunge, P3-05): sprint time x0.6 for
+## taint.json `shaken.duration_s`; a new cause restarts it (`restarts_on_new_cause`). Never Taints (doc 01).
 func shake(peer: int) -> void:
-	Game.players[peer].speed_mult = SHAKEN_MULT
-	_shaken[peer] = SHAKEN_S
-	Log.event(&"shaken", {"player": peer, "seconds": SHAKEN_S})
+	if not Game.players.has(peer) or Game.is_ghost(peer):
+		return
+	var s := float(Data.value(&"taint", &"shaken", &"duration_s"))
+	Game.players[peer].shaken = true
+	_shaken[peer] = s
+	Log.event(&"shaken", {"player": peer, "seconds": s})
 	if peer == 1:
-		Net.apply_received.emit(&"shaken", [SHAKEN_S])
+		Net.apply_received.emit(&"shaken", [s])
 	elif peer > 1:
-		Net.to_peers(&"apply_shaken", [SHAKEN_S], [peer])
+		Net.to_peers(&"apply_shaken", [s], [peer])
+
+
+## Host: after a bear trap (doc 01 "Night Traps"): 40% slower for 60 s. The host's speed check reads
+## `speed_mult`; the freed player's own body slows by `apply_slowed`.
+func slow(peer: int) -> void:
+	Game.players[peer].speed_mult = SLOW_MULT
+	_slowed[peer] = SLOW_S
+	if peer == 1:
+		Net.apply_received.emit(&"slowed", [SLOW_S])
+	elif peer > 1:
+		Net.to_peers(&"apply_slowed", [SLOW_S], [peer])
 
 
 func _lose(id: String, r: Dictionary) -> void:
 	races.erase(id)
 	var pry_s := Data.hold_s(&"pry")
+	if bool(Game.players[r.victim].get("tainted", false)):
+		pry_s *= float(Data.value(&"taint", &"taint", &"pry_mult"))  # doc 03 section 7: 6 s Tainted
 	var h: Dictionary = _registry.holds.get(r.victim, {})
 	var left := pry_s * (1.0 - float(h.progress)) if not h.is_empty() and h.verb == &"pry" else pry_s
 	_result(id, r, false, r.deadline - (r.t + left), pry_s)
@@ -177,7 +203,8 @@ func _lose(id: String, r: Dictionary) -> void:
 
 
 func _result(id: String, r: Dictionary, survived: bool, spare: float, pry_s: float) -> void:
-	Log.event(&"trap_race_result", {"player": r.victim, "trap_id": id, "solo": not r.helped, "tainted": false,
+	Log.event(&"trap_race_result", {"player": r.victim, "trap_id": id, "solo": not r.helped,
+		"tainted": bool(Game.players.get(r.victim, {}).get("tainted", false)),
 		"pried_at_once": r.hold_t >= 0.0 and r.hold_t <= AT_ONCE_S, "survived": survived,
 		"seconds_spare": snappedf(spare, 0.01), "start_distance_m": r.start_m, "pry_s": snappedf(pry_s, 0.01),
 		"credit_ms": 0})
@@ -208,9 +235,13 @@ func _on_apply(what: StringName, args: Array) -> void:
 		&"shaken":
 			var pl := _player(Game.local_peer())
 			if pl:
-				pl.shake(args[0], SHAKEN_MULT)
+				pl.shaken_s = args[0]
 				if not Game.is_host():  # the host's own line is written in shake()
 					Log.event(&"shaken", {"player": Game.local_peer(), "seconds": args[0]})
+		&"slowed":
+			var pl := _player(Game.local_peer())
+			if pl:
+				pl.shake(args[0], SLOW_MULT)
 		&"death":
 			for id in victims.keys():
 				if victims[id] == args[0]:
