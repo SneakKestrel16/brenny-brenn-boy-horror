@@ -152,6 +152,10 @@ def lure_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
     counted = 0
     mismatches: list[str] = []
     by_phase: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    # Doc 09 s3 "lure success by source" (P2-04): a recorded clip (kind "clip") against the generic
+    # stranger and sound lures; read, not gated. Logs before P2-04 have no kind and count as generic.
+    kind_of = {(r.session, r.data.get("lure_id")): r.data.get("kind") for r in recs if r.event == "lure_played"}
+    by_source: dict[str, list[int]] = defaultdict(lambda: [0, 0])
     for r in results:
         moved, within = r.data.get("moved_m"), r.data.get("within_s")
         if not (_is_number(moved) and _is_number(within)):
@@ -164,6 +168,9 @@ def lure_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
         worked += ok
         by_phase[r.phase][0] += ok
         by_phase[r.phase][1] += 1
+        src = "recorded" if kind_of.get((r.session, r.data.get("lure_id"))) == "clip" else "generic"
+        by_source[src][0] += ok
+        by_source[src][1] += 1
         if "worked" in r.data and bool(r.data["worked"]) != ok:
             mismatches.append(f"{r.session} t={r.t}: logged worked={r.data['worked']}, doc 01 rule gives {ok} (moved_m={moved}, within_s={within})")
     rate = worked / counted if counted else None
@@ -174,6 +181,7 @@ def lure_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
         "rate": rate,
         "phase1_gate": None if rate is None else rate >= LURE_GATE,
         "by_phase": {k: {"worked": v[0], "total": v[1]} for k, v in sorted(by_phase.items())},
+        "by_source": {k: {"worked": v[0], "total": v[1], "rate": v[0] / v[1]} for k, v in sorted(by_source.items())},
         "worked_mismatches": mismatches,
     }
 
@@ -283,6 +291,8 @@ def format_report(rep: dict[str, Any]) -> str:
         add(f"  {lure['worked']}/{lure['lure_results']} worked = {_pct(lure['rate'])}  [{gate}]  (lure_played: {lure['lure_played']})")
         for phase, v in lure["by_phase"].items():
             add(f"  {phase}: {v['worked']}/{v['total']}")
+        for src, v in lure["by_source"].items():
+            add(f"  {src}: {v['worked']}/{v['total']} = {_pct(v['rate'])}  (doc 09 s3, read not gated)")
         for m in lure["worked_mismatches"]:
             add(f"  MISMATCH {m}")
     else:

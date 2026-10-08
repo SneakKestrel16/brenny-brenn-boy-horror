@@ -6,9 +6,10 @@ extends CharacterBody3D
 ## Night: scripted lurk 60 s, stalk the first outdoor player, chase, retreat (doc 03 section 18);
 ## then it wanders and hunts by sound: it homes on what it heard or saw (sections 3.1, 3.2), never on
 ## a true position, and loses a chase by section 5. It sets one bear trap and one pit at the four
-## scripted times (section 18), shown to every peer as a close-range clue (section 9), and plays generic
-## stranger lines from the crow corn edges as lures (section 12), in the scripted lurk too. Taint and
-## the AI Director are off in Phase 1. Day: it waits in far cover.
+## scripted times (section 18), shown to every peer as a close-range clue (section 9), and plays lures
+## (section 12, P2-04: recorded clips, sound lures, stranger lines) from crow corn edges and cover points
+## as world sounds, in the scripted lurk too. Taint and the AI Director are off in Phase 1. Day: it waits
+## in far cover and, from the day's second third, sends a targeted lure now and then from a trap spot.
 ##
 ## Presentation may read true positions (lure targeting, the trap spring check, the lit doorway rule);
 ## hunting never does, except the scripted stalk and chase, which doc 03 section 18 scripts at "the
@@ -16,7 +17,8 @@ extends CharacterBody3D
 ##
 ## QA flags: `-- --creature-test` starts a night at once, repeats it every `night_s`, walks the local
 ## player round the yard and turns it toward half the lures it hears (synthetic, measures plumbing,
-## not players). `-- --log-creature` logs `apply_creature_state` arrivals on clients.
+## not players). `-- --creature-walk` walks and turns the same way but keeps the real clock (day lures).
+## `-- --log-creature` logs `apply_creature_state` arrivals on clients.
 
 signal state_changed(state: StringName, body: StringName)
 ## Host only (P1-09): the creature reached `peer` in a chase / a living player sprang an armed trap.
@@ -46,7 +48,23 @@ const TRAP_SPRING_M := 1.0  ## placeholder: a living player this close to an arm
 const ARRIVE_M := 1.0
 const DAY_COVER := "cover_15"  ## doc 04 sec 9: the far south cover point; where it waits by day (placeholder)
 const BODY := &"body_gaunt"  ## doc 03 section 2: Phase 1 shows one body (placeholder choice)
-const TELLS: Array[StringName] = [&"none", &"echo", &"pitch_up", &"pitch_down"]  ## doc 03 section 12.2
+const TELLS: Array[StringName] = [&"none", &"echo", &"pitch_up", &"pitch_down", &"no_crackle"]  ## doc 03 section 12.2
+# P2-04 recorded lures (doc 03 section 12.1). Weights dead 3 : alive 1 : own 0.1 are doc 03's placeholders.
+const WEIGHT_DEAD := 3.0
+const WEIGHT_ALIVE := 1.0
+const WEIGHT_OWN := 0.1
+const WEIGHT_STRANGER := 1.0  ## placeholder: doc 03 gives no weight for the unattributed voice; a playtest settles it
+## Doc 03 section 16 "Day or night use"; which lines fit both is a placeholder reading. A name call fits both.
+const DAY_LINES := ["come_look_at_this", "i_found_something", "its_fine_come_on", "wait_for_me"]
+const NIGHT_LINES := ["over_here", "help_me", "where_are_you", "wait_for_me", "its_fine_come_on"]
+## Doc 03 section 16 sound lures with a sound in the Soundscape catalog: [catalog id, plays, gap s] (placeholder).
+## hoe_fake, watering_can_fake and shovel_fake wait for their assets (Audio Designer).
+const SOUND_LURES := {"step_walk_fake": [&"sfx_step_dirt", 8, 0.55], "step_run_fake": [&"sfx_step_dirt", 10, 0.3],
+	"door_fake": [&"cre_door_bang", 1, 0.0]}
+const DAY_RULE_M := 15.0  ## doc 03 section 12.1 "the 15 m rule": a day source this far from every teammate of the target
+const COULD_NOT_BE_M := 25.0  ## doc 03 section 12.2: the source this far from the living teammate it voices
+const DAY_LURE_GAP_S := 90.0  ## placeholder: one day lure attempt per gap until the AI Director (DD Phase 3) budgets them
+const VOICE_CHAIN := "res://game/audio/voice_chain.gd"  ## Audio Designer's tell buses (P2-08); VoiceBase without it
 
 var state: StringName = &"lurk"
 var body: StringName = BODY
@@ -83,6 +101,7 @@ var _num: Dictionary = {}
 # client only
 var _target_pos := Vector3.ZERO
 var _target_yaw := 0.0
+var _clip_lures: Array = []  ## every peer: [owner, clip_id, AudioStreamPlayer3D] playing now
 
 
 func _ready() -> void:
@@ -109,7 +128,8 @@ func _ready() -> void:
 	_log = OS.get_cmdline_user_args().has("--log-creature")
 	Net.apply_received.connect(_on_apply)
 	Net.bytes_received.connect(_on_bytes)
-	if _test and not OS.get_cmdline_user_args().has("--autowalk"):  # --autowalk: players circle instead
+	Voice.clips.clip_freed.connect(_on_clip_freed)
+	if (_test or OS.get_cmdline_user_args().has("--creature-walk")) and not OS.get_cmdline_user_args().has("--autowalk"):  # --autowalk: players circle instead
 		_test_walk.call_deferred()
 	if not Game.is_host():
 		return
@@ -166,6 +186,10 @@ func _physics_process(delta: float) -> void:
 	if _night_t >= 0.0:
 		_night_t += delta
 		_night(delta)
+	elif Clock.phase == &"day" and Clock.t_phase >= Clock.length_of(&"day") / 3.0 and not _lure and _now - _last_lure_t >= DAY_LURE_GAP_S:
+		_try_day_lure()  # doc 03 section 11.3: no lures in the calm first third
+	if _lure:
+		_track_lure()
 	_move(delta)
 	_log_t += delta
 	if _log and _log_t >= 5.0:
@@ -206,8 +230,6 @@ func _night(delta: float) -> void:
 		_set_trap(_trap_i)
 		_trap_i += 1
 	_sense()
-	if _lure:
-		_track_lure()
 	if _scripted:
 		_run_script()
 	else:
@@ -410,36 +432,183 @@ func _blocked(from: Vector3, to: Vector3, mask: int) -> bool:
 
 # --- lures (doc 03 section 12) -------------------------------------------------------------------
 
-## Presentation: picks the crow corn edge (doc 03 section 18) from the target's true position. A target
-## with company needs a source near an armed trap (`trap_lure_m`). Where the target stands (corn or open
-## ground) does not matter.
+## Night (doc 03 section 4.2 lurk -> lure): a world lure at `p`; the creature waits by the source.
 func _play_lure(p: int) -> bool:
-	var pos: Vector3 = Game.players[p].pos
-	var lone := _lone(p)
-	var src := Vector3.INF
-	var ids: Array = Data.value(&"phase1", &"stranger_voice_spots", &"ids")
-	for id in ids:
-		var m := _marker(&"crow_perches", id)
-		var d := m.distance_to(pos)
-		if not lone and not _traps.values().any(func(t: Dictionary) -> bool: return t.armed and t.position.distance_to(m) <= _num[&"trap_lure_m"]):
-			continue
-		if d >= LURE_MIN_M and d <= LURE_MAX_M and (src == Vector3.INF or d < src.distance_to(pos)):
-			src = m
+	if not _lure_at(p, false):
+		return false
+	_set_state(&"lure", &"lone_player", p)
+	_goal = _lure.position + (_lure.position - global_position).normalized() * 3.0  # waits by the source's far side
+	return true
+
+
+## Day (doc 03 section 11.3 thirds 2 and 3): a targeted lure at one outdoor living player. Private: no state
+## change, the creature stays in cover. The AI Director's scare budget (section 11.4) is DD Phase 3.
+func _try_day_lure() -> void:
+	_last_lure_t = _now  # one attempt per gap, played or not
+	var ps := Game.players.keys().filter(func(q: int) -> bool: return _alive(q) and _outdoor(Game.players[q].pos))
+	if ps.is_empty():
+		return
+	_lure_at(ps[_rng.randi() % ps.size()], true)
+
+
+## Doc 03 section 12. Presentation: reads true positions. Picks whose voice (12.1), the source (12.1 the
+## 15 m rule, 12.2 a place the voiced teammate could not be), one tell or none, then plays it: by day to the
+## target only, by night as a world sound. Exact clips only: splicing (day 4 on) is not built, so `exact`
+## is always true and `day` is logged.
+func _lure_at(p: int, day: bool) -> bool:
+	var v := _choose_voice(p, day)
+	var src := _lure_source(p, day, int(v.owner))
+	if src == Vector3.INF and int(v.owner) != 0:  # no place for that voice: the unattributed voice from any
+		v = {"kind": "stranger", "owner": 0}
+		src = _lure_source(p, day, 0)
 	if src == Vector3.INF:
 		return false
-	var lines: Array = Data.records(&"voice_lines").filter(func(r: Dictionary) -> bool:
-		return r.get("kind") == "stranger" and bool(r.get("phase1", false)))
 	_lure_n += 1
 	_last_lure_t = _now
-	var tell: StringName = TELLS[0] if _rng.randf() < 1.0 / 3.0 else TELLS[_rng.randi_range(1, TELLS.size() - 1)]
-	_lure = {"lure_id": "lure_%d" % _lure_n, "target": p, "position": src, "start_d": src.distance_to(pos), "moved_m": 0.0, "t0": _now}
-	Log.event(&"lure_played", {"lure_id": _lure.lure_id, "owner": null, "line_id": lines[_rng.randi() % lines.size()].id,
-		"sound_id": null, "target": p, "position": _v(src), "tell": String(tell), "ghost": false})
-	# Night lures are world sounds (doc 03 section 12.1): everyone hears, target slot -1.
-	Net.to_peers(&"apply_lure", [_lure.lure_id, "stranger", src, -1, tell, false])
-	_set_state(&"lure", &"lone_player", p)
-	_goal = src + (src - global_position).normalized() * 3.0  # waits by the source's far side
+	var lure_id := "lure_%d" % _lure_n
+	var tell: StringName = &"none"  # sound lures carry no voice tell (inference: section 12.2 tells are voice giveaways)
+	if v.kind != "sound":
+		tell = TELLS[0] if _rng.randf() < 1.0 / 3.0 else TELLS[_rng.randi_range(1, TELLS.size() - 1)]
+	var ghost := not day and int(v.owner) != 0 and Game.is_ghost(int(v.owner))  # doc 01 "Ghosts": the dead-voice twist
+	var source := "stranger"
+	match v.kind:
+		"stranger":  # Soundscape plays STRANGER_LINES[hash(lure_id) % 6], the stranger records in voice_lines order
+			var lines: Array = Data.records(&"voice_lines").filter(func(r: Dictionary) -> bool: return r.get("kind") == "stranger")
+			v.line_id = lines[hash(lure_id) % lines.size()].id
+		"sound":
+			source = "sound:" + String(v.sound_id)
+		"clip":
+			source = "clip:%d:%s" % [v.owner, v.clip_id]
+	var pos: Vector3 = Game.players[p].pos
+	_lure = {"lure_id": lure_id, "target": p, "position": src, "start_d": src.distance_to(pos), "moved_m": 0.0, "t0": _now,
+		"recorded_line": v.get("line_id") if v.kind == "clip" else null}
+	Log.event(&"lure_played", {"lure_id": lure_id, "kind": v.kind, "owner": v.owner if int(v.owner) != 0 else null,
+		"line_id": v.get("line_id"), "clip_id": v.get("clip_id"), "sound_id": v.get("sound_id"), "target": p,
+		"heard_by": p if day else -1, "position": _v(src), "tell": String(tell), "ghost": ghost, "day": Clock.day, "exact": true})
+	_send_lure([lure_id, source, src, p if day else -1, tell, ghost])
 	return true
+
+
+## Doc 03 section 12.1 "Whose voice": each player weighs dead 3, alive 1, own 0.1, plus the stranger. A
+## player voices a clip only with `lobby_lines` and a fitting clip this machine holds; anyone else (Off,
+## unchosen, a bot) gets a sound lure instead: footsteps and tools only (doc 01 "Habits").
+func _choose_voice(p: int, day: bool) -> Dictionary:
+	var opts: Array = [{"kind": "stranger", "owner": 0}]
+	var w := PackedFloat32Array([WEIGHT_STRANGER])
+	for q: int in Game.players:
+		w.append(WEIGHT_OWN if q == p else (WEIGHT_DEAD if Game.is_ghost(q) else WEIGHT_ALIVE))
+		var clips := _fitting_clips(q, p, day) if Game.voice_setting_of(q) == "lobby_lines" else []
+		if clips.is_empty():
+			opts.append({"kind": "sound", "owner": q, "sound_id": SOUND_LURES.keys()[_rng.randi() % SOUND_LURES.size()]})
+		else:
+			var id: String = clips[_rng.randi() % clips.size()]
+			opts.append({"kind": "clip", "owner": q, "clip_id": id, "line_id": "name:" + id.trim_prefix("name_") if id.begins_with("name_") else id})
+	return opts[_rng.rand_weighted(w)]
+
+
+## `q`'s clips for a lure at `p`: the phase's fixed lines (section 16) and `p`'s name, never chatter. Own
+## voice: no name call (a player calling their own name is no lure).
+func _fitting_clips(q: int, p: int, day: bool) -> Array:
+	var lines: Array = DAY_LINES if day else NIGHT_LINES
+	var p_name := "name_" + str(Net.profiles.get(p, {}).get("uid", "-"))
+	return Voice.clips.clip_ids(q).filter(func(id: String) -> bool: return id in lines or (q != p and id == p_name))
+
+
+## The source point (doc 03 section 12.1 "Position"): a trap spot by day, a crow corn edge or cover point by
+## night, LURE_MIN_M to LURE_MAX_M from the target, nearest first. Night without the lone rule: near an armed
+## trap (`trap_lure_m`). Day: DAY_RULE_M from every teammate. A living voiced teammate: COULD_NOT_BE_M away.
+func _lure_source(p: int, day: bool, owner: int) -> Vector3:
+	var pos: Vector3 = Game.players[p].pos
+	var lone := _lone(p)
+	var pts := get_tree().get_nodes_in_group(&"trap_spots") if day else \
+		get_tree().get_nodes_in_group(&"crow_perches") + get_tree().get_nodes_in_group(&"creature_cover")
+	var src := Vector3.INF
+	for n: Node3D in pts:
+		var m := n.global_position
+		var d := m.distance_to(pos)
+		if d < LURE_MIN_M or d > LURE_MAX_M or (src != Vector3.INF and d >= src.distance_to(pos)):
+			continue
+		if not day and not lone and not _traps.values().any(func(t: Dictionary) -> bool: return t.armed and t.position.distance_to(m) <= _num[&"trap_lure_m"]):
+			continue
+		if day and Game.players.keys().any(func(q: int) -> bool: return q != p and _alive(q) and Game.players[q].pos.distance_to(m) < DAY_RULE_M):
+			continue
+		if owner != 0 and owner != p and _alive(owner) and Game.players[owner].pos.distance_to(m) < COULD_NOT_BE_M:
+			continue
+		src = m
+	return src
+
+
+## Host: day lures go to the target only, night lures to everyone. `Net.apply_lure` is call_remote, so
+## the host plays its own share here.
+func _send_lure(args: Array) -> void:
+	var to: int = args[3]
+	if to < 0:
+		Net.to_peers(&"apply_lure", args)
+	elif to != 1:
+		Net.to_peers(&"apply_lure", args, [to])
+	if to < 0 or to == 1:
+		Net.apply_received.emit(&"lure", args)
+
+
+## Every peer that hears a lure. A stranger line is the Soundscape's. A clip plays at the source through the
+## tell's bus, unless its owner is Off by now (doc 06 section 11 "Coverage") or the clip is not here.
+func _hear_lure(args: Array) -> void:
+	var source: String = args[1]
+	var pos: Vector3 = args[2]
+	if source.begins_with("sound:"):
+		var s: Array = SOUND_LURES.get(source.trim_prefix("sound:"), [])
+		for i in (int(s[1]) if s else 0):
+			Soundscape.play_3d(s[0], pos + Vector3(_rng.randf_range(-0.6, 0.6), 0.0, _rng.randf_range(-0.6, 0.6)))
+			await get_tree().create_timer(float(s[2])).timeout
+		return
+	if not source.begins_with("clip:"):
+		return
+	var parts := source.split(":", true, 2)
+	var owner := int(parts[1])
+	var clip_id := parts[2]
+	var pk: Array = Voice.clips.packets(owner, clip_id) if Game.voice_setting_of(owner) == "lobby_lines" else []
+	if pk.is_empty():
+		Log.event(&"lure_skipped", {"lure_id": args[0], "owner": owner, "clip_id": clip_id,
+			"why": "missing" if Game.voice_setting_of(owner) == "lobby_lines" else "owner_off"})
+		return
+	var chain: Script = load(VOICE_CHAIN) if ResourceLoader.exists(VOICE_CHAIN) else null
+	var tell: StringName = args[4]
+	var bus: StringName = chain.call(&"bus_for", tell) if chain else &"VoiceBase"
+	var s := AudioStreamOpus.new()
+	s.opus_sample_rate = Voice.OPUS_RATE
+	s.opus_channels = 1
+	s.buffer_length = pk.size() * 0.02 + 0.5  # 20 ms frames: the whole clip fits, pushed at once (clips.gd)
+	var player := AudioStreamPlayer3D.new()
+	player.stream = s
+	player.bus = bus
+	player.unit_size = VoiceEmitter.UNIT_SIZE
+	player.max_distance = VoiceEmitter.MAX_DISTANCE
+	get_parent().add_child(player)
+	player.global_position = pos + Vector3.UP * VoiceEmitter.EYE_HEIGHT
+	player.play()
+	var pb := player.get_stream_playback() as AudioStreamPlaybackOpus
+	for pkt: PackedByteArray in pk:
+		pb.push_opus_packet(pkt, 0, 0)
+	pb.mark_end_opus_stream(true)
+	if chain:
+		chain.call(&"attach_crackle", player, tell, bus)
+	_clip_lures.append([owner, clip_id, player])
+	await get_tree().create_timer(pk.size() * 0.02 + 0.3).timeout
+	_drop_clip_lure(player)
+
+
+## Doc 06 section 11: a clip freed (its owner went Off or left) stops at once.
+func _on_clip_freed(owner: int, clip_id: String) -> void:
+	for e in _clip_lures.duplicate():
+		if e[0] == owner and (clip_id.is_empty() or e[1] == clip_id):
+			_drop_clip_lure(e[2])
+			Log.event(&"lure_stopped", {"owner": owner, "clip_id": e[1]})
+
+
+func _drop_clip_lure(player: Node) -> void:
+	_clip_lures = _clip_lures.filter(func(e: Array) -> bool: return e[2] != player)
+	if is_instance_valid(player):
+		player.queue_free()
 
 
 func _track_lure() -> void:
@@ -452,6 +621,8 @@ func _track_lure() -> void:
 		return
 	Log.event(&"lure_result", {"lure_id": _lure.lure_id, "target": p, "moved_m": _lure.moved_m,  # unrounded: check_logs re-applies "> 10 m"
 		"within_s": snappedf(elapsed, 0.01) if worked else _num[&"lure_wait_s"], "window_s": _num[&"lure_wait_s"], "worked": worked})
+	if worked and _lure.recorded_line != null:  # CONTRACTS section 10 (D-020)
+		Log.event(&"lure_fooled", {"lure_id": _lure.lure_id, "target": p, "line_id": _lure.recorded_line})
 	var src: Vector3 = _lure.position
 	_lure = {}
 	if state != &"lure":
@@ -653,7 +824,8 @@ func _on_apply(what: StringName, args: Array) -> void:
 					Log.event(&"creature_state_applied", {"state": String(state), "body": String(body)})
 				state_changed.emit(state, body)
 		&"lure":
-			if _test:
+			_hear_lure(args)
+			if _walker:
 				_test_lure_heard(args[2])
 		&"trap_changed":  # every peer: the Creature sends `set`, TrapRace the later states
 			_show_clue(args[0], args[1], args[2] == &"set")

@@ -570,6 +570,45 @@ Doc 01 "Voice mimicry". Playback is doc 06's `apply_lure`; **choosing** is here.
   "over here" (doc 01 "Recording"). The same staged moments are used in play for those two lines as
   the AI Director's build-up (placeholder reading).
 
+### 12.4 As built (P2-04)
+
+`game/creature/creature.gd`, host only, until the AI Director (DD Phase 3) takes over the timing.
+
+- **Whose voice.** One weighted pick among the stranger (weight 1, placeholder) and every player in
+  the session: dead 3, alive 1, the target's own 0.1 (12.1). A player voices a **clip** only with
+  `lobby_lines` and a fitting clip the host holds: the phase's lines from section 16 (day:
+  `come_look_at_this`, `i_found_something`, `its_fine_come_on`, `wait_for_me`; night: `over_here`,
+  `help_me`, `where_are_you`, `wait_for_me`, `its_fine_come_on`; placeholder reading of the "Day or
+  night use" column) or the target's `name:<uid>` (not in the target's own voice). Barn chatter is
+  never used. Anyone else (Off, unchosen, a bot) gets a **sound lure** in their place:
+  `step_walk_fake`, `step_run_fake` or `door_fake` (`hoe_fake`, `watering_can_fake` and
+  `shovel_fake` wait for sounds).
+- **Source.** Day: a trap spot; night: a crow corn edge or a cover point; 12 to 40 m from the
+  target, nearest first. Night with company: within `trap_lure_m` of an armed trap (Phase 1 rule).
+  Day: 15 m from every living teammate of the target. A living voiced teammate other than the
+  target: 25 m from the source (12.2). No place for the chosen voice: the stranger from any place.
+- **Day.** From the start of the day's second third (11.3), one attempt every 90 s (placeholder) at
+  a random living outdoor player; sent to the target only; the creature stays in cover (no state
+  change). Sanctuary and the scare budget (11.4, 11.5) wait for the AI Director.
+- **Night.** As Phase 1 (section 4.2 lurk to lure), sent to everyone (target slot -1), the host
+  included (`apply_lure` is `call_remote`, so the host plays its share locally).
+- **Tells.** Voice lures (clip, stranger): a third none, else one of `echo`, `pitch_up`,
+  `pitch_down`, `no_crackle`. Sound lures: none (inference: tells are voice giveaways).
+- **Exactness.** Exact clips only; splicing (day 4 on) is not built. `lure_played` logs `day` and
+  `exact: true`.
+- **Wire.** `apply_lure.source` stays a String: `"stranger"`, `"sound:<sound_id>"` or
+  `"clip:<owner_peer>:<clip_id>"` (doc 06 section 7 describes a dictionary; raised in P2-04's
+  handoff). Each hearer checks the owner's setting at play time and plays the clip from its store
+  at the source on the tell's bus (`VoiceChain`), positional like a voice (`VoiceEmitter` unit size
+  and range); a clip freed on Off stops at once (`lure_stopped`); a missing one logs `lure_skipped`.
+- **Logs.** `lure_played`: `lure_id`, `kind` (`clip`, `sound`, `stranger`), `owner`, `line_id`,
+  `clip_id`, `sound_id`, `target`, `heard_by` (the target, or -1 for everyone), `position`, `tell`,
+  `ghost`, `day`, `exact`. `lure_result` as Phase 1. `lure_fooled` when a clip lure worked.
+  `check_logs.py` reports recorded (clip) against generic (stranger and sound) rates, read not gated
+  (doc 09 section 3).
+- **QA flag.** `-- --creature-walk` walks the local player round the yard and turns it toward half
+  the lures it hears, with the real clock (so day lures happen).
+
 ## 13. Jumpscares, fake-outs, hallucinations and other scares
 
 Doc 01 "Scare moments" and "Jumpscares". Make them land: **rare**, **built up** (silence, insects
