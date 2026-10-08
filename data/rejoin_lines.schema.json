@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/rejoin_lines.schema.json",
+  "title": "Rejoin mockery lines (doc 01 Joining and leaving, D-049)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "table",
+    "schema_version",
+    "records"
+  ],
+  "properties": {
+    "table": {
+      "const": "rejoin_lines"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "lines"
+        ],
+        "properties": {
+          "id": {
+            "const": "lines"
+          },
+          "source": {
+            "enum": [
+              "doc01",
+              "sim",
+              "placeholder"
+            ]
+          },
+          "cite": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          }
+        }
+      }
+    }
+  }
+}
