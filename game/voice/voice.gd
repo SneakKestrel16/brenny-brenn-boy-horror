@@ -406,10 +406,13 @@ func _apply_buses() -> void:
 			st.free()
 		if e.bus != want:
 			e.bus = want
+		# D-047: the layers follow the per-player volume, so a muted player's crackle or static never plays.
+		var muted := Settings.peer_volume(peer) <= 0.0
 		for layer in e.get_children():
 			if layer is AudioStreamPlayer3D:
 				layer.bus = want
-				layer.stream_paused = not e.talking()
+				layer.volume_db = float(layer.get_meta(&"base_db", layer.volume_db)) + e.volume_db
+				layer.stream_paused = muted or not e.talking()
 
 
 ## Names of the players this machine won't hear while it captures (the recording screen lists them).

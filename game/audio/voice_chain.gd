@@ -128,6 +128,7 @@ static func _layer(voice: Node, s: AudioStream, bus: StringName, db: float) -> N
 	layer.stream = s
 	layer.bus = bus
 	layer.volume_db = db
+	layer.set_meta(&"base_db", db)  # Voice adds the owner's per-player volume on top (D-047)
 	voice.add_child(layer)
 	layer.play()
 	return layer
