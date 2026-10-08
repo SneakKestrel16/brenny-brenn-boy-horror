@@ -9,7 +9,8 @@ const Station := preload("res://game/farming/station.gd")
 const Registry := preload("res://game/interaction/hold_registry.gd")
 
 var targets: Dictionary = {}  ## id -> Interactable
-var coins := 0  ## authoritative on the host; mirrored elsewhere
+var carry: Dictionary = {}  ## every peer: peer -> {can, bag, fuel_can}, replicated by `apply_carry`
+var coins := 0 ## authoritative on the host; mirrored elsewhere
 var registry: Node
 var _log_farm := OS.get_cmdline_user_args().has("--log-farm")
 
@@ -18,7 +19,7 @@ func _ready() -> void:
 	add_to_group(&"farm")
 	for m in get_tree().get_nodes_in_group(&"plot_spots"):
 		var p := Plot.new()
-		p.locked = bool(m.get_meta(&"upgrade", false))
+		p.locked = false  # Phase 1: all 12 plots open (doc 04 section 4 "switched on"); the upgrade row was unplantable at the playtest
 		_attach(m, p, String(m.name), Vector3(2.8, 0.3, 2.8))
 	for g in [[&"sell_box", &"sell", "sell_box"], [&"well", &"well", "well"]]:
 		for n in get_tree().get_nodes_in_group(g[0]):
@@ -68,6 +69,12 @@ func add_coins(n: int, reason: StringName, peer: int) -> void:
 	_broadcast(&"money_changed", [coins])
 
 
+## Host: tell every peer what `peer` now carries.
+func send_carry(peer: int) -> void:
+	var st := pstate(peer)
+	_broadcast(&"carry", [peer, int(st.can), int(st.bag), bool(st.get("fuel_can", false))])
+
+
 func plot_changed(p: Node) -> void:
 	_broadcast(&"plot_changed", [p.id, p.state, p.watered, p.age])
 
@@ -82,9 +89,12 @@ func _on_request(what: StringName, peer: int, args: Array) -> void:
 		return
 	match what:
 		&"hold": registry.request(peer, args[0], args[1])
-		&"hold_cancel": registry.cancel(peer)
+		&"hold_cancel": registry.cancel(peer, &"released", false)  # the client already ended it: no stale reply
 		&"farm_state":
 			Net.to_peers(&"apply_money_changed", [coins], [peer])
+			for p in Game.players:
+				var cs := pstate(p)
+				Net.to_peers(&"apply_carry", [p, int(cs.can), int(cs.bag), bool(cs.get("fuel_can", false))], [peer])
 			for t in targets.values():
 				if t is Plot:
 					Net.to_peers(&"apply_plot_changed", [t.id, t.state, t.watered, t.age], [peer])
@@ -94,6 +104,7 @@ func _on_apply(what: StringName, args: Array) -> void:
 	if _log_farm and what in [&"plot_changed", &"money_changed"]:  # QA: what this machine sees
 		Log.event(&"farm_seen", {"what": String(what), "args": args.map(func(a: Variant) -> Variant: return str(a) if a is StringName else a)})
 	match what:
+		&"carry": carry[args[0]] = {"can": args[1], "bag": args[2], "fuel_can": args[3]}
 		&"money_changed": coins = int(args[0])
 		&"plot_changed":
 			if not Game.is_host() and targets.has(args[0]):

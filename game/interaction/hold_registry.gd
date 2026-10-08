@@ -11,6 +11,8 @@ var holds: Dictionary = {}  ## peer -> {verb, target, progress, hold_s, started}
 
 
 func request(peer: int, verb: StringName, id: String) -> void:
+	if holds.has(peer):  # a new request means the client dropped the old hold (a lost cancel must not wedge it)
+		cancel(peer, &"replaced", false)
 	var reason := _validate(peer, verb, id)
 	if reason != &"":
 		Log.event(&"hold_refused", {"player": peer, "verb": String(verb), "target": id, "reason": String(reason)})
@@ -85,6 +87,7 @@ func _complete(peer: int, h: Dictionary) -> void:
 	t.complete(h.verb, peer, farm.pstate(peer))
 	Log.event(&"hold_completed", {"player": peer, "verb": String(h.verb), "target": t.id,
 			"seconds": h.hold_s, "elapsed": snappedf(elapsed, 0.01)})
+	farm.send_carry(peer)
 	_reply(peer, &"hold_done", [h.verb, t.id])
 
 

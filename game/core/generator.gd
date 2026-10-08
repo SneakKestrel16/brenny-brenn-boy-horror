@@ -24,10 +24,19 @@ class Point extends "res://game/interaction/interactable.gd":
 	var gen: Node
 	var drum := false
 
-	func verbs_for(_st: Dictionary) -> Array[StringName]:
+	## `st` empty means unknown: offer the default verb. The drum hides while a can is in hand, and the
+	## generator offers `refuel` only to someone carrying one (the prompt is the instruction).
+	func verbs_for(st: Dictionary) -> Array[StringName]:
+		var has_can := bool(st.get("fuel_can", false))
+		var out: Array[StringName] = []
 		if drum:
-			return [&"fill_fuel"]
-		return [&"repair_generator"] if gen.damaged else [&"refuel"]
+			if not has_can:
+				out.append(&"fill_fuel")
+		elif gen.damaged:
+			out.append(&"repair_generator")
+		elif has_can or st.is_empty():
+			out.append(&"refuel")
+		return out
 
 	func can_start(verb: StringName, st: Dictionary) -> StringName:
 		match verb:

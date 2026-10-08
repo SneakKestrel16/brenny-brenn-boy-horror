@@ -242,6 +242,12 @@ func apply_money_changed(coins: int) -> void:
 	apply_received.emit(&"money_changed", [coins])
 
 
+## Host to all: what `peer` carries (watering can charges, turnips, fuel can). Players show it in hand.
+@rpc("authority", "call_remote", "reliable")
+func apply_carry(peer: int, can: int, bag: int, fuel_can: bool) -> void:
+	apply_received.emit(&"carry", [peer, can, bag, fuel_can])
+
+
 # --- Generator (doc 05 section 12); added in P1-07 ------------------------------------------------
 
 ## Host to clients: tank seconds left and whether the generator is damaged (lights follow both).

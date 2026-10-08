@@ -28,6 +28,9 @@ var _spec := 0  ## ghost: peer being watched, 0 = free flight
 
 var nav_path: Array = []  ## QA waypoints for `--autochore` (HoldController fills it)
 var _cam: Camera3D
+var _held: Node3D
+var _water_can: MeshInstance3D
+var _fuel_can: MeshInstance3D
 var _shape: CollisionShape3D
 var _mesh: MeshInstance3D
 var _seq := 0
@@ -53,6 +56,8 @@ func _ready() -> void:
 	_cam.position.y = EYE_STAND
 	add_child(_cam)
 	_target_pos = global_position
+	_make_held()
+	Net.apply_received.connect(_on_carry)
 	if is_local:
 		_cam.current = true
 		_cam.fov = float(Settings.get_value(&"fov"))
@@ -73,6 +78,41 @@ func _ready() -> void:
 		hud.hold = hc
 		add_child(hud)
 	Log.event(&"player_spawned", {"peer": peer, "local": is_local})
+
+
+## Placeholder in-hand props (no art yet), children of the camera so the owner and everyone else see
+## them at the same spot: a blue watering can (pale when empty) and a red fuel can (replaces it while carried).
+func _make_held() -> void:
+	_held = Node3D.new()
+	_held.position = Vector3(0.35, -0.35, -0.6)
+	_cam.add_child(_held)
+	_water_can = _prop(Vector3(0.22, 0.22, 0.3), Color(0.2, 0.4, 0.9))
+	_fuel_can = _prop(Vector3(0.2, 0.3, 0.14), Color(0.85, 0.15, 0.1))
+	_fuel_can.visible = false
+	var farm := get_tree().get_first_node_in_group(&"farm")  # a late spawn still shows what the farm already knows
+	if farm and farm.carry.has(peer):
+		var c: Dictionary = farm.carry[peer]
+		_on_carry(&"carry", [peer, c.can, c.bag, c.fuel_can])
+
+
+func _prop(size: Vector3, col: Color) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var b := BoxMesh.new()
+	b.size = size
+	mi.mesh = b
+	var m := StandardMaterial3D.new()
+	m.albedo_color = col
+	mi.material_override = m
+	_held.add_child(mi)
+	return mi
+
+
+func _on_carry(what: StringName, args: Array) -> void:
+	if what != &"carry" or args[0] != peer:
+		return
+	_fuel_can.visible = bool(args[3])
+	_water_can.visible = not bool(args[3])
+	(_water_can.material_override as StandardMaterial3D).albedo_color = Color(0.2, 0.4, 0.9) if int(args[1]) > 0 else Color(0.7, 0.75, 0.85)
 
 
 func _apply_height(crouch: bool) -> void:
@@ -120,7 +160,14 @@ func _physics_process(delta: float) -> void:
 		_local(delta)
 	else:
 		global_position = global_position.lerp(_target_pos, 1.0 - exp(-PROXY_SMOOTH * delta))
-		_mesh.visible = not ghost or Game.is_ghost(Game.local_peer())  # ghosts are seen only by ghosts
+		var ghost_view := Game.is_ghost(Game.local_peer())
+		_mesh.visible = not ghost or ghost_view  # ghosts are seen only by ghosts
+		# Doc 01 "Static voices": the living hear a ghost only through static. The static chain is not built
+		# yet (doc 06 section 9), so until then a ghost voice is silent for the living, never clean.
+		var ve := get_node_or_null("VoiceEmitter") as AudioStreamPlayer3D
+		if ve:
+			ve.volume_db = -80.0 if ghost and not ghost_view else 0.0
+	_held.visible = not ghost
 	rotation.y = yaw
 	_cam.rotation.x = pitch
 	_cam.position.y = lerpf(_cam.position.y, EYE_CROUCH if crouching else EYE_STAND, 1.0 - exp(-12.0 * delta))
@@ -150,7 +197,7 @@ func respawn(pos: Vector3) -> void:
 
 
 ## Ghost: `spectate_next` / `spectate_prev` follow a living player; any move input goes back to free flight.
-func _spectate(dir: Vector2) -> void:
+func _spectate(dir: Vector2, delta: float) -> void:
 	var living: Array = players._players.keys().filter(func(p: int) -> bool: return p != peer and not Game.is_ghost(p))
 	living.sort()
 	if dir != Vector2.ZERO:
@@ -165,13 +212,16 @@ func _spectate(dir: Vector2) -> void:
 		_spec = 0
 	if _spec != 0:
 		var t: Node3D = players.player(_spec)
-		yaw = t.yaw
-		global_position = t.global_position + t.global_transform.basis.z * 2.0 + Vector3(0, 1.0, 0)
+		# The watched player's yaw arrives in 20 Hz steps; orbiting their raw rotation made the view jump
+		# whenever they turned. Smooth the yaw and place the camera from the smoothed value.
+		var k := 1.0 - exp(-10.0 * delta)
+		yaw = lerp_angle(yaw, t.yaw, k)
+		global_position = global_position.lerp(t.global_position + Vector3(sin(yaw), 0, cos(yaw)) * 2.0 + Vector3(0, 1.0, 0), k)
 
 
 func _local_ghost(delta: float) -> void:
 	var dir := Vector2.ZERO if Game.console_open else Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
-	_spectate(dir)
+	_spectate(dir, delta)
 	if _spec == 0:
 		var fly := (_cam.global_transform.basis * Vector3(dir.x, 0, dir.y)) * Data.speed(&"sprint")
 		global_position += fly * delta

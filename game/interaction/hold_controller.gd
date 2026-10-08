@@ -17,6 +17,7 @@ var _ring: MeshInstance3D
 var _result := &""  ## last host answer for the autochore: done / refused / cancelled
 var _holding := false
 var _need_release := false  ## a refused hold waits for `interact` to be released before it retries
+var target_farm: Node  ## the Farm (found lazily); its `carry` is what this player holds
 var _autopry := OS.get_cmdline_user_args().has("--autopry")
 var _pin_t := 0.0
 var aimed_verb: StringName = &""  ## HUD: first verb of the aimed target, empty if none (set while not holding)
@@ -58,15 +59,18 @@ func _physics_process(delta: float) -> void:
 		_pin_t = 0.0
 		_scripted = false
 	if not _holding:
+		if target_farm == null:
+			target_farm = get_tree().get_first_node_in_group(&"farm")
 		var tgt := _look_target()
+		var mine: Dictionary = target_farm.carry.get(player.peer, {}) if target_farm else {}
 		aimed_verb = &""
 		if tgt != null:
-			var vs: Array[StringName] = tgt.verbs_for({})
+			var vs: Array[StringName] = tgt.verbs_for(mine)
 			aimed_verb = vs[0] if not vs.is_empty() else &""
 		if not Input.is_action_pressed(&"interact"):
 			_need_release = false
 		if tgt != null and not _need_release and Input.is_action_pressed(&"interact") and not Game.console_open:
-			var verbs: Array[StringName] = tgt.verbs_for({})
+			var verbs: Array[StringName] = tgt.verbs_for(mine)
 			if not verbs.is_empty():
 				start(verbs[0], tgt)
 		return
@@ -118,6 +122,8 @@ func _look_target() -> Node:
 func _on_apply(what: StringName, args: Array) -> void:
 	if not _holding or not what in [&"hold_done", &"refused", &"hold_cancelled"] or args[0] != _verb:
 		return
+	if what == &"hold_done" and args[1] != _target.id:
+		return  # a late answer for an earlier hold of the same verb
 	match what:
 		&"hold_done": _end(&"done")
 		&"refused":
