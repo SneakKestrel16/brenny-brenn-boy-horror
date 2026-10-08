@@ -69,3 +69,11 @@ Start a host with `--dev`, a second instance joined; open the console with the b
 9. `phase dawn`: the paper slide as the Dawn Report shows.
 
 ## QA review
+
+## QA review
+Opus `qa-reviewer`, 2026-10-08: PASS, nothing must-fix. A 3-instance run confirmed the Taint heartbeat and the
+private scare sounds play only on the target's machine, the heartbeat stops on death and at dawn, the emote cloth
+plays for all, and the paper slide plays once per peer. All 16 WAVs are 48 kHz, peak -1 dBFS; no recordings, no
+music. Left: `scare fake_out` has not been heard live (needs a player outdoors); doc 08 section 8 says the Taint beat
+ducks under the still heartbeat but the code ducks it under the chase heartbeat (inference, designer to confirm);
+Q-072 and Q-073 stay open; every level waits on the CEO listen above.

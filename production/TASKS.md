@@ -402,7 +402,7 @@ that belong to Phase 4, so these wait: the `harvest_moon` profile and acts (doc 
 | P3-05 | AI Programmer, Audio Designer | Jumpscares, fake-outs, hallucinations (doc 03 s13), spent by the Director | done | P3-04 |
 | P3-06 | AI Programmer | Sabotage from the disturbance budget (doc 03 s10, D-034) | todo | P3-04 |
 | P3-07 | Gameplay, AI Programmer | Taint and Shaken: player side and the well (doc 05 s10), creature tracking (doc 03 s3.3, s8); Taint is off since Phase 1 | done | P3-02 |
-| P3-08 | Technical Artist, Audio Designer | Taint stain and Taint heartbeat; scare and Director sounds (doc 07, doc 08) | todo | P3-05, P3-07 |
+| P3-08 | Technical Artist, Audio Designer | Taint stain and Taint heartbeat; scare and Director sounds (doc 07, doc 08) | done (CEO listen pending) | P3-05, P3-07 |
 | P3-09 | Gameplay, Technical Artist | Ghosts: lantern flicker, crow possession and corn rustle (doc 01 "Ghosts", doc 05 s14, doc 03 s13, doc 07) | done | P3-01 |
 | P3-10 | Network & Voice, Audio Designer | Ghost voice: the ghost static chain on dead players' voice to the living and on dead-voice lures (doc 06 s9, D-011); today ghost voice is muted (OPEN_ISSUES playtest 9) | done (CEO listen of the static pending) | P3-09 |
 | P3-11 | Gameplay | Whistle and emotes (doc 05 s14); recheck whistle placement by ear (OPEN_ISSUES P2-01 review 1) | done (by-ear test pending a tester, OPEN_ISSUES) | P3-01 |
