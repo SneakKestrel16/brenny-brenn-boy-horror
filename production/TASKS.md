@@ -191,8 +191,8 @@ Approved by the CEO 2026-10-08. Source: doc 01 "Build Plan > Phase 2", doc 06 se
 (barn chatter, lures, clip pre-sharing), doc 03 sections 10 and 12 (sabotage, voice mimicry), doc 02
 section 8 (medical bill), doc 04 (full layout). **Done when** (doc 01): a friend's recorded voice
 fools someone, and trap sweeps feel worth doing. Checked in 2 sessions, one tester who hasn't read doc
-01, plus log measures (doc 09). Phase 1 human gate measures (30% lure walk-toward, 10/30/60 m spatial
-test) are still owed from STOP 2; run them in the first Phase 2 session. **STOP 3** after P2-09.
+01, plus log measures (doc 09). The Phase 1 lure walk-toward measure (30%) is deferred to Phase 3 (CEO, 2026-10-08). The 10/30/60 m spatial
+test is still owed from STOP 2; run it in the first Phase 2 session. **STOP 3** after P2-09.
 
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
