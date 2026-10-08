@@ -216,3 +216,10 @@ build id is `git describe --always --dirty` until Q-047 settles it. **Why:** the
 `main` had the game, showed a gray screen; a bare exe also starts no Phase 1 session, so the launch
 arguments must ship with the build.
 
+### D-030 · 2026-10-08 · CEO · Faster playtest pacing
+CEO asked for faster time in the playtest. `Clock` takes `--day-s`, `--dusk-s`, `--night-s` (seconds) and logs
+`clock_override` at session start; game data is unchanged (doc 02 numbers stay). The playtest zip's `Host.bat`
+and `Join.bat` pass day 180, dusk 30, night 300. Night stays full length: Phase 1 traps are set 40 to 220 s
+into it and the scripted stalk starts at 60 s. **Why:** shorter days give more nights (lures, chases) per
+session hour. Doc 09 s2's session length assumes 540 s days; the notes record the override.
+

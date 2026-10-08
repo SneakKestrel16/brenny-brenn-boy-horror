@@ -4,6 +4,9 @@ extends Node
 ## phase change. Lengths from season.json (doc 02 section 3); --phase1 uses phase1.json night_s.
 ## The `apply_clock` RPC is on `Net`, which calls `apply_clock` here. The Harvest Moon (final night)
 ## is not built in Phase 1.
+## Playtest pacing (D-030): `--day-s=<n>`, `--dusk-s=<n>`, `--night-s=<n>` replace a phase's length in
+## seconds. The host's values decide phase changes; a client with other values only shows a wrong
+## countdown, so Host.bat and Join.bat pass the same ones.
 
 signal phase_changed(phase: StringName)
 signal day_changed(day: int)
@@ -16,9 +19,22 @@ var phase: StringName = &"day"
 var t_phase := 0.0
 var running := false  ## host: ticking; client: set by the first apply_clock
 var _since_sync := 0.0
+var _override: Dictionary = {}  ## phase -> seconds, from the command line (D-030)
+
+
+func _ready() -> void:
+	for a in OS.get_cmdline_user_args():
+		for p in [&"day", &"dusk", &"night"]:
+			var key := "--%s-s=" % p
+			if a.begins_with(key) and a.substr(key.length()).is_valid_float():
+				var s := a.substr(key.length()).to_float()
+				if s > 0.0:
+					_override[p] = s
 
 
 func length_of(p: StringName) -> float:
+	if _override.has(p):
+		return float(_override[p])
 	match p:
 		&"day": return float(Data.value(&"season", &"day_s"))
 		&"dusk": return float(Data.value(&"season", &"dusk_s"))
@@ -36,6 +52,8 @@ func start() -> void:
 	phase = &"day"
 	t_phase = 0.0
 	running = true
+	if not _override.is_empty():
+		Log.event(&"clock_override", {"day_s": length_of(&"day"), "dusk_s": length_of(&"dusk"), "night_s": length_of(&"night")})
 	_broadcast()
 
 
