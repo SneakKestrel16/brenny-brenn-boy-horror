@@ -9,7 +9,7 @@ extends Node
 ## clips under `user://profiles/<name>/`, so two local copies don't share them.
 ##
 ## Not built yet (doc 06): apply_join_accepted, slots,
-## peer timeouts, rtt_ms, the --net-sim-* queue. Add each with the task that first needs it.
+## peer timeouts, the --net-sim-* queue. Add each with the task that first needs it.
 
 const DEFAULT_PORT := 45120  ## doc 06 section 2; 45121..45124 if taken locally
 const PORT_TRIES := 4
@@ -46,7 +46,7 @@ func _ready() -> void:
 		bytes_received.emit(id, packet))
 
 
-## Doc 06 s14 `net_bandwidth` every 10 s (P2-07, Gameplay edit): ENet's host counters plus 28 B of UDP/IPv4
+## Doc 06 s14 `net_bandwidth` and `net_rtt` every 10 s (P2-07, Gameplay edit; P2-21): ENet's host counters plus 28 B of UDP/IPv4
 ## header per datagram, the PP-02 spike's method, so doc 06 s13's table applies.
 func _process(delta: float) -> void:
 	_bw_t += delta
@@ -65,6 +65,12 @@ func _process(delta: float) -> void:
 			"up_kbps": snappedf((sent + 28 * sent_p) * 8.0 / s / 1000.0, 0.1),
 			"down_kbps": snappedf((recv + 28 * recv_p) * 8.0 / s / 1000.0, 0.1),
 			"up_datagrams_per_s": snappedf(sent_p / s, 0.1)})
+	# P2-21, doc 06 s14 `net_rtt`: one per ENet peer (a client's only peer is the host), the PP-02 spike's fields.
+	for id in multiplayer.get_peers():
+		var pp := e.get_peer(id)
+		if pp:
+			Log.event(&"net_rtt", {"to": id, "rtt_ms": int(pp.get_statistic(ENetPacketPeer.PEER_ROUND_TRIP_TIME)),
+					"enet_loss": snappedf(pp.get_statistic(ENetPacketPeer.PEER_PACKET_LOSS) / float(ENetPacketPeer.PACKET_LOSS_SCALE), 0.0001)})
 
 
 ## Host only. Opens the ENet server, trying the next ports if one is taken (doc 06 section 2).

@@ -12,8 +12,7 @@ game (a stream counts as having read it). Not the same fresh tester in both.
 
 - [ ] Build: the zip from `uv run tools/qa/package_playtest.py` (build id printed, goes in the notes).
       Host runs `Host.bat`, others `Join.bat` plus the host's Tailscale address (D-024). Both bats pass
-      `--phase1 --full-farm` and the host `--lobby`; without `--full-farm` the build plays the Phase 1
-      gray-box.
+      `--phase1` and the host `--lobby`; the full farm is the default (P2-20), so no farm flag.
 - [ ] Do not pass `--voice-setting=off`: testers use their real mics and choose in the game.
 - [ ] Headphones on every tester (model noted, left on left, Windows spatial sound off).
 - [ ] Consent asked for any recording. Notes say "tester A/B/C/D", never names.

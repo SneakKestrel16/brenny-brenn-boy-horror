@@ -81,6 +81,25 @@ class LogCheckerFixture(unittest.TestCase):
         self.assertEqual(o["hold_seconds_by_verb"]["plant"], {"n": 2, "mean": 2.0})
         self.assertEqual(o["inside_at_night_seconds_by_player"], {2: 60.0})
 
+    def test_p222_measures_on_synthetic_records(self) -> None:
+        def rec(event: str, data: dict, peer: int = 1, phase: str = "night") -> check_logs.Record:
+            return check_logs.Record("s", peer, 1.0, 1, phase, peer, event, data)
+
+        recs = [
+            rec("lure_played", {"lure_id": "a", "kind": "clip"}), rec("lure_played", {"lure_id": "b", "kind": "sound"}),
+            rec("lure_result", {"lure_id": "a", "moved_m": 12, "within_s": 3}), rec("lure_result", {"lure_id": "b", "moved_m": 1, "within_s": 8}),
+            rec("trap_changed", {"by": "creature", "kind": "bear", "state": "set"}), rec("trap_changed", {"by": 2, "state": "disarmed"}),
+            rec("trap_stolen", {}), rec("hold_completed", {"verb": "disarm_bear", "seconds": 5}),
+            rec("medical_bill", {"players": 4, "deaths": 1, "bill": 25, "paid": 0, "to_final": 25}, phase="dawn"),
+        ]
+        lure = check_logs.lure_measure(recs, [])
+        self.assertEqual((lure["by_source"]["recorded"]["worked"], lure["by_source"]["generic"]["played"]), (1, 1))
+        ts = check_logs.trap_sweep_measure(recs)
+        self.assertEqual((ts["set_by_creature"], ts["stolen"], ts["player_state_changes"], ts["sweep_holds"]), ({"bear": 1}, 1, {"disarmed": 1}, {"disarm_bear": 1}))
+        self.assertEqual(check_logs.bill_measure(recs)["bills"][0]["to_final"], 25)
+        rtt = check_logs.rtt_measure([rec("net_rtt", {"to": 1, "rtt_ms": 10}, peer=2), rec("net_rtt", {"to": 1, "rtt_ms": 20}, peer=2)])
+        self.assertEqual(rtt["s/peer_2->1"]["mean"], 15.0)
+
     def test_clean_fixture_has_no_problems_and_text_report_renders(self) -> None:
         self.assertEqual(self.rep["problems"], [])
         self.assertEqual(self.rep["warnings"], [])
@@ -98,7 +117,7 @@ class LogCheckerEdgeCases(unittest.TestCase):
         self.assertIsNone(rep["lure"]["rate"])
         self.assertEqual(rep["trap_race"]["races"], 0)
         self.assertEqual(rep["spatial_audio"]["trials"], 0)
-        self.assertEqual(check_logs.format_report(rep).count("none logged"), 3)
+        self.assertEqual(check_logs.format_report(rep).count("none logged"), 5)
 
     def test_session_without_host_file_falls_back_with_warning(self) -> None:
         rep = check_logs.analyze([FIXTURES / "sessions_no_host"])

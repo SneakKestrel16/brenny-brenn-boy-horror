@@ -15,9 +15,9 @@ const MAIN_SCENE := "res://game/core/main.tscn"
 const MENU_SCENE := "res://game/ui/main_menu.tscn"
 const LOBBY_SCENE := "res://game/ui/lobby.tscn"
 const WORLD_PHASE1 := "res://game/world/farm_phase1.tscn"
-const WORLD_FULL := "res://game/world/farm.tscn"  ## DD Phase 2 full farm (P2-02); chosen by `--full-farm` (Q-053)
+const WORLD_FULL := "res://game/world/farm.tscn"  ## DD Phase 2 full farm (P2-02); default since P2-20; `--phase1-farm` opens the Phase 1 farm
 
-var full_farm := OS.get_cmdline_user_args().has("--full-farm")  ## host and joiners both pass it: the session handshake does not carry it
+var full_farm := not OS.get_cmdline_user_args().has("--phase1-farm")  ## P2-20: the full farm is the default; `--phase1-farm` opens the gray-box. `--full-farm` is still accepted (no-op)
 var players: Dictionary = {}  ## peer id -> PlayerState (a Dictionary until P1-04)
 var session_id := ""
 var difficulty: StringName = &"normal"

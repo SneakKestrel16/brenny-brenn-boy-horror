@@ -197,7 +197,7 @@ func _walk(points: Array) -> void:
 
 
 func _do(verb: StringName, id: String, offset: Vector3, via: Array = []) -> StringName:
-	var farm := get_tree().get_first_node_in_group(&"farm")
+	var farm: Node = await _wait_farm()
 	var t: Node = farm.targets[id]
 	await _walk(via + [t.target_pos() * Vector3(1, 0, 1) + offset])
 	_scripted = true
@@ -213,7 +213,7 @@ func _do(verb: StringName, id: String, offset: Vector3, via: Array = []) -> Stri
 
 
 func _autochore() -> void:
-	var farm := get_tree().get_first_node_in_group(&"farm")
+	var farm: Node = await _wait_farm()
 	var host := Game.is_host()
 	var mine := "Plot01" if host else "Plot02"
 	await get_tree().create_timer(2.0).timeout
@@ -264,7 +264,7 @@ func _sweep_go(verb: StringName, target: Node, stand: Vector3) -> void:
 
 
 func _autosweep() -> void:
-	var farm := get_tree().get_first_node_in_group(&"farm")
+	var farm: Node = await _wait_farm()
 	var race := get_tree().get_first_node_in_group(&"trap_race")
 	var kind := &"bear" if Game.is_host() else &"pit"
 	await get_tree().create_timer(2.0).timeout
@@ -297,3 +297,12 @@ func _autosweep() -> void:
 	_flag = spot
 	await _sweep_go(&"place_flag", spot, at_board)
 	Log.event(&"autosweep_done", {})
+
+
+## QA scripts start in the barn lobby, where no Farm exists yet (P2-20): wait for the match scene's Farm.
+func _wait_farm() -> Node:
+	var farm := get_tree().get_first_node_in_group(&"farm")
+	while farm == null:
+		await get_tree().create_timer(0.5).timeout
+		farm = get_tree().get_first_node_in_group(&"farm")
+	return farm

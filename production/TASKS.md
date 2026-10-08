@@ -220,9 +220,10 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | P2-18 | Network & Voice | Join hardening: refuse a joiner whose game version differs from the host's (`version_mismatch`, doc 06; today the host only logs `net_join_version`); stop host sends to a refused peer before it disconnects (18 `Unable to send packet on channel 2` from `players.gd:71` via `net.gd` `send_bytes`, QUESTIONS P2-17 note); menu message for each | done (voice relay through the send filter not run live) | P2-17 |
 | P2-19 | Gameplay | Q-056: instant `take_trap` verb and HUD label for a loose trap (today it borrows the 5 s `disarm_bear` hold) | done (`hands_full` by code read) | P2-05 |
 | P2-09 | QA | Review each P2 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 2 gate | in progress (automated part done; human sessions at STOP 3) | all above |
-| P2-20 | Gameplay | P2-09 findings A, B, D: a bare exe launch plays the Phase 1 farm (make the full farm the default); `ERROR: 1 resources still in use at exit` on every multi run (find it with `--verbose`, free it); `--autochore`/`--autosweep` SCRIPT ERRORs in the lobby (`hold_controller.gd` null `targets`) | todo | P2-09 |
-| P2-21 | Network & Voice | P2-09 finding C: log `net_rtt` per peer (doc 06 s13, doc 09 "Up to 4 players") | todo | P2-09 |
-| P2-22 | QA | P2-09 findings E, F: doc 09 names `medical_bill`/`dawn_summary`, not `money_changed`; `check_logs.py` splits recorded vs generic lures, tallies trap sweeps, reports bills; fix `test_two_good_sessions_pass_every_automatic_row` 72 m fixture; repackage the playtest build clean | todo | P2-20, P2-21 |
+| P2-20 | Gameplay | P2-09 findings A, B, D: a bare exe launch plays the Phase 1 farm (make the full farm the default); `ERROR: 1 resources still in use at exit` on every multi run (find it with `--verbose`, free it); `--autochore`/`--autosweep` SCRIPT ERRORs in the lobby (`hold_controller.gd` null `targets`) | done | P2-09 |
+| P2-21 | Network & Voice | P2-09 finding C: log `net_rtt` per peer (doc 06 s13, doc 09 "Up to 4 players") | done | P2-09 |
+| P2-22 | QA | P2-09 findings E, F: doc 09 names `medical_bill`/`dawn_summary`, not `money_changed`; `check_logs.py` splits recorded vs generic lures, tallies trap sweeps, reports bills; fix `test_two_good_sessions_pass_every_automatic_row` 72 m fixture; repackage the playtest build clean | done (tooling; tests pass) | P2-20, P2-21 |
+| P2-23 | Network & Voice | Q-057: `tests/net/test_voice.gd` fails and hangs; `voice_emitter.gd:45` cannot resolve `Settings` in `-s` mode | todo | — |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
 s3 "DD Phase 2" reads, and leaves a handoff note. Placeholders cite doc 01 or say `placeholder`.

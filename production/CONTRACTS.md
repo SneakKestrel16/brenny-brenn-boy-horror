@@ -263,6 +263,12 @@ Added by D-053 (P2-05); the AI Programmer adds them to doc 05 section 18:
 | `trap_moved` | host, at dawn | `trap`, `from_building`, `to_spot` |
 | `trap_changed` (new fields) | host | `region` (`heard`, `nearest`, `random`), `work_m`, `stolen` |
 
+Added by P2-21 (P2-09 finding C; doc 06 s14 already lists it):
+
+| Event | Written by | `data` |
+|---|---|---|
+| `net_rtt` | every peer, every 10 s with `net_bandwidth`, one per ENet peer (a client logs only the host) | `to` (peer id), `rtt_ms` (ENet round-trip time), `enet_loss` (ENet's reliable-packet loss, 0 to 1) |
+
 ## 11. Voice and recordings
 
 - No real person's voice recording is ever committed. Test voices are synthetic or CEO-approved

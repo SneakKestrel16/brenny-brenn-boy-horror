@@ -72,7 +72,7 @@ More: TESTER BRIEF.md. Third-party licenses: licenses/ (TwoVoIP, libopus, RNNois
 PORT = 45120  # Net.DEFAULT_PORT (doc 06 section 2); Net tries the next ports if it is taken
 
 # The exe ignores user arguments unless they follow `--`. `--phase1` loads the Phase 1 night
-# (data/phase1.json, D-023) and `--full-farm` the DD Phase 2 farm (P2-09: without it the build played the gray-box); host and joiner must both pass it or the data hash refuses the join.
+# (data/phase1.json, D-023); host and joiner must both pass it or the data hash refuses the join. The full farm is the default since P2-20 (`--phase1-farm` opens the gray-box).
 # Phase lengths are the game's own (D-032): the host changes them in play with the dev console
 # (`skip`, `phase`, `length`). `--day-s`, `--dusk-s`, `--night-s` still exist for scripted runs.
 
@@ -83,7 +83,7 @@ echo Hosting on UDP port {port}.
 echo Dev console: press the backquote key (`), then type help.
 echo Give the other player this PC's Tailscale address:
 tailscale ip -4 2>nul || echo   (tailscale not found: open Tailscale and copy the 100.x.y.z address)
-start "" "{exe}" -- --host --lobby --phase1 --full-farm --dev --port={port}
+start "" "{exe}" -- --host --lobby --phase1 --dev --port={port}
 pause
 """
 
@@ -97,7 +97,7 @@ cd /d "%~dp0"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0update.ps1"
 set /p HOSTIP=Host's Tailscale address (100.x.y.z): 
 if "%HOSTIP%"=="" exit /b 1
-start "" "{exe}" -- --join=%HOSTIP%:{port} --phase1 --full-farm
+start "" "{exe}" -- --join=%HOSTIP%:{port} --phase1
 """
 
 # Doc 09 s5 spatial audio test, one per tester, solo (no host or join). An exported build runs a scene

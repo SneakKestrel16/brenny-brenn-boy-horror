@@ -23,6 +23,8 @@ Measures (doc 01 "Testing" and "Build Plan"):
   - Spatial audio trials. Doc 01 Testing: place a voice and a whistle at 10, 30 and 60 m.
     Written by the tester's own client (doc 09 sections 5 and 7), so read from every peer's
     file, not the host's only. Also broken down by tester (file peer) for doc 09's 60% floor.
+  - Also reported (P2-22): recorded vs generic lures played, trap sweeps, medical bills and
+    dawn summaries, and `net_rtt` per peer pair.
   - Also tallied: deaths, hold_completed by verb, inside_at_night seconds, money_changed count.
 A report with no measures is still a pass: absent events are reported as "none logged".
 """
@@ -155,7 +157,8 @@ def lure_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
     # Doc 09 s3 "lure success by source" (P2-04): a recorded clip (kind "clip") against the generic
     # stranger and sound lures; read, not gated. Logs before P2-04 have no kind and count as generic.
     kind_of = {(r.session, r.data.get("lure_id")): r.data.get("kind") for r in recs if r.event == "lure_played"}
-    by_source: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    by_source: dict[str, list[int]] = {"recorded": [0, 0], "generic": [0, 0]}
+    played_by_source = Counter("recorded" if r.data.get("kind") == "clip" else "generic" for r in recs if r.event == "lure_played")
     for r in results:
         moved, within = r.data.get("moved_m"), r.data.get("within_s")
         if not (_is_number(moved) and _is_number(within)):
@@ -181,7 +184,7 @@ def lure_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
         "rate": rate,
         "phase1_gate": None if rate is None else rate >= LURE_GATE,
         "by_phase": {k: {"worked": v[0], "total": v[1]} for k, v in sorted(by_phase.items())},
-        "by_source": {k: {"worked": v[0], "total": v[1], "rate": v[0] / v[1]} for k, v in sorted(by_source.items())},
+        "by_source": {k: {"played": played_by_source[k], "worked": v[0], "total": v[1], "rate": v[0] / v[1] if v[1] else None} for k, v in sorted(by_source.items())},
         "worked_mismatches": mismatches,
     }
 
@@ -237,6 +240,45 @@ def spatial_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
     return {"trials": trials, "by_sound_distance": grid, "by_tester": by_tester, "untested_doc01_cells": missing if trials else []}
 
 
+def trap_sweep_measure(recs: list[Record]) -> dict[str, Any]:
+    """Doc 09 s3 trap sweeps: what the creature set and stole, what players did about it (P2-22)."""
+    set_by_creature: Counter = Counter()
+    by_player: Counter = Counter()
+    for r in recs:
+        if r.event == "trap_changed":
+            if r.data.get("by") == "creature":
+                set_by_creature[str(r.data.get("kind"))] += 1
+            else:
+                by_player[str(r.data.get("state"))] += 1
+    verbs = Counter(r.data.get("verb") for r in recs if r.event == "hold_completed" and str(r.data.get("verb", "")).startswith(("disarm", "fill", "cut", "pick")))
+    return {
+        "set_by_creature": dict(sorted(set_by_creature.items())),
+        "stolen": sum(1 for r in recs if r.event == "trap_stolen"),
+        "sprung": sum(1 for r in recs if r.event == "trap_sprung"),
+        "player_state_changes": dict(sorted(by_player.items())),
+        "sweep_holds": dict(sorted(verbs.items())),
+    }
+
+
+def bill_measure(recs: list[Record]) -> dict[str, Any]:
+    """Doc 09 s3 death, dawn, bills: the host's `medical_bill` and `dawn_summary` events (not `money_changed`)."""
+    bills = [r for r in recs if r.event == "medical_bill"]
+    return {
+        "bills": [{"day": r.day, **{k: r.data.get(k) for k in ("players", "deaths", "bill", "paid", "to_final")}} for r in bills],
+        "dawn_summaries": [{"day": r.day, **{k: r.data.get(k) for k in ("coins", "deaths", "medical_bill", "final_extra")}} for r in recs if r.event == "dawn_summary"],
+        "respawns": sum(1 for r in recs if r.event == "respawn"),
+    }
+
+
+def rtt_measure(loaded_records: list[Record]) -> dict[str, Any]:
+    """Doc 06 s13/s14 `net_rtt`: every peer writes its own, so read every file (P2-21)."""
+    cells: dict[str, list[float]] = defaultdict(list)
+    for r in loaded_records:
+        if r.event == "net_rtt" and _is_number(r.data.get("rtt_ms")):
+            cells[f"{r.session}/peer_{r.file_peer if r.file_peer is not None else r.peer}->{r.data.get('to')}"].append(float(r.data["rtt_ms"]))
+    return {k: {"n": len(v), "min": min(v), "max": max(v), "mean": sum(v) / len(v)} for k, v in sorted(cells.items())}
+
+
 def other_measures(recs: list[Record]) -> dict[str, Any]:
     holds: dict[str, list[float]] = defaultdict(list)
     inside: dict[int, float] = defaultdict(float)
@@ -267,6 +309,9 @@ def analyze(paths: list[Path]) -> dict[str, Any]:
         "trap_race": trap_race_measure(recs, problems),
         # Clients write their own trials (doc 09 section 7), so every file counts here.
         "spatial_audio": spatial_measure([r for r in loaded.records if r.event == "spatial_audio_trial"], problems),
+        "trap_sweeps": trap_sweep_measure(recs),
+        "bills": bill_measure(recs),
+        "net_rtt": rtt_measure([r for r in loaded.records if r.event == "net_rtt"]),
         "other": other_measures(recs),
         "problems": problems,
         "warnings": loaded.warnings,
@@ -292,7 +337,7 @@ def format_report(rep: dict[str, Any]) -> str:
         for phase, v in lure["by_phase"].items():
             add(f"  {phase}: {v['worked']}/{v['total']}")
         for src, v in lure["by_source"].items():
-            add(f"  {src}: {v['worked']}/{v['total']} = {_pct(v['rate'])}  (doc 09 s3, read not gated)")
+            add(f"  {src} lures: played {v['played']}, results {v['worked']}/{v['total']} = {_pct(v['rate'])}  (doc 09 s3, read not gated)")
         for m in lure["worked_mismatches"]:
             add(f"  MISMATCH {m}")
     else:
@@ -318,9 +363,31 @@ def format_report(rep: dict[str, Any]) -> str:
             add(f"  untested: {', '.join(sp['untested_doc01_cells'])}")
     else:
         add("  none logged")
+    ts = rep["trap_sweeps"]
+    add("")
+    add("Trap sweeps (doc 09 s3)")
+    add(f"  creature set {ts['set_by_creature'] or 'none'}, stolen {ts['stolen']}, sprung {ts['sprung']}")
+    add(f"  player state changes {ts['player_state_changes'] or 'none'}, sweep holds {ts['sweep_holds'] or 'none'}")
+    b = rep["bills"]
+    add("")
+    add("Death, dawn, bills (doc 09 s3: medical_bill, dawn_summary)")
+    if b["bills"] or b["dawn_summaries"]:
+        for x in b["bills"]:
+            add(f"  day {x['day']}: {x['deaths']} death(s), {x['players']} players, bill {x['bill']}, paid {x['paid']}, to final {x['to_final']}")
+        for x in b["dawn_summaries"]:
+            add(f"  dawn day {x['day']}: coins {x['coins']}, bill {x['medical_bill']}, final_extra {x['final_extra']}")
+        add(f"  respawns {b['respawns']}")
+    else:
+        add("  none logged")
+    add("")
+    add("Network round trip (doc 06 s13, net_rtt)")
+    for k, v in rep["net_rtt"].items():
+        add(f"  {k}: n={v['n']} min {v['min']:.0f} max {v['max']:.0f} mean {v['mean']:.1f} ms")
+    if not rep["net_rtt"]:
+        add("  none logged")
     o = rep["other"]
     add("")
-    add(f"Other: deaths {o['deaths']}, traps sprung {o['traps_sprung']}, money_changed {o['money_changed_events']}")
+    add(f"Other: deaths {o['deaths']}, traps sprung {o['traps_sprung']}, money_changed {o['money_changed_events']} (the game logs bills as medical_bill)")
     for verb, v in o["hold_seconds_by_verb"].items():
         add(f"  hold {verb}: n={v['n']} mean {v['mean']:.2f} s")
     for player, s in o["inside_at_night_seconds_by_player"].items():

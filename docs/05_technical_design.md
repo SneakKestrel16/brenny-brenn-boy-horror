@@ -151,7 +151,7 @@ res://game/player/ghost.tscn       Ghost body: spectator camera, no collision wi
 
 - `Boot` is a `Node3D` today (`game/core/boot.tscn`, D-014). Its script parses the user arguments
   from doc 06 section 14 (`--host`, `--join`, `--voice-wav`, `--net-sim-*`) plus the ones this doc
-  adds: `--debug-view`, `--bots <n>`, `--phase1` (Phase 1 content), `--seed <n>`. `--full-farm` (P2-11, Q-053) makes `Main` and the lobby load `game/world/farm.tscn` through `Game.world_path()`; without it they load `farm_phase1.tscn`. Every peer must pass it (the handshake does not check). It does not turn Phase 1 data on: add `--phase1` for the creature and traps. With no arguments and a window, `Boot` shows the main menu (section 16); any argument takes the legacy path.
+  adds: `--debug-view`, `--bots <n>`, `--phase1` (Phase 1 content), `--seed <n>`. The full farm is the default (P2-20): `Main` and the lobby load `game/world/farm.tscn` through `Game.world_path()`. `--phase1-farm` loads `farm_phase1.tscn` instead; every peer must agree (the handshake does not check). `--full-farm` is still accepted and does nothing. It does not turn Phase 1 data on: add `--phase1` for the creature and traps. With no arguments and a window, `Boot` shows the main menu (section 16); any argument takes the legacy path.
 - `Main` is built from code plus the scenes above, not one giant scene, so the level scene can be
   swapped for the Phase 1 gray box and later the full farm without touching any player code.
 - A `Player` is the same scene on every machine. `is_multiplayer_authority()` (set to the owning
@@ -689,7 +689,7 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
 - **Flow.** Launching with no arguments in a window opens the main menu (`game/ui/main_menu.tscn`):
   Host (port), Join (a join code, a raw IP or `IP:port`; D-049 brings back doc 06 s4 join codes for rejoining), Settings, Quit. Host and
   Join turn Phase 1 data on and reload it (a bare exe has no `--phase1`; remove when the full farm lands).
-  Both land in the **lobby** (`game/ui/lobby.tscn`): the barn from `Game.world_path()` (the full farm with `--full-farm`, Phase 1's
+  Both land in the **lobby** (`game/ui/lobby.tscn`): the barn from `Game.world_path()` (the full farm; with `--phase1-farm`, Phase 1's
   scene otherwise), WorldLook at night (no lights built in the lobby), the `Players` node, and a roster with each
   player's voice setting and doc 01's Discord line. The host starts the match with Enter or the pause
   menu: `Game.start_match()` waits for `Game.match_ready()` (P2-03 clip pre-share hook, doc 06 section 12

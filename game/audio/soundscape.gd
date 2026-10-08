@@ -100,6 +100,11 @@ func _exit_tree() -> void:
 		p.stream = null
 		p.free()
 	_players.clear()
+	for c in get_children():  # P2-20: one-shots (footsteps) still playing at quit hold the WAV and its playback
+		if c is AudioStreamPlayer or c is AudioStreamPlayer3D:
+			c.stop()
+			c.stream = null
+			c.free()
 	_cache.clear()
 
 

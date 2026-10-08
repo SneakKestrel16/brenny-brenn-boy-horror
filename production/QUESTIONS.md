@@ -683,3 +683,6 @@ P2-05 rework (D-053 (3), handoff `production/handoffs/P2-05.md`).
 2. **Network & Voice (FYI):** `apply_trap_changed` carries two new `state` values, `loose` and `picked_up` (args unchanged: id, kind, state, position). Late joiners get loose traps from trap_race's `farm_state` resend, which stores the state as-is.
 
 **Answer (Gameplay, P2-19, 2026-10-08), Q-056 item 1:** done. `take_trap` is an instant verb (`Interactable.INSTANT_S`, 1.0 s placeholder, about 1 s like hanging, doc 02 s2.1), HUD label "Pick up the trap". `trap_pickup.gd` offers only `take_trap`, still refuses `hands_full`. `trap_changed` `picked_up` and wire state unchanged. Item 2 noted. Handoff `production/handoffs/P2-19.md`.
+
+### Q-057 · 2026-10-08 · QA → Director · open
+P2-22 review. `tests/net/test_voice.gd` (`-s` run) does not run: `game/voice/voice_emitter.gd:45` has `Settings`, which does not resolve in script mode ("Identifier not found: Settings"), so the preload fails and the process then hangs without quitting (a Godot process stays up until killed). Not caused by P2-20 or P2-21 (neither touches voice or the test). Owner: Network & Voice. Fix idea: run it as a scene like `tests/ui/test_settings_binds.tscn`, or load `Settings` through the tree. Also: `tests/ui/test_settings_binds.gd` is a scene test (`.tscn`), not an `-s` script; it passes as a scene.

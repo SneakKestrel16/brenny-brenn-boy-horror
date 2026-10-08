@@ -57,7 +57,7 @@ def _good_session(sid: str) -> dict[str, list[str]]:
     for peer in (1, 2):  # each tester's client writes its own trials, all correct
         lines = peer_files[f"peer_{peer}.jsonl"]
         for sound in ("voice", "whistle"):
-            for d in (10, 30, 60):
+            for d in (10, 30, 60, 72):
                 for _ in range(3):
                     lines.append(_rec(400, "spatial_audio_trial", {"sound": sound, "distance_m": d, "correct": True}, peer=peer))
     return peer_files
@@ -132,7 +132,7 @@ class Collect(unittest.TestCase):
             self.assertTrue(any(x.startswith("kept 20261008_190000_ab12/peer_1.jsonl") for x in log))
             self.assertFalse((tmp / "evil").exists())
             rep = json.loads((folder / "measures.json").read_text())
-            self.assertEqual(rep["spatial_audio"]["trials"], 36)
+            self.assertEqual(rep["spatial_audio"]["trials"], 48)
             self.assertTrue((folder / "measures.txt").read_text().startswith("Files: 2"))
 
     def test_session_filter_takes_old_local_logs_and_only_that_session(self) -> None:
@@ -173,7 +173,7 @@ class Collect(unittest.TestCase):
 
 def _trials(peer: int) -> list[str]:
     return [_rec(5, "spatial_audio_trial", {"sound": s, "distance_m": d, "correct": True}, peer=peer)
-            for s in ("voice", "whistle") for d in (10, 30, 60) for _ in range(3)]
+            for s in ("voice", "whistle") for d in (10, 30, 60, 72) for _ in range(3)]
 
 
 class Auto(unittest.TestCase):
@@ -320,8 +320,8 @@ class Package(unittest.TestCase):
         self.assertIn("abc1234", start)
         host = package_playtest.HOST_BAT.format(exe=package_playtest.EXE, port=package_playtest.PORT)
         join = package_playtest.JOIN_BAT.format(exe=package_playtest.EXE, port=package_playtest.PORT)
-        self.assertIn('-- --host --lobby --phase1 --full-farm --dev --port=45120\n', host)
-        self.assertIn('-- --join=%HOSTIP%:45120 --phase1 --full-farm\n', join)
+        self.assertIn('-- --host --lobby --phase1 --dev --port=45120\n', host)
+        self.assertIn('-- --join=%HOSTIP%:45120 --phase1\n', join)
         self.assertNotIn("--dev", join)
         self.assertIn('"Brenny Brenn Boy Horror.exe" res://game/debug/spatial_audio_test.tscn', package_playtest.SPATIAL_BAT.format(exe=package_playtest.EXE))  # the dev console is the host's only (D-031)
         for bat in (host, join):  # the game's own phase lengths (D-032)
