@@ -5,7 +5,8 @@ var kind: StringName = &"sell"  ## `sell` or `well`
 
 
 func verbs_for(_st: Dictionary) -> Array[StringName]:
-	return [&"sell"] if kind == &"sell" else [&"fill_can"]
+	var out: Array[StringName] = [&"sell"] if kind == &"sell" else [&"fill_can"]
+	return out
 
 
 func can_start(verb: StringName, st: Dictionary) -> StringName:

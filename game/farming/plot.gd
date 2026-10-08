@@ -21,7 +21,11 @@ func verbs_for(_st: Dictionary) -> Array[StringName]:
 		return []
 	match state:
 		&"empty": return [&"plant"]
-		&"growing": return [] if watered else [&"water"]
+		&"growing":
+			var out: Array[StringName] = []
+			if not watered:
+				out.append(&"water")
+			return out
 		&"ripe": return [&"harvest"]
 	return []
 

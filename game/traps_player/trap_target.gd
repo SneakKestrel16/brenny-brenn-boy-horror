@@ -6,7 +6,10 @@ var race: Node  ## the TrapRace
 
 
 func verbs_for(_st: Dictionary) -> Array[StringName]:
-	return [&"pry"] if race.victims.has(id) else []
+	var out: Array[StringName] = []
+	if race.victims.has(id):
+		out.append(&"pry")
+	return out
 
 
 func can_start(verb: StringName, _st: Dictionary) -> StringName:
