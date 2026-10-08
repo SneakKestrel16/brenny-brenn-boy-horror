@@ -468,3 +468,8 @@ were not run. The P2-08 CEO listen is still owed.
 **Why:** CEO call (no reason recorded; the CEO's local plays on 2026-10-08, P2-24 to P2-28, are the only human play of Phase 2).
 **How to apply:** treat both Phase 2 "done when" measures as unproven. Check them in the first
 human sessions of DD Phase 3.
+
+### D-058 · 2026-10-08 · CEO · DD Phase 3 scope approved
+The CEO approved rows P3-01 to P3-13 in `production/TASKS.md` as drafted. Phase 3 also carries the
+sabotage budget (D-034), the Phase 1 30% lure measure and both Phase 2 measures (D-057).
+**Why:** CEO approval; doc 01 "Build Plan > Phase 3" is the source.

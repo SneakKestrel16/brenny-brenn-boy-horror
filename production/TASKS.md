@@ -375,9 +375,9 @@ playtest" 1, 4, 5, 6, 9 to 12).
 
 ---
 
-## DD Phase 3: Ghosts, the AI Director, Taint and the Dawn Report (proposed)
+## DD Phase 3: Ghosts, the AI Director, Taint and the Dawn Report
 
-**Draft, awaiting CEO approval (Director, 2026-10-08).** Source: doc 01 "Build Plan > Phase 3": dead
+Approved by the CEO 2026-10-08 (D-058). Source: doc 01 "Build Plan > Phase 3": dead
 players' voices favored; the AI Director, day arc and jumpscares; Taint and Shaken; ghosts with flicker
 and crow; whistle, flags and the Dawn Report. **Done when** (doc 01): the dead stay engaged, the living
 argue over a static voice, and someone laughs at the Dawn Report. Checked in 2 sessions, one tester who
@@ -390,7 +390,7 @@ them into acceptance.
 
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
-| P3-01 | Director | Between-phase review: OPEN_ISSUES, settle what Phase 3 needs, write acceptance for the rows below | todo | CEO approval |
+| P3-01 | Director | Between-phase review: OPEN_ISSUES, settle what Phase 3 needs, write acceptance for the rows below | in progress | — |
 | P3-02 | Game Designer | Phase 3 data (doc 03 s19): Director profiles and tension meter, day arc, scare rules, disturbance budget, Taint and Shaken numbers, Dawn Report templates (doc 03 s8, s10, s11, s13, s17) | todo | P3-01 |
 | P3-03 | AI Programmer | Dead players' voices favored in lure choice (doc 03 s12.1; today `WEIGHT_*` in `creature.gd`) | todo | P3-02 |
 | P3-04 | AI Programmer | AI Director: tension meter, profiles, day arc, region nudges, private events, debug (doc 03 s11); it budgets lures in place of `DAY_LURE_GAP_S` | todo | P3-02 |
