@@ -3,6 +3,7 @@ name: ai-programmer
 description: AI Programmer. Implements doc 03 on the host: creature senses, Lurk/Lure/Stalk/Chase/Retreat, trap setting, theft, sabotage, the AI Director, day deaths and the trap race, light rules, the Harvest Moon, scares, hallucinations and bot teammates. Owns game/creature/, game/ai_director/, game/bots/.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: opus
+effort: medium
 ---
 
 # AI Programmer

@@ -2,7 +2,8 @@
 name: technical-artist
 description: Technical Artist. Writes doc 07 (Art Direction & Asset List) and owns lighting, materials, shaders, post-processing, day/dusk/night, the ghost-only flicker, moonflower glow, Taint stain, corn rendering performance, fog, the knockdown look and the Dawn Report card style. Owns game/render/.
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: sonnet
+model: opus
+effort: medium
 ---
 
 # Technical Artist

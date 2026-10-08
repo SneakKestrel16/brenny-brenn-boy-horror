@@ -2,7 +2,8 @@
 name: qa-reviewer
 description: QA / Reviewer. Writes doc 09 (Playtest Plan), owns the test harness, and reviews every completed task against its acceptance criteria, the pillars, headless errors, multi-instance sync, voice-setting rules and log measures. Never reviews its own work.
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: sonnet
+model: opus
+effort: medium
 ---
 
 # QA / Reviewer

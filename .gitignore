@@ -31,3 +31,4 @@ logs/
 __pycache__/
 *.blend1
 build_id.txt
+.claude/worktrees/
