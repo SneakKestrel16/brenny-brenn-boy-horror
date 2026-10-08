@@ -200,6 +200,13 @@ therefore absolute.
   - Post-processing never pulses brightness (no flash, no strobe, no lightning). The only full-screen
     brightness changes are the ones the clock phase and the cut-to-black on a lunge (section 8).
   - The Taint overlay and screen smudge change slowly and are not light.
+- **As built (P3-09).** `LightFlicker.play(rig) -> bool` (a static call on the `LightRig`; the host
+  resolves `light_id` to the rig in `ghost_powers.gd`) runs the pattern above: 30% of the rig's own
+  level, 0.25 s steps, `#BFD8FF`, colour back over 0.1 s, then the override is cleared so dimming and
+  outages carry on. It refuses (returns false) when the rig is at or below 5% (off, out or blown out),
+  and runs one pattern at a time per rig. The photosensitive variant is not built: no
+  `photosensitive_safe` setting exists yet. Placeholder look; the Technical Artist may replace it
+  inside the same function.
 
 ### 4.4 How QA enforces it
 

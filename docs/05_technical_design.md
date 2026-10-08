@@ -611,6 +611,26 @@ Harvest Moon only (doc 01 "The Harvest Moon", doc 02 section 9). Host-owned `Car
   crow, `apply_crow_possessed`. A possessed crow can "caw" (a ghost action, no creature Noise) and
   gives the ghost sight of the creature (doc 03 section 11.6, doc 04 section 8.4). The creature may
   attack a possessed crow (a `dead_crow` disturbance), host rules in doc 03.
+- **As built (P3-09).** `game/ghost/ghost_powers.gd` (node `Death/GhostPowers`) holds every rule; the
+  look is `game/ghost/light_flicker.gd`. Requests: `request_flicker(light_id)`,
+  `request_possess_crow(crow_id)`, `request_crow_caw()`, `request_rustle()`; results:
+  `apply_flicker(light_id)`, `apply_crow_possessed(peer, crow_id)` (sent to that ghost only, `""` to
+  release), `apply_ghost_sound(kind, position)`. A `light_id` is the `lightrig_spots` marker path
+  relative to Main (e.g. `World/Buildings/Barn/LightRigDoor`), the same on every peer; a `crow_id` is
+  the `crow_perches` marker name. Host rules: ghosts only; per-ghost cooldowns flicker 8 s, rustle
+  8 s, caw 3 s (`placeholder`, doc 01 says only "short"); the ghost must be within 20 m of the light
+  or perch (`placeholder`); the light must be lit (a blown-out or dark lantern never flickers, doc 03
+  section 20) and within 15 m of a living player (`placeholder` for doc 01's "near a living
+  teammate"); one crow per ghost per `Clock.day` (inference: "once a night" read as once per day
+  number), 20 s (doc 01 "Ghosts"), one ghost per perch; a rustle only inside the corn (layer 5) and
+  only a sound (`sfx_step_corn`), never a creature Noise; a caw plays `sfx_crow_caw` at the perch,
+  no Noise. Keys (no new actions): `use_tool` uses the nearest lit light, or caws while in a crow;
+  `alt_use` rustles; `lantern` takes the nearest crow. In a crow the local player is held at the
+  perch. Ghost vision (local only): every `trap_spots` marker is hidden (all trap looks hang under
+  them), and the creature mesh shows only within 20 m of the ghost's camera (30 m from a crow,
+  inference so the crow adds sight), at transparency 0.6 as a placeholder "smeared silhouette".
+  Not built: the creature attacking a possessed crow, crow models (the perch is the crow), the
+  photosensitive flicker variant. Dev console: `ghost light|crow|rustle|caw [peer] [id]`.
 - **Respawn.** At dawn, ghosts get bodies again (doc 01 "Death"). `apply_respawn(peer, position)`.
   A roster player who reconnects mid-session spawns as a ghost and gets a body at the next dawn
   (doc 06 section 5). No one new joins after the match starts (D-048).
@@ -913,8 +933,10 @@ the QA changes.
 | `settings_changed` | each peer | `key` (never a voice file path) | Debugging |
 | `save_written` | host | `path_name` (file name only), `day`, `bytes` | Save |
 | `audio_state` | `Soundscape` on every peer, through `Log`, on each creature-state change and every 5 s while the state is not `lurk` | `creature_state`, `body`, `bed_db`, `wind_db`, `last_sounds` (last 8 sound IDs) | Clients report Stalk layer drops; F3 is host-only (Q-035, CONTRACTS section 10) |
-| `ghost_flicker` | host | `player`, `light_id`, `cooldown_s` | Doc 01 Phase 3 "the dead stay engaged"; QA flicker checks (Q-037) |
-| `ghost_action` | host | `player`, `action` (`crow`, `rustle`, `static_voice`), `target` (id or null) | Same (Q-037) |
+| `ghost_action` | host | `kind` (`flicker`, `crow`, `rustle`, `caw`), `peer`, plus `light_id` (flicker), `crow_id` (crow, caw) or `position` `[x, z]` (rustle). As built in P3-09; replaces the proposed `ghost_flicker` row and the `player`/`action`/`target` fields. P3-10 adds its own kind for the static voice | Doc 01 Phase 3 "the dead stay engaged"; QA flicker checks (Q-037); `check_logs.py` tallies it by kind |
+| `ghost_action_refused` | host | `kind`, `peer`, `reason` (`not_ghost`, `cooldown`, `no_light`, `unlit`, `too_far`, `no_living_near`, `not_in_corn`, `used_tonight`, `no_perch`, `taken`, `no_crow`) | QA: non-ghosts and blown-out lanterns refused (P3-09) |
+| `ghost_action_seen` | client, when it applies a ghost result | `what` (`ghost_light`, `ghost_sound`, `crow_possessed`), `args`, `played` | Every peer sees the flicker (P3-09) |
+| `ghost_vision` | client, `--ghost-auto` QA runs only | `traps_shown`, `creature_seen`, `creature_m` | Ghosts never see traps; creature within 20 m (P3-09) |
 | `lure_fooled` | host, when a recorded-line lure has `lure_result.worked` | `lure_id`, `target`, `line_id` | Doc 01 Phase 2 voice lure check (Q-037) |
 | `perf_sample` | each peer, debug runs only (`--debug-view` or `--bots`) | `avg_ms`, `max_ms`, `draw_calls`, `adapter` (`RenderingServer.get_video_adapter_name()`) | Doc 07 section 10.3 four-instance corn profile (Q-037) |
 | `whistle` | host, on an accepted whistle | `player`, `position` (`[x, z]`), `cooldown_s` | Doc 01 "Whistle"; P3-11 cooldown check |

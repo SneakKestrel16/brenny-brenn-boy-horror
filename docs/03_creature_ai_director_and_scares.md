@@ -791,6 +791,25 @@ record by `opens_day` and `from_third` and applies `tainted_mult`.
 - **Not yet (doc 03 section 13).** The jumpscare on the screens of others in view, the creature
   vanishing, and its state change after a jumpscare (drop the stalk, then Retreat, as doc 08 expects).
 
+### 13.2 As built (P3-09): ghost powers
+
+`game/ghost/ghost_powers.gd` (Gameplay) holds the rules; doc 05 section 14 lists the messages. What
+touches the creature side:
+
+- **Corn rustle.** A sound only (`sfx_step_corn` at the ghost's spot, inside the corn): the host emits
+  no `Noise`, so the creature never hears it. Players cannot tell it from the creature's own rustling
+  (doc 01 "Ghosts").
+- **Crow.** One per ghost per day number (inference for "a night"), 20 s (doc 01), at a `crow_perches`
+  marker; the perch is the crow (no crow model yet). A caw is a sound (`sfx_crow_caw`, no file until
+  P3-08) and no `Noise`. The creature does not react: it "ignores crows" (doc 01). Not built: the
+  creature attacking a possessed crow (`dead_crow`, doc 05 section 14) and fake possessed crows.
+- **Ghost sight.** Local only: the creature mesh is shown to a ghost within 20 m of its camera (doc 01,
+  doc 04 section 8.4), 30 m from a crow (inference: the crow must add sight), at 0.6 transparency as a
+  placeholder smear. All `trap_spots` markers are hidden from a ghost. Not hidden: a trap hung on the
+  pegboard and a trap a living player carries.
+- **Lantern.** A ghost may use a lit light within 15 m of a living player (`placeholder`); a blown-out
+  lantern is below 5% and never answers (section 20).
+
 ## 14. Harvest Moon acts
 
 Doc 01 "Harvest Moon". No timer; a hard cap of 15 min (900 s, doc 02 section 3) after which the

@@ -107,8 +107,9 @@ func _process(delta: float) -> void:
 	_hint.modulate.a = clampf((HINT_S - _t) / 3.0, 0.0, 1.0)
 	var text := ""
 	if player.ghost:
-		text = "YOU ARE DEAD. You are a ghost: nobody hears or sees you.\n%s / %s watch a friend. You come back at dawn." % [
-				_key(&"spectate_prev"), _key(&"spectate_next")]
+		text = "YOU ARE DEAD. You are a ghost: nobody hears or sees you.\n%s / %s watch a friend. You come back at dawn.
+%s  disturb the nearest light   %s  rustle the corn you are in   %s  ride a crow (once a night; %s caws)" % [
+				_key(&"spectate_prev"), _key(&"spectate_next"), _key(&"use_tool"), _key(&"alt_use"), _key(&"lantern"), _key(&"use_tool")]
 	elif player.pinned:
 		text = "CAUGHT IN A TRAP. Hold %s on the trap to pry free. A friend can help." % _key(&"interact")
 	_banner.text = text

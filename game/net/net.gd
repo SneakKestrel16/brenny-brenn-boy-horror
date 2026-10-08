@@ -579,6 +579,46 @@ func apply_respawn(peer: int, position: Vector3) -> void:
 	apply_received.emit(&"respawn", [peer, position])
 
 
+# Ghost powers (doc 05 section 14, P3-09): the host checks the sender is a ghost (game/ghost/ghost_powers.gd).
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_flicker(light_id: String) -> void:
+	request_received.emit(&"ghost_light", _sender(), [light_id])
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_possess_crow(crow_id: String) -> void:
+	request_received.emit(&"possess_crow", _sender(), [crow_id])
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_crow_caw() -> void:
+	request_received.emit(&"crow_caw", _sender(), [])
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_rustle() -> void:
+	request_received.emit(&"rustle", _sender(), [])
+
+
+## Host to all: the ghost light pattern on the light at marker path `light_id` (doc 07 section 4.3).
+@rpc("authority", "call_remote", "reliable")
+func apply_flicker(light_id: String) -> void:
+	apply_received.emit(&"ghost_light", [light_id])
+
+
+## Host to the ghost: it now sees from crow perch `crow_id` ("" = the crow let go).
+@rpc("authority", "call_remote", "reliable")
+func apply_crow_possessed(peer: int, crow_id: String) -> void:
+	apply_received.emit(&"crow_possessed", [peer, crow_id])
+
+
+## Host to all: a ghost sound (`rustle` or `caw`) at `position`; a sound only, never creature Noise.
+@rpc("authority", "call_remote", "reliable")
+func apply_ghost_sound(kind: StringName, position: Vector3) -> void:
+	apply_received.emit(&"ghost_sound", [kind, position])
+
+
 # --- Trap sweeps (doc 05 section 11); added in P2-11 ----------------------------------------------
 
 ## Host to the target (private, `target_slot` the peer) or all (public, -1): a scare (doc 03 section 13,

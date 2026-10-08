@@ -25,7 +25,8 @@ Measures (doc 01 "Testing" and "Build Plan"):
     file, not the host's only. Also broken down by tester (file peer) for doc 09's 60% floor.
   - Also reported (P2-22): recorded vs generic lures played, trap sweeps, medical bills and
     dawn summaries, and `net_rtt` per peer pair.
-  - Also tallied: deaths, hold_completed by verb, inside_at_night seconds, money_changed count.
+  - Also tallied: deaths, hold_completed by verb, inside_at_night seconds, money_changed count,
+    ghost_action by kind (P3-09).
 A report with no measures is still a pass: absent events are reported as "none logged".
 """
 
@@ -293,6 +294,8 @@ def other_measures(recs: list[Record]) -> dict[str, Any]:
         "money_changed_events": sum(1 for r in recs if r.event == "money_changed"),
         "hold_seconds_by_verb": {v: {"n": len(s), "mean": sum(s) / len(s)} for v, s in sorted(holds.items())},
         "inside_at_night_seconds_by_player": dict(sorted(inside.items())),
+        # Doc 09 s13 (P3-09): ghost powers used, by kind (flicker, crow, rustle, caw).
+        "ghost_actions_by_kind": dict(sorted(Counter(str(r.data.get("kind")) for r in recs if r.event == "ghost_action").items())),
     }
 
 
@@ -392,6 +395,8 @@ def format_report(rep: dict[str, Any]) -> str:
         add(f"  hold {verb}: n={v['n']} mean {v['mean']:.2f} s")
     for player, s in o["inside_at_night_seconds_by_player"].items():
         add(f"  inside at night, player {player}: {s:.0f} s")
+    if o["ghost_actions_by_kind"]:
+        add("  ghost actions: " + ", ".join(f"{k}={v}" for k, v in o["ghost_actions_by_kind"].items()))
     if rep["problems"]:
         add("")
         add(f"Malformed records ({len(rep['problems'])}):")

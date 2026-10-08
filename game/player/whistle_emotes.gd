@@ -95,7 +95,7 @@ func _refusal(peer: int, last: Dictionary, gap_s: float, why: StringName) -> Str
 	if not Game.players.has(peer) or not Game.players[peer].has("pos"):
 		return &"no_player"
 	if Game.is_ghost(peer):
-		return &"ghost"  # ghosts cannot touch the world (doc 05 s14); their powers are flicker and crows
+		return &"ghost"  # ghosts cannot touch the world (doc 05 s14); their powers are lights and crows
 	if last.has(peer) and Time.get_ticks_msec() - int(last[peer]) < int(gap_s * 1000.0):
 		return why
 	return &""

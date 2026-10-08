@@ -123,6 +123,7 @@ three doc 01 measures plus tallies.
 | Hold times | `hold_completed` | mean seconds by verb | Done |
 | Time inside at night | `inside_at_night` | seconds by player | Done |
 | Deaths, traps, money | `death`, `trap_sprung`, `money_changed` | counts | Done |
+| Ghost powers used (DD Phase 3 "the dead stay engaged") | `ghost_action` (`kind`: `flicker`, `crow`, `rustle`, `caw`; `peer`) | count by `kind` | Done (P3-09). Refusals are `ghost_action_refused` with a `reason` (doc 05 section 18), counted in the event list only |
 | Lure success by source (recorded line, generic line, sound) | `lure_played` joined to `lure_result` on `lure_id` | not built | Needed for DD Phase 2 "fooled" (section 13) |
 | Sim comparison | `dawn_summary`, `payment_made` | not built | DD Phase 4 (section 13) |
 | Close calls missed for timeout vs disagreement, per RTT | `close_call` | not built | OPEN_ISSUES "A laggy player is hard to kill"; DD Phase 1 logs settle it |
@@ -503,7 +504,10 @@ Filed in `production/QUESTIONS.md` (see the PP-10 handoff for the IDs):
    and the list lacks: `ghost_flicker` (who, which light, cooldown), a ghost crow possession event,
    a frame-time and adapter event (`perf_sample`: average and max ms, draw calls, adapter name; debug
    runs only), and whether a "was fooled" signal exists for DD Phase 2. Without them DD Phase 2 and 3's
-   measures are the observer's notes only.
+   measures are the observer's notes only. **Answered for ghosts (P3-09):** one event,
+   `ghost_action` with `kind` (`flicker`, `crow`, `rustle`, `caw`) and `peer`, replaces
+   `ghost_flicker`; doc 05 section 18 lists it. The cooldown is not logged (a refusal logs
+   `ghost_action_refused` with `reason` `cooldown`).
 3. **Game Designer:** is `tools/sim/` getting the `compare` command doc 05 section 18 names, and which
    metric does "within 15 points" mean (clear rates, or the coin trajectory)? How many seasons does the
    comparison need?

@@ -2,9 +2,10 @@ extends Node
 ## Doc 05 section 14, doc 03 section 8 (death rules): the host decides a death (`die`), every peer applies
 ## it the same way: the player becomes a ghost (`Game.players[peer].ghost`), a body is left where they fell
 ## (`bodies` group, for carrying later), and the Player node switches to spectating. A ghost comes back at
-## dawn at the spawn point. Not built yet (Phase 3): ghost lantern flicker, crow possession, the body as a carried
-## thing, the Dawn Report.
+## dawn at the spawn point. Ghost powers (lights, crow, rustle, ghost vision) are the GhostPowers child (P3-09).
+## Not built yet: the body as a carried thing.
 
+const GhostPowersScript := preload("res://game/ghost/ghost_powers.gd")
 const RESPAWN_TEST_S := 10.0  ## `--creature-test` only: nights repeat without a real dawn, so QA respawns after 10 s
 
 var _creature: Node
@@ -16,6 +17,9 @@ var _bill_deaths := 0  ## host: deaths since the last dawn bill
 
 func _ready() -> void:
 	add_to_group(&"death")
+	var powers := GhostPowersScript.new()  # P3-09: what a ghost can do
+	powers.name = "GhostPowers"
+	add_child(powers)
 	Net.apply_received.connect(_on_apply)
 	Game.player_left.connect(func(p: int) -> void: _dead.erase(p))
 	if Game.is_host():  # D-048: a roster player back in a running match is a ghost until dawn

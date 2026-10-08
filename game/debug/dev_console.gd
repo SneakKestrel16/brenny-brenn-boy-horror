@@ -31,6 +31,7 @@ const HELP := """Commands (host only unless marked):
   emote <kind> [peer]       wave, point, shrug or scream as a player (default: you)
   kill [peer]               kill a player (default: you)
   respawn [peer]            bring a ghost back (default: you)
+  ghost light|crow|rustle|caw [peer] [id]  a ghost power as that ghost, host rules apply (id: light or perch)
   debug                     toggle the debug view (F3)
   clear                     clear this console (any peer)"""
 
@@ -284,6 +285,12 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? peer is not a ghost"
 			main.get_node("Death").respawn(p)
 			return "respawned %d" % p
+		"ghost":
+			var p := _peer_arg(a, 1)
+			if a.is_empty() or not a[0] in ["light", "crow", "rustle", "caw"] or p == 0:
+				return "? ghost light|crow|rustle|caw [peer] [id]"
+			var why: String = main.get_node("Death/GhostPowers").act(p, StringName(a[0]), a[2] if a.size() > 2 else "")
+			return "ghost %s by %d%s" % [a[0], p, ": refused, " + why if why else ""]
 		"debug":
 			var dv := main.get_node_or_null("DebugView")
 			if dv == null:
