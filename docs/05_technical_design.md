@@ -595,7 +595,8 @@ Harvest Moon only (doc 01 "The Harvest Moon", doc 02 section 9). Host-owned `Car
   gives the ghost sight of the creature (doc 03 section 11.6, doc 04 section 8.4). The creature may
   attack a possessed crow (a `dead_crow` disturbance), host rules in doc 03.
 - **Respawn.** At dawn, ghosts get bodies again (doc 01 "Death"). `apply_respawn(peer, position)`.
-  A mid-season joiner spawns as a ghost and gets a body at the next dawn (doc 06 section 5).
+  A roster player who reconnects mid-session spawns as a ghost and gets a body at the next dawn
+  (doc 06 section 5). No one new joins after the match starts (D-048).
 - **Whistle** (doc 01 "How players fight back > Whistle"): `request_whistle` (cooldown
   `placeholder`); the host stamps the position and sends `apply_whistle(slot, position)`; the whistle
   is a world sound everyone hears at their own distance. It emits `whistle` (50 m) to the creature,
@@ -1049,3 +1050,11 @@ Raised in `production/QUESTIONS.md` (Q-019 onward):
   kbps, down 32 to 36; client up 11.5, down 26 to 28. 6 players host up 163 to 178, down 49 to 58; client up
   11.5, down 36. Doc 06 s13's 4-talker figures (327 to 342 up) include voice; not exercised.
 - **Lobby autostart** (`--lobby-start=n`) retries until `match_ready()`; before, a first refusal ended it.
+
+## Field plots by headcount (P2-14, D-039)
+
+- Under `--full-farm`, `farm.gd` locks every `upgrade` plot (bought later) and every `extra` plot (Level Designer metadata `extra`, `min_players` 5 or 6). `_set_headcount(n)` opens extras whose `min_players <= n`. The host calls it at `Farm._ready` with `Game.player_count()` (roster at match start; in the lobby flow the match scene loads after the host starts, so that is the lobby headcount). Clients get the number through `apply_headcount` in the `farm_state` reply, so every peer opens the same plots.
+- A player joining after the match starts does not change the open plots (the headcount is fixed at match start; inference: the CEO's D-039 text says "start", it does not say plots appear mid-season). Settle by asking the Game Designer if mid-season joins should grow the field.
+- Open plots at 2/3/4/5/6 players: 16 + 0/0/0/4/8 extras, matching `field_plots_start_by_players` (16/16/16/20/24).
+- `Farm.plot_ceiling()` reads `field_plots_max_by_players` from `player_scaling.json` (24/24/24/28/32), not `season.json`. No store sells plots yet; whoever builds it reads this.
+- Log: `plots_open {headcount, extras_open, ceiling}` on every peer. Debug: `--headcount=<n>` (host) overrides the count for no-lobby runs, where joiners arrive after the farm loads.

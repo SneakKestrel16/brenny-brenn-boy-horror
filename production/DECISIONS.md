@@ -382,3 +382,11 @@ head-bob slider with a level knockdown camera at off, centre dot, per-player voi
 (same hold times), toggle sprint, invert Y, menu text size. Not added: panic key, scare volume cap,
 colour-blind Taint option. On-screen captions or subtitles for sounds are rejected for good (they
 would give away where sounds come from; D-019) and are not to be raised again. **Why:** CEO.
+
+### D-048 · 2026-10-08 · CEO · Lobby-only joins, rejoin allowed
+New players join only in the lobby. After the match starts the host refuses any `player_uid` not on
+the match roster; a loaded save's lobby admits only that season's players. A roster player who drops
+can reconnect to the same session: ghost at once, own farmer back at the next dawn, slot and role kept
+(imposter status too). One player left now waits for a roster teammate to reconnect. Replaces doc 01's
+"late joiners enter as a ghost" and D-041's late-joiner role pick. Field plots stay fixed at match
+start (D-039), which this makes final. Docs 01, 02, 05, 06 updated; task P2-16. **Why:** CEO.

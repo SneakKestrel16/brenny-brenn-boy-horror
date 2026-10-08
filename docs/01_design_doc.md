@@ -494,7 +494,10 @@ Payments, medical bills, trap counts and the disturbance budget scale to 80% at 
 
 ### Joining and leaving
 
-- **Joining:** late joiners enter at once as a ghost and get a body at the next dawn. Lobby-lines players record first.
+- **Joining:** new players join only in the lobby, before the host starts the match. Lobby-lines players record first.
+- **No mid-session joins:** once the match starts, the host refuses anyone who is not on the match roster.
+- **Rejoining:** a roster player who drops (crash or disconnect) can reconnect to the same session. They come back as a ghost at once and get their own farmer back at the next dawn, keeping their role (and imposter status in Imposter mode).
+- **Loading a save:** a saved season opens a lobby only to the players from that season.
 - **Leaving:** a player who drops counts as absent from the next dawn. Their character stays as an idle farmhand that doesn't count.
 
 **Debt formula:**
@@ -508,7 +511,7 @@ Payments, medical bills, trap counts and the disturbance budget scale to 80% at 
 
 **Rules:**
 - Payments lock when their dawn begins, so quitting saves nothing.
-- **One player left:** the game saves and pauses at that dawn ("Waiting for a farmhand") until a second player joins. There's no solo play.
+- **One player left:** the game saves and pauses at that dawn ("Waiting for a farmhand") until a teammate from the roster reconnects. There's no solo play.
 
 ### Saving
 
@@ -614,7 +617,7 @@ set before roles are built.
 - A role card per role shows its perk; a taken role is greyed out, so no two players share one.
 - "No role" is always open. Players can change picks until the host starts the match.
 - Roles are locked for the season once the match starts.
-- A late joiner picks from the roles still free when they join.
+- A player who reconnects keeps the role they had.
 - Bots take no role (placeholder).
 
 The flare gun is a store item, not a role; anyone can carry one, and the Warden is simply better with it. Below 4 players, roles are optional, and no role is required to win.

@@ -215,6 +215,7 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | P2-14 | Level Designer, Gameplay | Field plots scale above 4 players (D-039): 32 plot sites, locked by headcount | in progress | P2-13 |
 | P2-08 | Audio Designer | Clip playback tells, chase sting (Q-048), barn ambience for the recording spot | done (CEO listen owed) | P2-03 |
 | P2-15 | Gameplay | Comfort and convenience settings (D-047): camera shake, centre dot, per-player voice volume and mute, toggle holds, toggle sprint, invert Y, menu text size | todo | P2-07 |
+| P2-16 | Gameplay, Network & Voice | Lobby-only joins, reconnect by `player_uid` (D-048): refuse new players after match start and non-season players on a loaded save; reconnecting roster player returns as a ghost with slot and role kept | todo | P2-07 |
 | P2-09 | QA | Review each P2 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 2 gate | in progress | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09

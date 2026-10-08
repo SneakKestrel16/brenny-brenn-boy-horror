@@ -218,7 +218,9 @@ section says slot; moving them to slots is a later change to the message list.
 2. Client sends `request_join(protocol_version, build_id, player_uid, display_name, voice_setting)`.
    `voice_setting` is `off` or `lobby_lines` (section 11 "Setting IDs").
 3. Host refuses (`apply_join_refused(reason)`, then disconnects) on a different protocol version or
-   build, or a full farm.
+   build, or a full farm. **After the match starts,** the host also refuses any `player_uid` not on
+   the match roster (`apply_join_refused("match_in_progress")`); a loaded save's lobby refuses any
+   `player_uid` not in the save (`"not_in_season"`). D-048.
 4. Host sends `apply_join_accepted(slot, roster, session_state)` to the joiner and `apply_roster` to
    everyone.
 5. **Lobby-lines players record first** (doc 01 "Joining"): if the joiner hasn't chosen Off and has
@@ -227,8 +229,9 @@ section says slot; moving them to slots is a later change to the message list.
 6. The joiner shares their clips (section 12) and receives everyone else's, and reports what it
    holds with `request_clips_ready(digest)` (section 12; not `request_ready`, because
    `Node.request_ready` exists, section 17).
-7. **In the lobby,** the player appears in the barn. **Mid-season** (doc 01 "Joining"), the host
-   spawns them as a ghost at once and gives them a body at the next dawn.
+7. **In the lobby,** the player appears in the barn. **A roster player reconnecting mid-session**
+   (doc 01 "Joining", D-048) is matched by `player_uid`, keeps their slot and role, re-shares their
+   clips, spawns as a ghost at once and gets a body at the next dawn.
 
 ### Leaving
 

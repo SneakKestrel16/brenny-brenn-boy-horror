@@ -209,8 +209,8 @@ this is a precaution, not a known bug.
 **Exception: the debt.** Its total and the first-payment split round to the **nearest** coin
 (section 7). Rounding up there breaks doc 01's worked example.
 
-**Headcount** is the number of players with a body at that dawn: a late joiner counts from the
-dawn they get a body, a leaver stops counting from the next dawn (`01 Joining and leaving`). One
+**Headcount** is the number of players with a body at that dawn: a reconnecting roster player
+counts from the dawn they get a body (no one new joins mid-session, D-048), a leaver stops counting from the next dawn (`01 Joining and leaving`). One
 player left pauses the season (`01 Joining and leaving`), so headcount is always 2 to 6 (`max_players` 6; the game is built around 4, D-038).
 
 **Above 4 (D-038).** Every table that reads headcount goes through `scaled()` and so has a value at 5
