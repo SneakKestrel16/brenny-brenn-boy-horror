@@ -36,6 +36,7 @@ var _override_phase: StringName = &""
 var _override_p := 0.0
 var _shot := ""
 var _frames := 0
+var _fixed_cam: Camera3D
 
 
 func _ready() -> void:
@@ -58,7 +59,7 @@ func _ready() -> void:
 			floor_mesh.material_override = m
 		_paint_props(world)
 	_apply(_state())
-	if _shot != "":
+	if _shot != "" or _cam_arg():
 		_shot_camera()
 
 
@@ -148,6 +149,8 @@ func _place_rigs(world: Node) -> void:
 
 func _process(_delta: float) -> void:
 	_apply(_state())
+	if _fixed_cam and _shot == "" and not _fixed_cam.current:
+		_fixed_cam.make_current()  # --look-cam in a live session: hold the view over the Player camera
 	if _shot != "":
 		_frames += 1
 		if _frames == 40:
@@ -209,6 +212,12 @@ func _apply(s: Dictionary) -> void:
 	_post.set_shader_parameter(&"grain", s.grain)
 
 
+func _cam_arg() -> bool:
+	return Array(OS.get_cmdline_user_args()).any(func(a: String) -> bool: return a.begins_with("--look-cam="))
+
+
+## The --look-shot camera. --look-cam alone (no --look-shot) keeps it in a live session, so a screenshot
+## (--ui-shot-s) can show this player from another player's side (P3-08 Taint checks).
 func _shot_camera() -> void:
 	var cam := Camera3D.new()
 	var v := Vector3(0, 1.7, 8)
@@ -221,6 +230,7 @@ func _shot_camera() -> void:
 			yaw = float(f[3]) if f.size() > 3 else 0.0
 			pitch = float(f[4]) if f.size() > 4 else 0.0
 	add_child(cam)
+	_fixed_cam = cam
 	cam.global_position = v
 	cam.rotation_degrees = Vector3(pitch, yaw, 0.0)
 	get_tree().create_timer(0.3).timeout.connect(cam.make_current)  # the local Player camera is added later

@@ -301,6 +301,13 @@ vertex offsets or UV scroll, which are position or texture changes, not brightne
   material. For the local player, doc 05 s10 adds a faint dark smudge and fog at the screen edge.
   A **colour-blind-safe cue** is the shape: stains are dark and glossy against matte cloth, with a
   hard edge pattern, readable in greyscale (inference; settled by testing a greyscale screenshot).
+  *As built (P3-08):* `game/render/taint_look.gd`. Until `tool_hands.glb` exists, two capsule
+  forearms with `taint_hands.gdshader` hang under each player's camera and show only while Tainted.
+  `taint_level` is fixed at 1, because doc 01 says a second Taint changes nothing, so the "stages"
+  above are unsettled (Game Designer). The local player also gets `taint_screen.gdshader`, a
+  CanvasLayer at layer 5 that fades in over 3 s (`placeholder`). Ground sources use
+  `taint_ground.gdshader`: an oil puddle for leavings and a seed scatter for strange seeds. The dead
+  crow is still a dark box. None of these is a light or emissive.
 - **Shaken.** Doc 01 gives Shaken no visual. I add none; the camera and audio handle it (inference;
   settled by the Game Designer if a cue is wanted).
 - **Ragdoll knockdown.** After a jumpscare or trap (doc 01 "Traps"), the farmer swaps from the

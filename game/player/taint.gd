@@ -2,12 +2,12 @@ extends Node
 ## P3-07, doc 01 "The Taint", doc 02 section 13, doc 03 sections 3.3 and 8: who is Tainted and the Taint
 ## sources on the ground. Host-owned: `set_taint` sets `Game.players[peer].tainted` (and `taint_cause`), logs
 ## `taint_changed` and broadcasts `apply_taint_changed`; every peer mirrors the flag (NoiseBus, the HUD, the
-## sprint bar and the black-hands placeholder read it). Taint ends with `wash` at the well (station.gd) or at
+## sprint bar and the stained hands, TaintLook, read it). Taint ends with `wash` at the well (station.gd) or at
 ## dawn.
 ##
 ## Sources (`add_source` / `remove_source`, host): creature leavings (creature.gd, one per `leavings_every_m`
 ## of lurk and stalk walking), and the dead crows and strange seeds P3-06 sabotage will place. A living player
-## within TOUCH_M of one is Tainted with the source's kind as the cause. Every peer shows a placeholder mark
+## within TOUCH_M of one is Tainted with the source's kind as the cause. Every peer shows the stain (TaintLook)
 ## (`apply_taint_source`). Item causes (stolen tool, item left in the field at dusk) are on the cans
 ## (items/cans.gd). Moonflowers are not built yet.
 
@@ -124,41 +124,18 @@ func _on_apply(what: StringName, args: Array) -> void:
 				sources.erase(id)
 
 
-## Placeholder for doc 01's "black, oily stains up the hands and sleeves, visible to all": the body capsule
-## turns black (no hands model yet). The heartbeat is Audio's (Q-060).
+## Doc 01's "black, oily stains up the hands and sleeves, visible to all": the look is the Technical Artist's
+## (game/render/taint_look.gd, P3-08). The heartbeat is Audio's (Q-060).
 func _hands(peer: int, on: bool) -> void:
 	var players := get_parent().get_node_or_null(^"Players")
 	var pl: Node = players.player(peer) if players else null
-	if pl == null or pl._mesh == null:
-		return
-	var mat: StandardMaterial3D = null
-	if on:
-		mat = StandardMaterial3D.new()
-		mat.albedo_color = Color(0.03, 0.03, 0.03)
-		mat.roughness = 0.2  # oily
-	pl._mesh.material_override = mat
+	if pl:
+		TaintLook.show_on(pl, on)
 
 
-## Placeholder art until the Technical Artist's: a black stain disc (leavings), a black lump (dead crow), a
-## dark speckle (strange seeds).
+## The source's look on the ground (TaintLook, P3-08), seen by every peer.
 func _mark(kind: StringName, pos: Vector3) -> Node3D:
-	var mi := MeshInstance3D.new()
-	mi.name = "Taint_%s" % kind
-	match kind:
-		&"dead_crow":
-			var b := BoxMesh.new()
-			b.size = Vector3(0.35, 0.12, 0.2)
-			mi.mesh = b
-		_:
-			var c := CylinderMesh.new()
-			c.top_radius = 0.45 if kind == &"leavings" else 0.25
-			c.bottom_radius = c.top_radius
-			c.height = 0.02
-			mi.mesh = c
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.02, 0.02, 0.02) if kind != &"strange_seeds" else Color(0.15, 0.08, 0.12)
-	mat.roughness = 0.15
-	mi.material_override = mat
+	var mi := TaintLook.mark(kind)
 	add_child(mi)
 	mi.global_position = pos + Vector3(0, 0.02, 0)
 	return mi
