@@ -316,3 +316,15 @@ to Gameplay: a human joining past 4 when bots fill the match drops one bot (D-03
 takes `-n 2` to 6. P2-13's spawn scene changes ship with P2-14, which edits the same files. Network &
 Voice owes a review of P2-07's `net.gd` changes (cap, `apply_join_refused`, `net_bandwidth`) and decides
 whether `clips.gd` needs a fast path when nobody recorded. **Why:** QA reviews in `production/handoffs/QA-*.md`.
+
+### D-041 · 2026-10-08 · CEO · More roles than players
+Doc 01 "Roles" gains five placeholder roles: Carpenter, Medic, Night Owl, Radio Operator, Warden (9 roles
+for up to 6 players). The roster always holds more roles than the player cap, so players choose. Rules:
+every role has work every day however well the team plays (no speed-only or mistake-only roles: Hauler,
+Cleaner and Lookout were rejected for that, Lookout also for overlapping the Tracker and Rancher); no role
+harms the creature or reveals it; the Warden only forces Retreat like a flare hit. Game Designer sets the
+perk numbers in doc 02 s15 before roles are built (not a DD Phase 2 task). Players pick roles in the
+barn lobby: one player per role, "No role" always open, picks change until the host starts, then lock
+for the season; late joiners pick from what is free; bots take none (placeholder). Roles and the lobby
+pick are built with DD Phase 4 "upgrades, roles and payments". **Why:** CEO; 5 and 6 player
+teams (D-038) need distinct jobs.

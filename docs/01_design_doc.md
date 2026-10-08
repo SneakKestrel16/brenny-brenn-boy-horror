@@ -557,8 +557,24 @@ Bought by the shipping crate. "sim" means the price is set with the simulator be
 | Rancher | Handles animals, the early warning system |
 | Mechanic | Repairs and refuels faster |
 | Tracker | Spots trap clues more easily and disarms faster |
+| Carpenter (placeholder) | Builds fences and scarecrows faster or cheaper, then repairs them; machines stay the Mechanic's |
+| Medic (placeholder) | Frees a teammate from a bear trap faster; cuts the medical bill for deaths they were near |
+| Night Owl (placeholder) | Quieter at night (steps, tools, crouch) and picks moonflowers faster |
+| Radio Operator (placeholder) | Walkie-talkie reaches further and its batteries last longer; their voice carries too, so lures favor them |
+| Warden (placeholder) | More flare shots and a faster refill. A hit only drives the creature into Retreat, never harms it; the shot is the loudest noise on the farm and gives the Warden's position away |
 
-The flare gun is a store item, not a role. Below 4 players, roles are optional, and no role is required to win.
+There are more roles than players, so each player picks one they want and no team has every role. Roles
+never let anyone harm the creature or see it clearly ("Glimpsed, never seen"). Placeholder perks are
+set before roles are built.
+
+**Picking a role:** each player picks a role in the barn lobby before the match starts.
+- A role card per role shows its perk; a taken role is greyed out, so no two players share one.
+- "No role" is always open. Players can change picks until the host starts the match.
+- Roles are locked for the season once the match starts.
+- A late joiner picks from the roles still free when they join.
+- Bots take no role (placeholder).
+
+The flare gun is a store item, not a role; anyone can carry one, and the Warden is simply better with it. Below 4 players, roles are optional, and no role is required to win.
 
 ---
 
