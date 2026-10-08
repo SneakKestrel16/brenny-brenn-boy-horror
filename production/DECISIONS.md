@@ -355,3 +355,10 @@ game; the existing `--dev` / debug-build gate (`game/debug/dev_console.gd:38`) i
 PC can pass `--dev`. Only the hash goes in the repo, never the raw ID. The host assigns the imposter,
 so the setting works only when the CEO's PC hosts. Built with Imposter mode, after DD Phase 4.
 **Why:** CEO.
+
+### D-045 · 2026-10-08 · CEO · Dev toys on the CEO's PC
+Doc 01 "Dev toys" adds hidden joke commands behind the D-044 machine-hash gate: shrink, disco (creature
+dances, fully visible), nuke (ragdoll, no deaths), low gravity, big heads, confetti harvest, rubber
+chicken. Toys never touch save, coins, debt or deaths; sessions that used one log `dev_toy` so doc 09
+measures skip them; disco never flickers lights (the ghost flicker stays unique, doc 01 "Ghosts").
+Built after DD Phase 4. **Why:** CEO.

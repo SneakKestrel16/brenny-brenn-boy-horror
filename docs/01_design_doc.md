@@ -587,6 +587,24 @@ A lobby toggle, off by default, for groups who want betrayal on top of the creat
   one baked into the game, so `--dev` or a debug build on another PC does not unlock it. Peers see
   nothing different.
 
+### Dev toys (CEO's PC only, placeholder, after DD Phase 4)
+
+Hidden joke commands, behind the same machine-hash gate as the imposter dev setting. No menu shows
+them. The host runs them and every peer sees the result.
+- **Shrink:** every player shrinks to a quarter size for 60 seconds, with squeaky voices.
+- **Disco:** a mirror ball drops over the farm, music plays, and players and the creature dance until
+  it ends. The creature is fully visible while it dances.
+- **Nuke:** a white flash, a mushroom cloud over the corn, and every player and the creature ragdoll
+  outward. Nobody dies and nothing is destroyed.
+- **Low gravity:** jumps float for 60 seconds.
+- **Big heads:** everyone's head, the creature's included, grows to three times size.
+- **Confetti harvest:** every harvest pops confetti and a kazoo for the rest of the day.
+- **Rubber chicken:** every tool in the host's hands squeaks like a rubber chicken.
+
+Rules: toys never touch the save, coins, debt or deaths. A session that used one is marked `dev_toy`
+in the logs, so playtest measures skip it. Disco lights sweep colors and never flicker on and off,
+so the ghost flicker stays the one flicker in the game.
+
 This mode bends two pillars on purpose: "Honest signals cost something" (the imposter's signals lie)
 and the creature as the only liar. The normal game stays as written.
  Placeholder perks are
