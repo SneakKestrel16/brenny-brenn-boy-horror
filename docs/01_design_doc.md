@@ -667,7 +667,26 @@ Every player gets at least one award, such as:
 | Normal | |
 | Nightmare | Less fuel. Day deaths more likely only through wider distance bends. No voice tells, but the whistle stays honest and the wrong-place tell always remains. |
 
-Group options: the "no live clips" toggle and streamer-safe mode.
+Group options: the "no live clips" toggle, streamer-safe mode and Quirks.
+
+### Quirks (opt-in group option, placeholder, after DD Phase 4)
+
+With Quirks on, every player starts the season with one random quirk: a fictional farmhand
+condition that is half handicap, half joke. Quirks use invented names, never real medical
+diagnoses (D-051). Each player sees their own quirk; others learn it by watching.
+- **Jumpy:** Shaken lasts twice as long, but sprint refills faster.
+- **Night-blind:** their lantern lights half as far.
+- **Chatterbox:** their voice carries 50% further, so lures favour them.
+- **Paranoid:** now and then they alone hear a footstep behind them that isn't there.
+- **Seer:** private hallucinations start on day 1 instead of day 5.
+- **Butterfingers:** a jumpscare drops everything they carry, not just the held item.
+- **Pack rat:** one extra carry slot, but they walk 10% slower.
+- **Heavy sleeper:** they are the last to get a body at dawn, a few seconds after everyone else.
+- **Lucky:** bear traps take a little longer to snap on them.
+- **Superstitious:** walking under the scarecrow's gaze makes them Shaken.
+
+Quirks never let anyone see the creature clearly, harm it, or fake an honest signal. Numbers are
+placeholders for the Game Designer.
 
 ### Photosensitivity safety
 

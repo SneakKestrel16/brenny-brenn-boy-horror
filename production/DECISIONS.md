@@ -404,3 +404,10 @@ P2-16. **Why:** CEO.
 Each player sees all 50 rejoin lines (D-049) before any repeats: a shuffle bag kept on the player's
 own PC (`user://rejoin_bag.cfg`), reshuffled when empty, with the new round never opening on the
 line shown last. Docs 01 and 06, task P2-16. **Why:** CEO.
+
+### D-051 · 2026-10-08 · CEO, Director · Quirks group option
+CEO asked for an option where every player starts with a mental disorder. Doc 01 "Quirks" adds an
+opt-in group option: one random quirk per player per season, ten placeholder quirks. Director's call:
+quirks use invented names, not real diagnoses, so the joke lands on the farmhand and not on real
+conditions someone in the group may have. The CEO can overrule. Quirks never reveal or harm the
+creature or fake an honest signal. Built after DD Phase 4. **Why:** CEO; naming is the Director's.
