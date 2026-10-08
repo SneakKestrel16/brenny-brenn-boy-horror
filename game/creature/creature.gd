@@ -6,8 +6,9 @@ extends CharacterBody3D
 ## Night: scripted lurk 60 s, stalk the first outdoor player, chase, retreat (doc 03 section 18);
 ## then it wanders and hunts by sound: it homes on what it heard or saw (sections 3.1, 3.2), never on
 ## a true position, and loses a chase by section 5. It sets one bear trap and one pit at the four
-## scripted times (section 18) and plays generic stranger lines from the crow corn edges as lures
-## (section 12). Taint and the AI Director are off in Phase 1. Day: it waits in far cover.
+## scripted times (section 18), shown to every peer as a close-range clue (section 9), and plays generic
+## stranger lines from the crow corn edges as lures (section 12), in the scripted lurk too. Taint and
+## the AI Director are off in Phase 1. Day: it waits in far cover.
 ##
 ## Presentation may read true positions (lure targeting, the trap spring check, the lit doorway rule);
 ## hunting never does, except the scripted stalk and chase, which doc 03 section 18 scripts at "the
@@ -31,6 +32,12 @@ const EYE_M := 1.65  ## doc 03 section 3.2, CONTRACTS section 4
 const EYE_CROUCH_M := 0.9  ## placeholder: crouched head height for the sight ray
 const STALK_CHASE_M := 12.0  ## doc 03 section 4.2: at night a sensed target this close starts a chase
 const STALK_STANDOFF_M := 10.0  ## placeholder: a stalk holds back this far ("just out of sight", section 4)
+## Placeholder: the scripted stalk follows the true position, so it holds back past `sight_night_m` (15 m).
+## At 10 m it stood in view for 15 s, then chased from 8 m (Phase 1 playtest, OPEN_ISSUES 8).
+const SCRIPTED_STANDOFF_M := 18.0
+## Placeholder (Q-048): no lunge in a chase's first seconds, so the chase tell (doc 03 section 4) comes
+## before a kill. The playtest kill came 1.2 s after chase_started (OPEN_ISSUES 8).
+const CHASE_TELL_S := 2.0
 const REGION_M := 25.0  ## placeholder: lurk wanders among markers this near the last thing it heard
 const LOUDER_WINS_S := 4.0  ## doc 03 section 3.1 (placeholder)
 const LIT_DOOR_M := 6.0  ## doc 03 section 5 / doc 04 sec 8: lit doorway radius
@@ -39,6 +46,10 @@ const LURE_COOLDOWN_S := 20.0  ## placeholder: no doc number; a playtest settles
 const LURE_MIN_M := 12.0  ## placeholder: a source nearer than this cannot show a 10 m walk
 const LURE_MAX_M := 40.0  ## placeholder: beyond this a stranger line is too faint to follow
 const LONE_M := 15.0  ## inference: doc 03 section 4.2 "a lone player"; reuses the 15 m rule (doc 04 sec 8.3)
+## Inference from doc 01 "Behavior states" (Lure: "near armed traps or lone players"): a source this near
+## an armed trap may lure a player who is not alone. Placeholder number.
+const TRAP_LURE_M := 15.0
+const CLUE_M := 4.0  ## doc 03 section 9: trap clues are seen within 4 m (placeholder)
 const TRAP_SPRING_M := 1.0  ## placeholder: a living player this close to an armed trap springs it
 const ARRIVE_M := 1.0
 const DAY_COVER := "cover_15"  ## doc 04 sec 9: the far south cover point; where it waits by day (placeholder)
@@ -141,8 +152,11 @@ func _ready() -> void:
 		elif p == &"dawn" and not _test:
 			_night_t = -1.0)
 	Net.request_received.connect(func(what: StringName, peer: int, _a: Array) -> void:
-		if what == &"farm_state":  # a late joiner gets the current state
-			Net.to_peers(&"apply_creature_state", [state, body], [peer]))
+		if what == &"farm_state":  # a late joiner gets the current state and the armed traps
+			Net.to_peers(&"apply_creature_state", [state, body], [peer])
+			for t in _traps.values():
+				if t.armed:
+					Net.to_peers(&"apply_trap_changed", [t.id, t.kind, &"set", t.position], [peer]))
 	if _test or Clock.phase == &"night":
 		_start_night()
 
@@ -221,20 +235,29 @@ func _run_script() -> void:
 		_scripted = false
 		_set_state(&"lurk", &"script_done", 0)
 		return
+	if s == &"lurk" and state == &"lure":
+		return  # a lure from the scripted lurk runs until _track_lure ends it
 	if s != state:
 		_set_state(s, &"scripted", target if s != &"lurk" else 0)
 	match state:
 		&"stalk", &"chase":
 			if _alive(target):
 				_goal = Game.players[target].pos  # scripted: doc 03 section 18 names the player
-				if state == &"chase" and _goal.distance_to(global_position) <= _num[&"reach_m"]:
+				if state == &"chase" and _t_state >= CHASE_TELL_S and _goal.distance_to(global_position) <= _num[&"reach_m"]:
 					_scripted = false
 					caught.emit(target)
 					_set_state(&"retreat", &"reached", target)
 		&"retreat":
 			_goal_retreat()
 		&"lurk":
-			_wander()
+			var heard := Logic.pick_heard(_memory, _now, _num[&"hearing_memory_s"], LOUDER_WINS_S)
+			if heard.is_empty() or not _try_lure(int(heard.peer)):
+				_wander()
+
+
+## Doc 03 section 4.2 lurk -> lure: it heard `p` and a lure source fits (section 12.1).
+func _try_lure(p: int) -> bool:
+	return _alive(p) and _now - _last_lure_t >= LURE_COOLDOWN_S and _play_lure(p)
 
 
 ## Doc 03 sections 4.2 and 5, by sound and sight only.
@@ -245,7 +268,7 @@ func _hunt(delta: float) -> void:
 			if not heard.is_empty():
 				_search_until = -1.0
 				var p := int(heard.peer)
-				if _alive(p) and _now - _last_lure_t >= LURE_COOLDOWN_S and _lone(p) and _play_lure(p):
+				if _try_lure(p):
 					return
 				_set_state(&"stalk", &"heard_" + String(heard.kind), p)
 			elif _search_until >= _now and _goal != Vector3.INF:
@@ -283,7 +306,7 @@ func _hunt(delta: float) -> void:
 			var sensed := _sensed_pos(target, {})
 			if sensed != Vector3.INF:
 				_goal = sensed
-			if _alive(target) and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
+			if _alive(target) and _t_state >= CHASE_TELL_S and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
 				caught.emit(target)
 				_end_chase(&"retreat", &"reached")
 			elif _alive(target) and _in_lit_doorway(Game.players[target].pos):
@@ -336,15 +359,19 @@ func _set_state(s: StringName, reason: StringName, p_target: int) -> void:
 		return
 	var from := state
 	var old_target := target
+	var state_s := _t_state
 	state = s
 	target = p_target
 	_t_state = 0.0
 	if s == &"chase" and from != &"chase":
 		_chase_t = 0.0
 		_lose_t = 0.0
-		Log.event(&"chase_started", {"target": target})
+		# start_m is the true distance, for the log only (OPEN_ISSUES 8): hunting never reads it
+		Log.event(&"chase_started", {"target": target, "reason": String(reason),
+			"start_m": snappedf(Game.players[target].pos.distance_to(global_position), 0.1) if _alive(target) else null})
 	elif from == &"chase" and s != &"chase":  # doc 05 section 18 `how`: lost, lit_building, kill, retreat
-		Log.event(&"chase_ended", {"target": old_target, "how": String(reason) if reason in [&"lost", &"lit_building"] else "retreat"})
+		Log.event(&"chase_ended", {"target": old_target, "how": String(reason) if reason in [&"lost", &"lit_building"] else "retreat",
+			"chase_s": snappedf(state_s, 0.01)})
 	if s == &"retreat":
 		_goal = Vector3.INF
 	Log.event(&"creature_state", {"from": String(from), "to": String(s), "reason": String(reason),
@@ -391,14 +418,19 @@ func _blocked(from: Vector3, to: Vector3, mask: int) -> bool:
 
 # --- lures (doc 03 section 12) -------------------------------------------------------------------
 
-## Presentation: picks the crow corn edge (doc 03 section 18) from the target's true position.
+## Presentation: picks the crow corn edge (doc 03 section 18) from the target's true position. A target
+## with company needs a source near an armed trap (TRAP_LURE_M). Where the target stands (corn or open
+## ground) does not matter.
 func _play_lure(p: int) -> bool:
 	var pos: Vector3 = Game.players[p].pos
+	var lone := _lone(p)
 	var src := Vector3.INF
 	var ids: Array = Data.value(&"phase1", &"stranger_voice_spots", &"ids")
 	for id in ids:
 		var m := _marker(&"crow_perches", id)
 		var d := m.distance_to(pos)
+		if not lone and not _traps.values().any(func(t: Dictionary) -> bool: return t.armed and t.position.distance_to(m) <= TRAP_LURE_M):
+			continue
 		if d >= LURE_MIN_M and d <= LURE_MAX_M and (src == Vector3.INF or d < src.distance_to(pos)):
 			src = m
 	if src == Vector3.INF:
@@ -432,7 +464,7 @@ func _track_lure() -> void:
 	_lure = {}
 	if state != &"lure":
 		return
-	if worked:  # doc 03 section 4.2 lure -> stalk; it heads for the source it sent them to
+	if worked and not _scripted:  # doc 03 section 4.2 lure -> stalk (the scripted lurk keeps its script); it heads for the source it sent them to
 		_memory.append({"position": src, "margin": 0.0, "t": _now, "peer": p, "kind": &"lure"})
 		_set_state(&"stalk", &"lure_worked", p)
 	else:
@@ -442,7 +474,8 @@ func _track_lure() -> void:
 # --- traps (doc 03 sections 9 and 18) ------------------------------------------------------------
 
 ## One bear trap and one pit; the third and fourth set times move them to new spots (doc 03 section 4
-## "sets and moves traps"; reading of section 18, see production/handoffs/P1-08.md).
+## "sets and moves traps"; reading of section 18, see production/handoffs/P1-08.md). Every peer shows an
+## armed trap's clue (`_show_clue`); a moved trap is sent as `moved` so its old clue goes.
 func _set_trap(i: int) -> void:
 	var kind := &"bear" if i % 2 == 0 else &"pit"
 	if _traps.has(kind) and not _traps[kind].armed:
@@ -453,8 +486,14 @@ func _set_trap(i: int) -> void:
 	var used: Array = _traps.values().map(func(t: Dictionary) -> String: return t.id)
 	spots = spots.filter(func(n: Node) -> bool: return not used.has(String(n.name)))
 	var n: Node3D = spots[(_nights * 4 + i) % spots.size()]
+	if _traps.has(kind):
+		var old: Dictionary = _traps[kind]
+		Net.to_peers(&"apply_trap_changed", [old.id, kind, &"moved", old.position])
+		_show_clue(old.id, kind, false)
 	_traps[kind] = {"id": String(n.name), "kind": kind, "position": n.global_position, "deep": n.get_meta("kind", "") == "deep", "armed": true}
 	Log.event(&"trap_changed", {"trap_id": String(n.name), "state": "set", "by": "creature", "kind": String(kind)})
+	Net.to_peers(&"apply_trap_changed", [String(n.name), kind, &"set", n.global_position])
+	_show_clue(String(n.name), kind, true)
 	if _test and _walker:  # QA: the host's walker steps on it, so trap_sprung fires
 		_walker.nav_path = [n.global_position]
 
@@ -472,6 +511,42 @@ func _check_traps() -> void:
 				break
 
 
+## Every peer: an armed trap's clue at its spot, seen within CLUE_M (doc 01 "Night Traps": glinting metal,
+## fresh dirt; doc 03 section 9). Placeholder art until the Technical Artist's models. TrapRace shows a
+## sprung trap, so any state but `set` removes the clue.
+func _show_clue(id: String, kind: StringName, on: bool) -> void:
+	for m in get_tree().get_nodes_in_group(&"trap_spots"):
+		if String(m.name) != id:
+			continue
+		var old := m.get_node_or_null(^"Clue")
+		if old:
+			old.free()
+		if not on:
+			return
+		var mesh := MeshInstance3D.new()
+		mesh.name = "Clue"
+		var c := CylinderMesh.new()
+		c.top_radius = 0.35 if kind == &"bear" else 0.8
+		c.bottom_radius = c.top_radius
+		c.height = 0.04
+		mesh.mesh = c
+		var mat := StandardMaterial3D.new()
+		if kind == &"bear":  # glinting metal
+			mat.albedo_color = Color(0.55, 0.55, 0.5)
+			mat.metallic = 1.0
+			mat.roughness = 0.25
+			mat.emission_enabled = true
+			mat.emission = Color(0.25, 0.25, 0.2)
+		else:  # fresh dirt
+			mat.albedo_color = Color(0.22, 0.14, 0.08)
+		mesh.material_override = mat
+		mesh.visibility_range_end = CLUE_M
+		mesh.visibility_range_end_margin = 1.0
+		mesh.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+		m.add_child(mesh)
+		return
+
+
 # --- movement ------------------------------------------------------------------------------------
 
 func _move(_delta: float) -> void:
@@ -482,8 +557,12 @@ func _move(_delta: float) -> void:
 	if _night_t < 0.0:
 		_goal = _marker(&"creature_cover", DAY_COVER)
 	var d := Vector3.INF if _goal == Vector3.INF else _goal - global_position
-	var stop := STALK_STANDOFF_M if state == &"stalk" and target != 0 else ARRIVE_M
-	if d == Vector3.INF or Vector2(d.x, d.z).length() < stop:
+	var stop := ARRIVE_M
+	if state == &"stalk" and target != 0:
+		stop = SCRIPTED_STANDOFF_M if _scripted else STALK_STANDOFF_M
+	if _scripted and state == &"stalk" and d != Vector3.INF and Vector2(d.x, d.z).length() < stop - ARRIVE_M:
+		d = -d  # the target walked closer: back off to stay out of sight (doc 03 section 2)
+	elif d == Vector3.INF or Vector2(d.x, d.z).length() < stop:
 		velocity = Vector3.ZERO
 		if state == &"lurk" and _search_until < _now:
 			_goal = Vector3.INF
@@ -580,6 +659,8 @@ func _on_apply(what: StringName, args: Array) -> void:
 		&"lure":
 			if _test:
 				_test_lure_heard(args[2])
+		&"trap_changed":  # every peer: the Creature sends `set`, TrapRace the later states
+			_show_clue(args[0], args[1], args[2] == &"set")
 
 
 # --- debug (doc 05 section 19) -------------------------------------------------------------------

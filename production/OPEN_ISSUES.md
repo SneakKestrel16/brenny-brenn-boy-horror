@@ -49,10 +49,23 @@ is inference until a log or a run settles it. Host log: `logs/qa/stop1_host/` (g
    can was granted in state but never shown or usable. Hold-retry spam fixed in P1-17; the missing
    can model/pickup and the refuel step are open.
 5. **Corn is a solid wall.** Players cannot walk in, so nobody can be lured into it.
-6. **No traps visible.** `trap_changed` logged 4 times; none rendered.
-7. **No lures.** `lure_played` is 0 in the logs; the scripted corn lines never fired.
+6. **No traps visible.** `trap_changed` logged 4 times; none rendered. **FIXED** (AI Programmer
+   P1-20): cause was by design, a set trap stayed host-only and only sprung traps were drawn. The
+   Creature now sends `set`/`moved` to every peer and draws a clue seen within 4 m (doc 03 s9): metal
+   disc for a bear trap, dirt patch for a pit. Placeholder art; not yet looked at in a window.
+7. **No lures.** `lure_played` is 0 in the logs; the scripted corn lines never fired. **FIXED** (P1-20):
+   lures fired only in the unscripted lurk and only for a lone player (no one within 15 m); the night
+   ran scripted for most of the session with three players together (inference from the log). Lures
+   now also fire in the scripted lurk, and a source within 15 m of an armed trap may lure a player with
+   company (doc 01 "Lure"). Not tied to the corn. 2-instance `--creature-test --bots=2` at 10x:
+   `check_logs.py` reports 3 lures (bots ignore them, so 0% is expected there).
 8. **Random death.** The creature stayed near for a long time, then killed without warning. One
-   `death` in the logs; the 5 chases need reading against it.
+   `death` in the logs; the 5 chases need reading against it. **FIXED in part** (P1-20): the death was
+   the scripted chase. The creature stood 10 m from the host for 15 s (in view, sight 15 m), chased
+   from 8 m and killed 1.18 s later with no sound; this breaks doc 03 s2 and the s4 chase tell. The
+   scripted stalk now holds 18 m and backs off, no kill comes in a chase's first 2 s, and
+   `chase_started` logs `reason` and `start_m`, `chase_ended` logs `chase_s`. The other 4 chases were
+   fine. Open: no chase sting or signature sound exists (Q-048, Audio Designer).
 9. **Dead players still audible.** Ghost voice must not reach the living except through the ghost
    static rules in doc 06.
 10. **Spectate camera tears** whenever the spectated player turns.

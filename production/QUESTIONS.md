@@ -611,3 +611,24 @@ names a build `git describe --always --dirty` and writes it to `BUILD.txt`. Prop
 a bare exe double-click hosts solo without `--phase1`; the zip works around it with `Host.bat`/`Join.bat`. A host/join
 menu (or `--phase1` as the default in an export) removes the need.
 
+### Q-048 · 2026-10-08 · AI Programmer → Game Designer, Audio Designer, Network & Voice, Gameplay · open
+P1-20 (OPEN_ISSUES playtest 6, 7, 8; handoff `production/handoffs/P1-20.md`).
+1. **Game Designer: three placeholders in `game/creature/creature.gd`.** (a) `CHASE_TELL_S = 2.0`: no
+   kill in a chase's first 2 s, so the chase tell (doc 03 s4) always comes before a lunge. The playtest
+   kill came 1.18 s after `chase_started`. (b) `SCRIPTED_STANDOFF_M = 18.0`: the scripted stalk follows
+   the true position, so it now holds back past `sight_night_m` (15 m) and backs off when the player
+   walks closer (doc 03 s2 "never in clear view at night except mid-chase"); at 10 m it stood in view
+   for 15 s. (c) `TRAP_LURE_M = 15.0`: reading of doc 01 "Lure: near armed traps or lone players" as
+   "a source within 15 m of an armed trap may lure a player who is not alone". Lures also fire in the
+   scripted lurk now. Please confirm or set numbers; this also answers Q-046 (4) from my side.
+2. **Audio Designer: no chase sting or signature sound exists.** Doc 01 / doc 03 s4 give the chase "music
+   sting plus signature"; `Soundscape` has no cue for `apply_creature_state` `chase`, and stalk and chase
+   share the -80 dB bed, so entering a chase is silent. This is half of the playtest "killed without
+   warning". Please add both on every peer when the replicated state turns `chase`.
+3. **Network & Voice: `net.gd` comment is stale.** `apply_trap_changed` says "Set traps are never sent";
+   the Creature now sends `set` (and `moved` when a trap moves), so every peer can draw the close-range
+   clue (doc 03 s9, 4 m). Please update the comment.
+4. **Gameplay: client `TrapRace.traps` now holds `set` and `moved` entries.** `_on_apply` stores every
+   state; nothing breaks, but the debug view on a client may colour a set trap as if open. Filter on
+   `state` if that matters.
+
