@@ -56,12 +56,6 @@
       "seconds": 10
     },
     {
-      "id": "trap_race_distance_m",
-      "source": "placeholder",
-      "cite": "doc 03 section 18; doc 03 section 7",
-      "metres": 25
-    },
-    {
       "id": "scripted_trap_spots",
       "source": "placeholder",
       "cite": "doc 03 section 18; doc 04",

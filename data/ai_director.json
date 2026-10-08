@@ -88,7 +88,7 @@
     {
       "id": "trap_race",
       "source": "placeholder",
-      "cite": "doc 03 section 7.2 (derivation there); replaces phase1.trap_race_distance_m and trap_race.gd DEEP_M when P3-04 reads it",
+      "cite": "doc 03 section 7.2 (derivation there); rolled daily by the AI Director (P3-04), read by trap_race.gd",
       "start_distance_m": 25,
       "deep_start_distance_m": 18,
       "bend_m": 3,
@@ -106,7 +106,7 @@
     {
       "id": "lures",
       "source": "placeholder",
-      "cite": "doc 03 section 12.1 (dead : alive : own); stranger weight and day gap from creature.gd P2-04, to move here in P3-03 and P3-04",
+      "cite": "doc 03 section 12.1 (dead : alive : own); stranger weight and day gap from creature.gd P2-04, moved here in P3-03 and P3-04",
       "weight_dead": 3,
       "weight_alive": 1,
       "weight_own": 0.1,

@@ -136,6 +136,14 @@ def extra_plots(first: int, field: str, x0: float, zc: float) -> None:
              f'mesh = SubResource("{pm}")\nmaterial_override = SubResource("{MATS["plot"]}")\n')
 
 
+# Doc 03 s11.6 regions: name, x0, x1, z0, z1. Placeholder cuts that tile the clearing (x -65..105, z -45..55) so
+# neighbours touch, plus the ring sides and the road lane; the director picks the smallest box holding a point.
+REGIONS = [("yard", -65, 15, -25, 32), ("pen", -65, 15, -45, -25), ("pumpkin", -65, 15, 32, 55),
+           ("field_a", 15, 50, -45, 5), ("field_b", 50, 105, -45, 5), ("moonflower", 15, 105, 5, 55),
+           ("town_road", 105, 130, -12, 2), ("corn_ring_north", -90, 130, -70, -45),
+           ("corn_ring_south", -90, 130, 55, 80), ("corn_ring_west", -90, -65, -45, 55), ("corn_ring_east", 105, 130, -45, 55)]
+
+
 def generate(full: bool) -> str:
     global MATS
     subs.clear()
@@ -146,7 +154,7 @@ def generate(full: bool) -> str:
         "house": mat("0.82, 0.78, 0.66, 1"), "plot": mat("0.35, 0.24, 0.14, 1"), "fence": mat("0.55, 0.45, 0.30, 1"),
     }
     node("Farm", "Node3D", None)
-    for c in ("Ground", "CornBlockers", "Buildings", "Props", "Fields", "Pen", "Markers", "Bounds"):
+    for c in ("Ground", "CornBlockers", "Buildings", "Props", "Fields", "Pen", "Markers", "Regions", "Bounds"):
         node(c, "Node3D", ".")
 
     # Ground and map boundary (doc 04 s3: invisible wall at the ring's outer edge; Phase 1 temp walls end at x -57 / 71)
@@ -219,6 +227,15 @@ def generate(full: bool) -> str:
                                ("SouthL", -27.5, -28, 5, .2), ("SouthR", -20.5, -28, 5, .2)):
         box("Pen", nm, cx, cz, sx, sz, 1.2, "fence")
     marker("Pen", "PenGate", -24, -28, "pen_gates")
+
+    # AI Director regions (doc 03 s11.6): flat Area3D boxes, no collision; the director reads the shapes and links
+    # regions within ai_director.json nudge.link_m. Bounds are placeholder cuts of the clearing and ring (P3-04);
+    # the same boxes go in both scenes, the Phase 1 farm just has no players in the outer ones.
+    for nm, x0, x1, z0, z1 in REGIONS:
+        area = node(nm, "Area3D", "Regions", f"transform = {tf((x0 + x1) / 2, 1, (z0 + z1) / 2)}\n"
+                    "collision_layer = 0\ncollision_mask = 0\nmonitoring = false\nmonitorable = false\n", ["regions"])
+        rs = sub("BoxShape3D", f"size = Vector3({x1 - x0}, 2, {z1 - z0})\n")
+        node("Shape", "CollisionShape3D", area, f'shape = SubResource("{rs}")\n')
 
     # Markers (doc 04 s7). Group names: D-016.
     M = "Markers"

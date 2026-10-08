@@ -575,6 +575,42 @@ are `placeholder`. Regions are `Area3D` nodes in the level scene; adjacency is c
 The debug view draws the true creature, players, each player's `sensed` marker and the region, the
 meter and the phase (doc 01 "Hunting and presentation"; owner doc 05 / AI Programmer).
 
+### 11.8 As built (P3-04)
+
+`game/ai_director/ai_director.gd` (node `AiDirector`, group `ai_director`, added by `main.gd` before the
+Creature) runs on the host only; the pure rules are in `director_logic.gd` and checked by
+`tests/creature/test_director_logic.gd`. All numbers come from `ai_director.json`.
+
+- **Meter.** Inputs as section 11.1: players outdoors at night, sprinting, the Creature's new `heard`
+  signal (noise that passed its hearing check), `lure_result.worked`, trap sprung, and `jumpscare(peer)`
+  for P3-05. It logs `tension` (`value`, `phase`, `profile`) every 10 s.
+- **Fade decays.** Inference: the meter decays in `fade` at the `relax` rate, else a quiet fade never
+  reaches `fade_to`. Doc 01 does not say; a playtest of a peak settles it.
+- **Gating.** The Creature asks `allow(kind, peer)` and then `spend`s it. Night `lure` and `stalk` are
+  build-up events (2 per player per build-up, `profile_night`); a stalk is also allowed at peak.
+  A `chase` is allowed only at peak (1 per player per peak). Inference: the table's "stalk to chase" at
+  peak is read as "chases only at peak"; outside peak the creature holds the stalk. The scripted first
+  night (section 18) is not gated.
+- **Day arc.** Third 1: no day lure, and the day cover keeps `calm_field_keepout_m` (25 m) from the
+  field region holding the most players. Day lures start in third 2, every `lures.day_gap_s`.
+- **Scare budget.** A day lure is a private event: the target is picked among outdoor living players
+  that pass `scare_ok` (1 per player per day, 120 s apart), weighted unscared 3 : 1. Counts reset on
+  `Clock.day_changed`.
+- **Sanctuary.** `allow` refuses every kind for a player within the sanctuary radius (marker
+  `radius_m`, else `scare_rules.sanctuary_m`); a chase on that player ends as `retreat` / `sanctuary`.
+- **Daily roll.** At start and at each dawn (for the next day) it rolls `deep_m`, `earshot_m`,
+  `trap_race_m` and `deep_trap_race_m` and logs `daily_roll`. A normal trap race keeps a floor of
+  (pry hold + `min_spare_s`) at the approach speed, 21 m; a deep trap has none. `trap_race.gd` reads the
+  roll. `deep_m` and `earshot_m` are only rolled and logged: nothing reads them until the day deaths.
+- **Regions and nudges.** `build_farm.py` places the eleven regions as `Area3D` boxes (group `regions`,
+  placeholder bounds tiling the clearing). Boxes within `link_m` (2 m) are linked. Every 20 s in a night
+  build-up the wander region moves one hop toward the region with the most living players; `nudge`
+  logs `from`, `to`, `toward`. The Creature's lurk wanders among cover and trap spots inside the region.
+- **Not built.** Nightmare numbers and the `harvest_moon` profile (P3-06 and later); trap setting is not
+  gated (the night's counts come from `ramp_up.json`); scares themselves are P3-05.
+- **Debug view.** Region boxes (the wander region filled), and a line with tension, phase, profile,
+  third and region over the tension graph.
+
 ## 12. Voice mimicry
 
 Doc 01 "Voice mimicry". Playback is doc 06's `apply_lure`; **choosing** is here.

@@ -105,6 +105,16 @@ func _draw_panel() -> void:
 			c.draw_string(font, gp + Vector2(6, 4), g[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, g[2])
 	for m in get_tree().get_nodes_in_group(&"plot_spots"):
 		c.draw_circle(_px(m.global_position), 1.5, Color(0.4, 0.7, 0.3))
+	var d := _director()
+	for r: String in d.get("regions", {}):  # host only: the AI Director's regions, its wander region filled
+		var rr: Rect2 = d.regions[r]
+		var a := _px(Vector3(rr.position.x, 0, rr.position.y))
+		var box := Rect2(a, rr.size * _scale())
+		var rc := Color(0.6, 0.4, 1.0, 0.6)
+		if r == d.nudge_region:
+			c.draw_rect(box, Color(0.6, 0.4, 1.0, 0.15))
+		c.draw_rect(box, rc, false)
+		c.draw_string(font, a + Vector2(2, 10), r, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, rc)
 	for n: Dictionary in _noise:
 		var a: float = 1.0 - n.age / NOISE_FADE_S
 		var col := Color.from_hsv(float(hash(n.kind) % 100) / 100.0, 0.8, 1.0, a)
@@ -125,10 +135,9 @@ func _draw_panel() -> void:
 		c.draw_line(p, p + Vector2(-sin(body.yaw), -cos(body.yaw)) * 12, col, 2)
 		c.draw_string(font, p + Vector2(7, -5), "%d%s%s" % [peer, " (you)" if peer == Game.local_peer() else "", " bot" if peer < 0 else ""], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, col)
 	_draw_creature(c, font)
-	var d := _director()
 	var y := PANEL.y - 12.0
 	if not d.is_empty():
-		c.draw_string(font, Vector2(6, y - 44), "tension %.0f  %s  next scare %.0fs" % [d.get("tension", 0.0), d.get("phase", ""), d.get("next_scare_s", 0.0)], HORIZONTAL_ALIGNMENT_LEFT, -1, 11)
+		c.draw_string(font, Vector2(6, y - 44), "tension %.0f  %s  %s  third %d  region %s" % [d.get("tension", 0.0), d.get("phase", ""), d.get("profile", ""), d.get("third", 0), d.get("nudge_region", "")], HORIZONTAL_ALIGNMENT_LEFT, -1, 11)
 		for i in _tension.size():
 			c.draw_line(Vector2(6 + i, y), Vector2(6 + i, y - _tension[i] * 0.3), Color.ORANGE)
 	c.draw_string(font, Vector2(6, 14), "debug view  zoom %.1f  t=%.0fs  noise %s" % [_zoom, Log.now(), NoiseBus.counts], HORIZONTAL_ALIGNMENT_LEFT, -1, 10)

@@ -10,7 +10,6 @@ extends Node
 ## is logged 0).
 
 const TrapTarget := preload("res://game/traps_player/trap_target.gd")
-const DEEP_M := 18.0  ## doc 03 section 7 deep trap start distance (placeholder)
 const AT_ONCE_S := 0.5  ## doc 03 section 7: "pried at once" = pry hold started within 0.5 s of the spring
 const SHAKEN_S := 60.0  ## doc 01 "Night Traps"
 const SHAKEN_MULT := 0.6  ## doc 01 "Night Traps": 40% slower
@@ -73,7 +72,7 @@ func _on_sprung(id: String, kind: StringName, peer: int, pos: Vector3, deep: boo
 	st.pinned = true
 	if peer > 1:
 		Net.to_peers(&"apply_teleport", [st.pos], [peer])  # snap back to where the host has them
-	var dist := DEEP_M if deep else float(Data.value(&"phase1", &"trap_race_distance_m", &"metres"))
+	var dist: float = get_tree().get_first_node_in_group(&"ai_director").trap_race_m(deep)  # the day's roll (P3-04)
 	var dl := dist / float(Data.value(&"creature", &"trap_race_speed_mps", &"speed_mps"))
 	races[id] = {"victim": peer, "deadline": dl, "t": 0.0, "hold_t": -1.0, "helped": false, "start_m": dist}
 	_bcast(&"trap_race", [peer, id, dl, dist])

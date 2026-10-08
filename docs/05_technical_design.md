@@ -882,7 +882,9 @@ the QA changes.
 | `noise_emitted` | host, debug runs only | `kind`, `radius_m`, `position`, `source_peer` | Debug; off by default. Never a voice volume |
 | `chase_started` / `chase_ended` | host | `target`, `how` (`lost`, `lit_building`, `kill`, `retreat`) | Pacing |
 | `sabotage` | host | `kind`, `position` | Disturbance pool |
-| `tension` | host, every 10 s | `value` (0 to 100), `phase` | AI Director |
+| `tension` | host, every 10 s | `value` (0 to 100), `phase`, `profile` (P3-04) | AI Director |
+| `daily_roll` | host, at start and each dawn (for the next day) | `day`, `deep_m`, `earshot_m`, `trap_race_m`, `deep_trap_race_m` | AI Director (doc 03 section 11.8) |
+| `nudge` | host | `from`, `to`, `toward` (region names) | AI Director region-only nudge (doc 03 section 11.8) |
 | `speed_violation` | host | `player`, `speed_mps`, `max_mps`, `clamped` | Doc 06 section 6 |
 | `data_mismatch` | host | `peer`, `table` | Section 4 |
 | `net_*`, `voice_stats` | each peer | doc 06 section 14 (including `net_join_code_rejected` with `reason` `typo` or `length`) | Network |

@@ -10,8 +10,10 @@ extends CharacterBody3D
 ## counts from `ramp_up.json` on spots near where it heard players work; its bear traps are the farm's own,
 ## taken at nightfall from hands, then the pegboard (D-053, section 9, "9.1 As built"). Traps show to every peer as a close-range clue, and it plays lures
 ## (section 12, P2-04: recorded clips, sound lures, stranger lines) from crow corn edges and cover points
-## as world sounds, in the scripted lurk too. Taint and the AI Director are off in Phase 1. Day: it waits
-## in far cover and, from the day's second third, sends a targeted lure now and then from a trap spot.
+## as world sounds, in the scripted lurk too. Taint is off in Phase 1. After the scripted night the AI
+## Director (P3-04, game/ai_director/) gates its lures, stalks, chases and kills and sets its wander region.
+## Day: it waits in far cover and, from the day's second third, sends a targeted lure now and then from a
+## trap spot, the target picked by the AI Director's scare budget.
 ##
 ## Presentation may read true positions (lure targeting, the trap spring check, the lit doorway rule);
 ## hunting never does, except the scripted stalk and chase, which doc 03 section 18 scripts at "the
@@ -29,6 +31,8 @@ signal state_changed(state: StringName, body: StringName)
 ## Host only (P1-09): the creature reached `peer` in a chase / a living player sprang an armed trap.
 signal caught(peer: int)
 signal trap_sprung(trap_id: String, kind: StringName, peer: int, position: Vector3, deep: bool)
+## Host only (P3-04): a noise passed the hearing check; the AI Director's meter input (doc 03 section 11.1).
+signal heard(radius_m: float, kind: StringName, peer: int)
 
 const Logic := preload("res://game/creature/creature_logic.gd")
 const TrapPickup := preload("res://game/creature/trap_pickup.gd")
@@ -65,11 +69,9 @@ const SOUND_LURES := {"step_walk_fake": [&"sfx_step_dirt", 8, 0.55], "step_run_f
 	"door_fake": [&"cre_door_bang", 1, 0.0]}
 const DAY_RULE_M := 15.0  ## doc 03 section 12.1 "the 15 m rule": a day source this far from every teammate of the target
 const COULD_NOT_BE_M := 25.0  ## doc 03 section 12.2: the source this far from the living teammate it voices
-const DAY_LURE_GAP_S := 90.0  ## placeholder: one day lure attempt per gap until the AI Director (DD Phase 3) budgets them
 const VOICE_CHAIN := "res://game/audio/voice_chain.gd"  ## Audio Designer's tell buses (P2-08); VoiceBase without it
 # P2-05 full-farm traps (doc 03 section 9).
 const TRAP_GAP_M := 8.0  ## doc 03 section 9: at most one trap in any 8 m circle (placeholder)
-const SANCTUARY_M := 10.0  ## doc 01 "Sanctuary"; the marker's `radius_m` wins
 const WORK_MAX := 64  ## placeholder: heard player noises kept as "where they work" for spot choice
 const TRAP_SET_FROM := 0.1  ## placeholder: the night's sets spread from 10% to 75% of the night
 const TRAP_SET_SPAN := 0.65
@@ -117,6 +119,7 @@ var _log := false
 var _last_heard := Vector3.INF  ## outlives the memory: the region it wanders in (section 4 `lurk`)
 var _rng := RandomNumberGenerator.new()
 var _num: Dictionary = {}
+var _dir: Node  ## AiDirector (P3-04): asked before lures, stalks, chases and kills
 
 # client only
 var _target_pos := Vector3.ZERO
@@ -165,6 +168,9 @@ func _ready() -> void:
 		return
 	_ok = true
 	_rng.seed = Game.seed_value
+	_dir = get_tree().get_first_node_in_group(&"ai_director")  # main adds it before the Creature
+	_num[&"day_gap_s"] = float(Data.value(&"ai_director", &"lures", &"day_gap_s"))
+	_num[&"sanctuary_m"] = float(Data.value(&"ai_director", &"scare_rules", &"sanctuary_m"))
 	for id in [&"lurk_speed_mps", &"stalk_speed_mps", &"chase_speed_mps"]:
 		_num[id] = float(Data.value(&"creature", id, &"speed_mps"))
 	for id in [&"lure_wait_s", &"stalk_max_s", &"chase_commit_s", &"retreat_s", &"hearing_memory_s", &"chase_lose_quiet_s", &"chase_tell_s"]:
@@ -217,7 +223,7 @@ func _physics_process(delta: float) -> void:
 	if _night_t >= 0.0:
 		_night_t += delta
 		_night(delta)
-	elif Clock.phase == &"day" and Clock.t_phase >= Clock.length_of(&"day") / 3.0 and not _lure and _now - _last_lure_t >= DAY_LURE_GAP_S:
+	elif Clock.phase == &"day" and _dir.third() >= 2 and not _lure and _now - _last_lure_t >= _num[&"day_gap_s"]:
 		_try_day_lure()  # doc 03 section 11.3: no lures in the calm first third
 	if _lure:
 		_track_lure()
@@ -309,7 +315,8 @@ func _run_script() -> void:
 				_goal = Game.players[target].pos  # scripted: doc 03 section 18 names the player
 				if state == &"chase" and _t_state >= _num[&"chase_tell_s"] and _goal.distance_to(global_position) <= _num[&"reach_m"]:
 					_scripted = false
-					caught.emit(target)
+					if _dir.allow(&"kill", target):  # sanctuary: no kill (doc 03 section 11.5)
+						caught.emit(target)
 					_set_state(&"retreat", &"reached", target)
 		&"retreat":
 			_goal_retreat()
@@ -319,9 +326,14 @@ func _run_script() -> void:
 				_wander()
 
 
-## Doc 03 section 4.2 lurk -> lure: it heard `p` and a lure source fits (section 12.1).
+## Doc 03 section 4.2 lurk -> lure: it heard `p` and a lure source fits (section 12.1). Outside the scripted
+## night the AI Director budgets it (section 11.2).
 func _try_lure(p: int) -> bool:
-	return _alive(p) and _now - _last_lure_t >= LURE_COOLDOWN_S and _play_lure(p)
+	if not _alive(p) or _now - _last_lure_t < LURE_COOLDOWN_S or not (_scripted or _dir.allow(&"lure", p)) or not _play_lure(p):
+		return false
+	if not _scripted:
+		_dir.spend(&"lure", p)
+	return true
 
 
 ## Doc 03 sections 4.2 and 5, by sound and sight only.
@@ -334,6 +346,10 @@ func _hunt(delta: float) -> void:
 				var p := int(heard.peer)
 				if _try_lure(p):
 					return
+				if not _dir.allow(&"stalk", p):  # out of build-up events, fading or relaxing: it keeps to its region
+					_wander()
+					return
+				_dir.spend(&"stalk", p)
 				_set_state(&"stalk", &"heard_" + String(heard.kind), p)
 			elif _search_until >= _now and _goal != Vector3.INF:
 				pass  # searching the last sensed position (section 5)
@@ -354,7 +370,8 @@ func _hunt(delta: float) -> void:
 				return
 			var seen := _seen.has(target) and _now - float(_seen[target].t) < 0.5
 			var sprint := not heard.is_empty() and int(heard.peer) == target and String(heard.kind).begins_with("step_sprint") and _now - float(heard.t) < 0.5
-			if seen or sprint or sensed.distance_to(global_position) <= STALK_CHASE_M:
+			if (seen or sprint or sensed.distance_to(global_position) <= STALK_CHASE_M) and _dir.allow(&"chase", target):
+				_dir.spend(&"chase", target)  # chases only at peak (doc 03 section 11.2); else it holds the stalk
 				_set_state(&"chase", &"seen" if seen else (&"sprint" if sprint else &"close"), target)
 			elif _t_state >= _num[&"stalk_max_s"]:
 				_memory.clear()
@@ -370,7 +387,9 @@ func _hunt(delta: float) -> void:
 			var sensed := _sensed_pos(target, {})
 			if sensed != Vector3.INF:
 				_goal = sensed
-			if _alive(target) and _t_state >= _num[&"chase_tell_s"] and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
+			if _alive(target) and not _dir.allow(&"kill", target):
+				_end_chase(&"retreat", &"sanctuary")  # doc 03 section 11.5: no kill within 10 m of the town stand
+			elif _alive(target) and _t_state >= _num[&"chase_tell_s"] and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
 				caught.emit(target)
 				_end_chase(&"retreat", &"reached")
 			elif _alive(target) and _in_lit_doorway(Game.players[target].pos):
@@ -462,6 +481,7 @@ func _on_noise(position: Vector3, radius_m: float, kind: StringName, source_peer
 			_work.pop_front()
 	if _night_t < 0.0:
 		return
+	heard.emit(radius_m, kind, source_peer)
 	_memory.append({"position": position, "margin": r - d, "t": _now, "peer": source_peer, "kind": kind})
 	_last_heard = position
 	_memory = _memory.filter(func(e: Dictionary) -> bool: return _now - float(e.t) <= _num[&"hearing_memory_s"])
@@ -498,13 +518,12 @@ func _play_lure(p: int) -> bool:
 
 
 ## Day (doc 03 section 11.3 thirds 2 and 3): a targeted lure at one outdoor living player. Private: no state
-## change, the creature stays in cover. The AI Director's scare budget (section 11.4) is DD Phase 3.
+## change, the creature stays in cover. The AI Director picks the target within the scare budget (section 11.4).
 func _try_day_lure() -> void:
 	_last_lure_t = _now  # one attempt per gap, played or not
-	var ps := Game.players.keys().filter(func(q: int) -> bool: return _alive(q) and _outdoor(Game.players[q].pos))
-	if ps.is_empty():
-		return
-	_lure_at(ps[_rng.randi() % ps.size()], true)
+	var p: int = _dir.day_lure_target(Game.players.keys().filter(func(q: int) -> bool: return _alive(q) and _outdoor(Game.players[q].pos)))
+	if p != 0 and _lure_at(p, true):
+		_dir.spend(&"day_lure", p)
 
 
 ## Doc 03 section 12. Presentation: reads true positions. Picks whose voice (12.1), the source (12.1 the
@@ -679,6 +698,8 @@ func _track_lure() -> void:
 	var worked: bool = _lure.moved_m > LURE_WORKED_M
 	if not worked and elapsed < _num[&"lure_wait_s"]:
 		return
+	if worked:
+		_dir.lure_worked()
 	Log.event(&"lure_result", {"lure_id": _lure.lure_id, "target": p, "moved_m": _lure.moved_m,  # unrounded: check_logs re-applies "> 10 m"
 		"within_s": snappedf(elapsed, 0.01) if worked else _num[&"lure_wait_s"], "window_s": _num[&"lure_wait_s"], "worked": worked})
 	if worked and _lure.recorded_line != null:  # CONTRACTS section 10 (D-020)
@@ -806,7 +827,7 @@ func _pick_spot(kind: StringName) -> Dictionary:
 
 func _in_sanctuary(pos: Vector3) -> bool:
 	for s: Node3D in get_tree().get_nodes_in_group(&"sanctuary"):
-		if s.global_position.distance_to(pos) <= float(s.get_meta("radius_m", SANCTUARY_M)):
+		if s.global_position.distance_to(pos) <= float(s.get_meta("radius_m", _num[&"sanctuary_m"])):  # the marker's radius wins
 			return true
 	return false
 
@@ -1007,7 +1028,7 @@ func _move(_delta: float) -> void:
 		&"stalk": speed = _num[&"stalk_speed_mps"]
 		&"chase", &"retreat": speed = _num[&"chase_speed_mps"]
 	if _night_t < 0.0:
-		_goal = _marker(&"creature_cover", DAY_COVER)
+		_goal = _dir.day_cover(_marker(&"creature_cover", DAY_COVER))
 	var d := Vector3.INF if _goal == Vector3.INF else _goal - global_position
 	var stop := ARRIVE_M
 	if state == &"stalk" and target != 0:
@@ -1026,11 +1047,17 @@ func _move(_delta: float) -> void:
 	global_position.y = 0.0
 
 
-## Lurk: walk between cover points and trap spots in its region (doc 03 section 4).
+## Lurk: walk between cover points and trap spots in its region (doc 03 section 4): the AI Director's wander
+## region when it set one (section 11.6; its centre when the region has no such points), else near what it heard.
 func _wander() -> void:
 	if _goal != Vector3.INF:
 		return
 	var pts := get_tree().get_nodes_in_group(&"creature_cover") + get_tree().get_nodes_in_group(&"trap_spots")
+	if _dir.wander_region:
+		var rect: Rect2 = _dir.region_rect(_dir.wander_region)
+		var inside := pts.filter(func(n: Node3D) -> bool: return rect.has_point(Vector2(n.global_position.x, n.global_position.z)))
+		_goal = (inside[_rng.randi() % inside.size()] as Node3D).global_position if inside else Vector3(rect.get_center().x, 0.0, rect.get_center().y)
+		return
 	var near := pts.filter(func(n: Node3D) -> bool: return _last_heard != Vector3.INF and n.global_position.distance_to(_last_heard) <= REGION_M)
 	if not near.is_empty():
 		pts = near

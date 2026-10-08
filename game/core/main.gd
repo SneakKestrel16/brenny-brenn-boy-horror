@@ -26,6 +26,10 @@ func _ready() -> void:
 	bots.set_script(load("res://game/bots/bots.gd"))
 	bots.name = "Bots"
 	add_child(bots)
+	var director := Node.new()  # AI Programmer P3-04: the AI Director (game/ai_director/); before the Creature, which asks it in _ready
+	director.set_script(load("res://game/ai_director/ai_director.gd"))
+	director.name = "AiDirector"
+	add_child(director)
 	var creature := CharacterBody3D.new()  # AI Programmer P1-08: the Phase 1 creature (game/creature/)
 	creature.set_script(load("res://game/creature/creature.gd"))
 	creature.name = "Creature"
