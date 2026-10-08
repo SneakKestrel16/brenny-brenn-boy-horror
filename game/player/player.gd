@@ -41,7 +41,7 @@ var _t := 0.0
 
 func _ready() -> void:
 	collision_layer = 2  # player
-	collision_mask = (1 | 16) if is_local else 0  # world and corn (layer 5) block the local body
+	collision_mask = 1 if is_local else 0  # world blocks the body; corn (layer 5) is walkable, sight/sound only
 	_shape = CollisionShape3D.new()
 	_shape.shape = CapsuleShape3D.new()
 	add_child(_shape)
@@ -146,7 +146,7 @@ func respawn(pos: Vector3) -> void:
 	global_position = pos
 	_target_pos = pos
 	velocity = Vector3.ZERO
-	collision_mask = (1 | 16) if is_local else 0
+	collision_mask = 1 if is_local else 0
 
 
 ## Ghost: `spectate_next` / `spectate_prev` follow a living player; any move input goes back to free flight.
