@@ -18,6 +18,7 @@ var _result := &""  ## last host answer for the autochore: done / refused / canc
 var _holding := false
 var _autopry := OS.get_cmdline_user_args().has("--autopry")
 var _pin_t := 0.0
+var aimed_verb: StringName = &""  ## HUD: first verb of the aimed target, empty if none (set while not holding)
 
 
 func _ready() -> void:
@@ -39,6 +40,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if player.ghost:
+		aimed_verb = &""
 		if _holding:
 			cancel()
 		return
@@ -56,6 +58,10 @@ func _physics_process(delta: float) -> void:
 		_scripted = false
 	if not _holding:
 		var tgt := _look_target()
+		aimed_verb = &""
+		if tgt != null:
+			var vs: Array[StringName] = tgt.verbs_for({})
+			aimed_verb = vs[0] if not vs.is_empty() else &""
 		if tgt != null and Input.is_action_pressed(&"interact"):
 			var verbs: Array[StringName] = tgt.verbs_for({})
 			if not verbs.is_empty():
@@ -69,6 +75,11 @@ func _physics_process(delta: float) -> void:
 
 
 var _scripted := false
+
+
+## HUD: the verb being held and its progress 0..1, or an empty verb.
+func hold_state() -> Array:
+	return [_verb, clampf(_t / maxf(_hold_s, 0.01), 0.0, 1.0)] if _holding else [&"", 0.0]
 
 
 func start(verb: StringName, target: Node) -> void:

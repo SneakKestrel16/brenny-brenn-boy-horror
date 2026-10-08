@@ -14,6 +14,10 @@ const STRIDE_M := 1.6  ## doc 05 section 6 `step_stride_m` (placeholder)
 var _send_t := 0.0
 var _players: Dictionary = {}  ## peer -> Player
 var _log_moves := false
+var _inside_s: Dictionary = {}  ## host: peer -> seconds spent in a building this night
+## Floor rects (x, z, w, d) of the Barn and the ToolShed from build_farm.py (doc 04 section 4).
+## ponytail: hard-coded for the Phase 1 farm; read the Door markers' building bounds when the real map lands.
+const BUILDINGS := [Rect2(-8, -20, 16, 20), Rect2(-18, 26, 6, 5)]
 
 
 func _ready() -> void:
@@ -23,6 +27,8 @@ func _ready() -> void:
 	Game.player_joined.connect(_spawn)
 	Game.player_left.connect(_despawn)
 	Net.bytes_received.connect(_on_bytes)
+	if Game.is_host():
+		Clock.phase_changed.connect(_flush_inside)
 	if Game.is_host() and OS.get_cmdline_user_args().has("--log-noise"):  # doc 05 section 8: debug runs only
 		NoiseBus.noise_emitted.connect(func(p: Vector3, r: float, k: StringName, s: int) -> void:
 			Log.event(&"noise_emitted", {"kind": String(k), "radius_m": r, "peer": s, "x": snappedf(p.x, 0.1), "z": snappedf(p.z, 0.1)}))
@@ -39,6 +45,11 @@ func _physics_process(delta: float) -> void:
 			_log_positions()
 	if not Game.is_host():
 		return
+	if Clock.phase == &"night":
+		for peer in Game.players:
+			var st: Dictionary = Game.players[peer]
+			if st.has("pos") and not Game.is_ghost(peer) and BUILDINGS.any(func(r: Rect2) -> bool: return r.has_point(Vector2(st.pos.x, st.pos.z))):
+				_inside_s[peer] = float(_inside_s.get(peer, 0.0)) + delta
 	_send_t += delta
 	if _send_t < 1.0 / SEND_HZ:
 		return
@@ -57,6 +68,18 @@ func _physics_process(delta: float) -> void:
 	pkt[1] = n
 	if n > 0:
 		Net.send_bytes(0, pkt)
+
+
+## Host: doc 05 section 12 `inside_at_night`, once per player when the night ends.
+func _flush_inside(phase: StringName) -> void:
+	if phase == &"night":
+		_inside_s.clear()
+		return
+	if phase != &"dawn":
+		return
+	for peer in Game.players:
+		Log.event(&"inside_at_night", {"player": peer, "seconds": snappedf(float(_inside_s.get(peer, 0.0)), 0.1)})
+	_inside_s.clear()
 
 
 ## Local player calls this each send tick: the host ingests directly, a client sends to peer 1.

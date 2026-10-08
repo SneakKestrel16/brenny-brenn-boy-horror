@@ -8,6 +8,7 @@ const HEIGHT_CROUCH := 1.1  ## placeholder: no crouch height in the docs
 const EYE_CROUCH := 0.95  ## placeholder
 const RADIUS := 0.35  ## placeholder
 const GRAVITY := 20.0
+const RESUME_S := 1.5  ## placeholder: stamina needed to sprint again after running dry (doc 02 section 2.2 gives max and refill only)
 const PROXY_SMOOTH := 15.0  ## exponential smoothing rate for proxies (ponytail: no snapshot buffer)
 
 var peer := 0
@@ -18,6 +19,7 @@ var yaw := 0.0
 var pitch := 0.0
 var crouching := false
 var stamina := 0.0  ## seconds of sprint left (doc 02 section 2.2)
+var exhausted := false  ## ran dry: no sprint until `stamina` refills to RESUME_S (stops a per-frame flip at 0)
 var ghost := false  ## dead: flies, no collision, no sound (set by Death on every peer)
 var pinned := false  ## caught in a bear trap: cannot move (TrapRace sets it on every peer)
 var speed_mult := 1.0  ## Shaken (doc 01 "Night Traps"), local only; the host mirrors it in Game.players
@@ -30,6 +32,8 @@ var _shape: CollisionShape3D
 var _mesh: MeshInstance3D
 var _seq := 0
 var _send_t := 0.0
+var _sprint_any := false  ## sprinted at any point since the last packet (the host judges the whole interval's speed)
+var _crouch_all := true  ## crouched for the whole interval
 var _target_pos := Vector3.ZERO
 var _autowalk := false  ## QA: `-- --autowalk` walks in a circle with no input (multi-instance tests)
 var _t := 0.0
@@ -62,6 +66,12 @@ func _ready() -> void:
 		hc.set_script(preload("res://game/interaction/hold_controller.gd"))
 		hc.name = "HoldController"
 		add_child(hc)
+		var hud := CanvasLayer.new()  # P1-16: plain text HUD (game/ui/hud.gd), local player only
+		hud.set_script(preload("res://game/ui/hud.gd"))
+		hud.name = "Hud"
+		hud.player = self
+		hud.hold = hc
+		add_child(hud)
 	Log.event(&"player_spawned", {"peer": peer, "local": is_local})
 
 
@@ -187,7 +197,7 @@ func _local(delta: float) -> void:
 	if _autowalk:
 		yaw = _t * 0.5
 		dir = Vector2(0, -1)
-		want_sprint = fmod(_t, 8.0) > 4.0
+		want_sprint = fmod(_t, 8.0) > 4.0 or OS.get_cmdline_user_args().has("--autosprint")  # QA: sprint held, stamina runs dry
 	if not nav_path.is_empty():  # QA: walk to the next waypoint (`--autochore`), facing it
 		var d: Vector3 = nav_path[0] - global_position
 		d.y = 0.0
@@ -202,9 +212,12 @@ func _local(delta: float) -> void:
 	if still or pinned:
 		dir = Vector2.ZERO
 	var sprint_rec := Data.record(&"labor", &"sprint")
-	var sprinting := want_sprint and not crouching and dir != Vector2.ZERO and stamina > 0.0
+	if exhausted and stamina >= RESUME_S:
+		exhausted = false
+	var sprinting := want_sprint and not crouching and dir != Vector2.ZERO and stamina > 0.0 and not exhausted
 	if sprinting:
 		stamina = maxf(stamina - delta, 0.0)
+		exhausted = stamina <= 0.0
 	else:
 		stamina = minf(stamina + float(sprint_rec["max_s"]) / float(sprint_rec["refill_s"]) * delta, float(sprint_rec["max_s"]))
 	var speed := Data.speed(&"crouch" if crouching else (&"sprint" if sprinting else &"walk")) * speed_mult
@@ -213,8 +226,14 @@ func _local(delta: float) -> void:
 	velocity.z = wish.z
 	velocity.y = 0.0 if is_on_floor() else velocity.y - GRAVITY * delta
 	move_and_slide()
+	_sprint_any = _sprint_any or sprinting
+	_crouch_all = _crouch_all and crouching
 	_send_t += delta
 	if _send_t >= 1.0 / players.SEND_HZ:
 		_send_t = 0.0
 		_seq += 1
-		players.submit_local(_seq, global_position, yaw, pitch, crouching, sprinting)
+		# A mode change inside the interval would read as too fast (sprint to walk) or free (walk to crouch):
+		# send the faster mode, so the host limit covers the distance walked.
+		players.submit_local(_seq, global_position, yaw, pitch, _crouch_all, _sprint_any)
+		_sprint_any = false
+		_crouch_all = true

@@ -166,6 +166,8 @@ func _on_apply(what: StringName, args: Array) -> void:
 			var pl := _player(Game.local_peer())
 			if pl:
 				pl.shake(args[0], SHAKEN_MULT)
+				if not Game.is_host():  # the host's own line is written in on_pry_done
+					Log.event(&"shaken", {"player": Game.local_peer(), "seconds": args[0]})
 		&"death":
 			for id in victims.keys():
 				if victims[id] == args[0]:
