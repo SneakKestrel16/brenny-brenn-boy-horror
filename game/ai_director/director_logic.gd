@@ -40,6 +40,14 @@ static func scare_weight(count: int, rules: Dictionary) -> float:
 	return float(rules.unscared_weight) if count == 0 else float(rules.scared_weight)
 
 
+## Doc 03 section 13: a `scare_*` record's pick weight on `day` in `third` (0 is not day), 0 while closed:
+## before `opens_day`, or by day before `from_third`. A Tainted target scales it by `tainted_mult`.
+static func scare_weight_of(rec: Dictionary, day: int, third: int, tainted: bool) -> float:
+	if day < int(rec.opens_day) or (third != 0 and third < int(rec.from_third)):
+		return 0.0
+	return float(rec.weight) * (float(rec.get("tainted_mult", 1.0)) if tainted else 1.0)
+
+
 ## Doc 03 section 7.2 and 11.4: the day's trap race start distance. `u` is a roll in -1..1. A normal
 ## trap keeps `floor_m` (pry plus `min_spare_s` at the approach speed); a deep trap has no floor.
 static func race_m(base_m: float, bend_m: float, u: float, floor_m: float) -> float:

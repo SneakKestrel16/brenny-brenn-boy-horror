@@ -19,7 +19,7 @@ Builds on [doc 02](02_systems_and_economy.md) (numbers), [doc 04](04_farm_layout
 10. Sabotage and the disturbance budget
 11. The AI Director
 12. Voice mimicry
-13. Jumpscares, fake-outs, hallucinations and other scares
+13. Jumpscares, fake-outs, hallucinations and other scares (13.1 As built, P3-05)
 14. Harvest Moon acts
 15. Bodies of the dead and ghost hand-off
 16. Voice-line list
@@ -730,6 +730,66 @@ model** (doc 01 "Make them land").
   else only by animals and crows; never see traps; flicker lanterns (only ghosts flicker); rustle
   corn (the creature can fake rustling); static voices; one crow possession a night for 20 s; the
   creature ignores crows but sends fake ones.
+
+### 13.1 As built (P3-05)
+
+`game/ai_director/scares.gd` (node `Scares`, added by `main.gd` after the Creature) runs on every peer.
+The host picks and applies scares; every peer plays the build-up and the scare it is sent. Numbers come
+from the `scare_*` records in `ai_director.json`; `director_logic.scare_weight_of` (unit-tested) opens a
+record by `opens_day` and `from_third` and applies `tainted_mult`.
+
+- **Timing.** Every second the host tries the living human players in a seeded random order (bots
+  are skipped: nobody sits behind them to be scared). A player gets a scare only when the AI Director
+  allows a big scare (`allow(&"scare", peer)`: third 2 or 3, phase peak, the per-peak count, 1 per day,
+  120 s apart, not in sanctuary) and a roll of `SCARE_CHANCE_PER_S` (0.05, placeholder: a 20 s peak
+  scares a player about 2 times in 3) hits, so a peak does not always bring one ("rare", "randomizes").
+  A player already in a build-up is skipped. The kind is a weighted pick among the open records that fit
+  where the player is. Inference: scares wait for a day peak, so they stay rare. The
+  P3-04 run reached a meter of only 44 in the day, so a day peak may never happen; a playtest (Game
+  Designer) settles whether the day needs its own peak or scares should also fire in build-up.
+- **Where each fits.** Jumpscare: outdoors (no building at all, lit or dark: inference, doc says lit),
+  no trap race on, the Creature not chasing. Shed: inside `ToolShed`; the door slam plays at its door.
+  Whisper: a living teammate on Lobby lines at least 25 m away (`COULD_NOT_BE_M`) with a fitting clip;
+  the clip plays 1.2 m behind the target through the lure clip player. Own voice: the target's own clip,
+  `own_voice_per_player_per_season` (data reads per player per season, the table above says per team per
+  day; data wins). Wrong count (`wrong_count_per_team_per_day`) and hallucination: outdoors, with a crow
+  perch or creature cover point 15 to 30 m away within 60 degrees of the player's facing (inference for
+  "a place the player can see"; walls and corn are not checked).
+- **Build-up.** Two sends. The host first sends `apply_scare(&"buildup", ...)` with the kind in
+  `extra`; the target's machine (every machine for a public scare) plays the build-up. `Soundscape.hush`: the insect bed off and the wind 12 dB down for the build-up (3 s,
+  placeholder), then the layers return unless the creature is stalking or chasing. Doc 08 section 4.4
+  rule 1 only lets creature state lower layers; hush is a second path, to be added to doc 08 in P3-08.
+  The shed's build-up is `cre_door_bang` outside; the fake-out's is a corn rustle and no layer change.
+- **Check again.** After the build-up the host checks the target is still alive and, unless the dev
+  console forced it, that the kind still fits and the AI Director still allows it. If not, it logs
+  `scare_dropped` (`kind`, `target`, `why`), sends nothing and spends no budget: the hush lifts on its
+  own. Otherwise it spends the budget, sends the scare (played at once), applies the cost and logs `scare`.
+- **Cost.** a jumpscare (and a disarm lunge) calls
+  `TrapRace.shake` (Shaken 60 s, never Taint) and the AI Director's `jumpscare(peer)` (meter -30, a 45 s
+  relax). A jumpscare drops the held can. The shovel and a held trap are not dropped (not built).
+  The shed's "locked 5 s" is a 5 s freeze through `player.shake(5, 0)` (placeholder until a door lock
+  exists); a Shaken it interrupts carries on for its remaining time afterwards.
+- **Disarm lunge.** When a player starts the `disarm_bear` hold and the AI Director allows a big
+  scare, the hold is cancelled and the lunge plays: two corn parts, the lunge sound, 1.5 s of black.
+- **Fake-out.** Each second a roll of `FAKE_OUT_CHANCE_PER_S` (1/240, placeholder: about one every 4
+  minutes) bursts a crow from the perch nearest a living outdoor player, while its record is open.
+  Inference: doc 01 does not say when fake-outs fire; at random, so they tell the players nothing.
+  Public, not big, day or night.
+- **Presentation.** A placeholder capsule: the creature tall and black, a farmer brown (no hats yet, so
+  no teammate's hat on the wrong count). It goes after `vanish_look_s` looked at (camera within about
+  14 degrees), after `vanish_approach_m` walked toward it, or after 20 s. The jumpscare shows a creature
+  capsule for 0.4 s with the knockdown camera.
+- **Network.** `Net.apply_scare(scare_id, target_slot, position, extra)`: a private scare goes to the
+  target only (nothing to send for a bot), a public one to all. Every scare logs `scare` with `kind`,
+  `target`, `big`, `private`, `day`, `third`, `position`; a client logs `scare_applied`.
+- **Not built.** The trap (a pry only happens in a trap race, which the doc rules out, so nothing
+  triggers it); scarecrow moved (weight 0, P3-06 sabotage). The stingers in doc 08 section 5.4 are in the
+  Soundscape catalog but have no files until P3-08, so the scares are silent apart from the hush.
+- **Dev console.** `day <n>` sets the day; `tension <n>` sets the meter; `scare <kind> [peer]` plays
+  one now, past the AI Director and the where-it-fits rules, and names the rule it forced past. It
+  refuses a kind that is not built and a dead target.
+- **Not yet (doc 03 section 13).** The jumpscare on the screens of others in view, the creature
+  vanishing, and its state change after a jumpscare (drop the stalk, then Retreat, as doc 08 expects).
 
 ## 14. Harvest Moon acts
 

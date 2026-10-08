@@ -38,6 +38,16 @@ func _init() -> void:
 	_check(not Logic.scare_ok(0, 100.0, 219.0, sr), "big scare within 120 s refused")
 	_check(Logic.scare_ok(0, 100.0, 220.0, sr), "big scare after 120 s allowed")
 	_check(is_equal_approx(Logic.scare_weight(0, sr) / Logic.scare_weight(1, sr), 3.0), "unscared weighted 3 : 1")
+	# scares (P3-05): hallucination opens day 5 in third 2, x2 Tainted; jumpscare third 3 only
+	var h: Dictionary = r.scare_hallucination
+	_check(Logic.scare_weight_of(h, 4, 3, false) == 0.0, "no hallucination before day 5")
+	_check(Logic.scare_weight_of(h, 5, 1, false) == 0.0, "no hallucination in the calm third")
+	_check(Logic.scare_weight_of(h, 5, 2, false) == 1.0, "hallucination on day 5, third 2")
+	_check(Logic.scare_weight_of(h, 5, 2, true) == 2.0, "Tainted see hallucinations x2")
+	_check(Logic.scare_weight_of(r.scare_jumpscare, 1, 2, false) == 0.0, "no jumpscare in third 2")
+	_check(Logic.scare_weight_of(r.scare_jumpscare, 1, 3, true) == 1.0, "jumpscare in third 3, Taint changes nothing")
+	_check(Logic.scare_weight_of(r.scare_fake_out, 1, 0, false) == 1.0, "fake-out open at night")
+	_check(Logic.scare_weight_of(r.scare_scarecrow_moved, 9, 3, false) == 0.0, "scarecrow moved is never rolled")
 	# trap race: 25 m bent 3 m, normal trap floored, deep trap not
 	_check(is_equal_approx(Logic.race_m(25.0, 3.0, -1.0, 21.0), 22.0), "normal race bends down to 22 m")
 	_check(is_equal_approx(Logic.race_m(25.0, 3.0, -1.0, 23.0), 23.0), "normal race keeps its floor")

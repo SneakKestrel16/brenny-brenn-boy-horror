@@ -4,7 +4,7 @@ extends Node
 ## and the daily roll, and nudges the creature's wander region one hop toward the players (section 11.6).
 ## It decides when and where, never a goal point: the Creature asks `allow(kind, peer)` before a lure,
 ## stalk, chase or kill and reports with `spend`. Rules live in director_logic.gd; numbers in
-## `ai_director.json`. Scares themselves (picking `scare_*`, `jumpscare`) are P3-05.
+## `ai_director.json`. Scares (picking `scare_*`, calling `jumpscare`) live in scares.gd (P3-05).
 ## Not built: the `harvest_moon` profile (section 14), nightmare trap race numbers (no difficulty yet),
 ## deep and earshot day deaths (rolled and logged only, nothing reads them).
 

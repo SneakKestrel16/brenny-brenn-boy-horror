@@ -1137,7 +1137,7 @@ func _on_apply(what: StringName, args: Array) -> void:
 				state_changed.emit(state, body)
 		&"lure":
 			_hear_lure(args)
-			if _walker:
+			if _walker and not String(args[0]).begins_with("scare_"):  # a scare voice is not a lure test
 				_test_lure_heard(args[2])
 		&"trap_changed":  # every peer: the Creature sends `set`, TrapRace the later states
 			_show_clue(args[0], args[1], args[2] == &"set")

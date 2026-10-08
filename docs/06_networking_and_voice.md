@@ -401,7 +401,7 @@ client rolls back its prediction). Doc 05 section 7 (hold framework) uses only t
 | `apply_creature_state(state, body)` | Reliable copy of each state change, so ambience never misses one |
 | `apply_taint_changed`, `apply_shaken`, `apply_death`, `apply_respawn` | |
 | `apply_close_call_check(call_id, creature_position, reach_m)` | **victim only**; answered by `request_close_call_result(call_id, own_position, inside_lit)` (section 6) |
-| `apply_scare(scare_id, ...)` | **target only** for private events (hallucinations, the wrong count), all for public ones |
+| `apply_scare(scare_id, target_slot, position, extra)` | **target only** for private events (hallucinations, the wrong count), all for public ones (`target_slot` -1); `extra` is a `clip:<owner>:<id>` source for the whisper and own voice (P3-05, doc 03 section 13.1) |
 | `apply_lure(...)` | Section 12; **target only** for targeted day lures, all for world lures |
 | `apply_dawn_report(report)` | Lure references, not audio |
 | `apply_lights`, `apply_plot_changed`, ... | The results listed above |

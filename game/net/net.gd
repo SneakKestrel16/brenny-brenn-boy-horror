@@ -581,6 +581,13 @@ func apply_respawn(peer: int, position: Vector3) -> void:
 
 # --- Trap sweeps (doc 05 section 11); added in P2-11 ----------------------------------------------
 
+## Host to the target (private, `target_slot` the peer) or all (public, -1): a scare (doc 03 section 13,
+## doc 06 section 7). `extra` is the voice source (`clip:<owner>:<clip_id>`) for the whisper and own voice.
+@rpc("authority", "call_remote", "reliable")
+func apply_scare(scare_id: StringName, target_slot: int, position: Vector3, extra: String) -> void:
+	apply_received.emit(&"scare", [scare_id, target_slot, position, extra])
+
+
 ## Host to all: every flag position (doc 01 "Night Traps > Flags").
 @rpc("authority", "call_remote", "reliable")
 func apply_flags(positions: Array) -> void:

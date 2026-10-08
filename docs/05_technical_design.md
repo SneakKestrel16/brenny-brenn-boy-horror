@@ -885,6 +885,9 @@ the QA changes.
 | `tension` | host, every 10 s | `value` (0 to 100), `phase`, `profile` (P3-04) | AI Director |
 | `daily_roll` | host, at start and each dawn (for the next day) | `day`, `deep_m`, `earshot_m`, `trap_race_m`, `deep_trap_race_m` | AI Director (doc 03 section 11.8) |
 | `nudge` | host | `from`, `to`, `toward` (region names) | AI Director region-only nudge (doc 03 section 11.8) |
+| `scare` | host, when a scare lands (after its build-up) | `kind`, `target` (-1 public), `big`, `private`, `day`, `third`, `position`, `extra` (clip source or null), `hold` (disarmed trap or null) | Scares (doc 03 section 13.1, P3-05) |
+| `scare_dropped` | host, when a scare's build-up ends and its rules no longer hold | `kind`, `target`, `why` (a `fits` reason or `director`) | Scares (doc 03 section 13.1) |
+| `scare_applied` | client, when it plays a scare sent to it | `kind` | Scares sync check |
 | `speed_violation` | host | `player`, `speed_mps`, `max_mps`, `clamped` | Doc 06 section 6 |
 | `data_mismatch` | host | `peer`, `table` | Section 4 |
 | `net_*`, `voice_stats` | each peer | doc 06 section 14 (including `net_join_code_rejected` with `reason` `typo` or `length`) | Network |

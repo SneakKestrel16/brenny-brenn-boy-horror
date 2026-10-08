@@ -34,6 +34,10 @@ func _ready() -> void:
 	creature.set_script(load("res://game/creature/creature.gd"))
 	creature.name = "Creature"
 	add_child(creature)
+	var scares := Node.new()  # AI Programmer P3-05: the scares (game/ai_director/); after the Creature, whose rules it reads
+	scares.set_script(load("res://game/ai_director/scares.gd"))
+	scares.name = "Scares"
+	add_child(scares)
 	var death := Node.new()  # P1-09: death, ghosts, respawn (game/ghost/); before TrapRace, which kills through it
 	death.set_script(load("res://game/ghost/death.gd"))
 	death.name = "Death"

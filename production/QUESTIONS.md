@@ -690,3 +690,6 @@ P2-22 review. `tests/net/test_voice.gd` (`-s` run) does not run: `game/voice/voi
 
 ### Q-058 · 2026-10-08 · AI Programmer → Gameplay · open
 D-055 follow-up. `game/creature/trap_art.gd` (`class_name TrapArt`) builds the placeholder trap meshes: `TrapArt.bear()`, `TrapArt.pit()`, `TrapArt.of(kind)`, each a `Node3D` with its origin on the ground. Set traps (`creature.gd` `_show_clue`) and loose traps (`_show_loose`) use it now. Ask: use it for the pegboard hung trap (`trap_sweep.gd` `_make_slot`, now a 0.6 m box) and the sprung trap (`trap_race.gd` "Sprung" cylinder), so a trap looks the same everywhere. For the pegboard, rotate the bear 90 degrees on x so it hangs flat on the board.
+
+### Q-059 · 2026-10-08 · AI Programmer → Audio Designer, Director · open
+P3-05 (handoff `production/handoffs/P3-05.md`, doc 03 s13.1). A scare's build-up calls `Soundscape.hush(seconds)`: the insect bed off and the wind 12 dB down, then the layers return unless the creature is stalking or chasing. Doc 08 s4.4 rule 1 lets only creature state lower layers. Ask: amend doc 08 s4.4 to allow `hush` as a second layer-lowering path (P3-08), or say which path the build-up should use instead.

@@ -16,12 +16,16 @@ const HELP := """Commands (host only unless marked):
   skip                      end the current phase now
   phase day|dusk|night|dawn jump to that phase (advances through the ones between)
   time <s>                  set seconds into the current phase
+  day <n>                   set the day number (scares and events that open on a day)
+  tension <n>               set the AI Director's tension meter (0 to 100)
   length <phase> <s>        set a phase's length for this session
   coins <n>                 add n coins (negative takes them away)
   fuel [s]                  add s seconds of fuel (default: fill the tank)
   gen damage|repair         break or fix the generator
   creature <state> [peer]   force lurk, stalk, chase or retreat (target defaults to you)
   grow [ripe|growing|empty] set every planted plot to a stage (default ripe)
+  scare <kind> [peer]       play a scare now, past the AI Director: jumpscare, shed, whisper, own_voice,
+                            wrong_count, hallucination, disarm_lunge, fake_out (target defaults to you)
   trap [bear|pit]           creature sets a trap at the free trap spot nearest you (default bear)
   kill [peer]               kill a player (default: you)
   respawn [peer]            bring a ghost back (default: you)
@@ -165,6 +169,18 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? time <seconds>"
 			Clock.t_phase = clampf(a[0].to_float(), 0.0, Clock.length_of(Clock.phase))
 			return "%s at %.0f s of %.0f" % [Clock.phase, Clock.t_phase, Clock.length_of(Clock.phase)]
+		"day":
+			if a.is_empty() or not a[0].is_valid_int() or a[0].to_int() < 1:
+				return "? day <n>"
+			Clock.day = a[0].to_int()
+			Clock._broadcast()
+			return "day %d" % Clock.day
+		"tension":
+			var dir := main.get_node("AiDirector")
+			if a.is_empty() or not a[0].is_valid_float():
+				return "? tension <n>"
+			dir._add(a[0].to_float() - dir.meter)
+			return "tension %.0f, %s" % [dir.meter, dir.phase]
 		"length":
 			if a.size() < 2 or not StringName(a[0]) in [&"day", &"dusk", &"night"] or not a[1].is_valid_float() or a[1].to_float() <= 0.0:
 				return "? length day|dusk|night <seconds>"
@@ -228,6 +244,20 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? no free trap spot"
 			creature._arm(best, kind, {"dev": true})
 			return "%s set at %s, %.0f m away" % [kind, best.name, best.global_position.distance_to(me)]
+		"scare":
+			var scares := main.get_node("Scares")
+			var target := _peer_arg(a, 1)
+			if a.is_empty() or not scares._d.has(StringName(a[0])):
+				return "? scare <kind> [peer] (help)"
+			if a[0] == "fake_out":
+				return "fake-out" if scares._fake_out(true) else "? no living player outdoors (or no crow perch)"
+			if target == 0:
+				return "? no such peer"
+			var why: String = scares.fits(StringName(a[0]), target)
+			if why == "not_built" or why == "not_alive":
+				return "? scare %s on %d: %s" % [a[0], target, why]
+			scares.fire(StringName(a[0]), target, {}, true)
+			return "scare %s on %d%s" % [a[0], target, " (forced past: %s)" % why if why else ""]
 		"kill":
 			var p := _peer_arg(a, 0)
 			if p == 0 or Game.is_ghost(p):

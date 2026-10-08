@@ -146,19 +146,23 @@ func on_pry_done(id: String, peer: int) -> void:
 	if r.is_empty() or peer != r.victim:
 		return
 	races.erase(id)
-	var st: Dictionary = Game.players[peer]
-	st.pinned = false
-	st.speed_mult = SHAKEN_MULT
-	_shaken[peer] = SHAKEN_S
+	Game.players[peer].pinned = false
 	_result(id, r, true, r.deadline - r.t, r.t - maxf(r.hold_t, 0.0))
+	shake(peer)
+	traps[id].state = &"disarmed"
+	_bcast(&"trap_changed", [id, traps[id].kind, &"disarmed", traps[id].position])
+	_creature.force_state(&"retreat" if _night() else &"lurk", &"trap_race_survived", peer)
+
+
+## Host: `peer` is Shaken for SHAKEN_S (a survived trap race; a jumpscare or disarm lunge, P3-05).
+func shake(peer: int) -> void:
+	Game.players[peer].speed_mult = SHAKEN_MULT
+	_shaken[peer] = SHAKEN_S
 	Log.event(&"shaken", {"player": peer, "seconds": SHAKEN_S})
 	if peer == 1:
 		Net.apply_received.emit(&"shaken", [SHAKEN_S])
 	elif peer > 1:
 		Net.to_peers(&"apply_shaken", [SHAKEN_S], [peer])
-	traps[id].state = &"disarmed"
-	_bcast(&"trap_changed", [id, traps[id].kind, &"disarmed", traps[id].position])
-	_creature.force_state(&"retreat" if _night() else &"lurk", &"trap_race_survived", peer)
 
 
 func _lose(id: String, r: Dictionary) -> void:
@@ -205,7 +209,7 @@ func _on_apply(what: StringName, args: Array) -> void:
 			var pl := _player(Game.local_peer())
 			if pl:
 				pl.shake(args[0], SHAKEN_MULT)
-				if not Game.is_host():  # the host's own line is written in on_pry_done
+				if not Game.is_host():  # the host's own line is written in shake()
 					Log.event(&"shaken", {"player": Game.local_peer(), "seconds": args[0]})
 		&"death":
 			for id in victims.keys():
