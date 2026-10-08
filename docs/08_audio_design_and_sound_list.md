@@ -119,7 +119,7 @@ All `placeholder`. Every WAV is peak-normalised to -1 dBFS (D-015), so the per-s
 | Class | Target at 5 m | Notes |
 |---|---|---|
 | Wind, night | -34 | steady, wide |
-| Insect and frog bed, night | -30 | the layer that carries the tell, so audible but not busy |
+| Insect bed, night | -30 | the layer that carries the tell, so audible but not busy |
 | Insect bed, day | -32 | |
 | Footsteps (own, walk) | -26 | |
 | Tools | -18 to -14 | loud tools sound loud (doc 01 "Noise") |
@@ -189,8 +189,7 @@ not a bus). `Tag` is what the Stalk rule affects.
 | Layer | Tag | Content | Day | Dusk | Night |
 |---|---|---|---|---|---|
 | Wind | `wind` | `amb_wind_loop` (stereo) | -26 dB | -24 | -20 |
-| Bed, insects | `bed` | `amb_insect_bed_night` (stereo loop) | off (no day insect bed) | in over 45 s | -22 |
-| Bed, frogs | `bed` | `amb_frog_bed` (stereo loop) | off | in over 45 s | -26 |
+| Bed, insects | `bed` | `amb_insect_bed_night` (stereo loop) | off (no day insect bed) | in over 45 s | -28 (CEO: halved after the 2026-10-08 playtest) |
 | Corn rustle | `corn` | `amb_corn_rustle_loop` (stereo), level by distance to the nearest corn edge, plus one-shots `sfx_corn_rustle_*` | within 6 m of corn: -28 | same | within 6 m: -30 |
 | Birds | none (SFX one-shots) | `sfx_bird_*`, one call every 6 to 14 s, random place within 40 m | on | fade out over 45 s | off |
 | Livestock | none (SFX one-shots) | `sfx_animal_*` from the pen, every 12 to 30 s, plus when the Rancher rounds up | on | quiet over 45 s ("animals go quiet", doc 01 "Dusk") | off (rare shuffle only) |
@@ -548,7 +547,6 @@ Recipe abbreviations: `noise` = `WhiteNoise`/`PinkNoise`/`BrownNoise`, `BPF`/`LP
 |---|---|---|---|---|---|---|
 | `amb_wind_loop` | A | St | 24 | yes | 1 | pink noise through two slowly swept BPFs (200 to 900 Hz, LFO 0.07 and 0.11 Hz), gusts by low-passed noise on amplitude; two uncorrelated channels |
 | `amb_insect_bed_night` | A | St | 20 | yes | 1 | 20 cricket voices: `SinOsc` 4.2 to 5.4 kHz chirp trains (3 chirps, 0.25 s) with random phase; steady floor of high noise at -50 dB |
-| `amb_frog_bed` | A | St | 24 | yes | 1 | 8 frog voices: pulse trains with fast pitch glides 400 to 900 Hz and a tonal peak, `FreeVerb` damp |
 | `amb_corn_rustle_loop` | A | St | 18 | yes | 1 | brown + pink noise, BPF 500 to 4 kHz swept by random LFOs, grainy `Dust` leaves ticks; **no pulsing envelope** (section 6) |
 | `sfx_corn_rustle_01..04` | S | 3D | 1 to 2 | no | 1 | the same recipe as a gust: swell + tail |
 | `sfx_bird_01..04` | S | 3D | 0.4 to 1.2 | no | 1 | two-tone glides `SinOsc` 2.8 to 5 kHz with fast vibrato, tweet patterns |
