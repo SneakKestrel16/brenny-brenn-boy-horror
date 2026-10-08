@@ -435,3 +435,13 @@ P2-05's acceptance (written by the Director) missed doc 01 "The tool shed"; doc 
    fields `region`, `work_m`, `stolen` join CONTRACTS s10.
 **Why:** doc 01 is CEO-approved; the acceptance contradicted it. The rule is also more readable:
 players count empty outlines to know how many bear traps are out there.
+
+### D-054 · 2026-10-08 · CEO · Watering and fuel cans are physical objects
+The CEO, after local play: the watering can and the fuel can are physical objects in the world.
+Players pick them up, carry them and drop them, and anyone can pick up a dropped can. A can is no
+longer a per-player count that every player starts with. Where cans start (the well, the fuel drum),
+how many there are by headcount, whether carrying one fills a hand slot, and how creature tool theft
+treats them follow doc 01 and doc 05; where those are silent, the Gameplay Programmer picks a
+`placeholder` and the Game Designer settles it in data.
+**Why:** CEO ask ("yes you can pickup, carry and drop them"). Cans that sit where someone left them
+give the farm more to fetch and the creature more to move.
