@@ -185,6 +185,29 @@ still needs QA pass plus Director check.
 
 ---
 
+## DD Phase 2: Barn recording, theft, death costs, two fields
+
+Approved by the CEO 2026-10-08. Source: doc 01 "Build Plan > Phase 2", doc 06 sections 11 and 12
+(barn chatter, lures, clip pre-sharing), doc 03 sections 10 and 12 (sabotage, voice mimicry), doc 02
+section 8 (medical bill), doc 04 (full layout). **Done when** (doc 01): a friend's recorded voice
+fools someone, and trap sweeps feel worth doing. Checked in 2 sessions, one tester who hasn't read doc
+01, plus log measures (doc 09). Phase 1 human gate measures (30% lure walk-toward, 10/30/60 m spatial
+test) are still owed from STOP 2; run them in the first Phase 2 session. **STOP 3** after P2-09.
+
+| ID | Owner | Task | Status | Depends on |
+|---|---|---|---|---|
+| P2-01 | Director | Between-phase review: read Phase 1 logs and notes, add new problems to OPEN_ISSUES, settle what Phase 2 needs, turn rows below into acceptance | todo | — |
+| P2-02 | Level Designer | Full farm: second field, corn between the two fields, 4-player spawns, pegboard and recording-spot markers (doc 04) | todo | P2-01 |
+| P2-03 | Network & Voice | Staged barn recording: lobby lines, chatter and voice settings, clip capture and pre-share to all peers (doc 06 s11-12) | todo | P2-01 |
+| P2-04 | AI Programmer | Replay recorded clips as lures, voice mimicry choice, tells and success logging (doc 03 s12) | todo | P2-03 |
+| P2-05 | AI Programmer | Pegboard theft and sabotage from the disturbance budget (doc 03 s10) | todo | P2-02 |
+| P2-06 | Gameplay | Dawn respawn and medical bills, day deaths billed at next dawn (doc 02 s8) | todo | P2-01 |
+| P2-07 | Gameplay | Up to 4 players: roster, spawn, player scaling data, bots fill (doc 05, `player_scaling.json`) | todo | P2-02 |
+| P2-08 | Audio Designer | Clip playback tells, chase sting (Q-048), barn ambience for the recording spot | todo | P2-03 |
+| P2-09 | QA | Review each P2 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 2 gate | todo | all above |
+
+---
+
 ## Later phases
 
 Written at the end of the previous phase's review. Not started without CEO approval.
