@@ -161,8 +161,8 @@ section 8 (voice) and doc 08 section 9.3 (whistle).
    `distance_m`, `correct`, `angle_error_deg`, `marker`, `guessed_marker`, `listener`; doc 05 section
    18).
 
-**Sample.** Per tester: 2 sounds x 3 distances x 6 trials = **36 trials**, order shuffled, no more
-than 2 in a row from the same source. Rest after 18. At least 2 testers (one new to the game).
+**Sample.** Per tester: 2 sounds x 4 distances (10, 30, 60, 72 m) x 6 trials = **48 trials**, order shuffled, no more
+than 2 in a row from the same source. Rest after 24. At least 2 testers (one new to the game).
 (`placeholder`: 6 per cell is the smallest count where 5 of 6 is clearly above the 1 in 3 chance rate;
 tune after the first run.)
 

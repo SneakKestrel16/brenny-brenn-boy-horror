@@ -13,9 +13,9 @@ extends Node3D
 ## whistle unit 20 m max 220 m (doc 08, placeholder). `--auto-pick` answers at random, for headless runs.
 
 const SOUNDS: Array[StringName] = [&"voice", &"whistle"]
-const MARKER_IDS: Array[StringName] = [&"audio_10m", &"audio_30m", &"audio_60m"]
-const DISTANCES := [10, 30, 60]
-const REST_AFTER := 18  ## doc 09 section 5: rest after 18 of 36
+const MARKER_IDS: Array[StringName] = [&"audio_10m", &"audio_30m", &"audio_60m", &"audio_72m"]
+const DISTANCES := [10, 30, 60, 72]  ## 72 m: doc 09 section 4 (doc 04 section 8.2: far field and moonflower bed)
+const REST_AFTER := 24  ## rest at the halfway point (doc 09 section 5 says 18 of 36)
 const MIX := 44100
 const EYE := 1.65  ## CONTRACTS section 4
 
@@ -52,6 +52,12 @@ func _ready() -> void:
 	add_child(farm)
 	for m in get_tree().get_nodes_in_group(&"spatial_audio_markers"):
 		_markers[StringName(m.name)] = m
+	if not _markers.has(&"audio_72m"):  # not in the farm scene; same row (z 16) as the others
+		var m72 := Marker3D.new()
+		m72.name = "audio_72m"
+		add_child(m72)
+		m72.global_position = Vector3(46, 0, 16)
+		_markers[&"audio_72m"] = m72
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-55, -30, 0)
 	add_child(sun)
@@ -96,7 +102,7 @@ func _ready() -> void:
 	_trials = _build_trials()
 	if DisplayServer.get_name() != "headless":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	_show("SPATIAL AUDIO TEST\nWear stereo headphones, left on left.\nEach trial plays ONE sound ONCE.\nTurn to face it, then press 1 (nearest post), 2 or 3 (farthest).\n\nEnter to start (%d trials)" % _trials.size())
+	_show("SPATIAL AUDIO TEST\nWear stereo headphones, left on left.\nEach trial plays ONE sound ONCE.\nTurn to face it, then press 1 (nearest post) to 4 (farthest).\n\nEnter to start (%d trials)" % _trials.size())
 	if _auto:
 		_start_next.call_deferred()
 
@@ -140,7 +146,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode in [KEY_ENTER, KEY_KP_ENTER] and _state in ["intro", "rest"]:
 			_start_next()
-		elif _state == "listening" and event.keycode >= KEY_1 and event.keycode <= KEY_3:
+		elif _state == "listening" and event.keycode >= KEY_1 and event.keycode <= KEY_4:
 			_pick(event.keycode - KEY_1)
 		elif event.keycode == KEY_ESCAPE:
 			get_tree().quit()
@@ -160,19 +166,19 @@ func _start_next() -> void:
 	_player.stream = _streams[t.sound]
 	var voice: bool = t.sound == &"voice"
 	_player.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
-	_player.unit_size = 6.0 if voice else 20.0
-	_player.max_distance = 80.0 if voice else 220.0
+	_player.unit_size = 10.0 if voice else 20.0
+	_player.max_distance = 120.0 if voice else 220.0
 	_player.play()
 	_state = "listening"
 	_pick_t = 0.2
-	_show("Trial %d of %d\nPress 1, 2 or 3" % [_i + 1, _trials.size()])
+	_show("Trial %d of %d\nPress 1, 2, 3 or 4" % [_i + 1, _trials.size()])
 
 
 func _process(delta: float) -> void:
 	if _auto and _state == "listening":
 		_pick_t -= delta
 		if _pick_t < 0.0:
-			_pick(_rng.randi_range(0, 2))
+			_pick(_rng.randi_range(0, MARKER_IDS.size() - 1))
 
 
 func _pick(guess: int) -> void:

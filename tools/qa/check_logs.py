@@ -44,7 +44,7 @@ HOST_PEER = 1  # CONTRACTS section 5
 LURE_MIN_MOVE_M = 10.0  # doc 01 Testing: "more than 10 m toward the source"
 LURE_MAX_SECONDS = 8.0  # doc 01 Testing: "within 8 seconds"
 LURE_GATE = 0.30  # doc 01 Build Plan, Phase 1: "at least 30% of lures"
-SPATIAL_DISTANCES_M = (10, 30, 60)  # doc 01 Testing: "at 10, 30 and 60 m"
+SPATIAL_DISTANCES_M = (10, 30, 60, 72)  # doc 01 Testing: "at 10, 30 and 60 m"; 72 m from doc 09 section 4
 SPATIAL_SOUNDS = ("voice", "whistle")  # doc 01 Testing
 _PEER_FILE = re.compile(r"^peer_(\d+)\.jsonl$")
 
@@ -300,7 +300,7 @@ def format_report(rep: dict[str, Any]) -> str:
         add("  none logged")
     sp = rep["spatial_audio"]
     add("")
-    add("Spatial audio trials (doc 01 Testing: voice and whistle at 10, 30, 60 m)")
+    add("Spatial audio trials (doc 01 Testing: voice and whistle at 10, 30, 60, 72 m)")
     if sp["trials"]:
         for cell, v in sp["by_sound_distance"].items():
             add(f"  {cell}: {v['correct']}/{v['trials']} placed correctly")
