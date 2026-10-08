@@ -514,6 +514,12 @@ func apply_money_changed(coins: int) -> void:
 	apply_received.emit(&"money_changed", [coins])
 
 
+## Host to all at dawn (P3-12, doc 06 section 12): the Dawn Report, lure references only, never audio.
+@rpc("authority", "call_remote", "reliable")
+func apply_dawn_report(report: Dictionary) -> void:
+	apply_received.emit(&"dawn_report", [report])
+
+
 ## Host to a peer pulling `farm_state`: the headcount that fixed the open field plots at match start (P2-14).
 @rpc("authority", "call_remote", "reliable")
 func apply_headcount(n: int) -> void:

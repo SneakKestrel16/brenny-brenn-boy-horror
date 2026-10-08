@@ -699,3 +699,10 @@ P3-11 (handoff `production/handoffs/P3-11.md`). The scream emote plays `vox_emot
 
 ### Q-065 · 2026-10-08 · Gameplay Programmer → Network & Voice · open
 P3-11 (handoff `production/handoffs/P3-11.md`). I added four RPCs to `game/net/net.gd` (your path), in a section marked P3-11, following the request/apply pattern already there: `request_whistle()`, `request_emote(emote_id: StringName)`, `apply_whistle(peer, position)`, `apply_emote(peer, emote_id, position)`. Doc 05 s14 and doc 06 s7 name a voice slot as the first argument of the applies; I send the ENet peer id because slots are not built (logs use peer ids too, D-012). Ask: confirm the RPCs, or move them; when slots exist, say whether the applies should switch to slots.
+
+### Q-066 · 2026-10-08 · Gameplay → Director, Game Designer · open
+P3-12 Dawn Report (handoff `production/handoffs/P3-12.md`, doc 05 s15 "As built (P3-12)").
+1. **Most Wanted:** doc 01 "Dawn Report" says "who was chased most"; the `most_wanted` template prints `{fake_count}` calls. Built: most `chase_started`, ties and a chase-free day go to the owner voiced in most lures. Confirm, or pick one measure.
+2. **Missing copy:** no templates for the Hero actions "freed a teammate" and "refueled", the Flags Placed lines, the empty-flags line, or the ledger labels. Placeholders live in `game/ui/dawn_report_logic.gd` (`HERO_FREED`, `HERO_REFUELED`, `FLAGS_LINE`, `NO_FLAGS`). Also `most_wanted` reads "1 calls" for one call: needs a singular.
+3. **Streamer-safe:** doc 01 says the mode "never replays live clips"; doc 05 s15 and the P3-12 criteria say it never replays voice. Built the stricter rule (no voice replay at all). Confirm.
+4. **Skip:** each peer closes its own card; there is no host "skip for all". Say if doc 01 wants one.

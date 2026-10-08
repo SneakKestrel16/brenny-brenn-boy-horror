@@ -5,7 +5,8 @@ extends Node
 ## slider (the night ambient floor, 0.2 to 0.4; it touches no light, doc 07 s5), mic device. Lives on the root so it
 ## survives scene changes. Display and graphics keys apply only once the player has set them
 ## (`Settings.is_set`), so launch flags and the QA window tiling keep working.
-## Debug arg: `--ui-shot=<png>` saves the window after 90 frames and quits (menu screenshots).
+## Debug arg: `--ui-shot=<png>` saves the window after 90 frames (or `--ui-shot-s=<seconds>`) and quits
+## (menu screenshots).
 
 const BUSES := {"vol_master": "Master", "vol_music": "Music", "vol_sfx": "SFX", "vol_ambience": "Ambience",
 		"vol_voice": "Voice", "vol_ui": "UI"}
@@ -19,6 +20,7 @@ var _env: WorldEnvironment
 var _theme: Theme
 var _shot := ""
 var _frames := 0
+var _shot_s := 0.0
 
 
 func _ready() -> void:
@@ -26,6 +28,8 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--ui-shot="):
 			_shot = a.trim_prefix("--ui-shot=")
+		elif a.begins_with("--ui-shot-s="):
+			_shot_s = a.trim_prefix("--ui-shot-s=").to_float()
 	for action in game_actions():
 		defaults[action] = InputMap.action_get_events(action).duplicate()
 	Settings.changed.connect(_on_changed)
@@ -42,8 +46,9 @@ func _process(_d: float) -> void:
 	_ambient_floor()
 	if _shot != "":
 		_frames += 1
-		if _frames == 90:
+		if (_shot_s <= 0.0 and _frames == 90) or (_shot_s > 0.0 and Time.get_ticks_msec() >= _shot_s * 1000.0):
 			get_viewport().get_texture().get_image().save_png(_shot)
+			_shot = ""
 			get_tree().quit()
 
 

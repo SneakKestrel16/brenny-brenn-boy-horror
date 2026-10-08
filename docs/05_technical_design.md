@@ -685,6 +685,41 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
 - **Order of the dawn** (doc 02 section 9): cash-in, final-dawn 50% sale + festival payout, medical
   bill, payment, farm damage, save, free scrap and flare refill. The report screen shows the cash and
   payment results as they were applied; it is a view and applies nothing.
+- **As built (P3-12):** `game/ui/dawn_report.gd` (node `DawnReport`, added by `main.gd`) and the pure
+  builder `game/ui/dawn_report_logic.gd` (unit checks: `tests/ui/test_dawn_report_logic.gd`).
+  - **Host build:** `Log.logged` (a signal emitted after each record is written) feeds the host the day's
+    report events, so the report reads the same records as the log. It adds places the creature never
+    logs: `lure_played.owner_place` (the voiced teammate's AI Director region at that moment),
+    `chase_started.place`, `death.place_name` and `death.distance` (to the nearest `player_spawns`
+    marker, standing in for "the barn lights"; inference, doc 04 names no light point). It builds the
+    report one frame after `dawn_summary`, which `Death.dawn()` logs once cash-in, medical bill and respawn
+    are done, so the card follows the money steps. Events are kept from one dawn to the next (the day's
+    targeted lures count: they are day lures). `Net.apply_dawn_report(report)` carries text and lure
+    references only.
+  - **Report:** `day` (the day that ended), `streamer_safe`, `ledger` (rows `[label, coins, red]`:
+    cash-in, medical bill paid, the unpaid rest added to the final payment, farm damage, balance;
+    payment is not built) and `sections` in order: Best Impression (the lure with the largest
+    `lure_result.moved_m`), Most Wanted (most `chase_started`; ties, and a chase-free day, go to the
+    owner voiced in most lures; Q-066), Cause of Death (one obituary per death, `reconnect` skipped; a
+    full wipe heads it; none gives `no_deaths`), Hero of the Night (score: trap disarmed or pit filled 3,
+    a pry that freed a teammate 3, a refuel 2, outside the most while someone hid 1; placeholder weights,
+    the biggest deed names the action), Heard in the Corn (up to 3 more targeted lures, placeholder cap)
+    and Flags Placed (per-player `flag_placed` counts). A section with nothing to say is left out,
+    except Cause of Death and Flags Placed. Copy without a template (freed, refueled, flags) is in the
+    builder until the Game Designer adds it (Q-066).
+  - **Screen (every peer):** placeholder newspaper card (doc 07 section 9 colours, 0.5 degree tilt,
+    masthead, dotted ledger, red ink, fold line; no vignette). A section fades in every 3 s; a click or
+    Enter reveals the rest at once (skipping their replays); the next click closes. It closes itself at
+    dusk. While open it frees the mouse and sets `Game.console_open`. It applies nothing and logs
+    `dawn_report_shown` on each peer.
+  - **Replays** (on a section's reveal, 2.5 s apart, placeholder): a clip plays through
+    `VoiceChain.play_clip` with its tell at the listener's `voice_peer_volume`; a muted owner is skipped
+    whole (D-047). A clip whose owner is not `lobby_lines` now, or any clip in streamer-safe mode, shows
+    the `off_player` line and plays a neutral cue (`sfx_step_dirt`, placeholder). A sound lure shows the
+    `off_player` line and replays the faked sound (`creature.gd` `SOUND_LURES`); a stranger plays its
+    `Soundscape.STRANGER_LINES` line. The ghost flag is carried but changes nothing until P3-10's ghost
+    chain exists. Streamer-safe is the host's `--streamer-safe` debug flag until the lobby's group option
+    exists; it blocks every voice replay (this section's wording; doc 01 says "live clips", Q-066).
 - **Season Awards** (doc 01 "Season Awards"): shown after the final dawn or on foreclosure. Computed
   by the host from the season log (the same events) and sent as one `apply_dawn_report`-shaped
   message with a `season` flag. The awards list is doc 03 section 16's.
@@ -927,6 +962,7 @@ the QA changes.
 | `scare` | host, when a scare lands (after its build-up) | `kind`, `target` (-1 public), `big`, `private`, `day`, `third`, `position`, `extra` (clip source or null), `hold` (disarmed trap or null) | Scares (doc 03 section 13.1, P3-05) |
 | `scare_dropped` | host, when a scare's build-up ends and its rules no longer hold | `kind`, `target`, `why` (a `fits` reason or `director`) | Scares (doc 03 section 13.1) |
 | `scare_applied` | client, when it plays a scare sent to it | `kind` | Scares sync check |
+| `dawn_report_shown` | each peer, when the Dawn Report card opens | `day`, `sections` (ids in order), `replays` (count), `streamer_safe` | Dawn Report (section 15, P3-12) |
 | `speed_violation` | host | `player`, `speed_mps`, `max_mps`, `clamped` | Doc 06 section 6 |
 | `data_mismatch` | host | `peer`, `table` | Section 4 |
 | `net_*`, `voice_stats` | each peer | doc 06 section 14 (including `net_join_code_rejected` with `reason` `typo` or `length`) | Network |

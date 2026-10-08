@@ -6,6 +6,9 @@ extends Node
 ## `phase` come from Clock, read lazily (null until Clock loads). Players are named by ENet peer
 ## id, never by voice slot (D-012). Never throws; flushes every line.
 
+## Every record, after it is written (P3-12: the host's Dawn Report reads the night from its own log lines).
+signal logged(name: StringName, data: Dictionary)
+
 var peer_id := 0
 var session_id := ""
 var _file: FileAccess
@@ -49,6 +52,7 @@ func event(name: StringName, data: Dictionary = {}) -> void:
 		_pending.append(r)
 	else:
 		_write(r)
+	logged.emit(name, data)
 
 
 func close() -> void:
