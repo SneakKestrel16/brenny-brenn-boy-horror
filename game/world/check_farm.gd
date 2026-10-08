@@ -45,9 +45,9 @@ func _group(g: StringName) -> Array:
 
 func _counts() -> void:
 	var want := {&"trap_spots": 22, &"creature_cover": 16, &"crow_perches": 9, &"scarecrow_spots": 7,
-			&"animal_escape_spots": 4, &"spatial_audio_markers": 4, &"player_spawns": 4, &"plot_spots": 28,
+			&"animal_escape_spots": 4, &"spatial_audio_markers": 4, &"player_spawns": 6, &"plot_spots": 36,
 			&"pegboard_spots": 1, &"pegboard_slots": 5, &"recording_spots": 1, &"barn_lantern": 1, &"doors": 3,
-			&"lightrig_spots": 3, &"generator": 1, &"fuel_drum": 1, &"well": 1, &"sell_box": 1, &"store_crate": 1,
+			&"lightrig_spots": 4, &"generator": 1, &"fuel_drum": 1, &"well": 1, &"sell_box": 1, &"store_crate": 1,
 			&"pen_gates": 1, &"farm_gate": 1, &"sanctuary": 1, &"pumpkin_patch": 1, &"moonflower_bed": 1}
 	for g in want:
 		var n := _group(g).size()
@@ -61,8 +61,8 @@ func _counts() -> void:
 	if kinds != {"edge": 9, "row": 9, "deep": 4}:
 		_fails += 1
 	var start := _group(&"plot_spots").filter(func(p): return not p.get_meta(&"upgrade")).size()
-	var field_start := _group(&"plot_spots").filter(func(p): return not p.get_meta(&"upgrade") and p.get_meta(&"field") != "moonflower").size()
-	print("plots: start %d (fields %d, doc 01 16 at start), all 24 field + 4 moonflower" % [start, field_start])
+	var field_start := _group(&"plot_spots").filter(func(p): return not p.get_meta(&"upgrade") and not p.get_meta(&"extra", false) and p.get_meta(&"field") != "moonflower").size()
+	print("plots: start %d (fields %d, doc 01 16 at start), 24 field + 8 headcount extras + 4 moonflower" % [start, field_start])
 	if field_start != 16:
 		_fails += 1
 
@@ -71,7 +71,7 @@ func _centre(field: String) -> Vector2:
 	var s := Vector2.ZERO
 	var n := 0
 	for p in _group(&"plot_spots"):
-		if p.get_meta(&"field") == field:
+		if p.get_meta(&"field") == field and not p.get_meta(&"extra", false):  # doc centres are the 12-plot grid
 			s += Vector2(p.global_position.x, p.global_position.z)
 			n += 1
 	return s / n

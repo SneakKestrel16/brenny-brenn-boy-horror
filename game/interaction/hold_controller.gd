@@ -14,6 +14,7 @@ var player: CharacterBody3D
 var _cam: Camera3D
 var _verb: StringName = &""
 var _target: Node
+var _target_id := ""  ## kept apart: a trap target is freed when the trap clears, possibly before `hold_done` arrives
 var _hold_s := 0.0
 var _t := 0.0
 var _ring: MeshInstance3D
@@ -91,12 +92,22 @@ func _physics_process(delta: float) -> void:
 		return
 	_t += delta
 	_ring.scale = Vector3.ONE * clampf(_t / _hold_s, 0.01, 1.0)
-	_ring.global_position = _target.target_pos() + Vector3(0, 1.4, 0)
-	if not Input.is_action_pressed(_action) and not _scripted:
+	if is_instance_valid(_target):  # freed mid-hold (trap filled or disarmed by this hold): ring stays put
+		_ring.global_position = _target.target_pos() + Vector3(0, 1.4, 0)
+	if _scripted:
+		return
+	if bool(Settings.get_value(&"toggle_holds")):  # D-047: press starts, press again stops; hold time is unchanged
+		if not Input.is_action_pressed(_action):
+			_armed = true
+		elif _armed:
+			_need_release = true
+			cancel()
+	elif not Input.is_action_pressed(_action):
 		cancel()
 
 
 var _scripted := false
+var _armed := false  ## toggle_holds: the starting press has been released, the next press stops
 
 
 ## HUD: the verb being held and its progress 0..1, or an empty verb.
@@ -112,11 +123,13 @@ func fresh_refusal() -> StringName:
 func start(verb: StringName, target: Node, action: StringName = &"interact") -> void:
 	_verb = verb
 	_target = target
+	_target_id = String(target.id)
 	_action = action
 	_hold_s = Interactable.hold_seconds(verb)
 	_t = 0.0
 	_holding = true
 	_result = &""
+	_armed = false
 	_ring.visible = true
 	Net.to_host(&"request_hold", [verb, target.id])
 
@@ -159,7 +172,7 @@ func _look_target() -> Node:
 func _on_apply(what: StringName, args: Array) -> void:
 	if not _holding or not what in [&"hold_done", &"refused", &"hold_cancelled"] or args[0] != _verb:
 		return
-	if what == &"hold_done" and args[1] != _target.id:
+	if what == &"hold_done" and args[1] != _target_id:
 		return  # a late answer for an earlier hold of the same verb
 	match what:
 		&"hold_done":

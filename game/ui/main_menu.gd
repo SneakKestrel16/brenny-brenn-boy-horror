@@ -1,12 +1,20 @@
 extends Control
-## P2-10 main menu (doc 05 section 16): Host, Join, Settings, Quit. Join takes a raw IP or IP:port
-## (D-024: friends join over Tailscale; no join codes). Host and Join both land in the barn lobby.
+## P2-10 main menu (doc 05 section 16): Host, Join, Settings, Quit. Join takes a join code (doc 06 s4,
+## D-049) or a raw IP or IP:port (D-024: friends join over Tailscale). Host and Join both land in the barn lobby. A launch that finds
+## `last_session.cfg` offers "Rejoin your last match?" (D-049).
 ## Debug user args: --menu-open=settings, --ui-shot=<png> (SettingsApply).
 
 var _ip: LineEdit
 var _port: LineEdit
 var _status: Label
 var _buttons: Array[Button] = []
+
+const REFUSALS := {
+	"full": "The farm is full.",
+	"match_in_progress": "That match has started. Only the players who were in the barn can come back.",
+	"not_in_season": "That farm's save belongs to other players.",
+	"no_identity": "The host did not hear who you are. Try again.",
+}
 
 
 func _ready() -> void:
@@ -39,7 +47,7 @@ func _ready() -> void:
 	_buttons.append(_button(v, "Host", _host))
 	v.add_child(_port)
 	_ip = LineEdit.new()
-	_ip.placeholder_text = "Host's Tailscale IP (or IP:port)"
+	_ip.placeholder_text = "Join code, or the host's IP (or IP:port)"
 	_ip.text_submitted.connect(func(_t: String) -> void: _join())
 	v.add_child(_ip)
 	_buttons.append(_button(v, "Join", _join))
@@ -49,6 +57,12 @@ func _ready() -> void:
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_status)
 	multiplayer.connection_failed.connect(_failed)
+	if Net.refusal != "":
+		_status.text = REFUSALS.get(Net.refusal, "The host refused the join (%s)." % Net.refusal)
+		Net.refusal = ""
+	var last := Rejoin.last_session()
+	if not last.is_empty():
+		_rejoin_offer(v, last)
 	for a in OS.get_cmdline_user_args():
 		if a == "--menu-open=settings":
 			_open_settings.call_deferred()
@@ -82,9 +96,34 @@ func _host() -> void:
 
 
 func _join() -> void:
-	var addr := _ip.text.strip_edges()
-	if addr == "" or not _data():
-		_status.text = "Type the host's IP address first." if addr == "" else _status.text
+	var r := JoinCode.resolve(_ip.text)  # a join code, or a raw IP (doc 06 s4)
+	if not r.ok:
+		_status.text = r.error
+		return
+	_connect(r.address)
+
+
+## D-049: "Rejoin your last match?" Connects in one click; Not now forgets the match.
+func _rejoin_offer(parent: Control, last: Dictionary) -> void:
+	var box := VBoxContainer.new()
+	var l := Label.new()
+	l.text = "Rejoin your last match?"
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(l)
+	var row := HBoxContainer.new()
+	_button(row, "Rejoin", func() -> void:
+		box.queue_free()
+		_connect(str(last.address)))
+	_button(row, "Not now", func() -> void:
+		Rejoin.clear_session()
+		box.queue_free())
+	box.add_child(row)
+	parent.add_child(box)
+	parent.move_child(box, 2)
+
+
+func _connect(addr: String) -> void:
+	if not _data():
 		return
 	var err := Net.join(addr, int(_port.text) if _port.text.is_valid_int() else Net.DEFAULT_PORT)
 	if err != OK:

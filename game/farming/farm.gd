@@ -14,6 +14,8 @@ var coins := 0 ## authoritative on the host; mirrored elsewhere
 var final_extra := 0  ## host: medical bill the bank floor could not cover, added to the final payment (doc 02 s8)
 var registry: Node
 var _log_farm := OS.get_cmdline_user_args().has("--log-farm")
+var headcount := 0  ## players at match start: fixes which `extra` plots are open (P2-14, D-039); host decides, clients are told
+var _headcount_arg := _int_arg("--headcount=")  ## QA: host-only override for a no-lobby run (joiners arrive after the farm loads)
 
 
 func _ready() -> void:
@@ -22,7 +24,7 @@ func _ready() -> void:
 		var p := Plot.new()
 		# Phase 1: all plots open (the upgrade row was unplantable at the playtest). The full farm
 		# (--full-farm) keeps the `upgrade` plots locked until the shop sells them (P2-06).
-		p.locked = Game.full_farm and bool(m.get_meta(&"upgrade", false))
+		p.locked = Game.full_farm and (bool(m.get_meta(&"upgrade", false)) or bool(m.get_meta(&"extra", false)))
 		_attach(m, p, String(m.name), Vector3(2.8, 0.3, 2.8))
 	for g in [[&"sell_box", &"sell", "sell_box"], [&"well", &"well", "well"]]:
 		for n in get_tree().get_nodes_in_group(g[0]):
@@ -36,10 +38,37 @@ func _ready() -> void:
 		registry.farm = self
 		registry.name = "HoldRegistry"
 		add_child(registry)
+		_set_headcount(_headcount_arg if _headcount_arg > 0 else Game.player_count())
 		Clock.day_changed.connect(func(_d: int) -> void: advance_day())
 		Game.player_left.connect(func(p: int) -> void: registry.cancel(p, &"left", false))
 	else:
 		Net.to_host(&"request_farm_state")
+
+
+func _int_arg(prefix: String) -> int:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with(prefix):
+			return int(a.trim_prefix(prefix))
+	return 0
+
+
+## D-039: `extra` plots open when the match-start headcount reaches their `min_players`. The bought-plot
+## ceiling for the store is `plot_ceiling()` (player_scaling.json, not season.json); no store sells plots yet.
+func _set_headcount(n: int) -> void:
+	headcount = n
+	var open := 0
+	for m in get_tree().get_nodes_in_group(&"plot_spots"):
+		var t: Node = targets.get(String(m.name))
+		if t is Plot and bool(m.get_meta(&"extra", false)) and Game.full_farm:
+			t.locked = n < int(m.get_meta(&"min_players", 99))
+			t._refresh()
+			open += int(not t.locked)
+	Log.event(&"plots_open", {"headcount": n, "extras_open": open, "ceiling": plot_ceiling()})
+
+
+func plot_ceiling() -> int:
+	var t: Dictionary = Data.record(&"player_scaling", &"headcount").get("field_plots_max_by_players", {})
+	return int(t.get(str(clampi(headcount, 2, Game.max_players())), 24))
 
 
 func _attach(world_node: Node, it: Node, id: String, pick: Vector3) -> void:
@@ -103,6 +132,7 @@ func _on_request(what: StringName, peer: int, args: Array) -> void:
 		&"hold_cancel": registry.cancel(peer, &"released", false)  # the client already ended it: no stale reply
 		&"farm_state":
 			Net.to_peers(&"apply_money_changed", [coins], [peer])
+			Net.to_peers(&"apply_headcount", [headcount], [peer])
 			for p in Game.players:
 				var cs := pstate(p)
 				Net.to_peers(&"apply_carry", [p, int(cs.can), int(cs.bag), bool(cs.get("fuel_can", false))], [peer])
@@ -133,6 +163,7 @@ func _on_apply(what: StringName, args: Array) -> void:
 				if ds.get("shovel", false) or ds.get("trap", false):
 					set_hands.call_deferred(args[0], false, false)
 		&"money_changed": coins = int(args[0])
+		&"headcount": _set_headcount(int(args[0]))
 		&"plot_changed":
 			if not Game.is_host() and targets.has(args[0]):
 				targets[args[0]].apply_state(args[1], args[2], args[3])

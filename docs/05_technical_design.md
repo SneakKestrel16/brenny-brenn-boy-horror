@@ -662,7 +662,7 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   default 1).
   Streamer-safe and denoise are not built. There are no voice
   subtitles (D-019).
-- **Settings screen** (`game/ui/settings_menu.gd`, shared by the main menu and the pause menu), four tabs:
+- **Settings screen** (`game/ui/settings_menu.gd`, shared by the main menu and the pause menu), five tabs:
   - **Keybinds:** every non-`ui_*` InputMap action. Click an action, press the new key or mouse button;
     Esc cancels. A key already used by another action shows a warning and is still bound (the ghost
     spectate keys deliberately share E and Q with interact and whistle, so those pairs never warn).
@@ -684,6 +684,8 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
     after `WorldLook` sets the phase value (never lowers it), and touches no light. There is no gamma
     control and no screen pass. At 0.2 the slider equals the default because doc 07 s3 holds the night
     ambient at 0.25 or more (inference; the CEO or Technical Artist can rule otherwise).
+  - **Comfort** (D-047): camera shake and head bob slider (`camera_shake`; `Player._head_bob` scales the bob, and `Player.knockdown_camera(seconds)` rolls the camera but stays level at 0; no knockdown exists yet, the creature work calls it on the local player), centre dot (`HUD`, 4 px), toggle holds (`HoldController`: press starts, release arms, next press cancels; hold times unchanged), toggle sprint, invert mouse Y, menu text size (`SettingsApply` sets `default_font_size` (16 x scale) on a Theme assigned to the root Window, because `ThemeDB.fallback_font_size` changes nothing; the HUD sets its own sizes). No panic key, scare volume cap, colour-blind option or captions.
+  - **Per-player voice volume** is not in this screen: the pause menu roster (`PauseMenu._roster_volumes`) has a slider and Mute box per other human, stored in `voice_peer_volume` under the player profile uid (else the peer id). `Player._peer_gain_db` applies it to the live voice emitter; `Creature._hear_lure` reads `Settings.peer_volume(owner)` to skip a muted player's replay entirely (no crackle either, so mute never exposes a fake) and to scale the replay volume.
 - **Flow.** Launching with no arguments in a window opens the main menu (`game/ui/main_menu.tscn`):
   Host (port), Join (a join code, a raw IP or `IP:port`; D-049 brings back doc 06 s4 join codes for rejoining), Settings, Quit. Host and
   Join turn Phase 1 data on and reload it (a bare exe has no `--phase1`; remove when the full farm lands).
@@ -697,6 +699,23 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   120, Esc) does not pause the session: Resume, Settings, Start match (host, lobby), Leave to menu,
   Quit. While open it sets `Game.console_open` so Player and HoldController ignore game keys. It also
   shows the host-left card (`multiplayer.server_disconnected`) with a way back to the menu.
+- **Joining, rejoining and join codes (P2-16, D-048 to D-050).** `Game.match_roster` (uid -> true, filled by
+  `start_match` from `Net.profiles`) is who may be in a running match; `Game.match_started()` is true when it
+  is non-empty, so a host started straight into the farm (debug, QA) stays open. While a match runs, a new
+  peer sits in `Net._pending` until `request_join` brings its uid (10 s, else `no_identity`); a uid not on the
+  roster is refused `match_in_progress`, and a loaded save's lobby refuses uids not in `Game.season_uids`
+  (`not_in_season`; empty = new game, the save task fills it). A roster player back in a running match is
+  admitted with `players[id].rejoin = true`; `Death` sees it on `player_joined` and calls
+  `die(id, &"reconnect")` (ghost at once, no debt billed; the dawn respawn returns the farmer). A same-uid peer
+  still on the host (a crash not yet timed out) is replaced by the new connection. The refused client reads
+  `Net.refusal` on the main menu. `Rejoin` (`game/core/rejoin.gd`) keeps `last_session.cfg` (written at match
+  start, cleared by Leave or a `match_in_progress` refusal; match end has no hook yet) and the
+  `rejoin_bag.cfg` shuffle bag for `data/rejoin_lines.json` (all lines before a repeat, a new round never
+  opens on the last line shown); the rejoiner sees one line in `RejoinToast` (event `rejoin_line`). The main
+  menu offers "Rejoin your last match?" from `last_session.cfg`. `JoinCode` (`game/net/join_code.gd`)
+  encodes and decodes doc 06 s4 codes; the Join field takes a code or an IP (`IP:port`); the lobby roster and
+  the pause menu show `Net.join_code()` (host: best local IPv4, Tailscale first). Not built: the "Waiting
+  for a farmhand" dawn pause for a lone survivor (no dawn save exists), roles and slots (kept by uid).
 - **Voice setting on the wire.** `Game.set_voice_setting` saves locally and sends `request_voice_setting`
   (`unchosen` is sent as `off`); the host accepts `off` and `lobby_lines`, refuses `live_clips`, logs
   `voice_setting`, and broadcasts `apply_voice_setting(peer, setting)` (the peer id, not a slot: slots are

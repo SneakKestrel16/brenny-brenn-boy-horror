@@ -42,6 +42,9 @@ var _crouch_all := true  ## crouched for the whole interval
 var _target_pos := Vector3.ZERO
 var _autowalk := false  ## QA: `-- --autowalk` walks in a circle with no input (multi-instance tests)
 var _t := 0.0
+var _eye := EYE_STAND  ## smoothed eye height; the head bob rides on it
+var _bob := 0.0  ## head bob phase
+var _sprint_on := false  ## toggle_sprint (D-047): sprint stays on until you stop, run dry or crouch
 
 
 func _ready() -> void:
@@ -155,9 +158,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var s := float(Settings.get_value(&"mouse_sensitivity"))
 		yaw -= event.relative.x * s
-		pitch = clampf(pitch - event.relative.y * s, -1.5, 1.5)
+		pitch = clampf(pitch + event.relative.y * s * (1.0 if bool(Settings.get_value(&"invert_y")) else -1.0), -1.5, 1.5)  # D-047 invert Y
 	elif event.is_action_pressed(&"crouch") and bool(Settings.get_value(&"toggle_crouch")):
 		_set_crouch(not crouching)
+	elif event.is_action_pressed(&"sprint") and bool(Settings.get_value(&"toggle_sprint")) and not Game.console_open:
+		_sprint_on = not _sprint_on
 
 
 func _set_crouch(c: bool) -> void:
@@ -178,11 +183,40 @@ func _physics_process(delta: float) -> void:
 		# yet (doc 06 section 9), so until then a ghost voice is silent for the living, never clean.
 		var ve := get_node_or_null("VoiceEmitter") as AudioStreamPlayer3D
 		if ve:
-			ve.volume_db = -80.0 if ghost and not ghost_view else 0.0
+			ve.volume_db = -80.0 if ghost and not ghost_view else _peer_gain_db()
 	_held.visible = not ghost
 	rotation.y = yaw
 	_cam.rotation.x = pitch
-	_cam.position.y = lerpf(_cam.position.y, EYE_CROUCH if crouching else EYE_STAND, 1.0 - exp(-12.0 * delta))
+	_eye = lerpf(_eye, EYE_CROUCH if crouching else EYE_STAND, 1.0 - exp(-12.0 * delta))
+	_cam.position.y = _eye + _head_bob(delta)
+
+
+## D-047 head bob: a small vertical sway while walking, scaled by `camera_shake`. Local view only; nothing else reads it.
+func _head_bob(delta: float) -> float:
+	var k := float(Settings.get_value(&"camera_shake"))
+	if not is_local or ghost or k <= 0.0:
+		return 0.0
+	var moving := is_on_floor() and Vector2(velocity.x, velocity.z).length() > 0.5
+	_bob = fmod(_bob + (Vector2(velocity.x, velocity.z).length() * 1.6 * delta if moving else 0.0), TAU)
+	return sin(_bob) * 0.03 * k if moving else 0.0
+
+
+## D-047 knockdown camera: the view tumbles to the side and gets up. `camera_shake` 0 keeps it level.
+## Nothing calls it yet (no knockdown in Phase 2 so far); the creature work calls it on the local player.
+func knockdown_camera(seconds: float) -> void:
+	var k := float(Settings.get_value(&"camera_shake"))
+	if not is_local or k <= 0.0:
+		return
+	var tw := create_tween()
+	tw.tween_property(_cam, "rotation:z", 1.2 * k, 0.25)
+	tw.tween_interval(maxf(seconds - 0.75, 0.0))
+	tw.tween_property(_cam, "rotation:z", 0.0, 0.5)
+
+
+## D-047: this listener's volume for this speaker; 0 is mute.
+func _peer_gain_db() -> float:
+	var v := Settings.peer_volume(peer)
+	return linear_to_db(v) if v > 0.0 else -80.0
 
 
 ## Host-told Shaken (TrapRace): all speeds x `mult` for `seconds`.
@@ -256,7 +290,7 @@ func _local(delta: float) -> void:
 	var typing := Game.console_open  # D-031: keys go to the dev console, not the body
 	var still := not typing and Input.is_action_pressed(&"go_still")  # doc 05 section 6: freezes the body, sends nothing special
 	var dir := Vector2.ZERO if typing else Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
-	var want_sprint := not typing and Input.is_action_pressed(&"sprint")
+	var want_sprint := not typing and (_sprint_on if bool(Settings.get_value(&"toggle_sprint")) else Input.is_action_pressed(&"sprint"))
 	if _autowalk:
 		yaw = _t * 0.5
 		dir = Vector2(0, -1)
@@ -278,6 +312,8 @@ func _local(delta: float) -> void:
 	if exhausted and stamina >= RESUME_S:
 		exhausted = false
 	var sprinting := want_sprint and not crouching and dir != Vector2.ZERO and stamina > 0.0 and not exhausted
+	if _sprint_on and (dir == Vector2.ZERO or exhausted or crouching or not sprinting):
+		_sprint_on = false  # toggled sprint ends when you stop, run dry or crouch
 	if sprinting:
 		stamina = maxf(stamina - delta, 0.0)
 		exhausted = stamina <= 0.0

@@ -28,4 +28,25 @@ func _ready() -> void:
 		b.claims = claims
 		b.rng.seed = hash([Game.seed_value, id])  # `--seed` makes bot choices repeatable
 		add_child(b)
-	Net.to_peers(&"apply_roster", [Game.players.keys()])  # a no-op until a client joins; joins resend it
+	Net.to_peers(&"apply_roster", [Game.players.keys(), Net.profiles])  # a no-op until a client joins; joins resend it
+	Game.player_joined.connect(_on_player_joined)
+
+
+## D-038 (3): a bot never pushes a match past the base count. A human joining a full table drops one bot.
+func _on_player_joined(id: int) -> void:
+	if id < 0:
+		return
+	while Game.players.size() > Game.BASE_PLAYERS:
+		var bot := 0
+		for p in Game.players:
+			if p < bot:
+				bot = p  # the most recently added bot goes first
+		if bot == 0:
+			return
+		Game.players.erase(bot)
+		var node := get_node_or_null("Bot%d" % -bot)
+		if node:
+			node.queue_free()
+		Net.to_peers(&"apply_roster", [Game.players.keys(), Net.profiles])
+		Log.event(&"player_left", {"player": bot, "bot": true, "reason": "human_joined"})
+		Game.player_left.emit(bot)

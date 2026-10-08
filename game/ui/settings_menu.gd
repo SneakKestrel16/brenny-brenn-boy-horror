@@ -1,7 +1,7 @@
 class_name SettingsMenu
 extends Control
-## Doc 05 section 16: the settings screen, shared by the main menu and the pause menu. Four tabs:
-## Keybinds, Audio, Graphics, Display. Every change goes through `Settings.set_value` plus
+## Doc 05 section 16: the settings screen, shared by the main menu and the pause menu. Five tabs:
+## Keybinds, Audio, Graphics, Display, Comfort. Every change goes through `Settings.set_value` plus
 ## `Settings.save()` (local disk, never sent); `SettingsApply` pushes it to the engine.
 ## Voice copy follows doc 06 section 11: it never implies the line list is the whole pool.
 
@@ -55,6 +55,7 @@ func _ready() -> void:
 	_audio_tab()
 	_graphics_tab()
 	_display_tab()
+	_comfort_tab()
 	var close := Button.new()
 	close.text = "Back"
 	close.pressed.connect(_close)
@@ -314,6 +315,21 @@ func _graphics_tab() -> void:
 func _custom() -> void:
 	_commit(&"quality_preset", "custom")
 	_preset.selected = _preset.item_count - 1
+
+
+# --- Comfort (D-047) -----------------------------------------------------------------------------
+
+func _comfort_tab() -> void:
+	var p := _page("Comfort")
+	_row(p, "Camera shake and head bob", _slider(&"camera_shake", 0.0, 1.0, 0.05))
+	p.add_child(_check(&"centre_dot", "Centre dot"))
+	p.add_child(_check(&"toggle_holds", "Toggle holds (press to start a hold, press again to stop)"))
+	p.add_child(_check(&"toggle_sprint", "Toggle sprint"))
+	p.add_child(_check(&"invert_y", "Invert mouse Y"))
+	_row(p, "Menu text size", _slider(&"ui_text_scale", 0.8, 1.5, 0.05))
+	var note := Label.new()
+	note.text = "Per-player voice volume and mute are in the pause menu."
+	p.add_child(note)
 
 
 # --- Display ------------------------------------------------------------------------------------

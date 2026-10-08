@@ -20,6 +20,7 @@ var _prompt: Label
 var _banner: Label
 var _hint: Label
 var _bar: ProgressBar
+var _dot: ColorRect
 var _t := 0.0
 var _shaken_s := 0.0
 
@@ -60,6 +61,16 @@ func _ready() -> void:
 	_bar.offset_right = 236
 	_bar.offset_bottom = -20
 	add_child(_bar)
+	_dot = ColorRect.new()  # D-047 centre dot: a plain dot, points at nothing
+	_dot.color = Color(1, 1, 1, 0.8)
+	_dot.custom_minimum_size = Vector2(4, 4)
+	_dot.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_dot.offset_left = -2
+	_dot.offset_right = 2
+	_dot.offset_top = -2
+	_dot.offset_bottom = 2
+	_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_dot)
 	Net.apply_received.connect(func(what: StringName, args: Array) -> void:
 		if what == &"shaken":
 			_shaken_s = float(args[0]))
@@ -85,6 +96,7 @@ func _process(delta: float) -> void:
 			int(left) / 60, int(left) % 60, farm.coins if farm else 0,
 			"\nShaken: slow for %d s" % ceili(_shaken_s) if _shaken_s > 0.0 else ""]
 	_bar.value = player.stamina
+	_dot.visible = bool(Settings.get_value(&"centre_dot")) and not player.ghost
 	_bar.modulate = Color(1, 0.4, 0.3) if player.exhausted else Color.WHITE
 	_bar.visible = not player.ghost
 	_hint.visible = _t < HINT_S and not Game.console_open  # hidden behind the pause menu

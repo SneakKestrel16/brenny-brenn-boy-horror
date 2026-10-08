@@ -18,6 +18,10 @@ func _ready() -> void:
 	add_to_group(&"death")
 	Net.apply_received.connect(_on_apply)
 	Game.player_left.connect(func(p: int) -> void: _dead.erase(p))
+	if Game.is_host():  # D-048: a roster player back in a running match is a ghost until dawn
+		Game.player_joined.connect(func(p: int) -> void:
+			if Game.players.get(p, {}).get("rejoin", false):
+				die(p, &"reconnect"))
 	if not Game.is_host():
 		return
 	_creature = get_parent().get_node("Creature")
@@ -39,8 +43,10 @@ func die(peer: int, cause: StringName) -> void:
 	if st.is_empty() or Game.is_ghost(peer):
 		return
 	st.pinned = false
-	_bill_deaths += 1  # day deaths count toward the next dawn (doc 02 s8)
-	var pos: Vector3 = st.get("pos", Vector3.ZERO)
+	var rejoin := cause == &"reconnect"  # D-048: not a death: no medical bill, and the body waits at the barn spawn
+	if not rejoin:
+		_bill_deaths += 1  # day deaths count toward the next dawn (doc 02 s8)
+	var pos: Vector3 = _spawn_pos(peer) if rejoin else st.get("pos", Vector3.ZERO)
 	get_parent().get_node("Farm").registry.cancel(peer, &"dead")
 	Log.event(&"death", {"player": peer, "cause": String(cause), "position": [snappedf(pos.x, 0.1), snappedf(pos.z, 0.1)],
 			"phase": String(Clock.phase), "body_id": "body_%d" % peer})
@@ -109,10 +115,7 @@ func dawn() -> void:
 func respawn(peer: int) -> void:
 	if not _dead.has(peer) or not Game.players.has(peer):
 		return
-	var spawns := get_tree().get_nodes_in_group(&"player_spawns")
-	var pos := Vector3.ZERO
-	if not spawns.is_empty():
-		pos = (spawns[maxi(Game.players.keys().find(peer), 0) % spawns.size()] as Node3D).global_position
+	var pos := _spawn_pos(peer)
 	var st: Dictionary = Game.players[peer]
 	st.freeze_until = Time.get_ticks_msec() + 300  # frames from before the teleport are dropped
 	st.pos = pos
@@ -149,6 +152,14 @@ func _apply_death(peer: int, cause: StringName, pos: Vector3) -> void:
 	var pl := _player(peer)
 	if pl:
 		pl.become_ghost()
+
+
+## The barn spawn marker for `peer`'s slot (the same one as at the start).
+func _spawn_pos(peer: int) -> Vector3:
+	var spawns := get_tree().get_nodes_in_group(&"player_spawns")
+	if spawns.is_empty():
+		return Vector3.ZERO
+	return (spawns[maxi(Game.players.keys().find(peer), 0) % spawns.size()] as Node3D).global_position
 
 
 func _apply_respawn(peer: int, pos: Vector3) -> void:

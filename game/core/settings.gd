@@ -28,6 +28,14 @@ const DEFAULTS := {
 	"resolution": "1280x720",
 	"monitor": 0,
 	"brightness": 0.25,  ## ambient floor 0.2..0.4, doc 07 s5; default is the 0.25 night floor
+	## D-047 comfort and convenience (doc 01), per player on this PC. Not sent anywhere.
+	"camera_shake": 1.0,  ## 0..1 head bob and shake; 0 also keeps the knockdown camera level
+	"centre_dot": false,
+	"voice_peer_volume": {},  ## player key (profile uid, else peer id) -> 0..1; 0 mutes live voice and the creature's replays of them
+	"toggle_holds": false,  ## press once to start a hold, again to stop; hold times unchanged
+	"toggle_sprint": false,
+	"invert_y": false,
+	"ui_text_scale": 1.0,  ## 0.8..1.5 menu text
 }
 
 signal changed(key: StringName)
@@ -58,6 +66,21 @@ func set_value(key: StringName, v: Variant) -> void:
 		return
 	_cfg.set_value("settings", String(key), v)
 	changed.emit(key)
+
+
+## D-047: the key a peer's volume is stored under: its profile uid (stable between sessions), else the peer id.
+func peer_key(peer: int) -> String:
+	return str(Net.profiles.get(peer, {}).get("uid", peer))
+
+
+func peer_volume(peer: int) -> float:
+	return clampf(float(get_value(&"voice_peer_volume").get(peer_key(peer), 1.0)), 0.0, 1.0)
+
+
+func set_peer_volume(peer: int, v: float) -> void:
+	var d: Dictionary = get_value(&"voice_peer_volume").duplicate()
+	d[peer_key(peer)] = clampf(v, 0.0, 1.0)
+	set_value(&"voice_peer_volume", d)
 
 
 func save() -> Error:

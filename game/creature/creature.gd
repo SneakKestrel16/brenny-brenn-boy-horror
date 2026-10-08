@@ -566,6 +566,8 @@ func _hear_lure(args: Array) -> void:
 	var parts := source.split(":", true, 2)
 	var owner := int(parts[1])
 	var clip_id := parts[2]
+	if Settings.peer_volume(owner) <= 0.0:
+		return  # D-047: muted for this listener: the replay is skipped whole (its crackle would expose it)
 	var pk: Array = Voice.clips.packets(owner, clip_id) if Game.voice_setting_of(owner) == "lobby_lines" else []
 	if pk.is_empty():
 		Log.event(&"lure_skipped", {"lure_id": args[0], "owner": owner, "clip_id": clip_id,
@@ -582,6 +584,7 @@ func _hear_lure(args: Array) -> void:
 	player.stream = s
 	player.bus = bus
 	player.unit_size = VoiceEmitter.UNIT_SIZE
+	player.volume_db = linear_to_db(Settings.peer_volume(owner))  # D-047 per-player volume applies to replays too
 	player.max_distance = VoiceEmitter.MAX_DISTANCE
 	get_parent().add_child(player)
 	player.global_position = pos + Vector3.UP * VoiceEmitter.EYE_HEIGHT

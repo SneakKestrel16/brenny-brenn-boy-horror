@@ -6,7 +6,7 @@ extends Node
 
 const TABLES: Array[StringName] = [&"season", &"labor", &"crops", &"pumpkin", &"debt", &"medical_bill",
 		&"player_scaling", &"difficulty", &"store", &"ramp_up", &"traps", &"taint", &"roles",
-		&"creature", &"sabotage", &"ai_director", &"voice_lines", &"dawn_report_templates"]
+		&"creature", &"sabotage", &"ai_director", &"voice_lines", &"dawn_report_templates", &"rejoin_lines"]
 ## Phase 1 content: loaded only with --phase1 (P1-01 handoff; Director approval pending).
 const PHASE1_TABLE := &"phase1"
 ## Must exist for Phase 1 (P1-01 wrote these). The rest load when present.

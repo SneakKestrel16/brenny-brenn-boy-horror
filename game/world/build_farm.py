@@ -125,6 +125,17 @@ def plots(first: int, field: str, x0: float, z0: float, cols: int, rows: int, up
             node("Mesh", "MeshInstance3D", body, f'mesh = SubResource("{pm}")\nmaterial_override = SubResource("{MATS["plot"]}")\n')
 
 
+def extra_plots(first: int, field: str, x0: float, zc: float) -> None:
+    """D-039 headcount plots: a row of 4 outside the field (z centre zc), same 3 m grid. Inner two open at 5+
+    players, outer two at 6 (start and ceiling both grow by 4 per player above 4). Not upgrade plots."""
+    for c, opens in enumerate((6, 5, 5, 6)):
+        node(f"Plot{first + c:02d}", "Marker3D", "Fields", f"transform = {tf(x0 + 1.5 + 3 * c, 0, zc)}\n", ["plot_spots"],
+             {"field": field, "upgrade": False, "extra": True, "min_players": opens, "extra_order": c + 1})
+        pm = sub("BoxMesh", "size = Vector3(2.8, 0.05, 2.8)\n")
+        node("Mesh", "MeshInstance3D", f"Fields/Plot{first + c:02d}",
+             f'mesh = SubResource("{pm}")\nmaterial_override = SubResource("{MATS["plot"]}")\n')
+
+
 def generate(full: bool) -> str:
     global MATS
     subs.clear()
@@ -176,7 +187,7 @@ def generate(full: bool) -> str:
                  f"transform = {tf((i - (n - 1) / 2) * 0.8, 0, 0)}\n", ["pegboard_slots"])
         # Barn staging (doc 01 "Recording lines", doc 04 s4): where a player records, and the lantern that blows out.
         node("RecordingSpot", "Marker3D", "Buildings/Barn", f"transform = {tf(0, 0, -15)}\n", ["recording_spots"])
-        node("BarnLantern", "Marker3D", "Buildings/Barn", f"transform = {tf(-5, 1.6, -17)}\n", ["barn_lantern"])
+        node("BarnLantern", "Marker3D", "Buildings/Barn", f"transform = {tf(-5, 1.6, -17)}\n", ["barn_lantern", "lightrig_spots"], {"radius_m": 6.0})  # world_look puts the real LightRig here (Q-054 item 4)
 
     # Props
     props = [("Generator", -11, -6, 2, 1, 1.2, "generator"), ("FuelDrum", -10, 27, 1, 1, 1.0, "fuel_drum"),
@@ -200,6 +211,8 @@ def generate(full: bool) -> str:
     if full:
         plots(13, "b", 66, -10, 4, 3, 2)
         plots(25, "moonflower", 57, 19, 2, 2, 9)  # 1 plot per player (doc 04 s5.2), none an upgrade
+        extra_plots(29, "a", 24, -11.5)  # north of field A (barn side), doc 04 s5.1
+        extra_plots(33, "b", 66, 0.5)  # south of field B (the cart route runs north of it)
 
     # Animal pen x -30..-18, z -38..-28, gate (-24,-28), 2 m gap in the south side
     for nm, cx, cz, sx, sz in (("North", -24, -38, 12, .2), ("West", -30, -33, .2, 10), ("East", -18, -33, .2, 10),
@@ -230,7 +243,7 @@ def generate(full: bool) -> str:
             marker(M, f"escape_{i:02d}", x, z, "animal_escape_spots")
     for nm, x, z in AUDIO:
         marker(M, nm, x, z, "spatial_audio_markers")
-    for i, (x, z) in enumerate(((-3, -8), (-1, -8), (1, -8), (3, -8)), 1):  # in the barn: lobby / dawn respawn (doc 04 s4)
+    for i, (x, z) in enumerate(((-3, -8), (-1, -8), (1, -8), (3, -8), (-2, -11), (2, -11)), 1):  # 6 players (D-038), in the barn: lobby / dawn respawn (doc 04 s4)
         marker(M, f"spawn_{i}", x, z, "player_spawns")
 
     if full:  # cart route R0..R8 (doc 04 s6.1); Curve3D _data is (in, out, position) per point

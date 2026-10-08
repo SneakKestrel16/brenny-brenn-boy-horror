@@ -52,6 +52,9 @@ func _refresh() -> void:
 		var who: String = Net.profiles.get(p, {}).get("name", "Player %d" % p)  # one source: Net.profiles (Q-054 item 3)
 		var rec := ", recording" if Voice._lit.has(p) else ""  # Voice has no public accessor yet; reads its tally-lamp set
 		t += "  %s%s%s: voice %s%s\n" % [who, me, host, VOICE_NAMES.get(Game.voice_setting_of(p), "Off"), rec]
+	var code := Net.join_code()  # D-049: the fallback when a rejoin prompt fails
+	if code != "":
+		t += "\nJoin code: %s" % code
 	t += "\n" + DISCORD_LINE + "\n"
 	t += "Enter: start the match   Esc: menu" if Game.is_host() else "Waiting for the host to start. Esc: menu"
 	_roster.text = t

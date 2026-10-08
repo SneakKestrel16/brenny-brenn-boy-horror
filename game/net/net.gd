@@ -31,6 +31,9 @@ var _join_target := ""
 var _uid := ""
 var _bw_t := 0.0
 var _refused := {}  ## host: peers sent away because the farm was full; their disconnect is not a player leaving
+var _code := ""  ## join_code() cache; the lobby asks twice a second
+var _pending := {}  ## host, match running: peers connected but not yet identified; admitted or refused by `request_join` (D-048)
+var refusal := ""  ## client: why the last join was refused (`full`, `match_in_progress`, ...); the main menu shows it
 
 
 func _ready() -> void:
@@ -131,6 +134,7 @@ func join(address: String, default_port: int = DEFAULT_PORT) -> Error:
 		return err
 	_use(peer)
 	_join_target = "%s:%d" % [ip, port]
+	_code = ""
 	get_tree().create_timer(CONNECT_TIMEOUT_S).timeout.connect(func() -> void:
 		if not Game.in_session:
 			push_error("Net: no session_state from %s within %d s" % [_join_target, int(CONNECT_TIMEOUT_S)]))
@@ -191,17 +195,41 @@ func _on_peer_connected(id: int) -> void:
 	_pin_throttle(id)
 	if not Game.is_host():
 		return
-	if Game.players.size() >= Game.max_players():  # P2-07, doc 06 s2: the farm is full (bots count as players)
-		_refused[id] = true
-		Log.event(&"join_refused", {"peer": id, "reason": "full", "players": Game.players.size()})
-		to_peers(&"apply_join_refused", [&"full"], [id])
-		# Disconnected 0.5 s later: an immediate disconnect reached the joiner before the RPC (tested).
-		get_tree().create_timer(0.5).timeout.connect(func() -> void:
-			var e := multiplayer.multiplayer_peer as ENetMultiplayerPeer
-			if e and id in multiplayer.get_peers():
-				e.disconnect_peer(id))
+	if Game.humans() >= Game.max_players():  # P2-07, doc 06 s2: the farm is full (bots do not count: D-038 drops one for a human)
+		_refuse(id, &"full")
 		return
-	Game.players[id] = {}
+	if Game.match_started():  # D-048: a running match admits only a roster player, and the uid arrives with `request_join`
+		_pending[id] = true
+		get_tree().create_timer(CONNECT_TIMEOUT_S).timeout.connect(func() -> void:
+			if _pending.has(id):
+				_refuse(id, &"no_identity"))
+		return
+	_admit(id)
+
+
+## Host: sends the refusal and drops the peer 0.5 s later (an immediate disconnect reached the joiner before the RPC, tested).
+func _refuse(id: int, reason: StringName) -> void:
+	_pending.erase(id)
+	var admitted := Game.players.has(id)  # a lobby joiner is admitted before its uid is known
+	if admitted:
+		Game.players.erase(id)
+		profiles.erase(id)
+	_refused[id] = true
+	Log.event(&"join_refused", {"peer": id, "reason": String(reason), "players": Game.players.size()})
+	to_peers(&"apply_join_refused", [reason], [id])
+	if admitted:
+		to_peers(&"apply_roster", [Game.players.keys(), profiles])
+		Game.player_left.emit(id)
+	get_tree().create_timer(0.5).timeout.connect(func() -> void:
+		var e := multiplayer.multiplayer_peer as ENetMultiplayerPeer
+		if e and id in multiplayer.get_peers():
+			e.disconnect_peer(id))
+
+
+## Host: `id` is in. `rejoin` marks a roster player coming back to a running match (Death makes them a ghost until dawn).
+func _admit(id: int, rejoin: bool = false) -> void:
+	_pending.erase(id)
+	Game.players[id] = {"rejoin": true} if rejoin else {}
 	to_peers(&"apply_session_state", [Game.session_id, Log.now(), Data.phase1, Data.hash_value, Game.difficulty, Game.in_lobby], [id])
 	to_peers(&"apply_roster", [Game.players.keys(), profiles])
 	for p in Game.players:  # the newcomer learns everyone's voice setting (P2-10)
@@ -213,6 +241,8 @@ func _on_peer_connected(id: int) -> void:
 
 
 func _on_peer_disconnected(id: int) -> void:
+	if _pending.erase(id):
+		return
 	if not Game.is_host() or _refused.erase(id):
 		return
 	Game.players.erase(id)
@@ -223,6 +253,34 @@ func _on_peer_disconnected(id: int) -> void:
 
 
 # --- Client side --------------------------------------------------------------------------------
+
+## The address this client dialled (`ip:port`), for the rejoin file and the join code the pause menu shows.
+func join_target() -> String:
+	return _join_target
+
+
+## A join code for the host (doc 06 s4; D-049 fallback). The host names its own best IPv4 (a Tailscale 100.64/10 address first, then a
+## private one); a client uses the address it dialled. Empty when there is none. Inference: UPnP is not built, so a public address
+## is not known here; the Tailscale or LAN address covers D-024's case.
+func join_code() -> String:
+	if not Game.in_session:
+		return ""
+	if _code.is_empty():
+		_code = _make_join_code()
+	return _code
+
+
+func _make_join_code() -> String:
+	if not Game.is_host():
+		return JoinCode.encode(_join_target.get_slice(":", 0), port)
+	var best := ""
+	for a in IP.get_local_addresses():
+		if JoinCode.classify(a) == "cgnat":
+			return JoinCode.encode(a, port)
+		if best.is_empty() and JoinCode.classify(a) == "private":
+			best = a
+	return JoinCode.encode(best, port) if not best.is_empty() else ""
+
 
 func _on_connected_to_server() -> void:
 	_pin_throttle(1)
@@ -249,6 +307,9 @@ func _on_server_disconnected() -> void:
 @rpc("authority", "call_remote", "reliable")
 func apply_join_refused(reason: StringName) -> void:
 	print("Net: join refused by the host: %s" % reason)
+	refusal = String(reason)
+	if reason == &"match_in_progress":
+		Rejoin.clear_session()  # the match is not ours to rejoin
 	multiplayer.multiplayer_peer = null
 	if DisplayServer.get_name() == "headless":
 		get_tree().quit()
@@ -324,11 +385,31 @@ func request_clips_ready(digest: String) -> void:
 @rpc("any_peer", "call_remote", "reliable")
 func request_join(protocol_version: int, _build_id: String, uid: String, display_name: String, _voice_setting: String) -> void:
 	var peer := _sender()
-	if not Game.is_host() or not Game.players.has(peer) or not _valid_uid(uid):
+	var waiting := _pending.has(peer)
+	if not Game.is_host() or not (waiting or Game.players.has(peer)) or not _valid_uid(uid):
+		return
+	# D-048: who may be in. A running match takes only its roster; a loaded save's lobby only that season's players.
+	var in_barn := Game.in_lobby
+	var reason: StringName = &""
+	if Game.match_started() and not Game.match_roster.has(uid):
+		reason = &"match_in_progress"
+	elif in_barn and not Game.season_uids.is_empty() and not uid in Game.season_uids:
+		reason = &"not_in_season"
+	if reason != &"":
+		_refuse(peer, reason)
 		return
 	if protocol_version != PROTOCOL_VERSION:
 		Log.event(&"net_join_version", {"peer": peer, "protocol_version": protocol_version})
+	if waiting:  # the same player back before the host saw the old connection die (a crash): the old one goes, the new one is in
+		for old in profiles.keys():
+			if profiles[old].get("uid") == uid:
+				_on_peer_disconnected(old)
+				_refused[old] = true  # swallows the old peer's own disconnect signal
+				multiplayer.multiplayer_peer.disconnect_peer(old)
 	profiles[peer] = {"uid": uid, "name": _clean_name(display_name)}
+	if waiting:  # a roster player back in a running match: in as a ghost until dawn (Death reads the flag)
+		_admit(peer, true)
+		return
 	to_peers(&"apply_roster", [Game.players.keys(), profiles])
 
 
@@ -411,6 +492,12 @@ func apply_plot_changed(id: String, state: StringName, watered: bool, age: int) 
 @rpc("authority", "call_remote", "reliable")
 func apply_money_changed(coins: int) -> void:
 	apply_received.emit(&"money_changed", [coins])
+
+
+## Host to a peer pulling `farm_state`: the headcount that fixed the open field plots at match start (P2-14).
+@rpc("authority", "call_remote", "reliable")
+func apply_headcount(n: int) -> void:
+	apply_received.emit(&"headcount", [n])
 
 
 ## Host to all: what `peer` carries (watering can charges, turnips, fuel can). Players show it in hand.

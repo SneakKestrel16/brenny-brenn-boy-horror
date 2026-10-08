@@ -16,6 +16,7 @@ const SHARED := {"spectate_next": "interact", "spectate_prev": "whistle", "inter
 static var defaults: Dictionary = {}  ## action -> Array[InputEvent], captured before any rebind
 
 var _env: WorldEnvironment
+var _theme: Theme
 var _shot := ""
 var _frames := 0
 
@@ -34,6 +35,7 @@ func _ready() -> void:
 	_graphics()
 	_display()
 	_mic()
+	_text_scale()
 
 
 func _process(_d: float) -> void:
@@ -138,6 +140,8 @@ func _on_changed(key: StringName) -> void:
 		_display()
 	elif k == "mic_device":
 		_mic()
+	elif k == "ui_text_scale":
+		_text_scale()
 
 func _volume(key: String) -> void:
 	var idx := AudioServer.get_bus_index(BUSES[key])
@@ -181,6 +185,15 @@ func _display() -> void:
 		var size := Vector2i(int(res[0]), int(res[1]))
 		DisplayServer.window_set_size(size)
 		DisplayServer.window_set_position(DisplayServer.screen_get_position(screen) + (DisplayServer.screen_get_size(screen) - size) / 2)
+
+
+## D-047 menu text size: a root-window theme with a scaled default font size (controls read the nearest theme, so
+## `ThemeDB.fallback_font_size` alone changes nothing; QA P2-15). Menus use it; the HUD and titles set their own sizes.
+func _text_scale() -> void:
+	if _theme == null:
+		_theme = Theme.new()
+		get_tree().root.theme = _theme
+	_theme.default_font_size = roundi(16.0 * clampf(float(Settings.get_value(&"ui_text_scale")), 0.8, 1.5))
 
 
 func _mic() -> void:

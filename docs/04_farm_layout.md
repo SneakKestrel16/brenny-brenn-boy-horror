@@ -52,7 +52,7 @@ up. Every shape in it has its coordinates in sections 3 to 7, so it can be check
 |---|---|
 | Green | Corn (ring and strips) |
 | Brown blocks | Buildings; white circle with black outline = a door or fixed prop |
-| Tan grid, dashed lower row | Field plots; the dashed row is the upgrade row |
+| Tan grid, dashed lower row | Field plots; the dashed row is the upgrade row; the dotted row outside a field is the headcount row (section 5.1) |
 | Purple squares | Moonflower bed |
 | Red dashed line | Cart route |
 | Orange dashed circle | 20 m around the Prize Pumpkin; grey dotted circle = 30 m from the farmhouse door |
@@ -111,7 +111,11 @@ out.
   "the walk is the cost". The generator sits by the barn it powers, 33 m from the drum, so a refuel
   is a 66 m round trip past strip 4's tip at night.
 - **Respawn and lobby:** players spawn at dawn inside the barn (inference: doc 01 says the dead
-  "respawn at the next dawn" without a place; the barn is the lobby and the cart's start).
+  "respawn at the next dawn" without a place; the barn is the lobby and the cart's start). Six
+  spawns for the 6-player cap (D-038): four in a row at z -8 (x -3, -1, 1, 3, 2 m apart) and two at
+  (-2, -11) and (2, -11), 3 m behind the row. Nearest pair is 2.0 m apart (capsules about 0.6 m wide, no
+  overlap). All are 8 to 12 m from the door (z 0), inside the dark barn (x -8..8, z -20..0), clear of the
+  `RecordingSpot` (0, -15; 4.0 m from the back pair) and the lantern (-5, -17).
 - **Lit doorway light:** a lit door's light reaches 6 m (`placeholder`, doc 07 sets it). It matters
   for pumpkin guarding (section 8.5).
 - **Church bell:** heard, not visited. Its sound plays from (400, -5), beyond the town end of the
@@ -129,10 +133,23 @@ Doc 01 "Crops": "16 field plots at the start, up to 24 with upgrades, split into
 | Field A | x 24..36, z -10..-1 | 8: rows z -10..-4 | 4: row z -4..-1 | Barn door 30.5 m (centre), 24 m (nearest corner) |
 | Field B | x 66..78, z -10..-1 | 8: rows z -10..-4 | 4: row z -4..-1 | Shipping crate 10.5 m (centre) |
 
+- **Headcount plots (D-039, P2-14):** above 4 players the field grows by 4 plots per extra player, start and
+  ceiling both (doc 01 "Crops"; `player_scaling.json` `field_plots_start_by_players` 16/16/16/20/24 and
+  `field_plots_max_by_players` 24/24/24/28/32 at 2 to 6 players, `placeholder`). The bought plots stay the 8 upgrade
+  plots at every count (4 pairs), so only the starting plots differ and the layout needs 8 more sites, 32 in all:
+  a row of 4 on the same 3 m grid outside each field, north of field A (z -13..-10, x 24..36) and south of field B
+  (z -1..2, x 66..78; the cart route runs north of B, so its side stays clear). Each carries `extra = true`,
+  `min_players` and `extra_order`: the inner two plots of each row (`extra_order` 2 and 3) open at 5 or more players,
+  the outer two (1 and 4) at 6, so 5 players open 4 sites (20 at the start) and 6 players open 8 (24).
+  A site below its `min_players` stays closed and cannot be bought. Both rows keep the field centres in this section
+  and section 8 (centres use the 12-plot grid), sit 6 m or more from corn (strip 2 is 6 m from A's row; strip 3 is
+  14 m from B's), 28 m from the barn door at nearest and 40 m or more from the town stand.
 - **Plots are 3 × 3 m** (`placeholder`), 4 columns by 3 rows per field, so 8 + 8 = 16 at the start
-  and 12 + 12 = 24 at most (doc 01 "Crops"). Upgrades fill the south row of each field; the bank's
+  and 12 + 12 = 24 at most with 4 or fewer players (doc 01 "Crops"); 32 with the headcount rows at 6. Upgrades fill the south row of each field; the bank's
   seizure of 2 plots ("Foreclosure Notice") takes from that row first (inference; doc 02 settles
   which plots).
+- Farthest plot centres in one field with the headcount row: 12.7 m (row to the opposite corner, `placeholder`);
+  the spatial audio band for "within one field" (section 8.2) becomes up to 13 m, still inside the tested 10 to 30 m.
 - Field centres are 42 m apart in a straight line, 48 m on foot round strip 3 (section 8.7).
 - Fields are walkable: plots are bare ground, so walks may cross them.
 - **Plots per player:** doc 01 "Crops > Labor" gives a starting estimate of about 6, so 4 players
@@ -360,7 +377,7 @@ max distance 80 m (`placeholder`), so beyond 80 m a voice is silent.
 
 | Band | Pairs on this farm | What it means |
 |---|---|---|
-| About 10 m (up to 11) | Plots within one field (10.8 m at most between plot centres); field B and the crate (10.5) | Tested at 10 m |
+| About 10 m (up to 11) | Plots within one field (10.8 m at most in the 12-plot grid, 12.7 m with a headcount row); field B and the crate (10.5) | Tested at 10 m |
 | 11 to 30 m | Barn door and generator (12.5); well to shed, farmhouse and barn; barn to shed; field B to moonflowers | Tested at 10 and 30 m |
 | 30 to 60 m | Barn to field A (30.5), fields to each other (42), barn to farmhouse (45), pumpkin to barn (57) | Tested at 30 and 60 m |
 | 60 to 80 m | Barn to moonflowers (63.9), barn to field B (72.2) | Audible but beyond the tested 60 m |
@@ -385,7 +402,7 @@ max distance 80 m (`placeholder`), so beyond 80 m a voice is silent.
 
 Doc 01 "Who hears a lure": day lures reach a player "only with no teammate within about 15 m".
 
-- **Two players in one field are always within 15 m** (plot centres at most 10.8 m apart), so
+- **Two players in one field are always within 15 m** (plot centres at most 12.7 m apart with the headcount rows, 10.8 m in the 12-plot grid), so
   sharing a field protects both from day lures; splitting the fields (42 m apart) exposes both.
 - Work spots under 15 m apart: the shed and its drum (5.1 m), field B and the crate (10.5 m), and
   the **barn door and the generator (12.5 m)**. So a teammate at the barn door shields a refueller
@@ -489,7 +506,7 @@ The Phase 1 farm is the full farm cut to **x -32..46** (the blue dashed outline)
 coordinates, so nothing moves when DD Phase 2 widens it:
 
 - **In:** barn, tool shed with pegboard and fuel drum, generator, well (the can refill, doc 02
-  section 2.2), field A (8 plots, `placeholder`; 2 players × about 6 plots, doc 01 "Crops > Labor",
+  section 2.2), field A (8 plots, `placeholder`; the headcount row is full-farm only; 2 players × about 6 plots, doc 01 "Crops > Labor",
   would use all 12, so the upgrade row can be switched on without moving anything), animal pen
   (empty), strips 2 and 4, the north and south ring.
 - **Temporary corn walls** at x -32..-57 (west) and x 46..71 (east, the east one where strip 3's
@@ -559,11 +576,11 @@ findings are Q-017.
 `game/world/build_farm.py` writes both scenes from this doc's coordinates: `farm_phase1.tscn` (section 9,
 unchanged) and `farm.tscn` (the full farm). `farm.tscn` adds the farmhouse, strips 1 and 3, the full ring
 (layer 5 boxes, road lane left open), field B, the moonflower bed (4 plots, `field = moonflower`), the
-shipping crate (group `store_crate`), the town stand (group `sell_box`) with a `sanctuary` marker (10 m),
+shipping crate (group `store_crate`), 8 headcount plots (`Plot29` to `Plot36`, D-039: 36 `plot_spots` in all, 24 field + 8 headcount + 4 moonflower), the town stand (group `sell_box`) with a `sanctuary` marker (10 m),
 the farm gate, the Prize Pumpkin marker, `CartRoute` (R0 to R8), all 22 trap spots, 16 cover points, 9 crow
-perches, 7 scarecrow spots, 4 escape spots, 4 audio markers, 4 barn spawns, the pegboard with
+perches, 7 scarecrow spots, 4 escape spots, 4 audio markers, 6 barn spawns (D-038), the pegboard with
 `pegboard_bear_slots` slot markers (5, read from `data/season.json`), and in the barn a `RecordingSpot`
-(0, -15) and `BarnLantern` (-5, -17) (placeholder positions, inference: inside the barn, away from the door).
+(0, -15) and `BarnLantern` (-5, -17; also in group `lightrig_spots`, radius 6, so `world_look.gd` puts the real `LightRig` there, Q-054 item 4) (placeholder positions, inference: inside the barn, away from the door).
 `game/world/check_farm.gd` reruns sections 7.1, 7.3, 8.1 and 8.3 to 8.5 on the built scene:
 `"$GODOT" --headless --path . --script res://game/world/check_farm.gd` (all pass; every doc distance
 matches within 0.1 m, corn distances within 0.5 m). `game/world/farm_view.tscn` loads the full farm with the

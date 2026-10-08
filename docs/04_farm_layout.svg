@@ -2,7 +2,7 @@
 <style>
 .bg{fill:#f4f1e6}.corn{fill:#9bb86a;stroke:#6f8a45;stroke-width:1}.clear{fill:#efe6c8}
 .bldg{fill:#8c5a3c;stroke:#3b2416;stroke-width:2}.field{fill:#c9a46b;stroke:#7a5a2c;stroke-width:1.5}
-.plotline{stroke:#7a5a2c;stroke-width:0.8}.upg{fill:#e3cfa3;stroke:#7a5a2c;stroke-width:1;stroke-dasharray:4 3}
+.plotline{stroke:#7a5a2c;stroke-width:0.8}.extra{fill:#d8c28a;stroke:#7a5a2c;stroke-width:1;stroke-dasharray:1 2}.upg{fill:#e3cfa3;stroke:#7a5a2c;stroke-width:1;stroke-dasharray:4 3}
 .moon{fill:#b9b4e6;stroke:#55508f;stroke-width:1.5}.pen{fill:none;stroke:#6b4a2a;stroke-width:2;stroke-dasharray:6 3}
 .route{fill:none;stroke:#c0392b;stroke-width:3;stroke-dasharray:10 5}.lane{fill:#d9cfae}
 .circle30{fill:none;stroke:#7f8c8d;stroke-width:2;stroke-dasharray:2 4}.circle20{fill:none;stroke:#d35400;stroke-width:2;stroke-dasharray:6 4}.sanct{fill:#3498db;fill-opacity:0.15;stroke:#2471a3;stroke-width:2}
@@ -73,7 +73,11 @@
 <line class="plotline" x1="572" y1="260" x2="572" y2="296"/>
 <line class="plotline" x1="536" y1="272" x2="584" y2="272"/>
 <line class="plotline" x1="536" y1="284" x2="584" y2="284"/>
-<text class="lbl" x="560.0" y="254.0" text-anchor="middle">Field A</text>
+<rect class="extra" x="536" y="248" width="48" height="12"/>
+<line class="plotline" x1="548" y1="248" x2="548" y2="260"/>
+<line class="plotline" x1="560" y1="248" x2="560" y2="260"/>
+<line class="plotline" x1="572" y1="248" x2="572" y2="260"/>
+<text class="lbl" x="560.0" y="242.0" text-anchor="middle">Field A</text>
 <rect class="field" x="704" y="260" width="48" height="24"/>
 <rect class="upg" x="704" y="284" width="48" height="12"/>
 <line class="plotline" x1="716" y1="260" x2="716" y2="296"/>
@@ -82,6 +86,10 @@
 <line class="plotline" x1="704" y1="272" x2="752" y2="272"/>
 <line class="plotline" x1="704" y1="284" x2="752" y2="284"/>
 <text class="lbl" x="728.0" y="254.0" text-anchor="middle">Field B</text>
+<rect class="extra" x="704" y="296" width="48" height="12"/>
+<line class="plotline" x1="716" y1="296" x2="716" y2="308"/>
+<line class="plotline" x1="728" y1="296" x2="728" y2="308"/>
+<line class="plotline" x1="740" y1="296" x2="740" y2="308"/>
 <rect class="moon" x="668" y="376" width="24" height="24"/>
 <line class="plotline" x1="680" y1="376" x2="680" y2="400"/>
 <line class="plotline" x1="668" y1="388" x2="692" y2="388"/>

@@ -27,6 +27,8 @@ var bots := 0
 var in_session := false
 var in_lobby := false  ## the barn before the match: the host's Clock has not started (P2-10)
 var lobby_autostart := 0  ## QA: `--lobby-start=<n>` starts the match when n players are in the barn
+var match_roster: Dictionary = {}  ## host: player_uid -> true for everyone in the barn at match start; only they may rejoin (D-048)
+var season_uids: Array = []  ## host: a loaded save sets the season's player uids; the lobby admits only them (D-048). Empty = new game
 var console_open := false  ## the dev console or a menu has the keyboard (D-031); Player and HoldController ignore game input
 var free_mouse := OS.get_cmdline_user_args().has("--free-mouse")  ## test runs never capture the mouse (multi.py passes it)
 
@@ -57,6 +59,15 @@ func is_ghost(peer: int) -> bool:
 ## Living and ghost players; farmhands that do not count are P1-later.
 func player_count() -> int:
 	return maxi(players.size(), 1)
+
+
+## Real players only (bots have negative ids).
+func humans() -> int:
+	var n := 0
+	for p in players:
+		if p > 0:
+			n += 1
+	return n
 
 
 ## D-038: the game is built around 4; bots never fill past it. Real players may go up to `max_players()`.
@@ -139,13 +150,21 @@ func match_ready() -> bool:
 	return Voice.clips.ready_to_start()
 
 
+## Host: a match with a roster is running (D-048). A host started straight into the farm (debug, QA) has no roster and stays open.
+func match_started() -> bool:
+	return not in_lobby and not match_roster.is_empty()
+
+
 ## Host: leaves the lobby for the match. Movement state from the lobby is dropped so the new Player
 ## nodes' sequence numbers are not rejected as stale.
 func start_match() -> void:
 	if not is_host() or not in_lobby or not match_ready():
 		return
 	in_lobby = false
+	match_roster.clear()
 	for p in players:
+		if p > 0:
+			match_roster[str(Net.profiles.get(p, {}).get("uid", ""))] = true
 		players[p] = {"voice_setting": voice_setting_of(p)}
 	Clock.start()
 	Log.event(&"match_started", {"players": players.keys()})
@@ -155,6 +174,7 @@ func start_match() -> void:
 
 func apply_match_start() -> void:
 	in_lobby = false
+	Rejoin.save_session(Net.join_target(), session_id)  # D-049: where to come back to after a crash
 	for p in players:
 		players[p] = {"voice_setting": voice_setting_of(p)}
 	_go_main()
@@ -162,6 +182,7 @@ func apply_match_start() -> void:
 
 ## Back to the main menu (pause menu "Leave", host-left card).
 func leave_session() -> void:
+	Rejoin.clear_session()  # D-049: a clean Leave forgets the match
 	Log.event(&"session_left", {})
 	Log.close()
 	multiplayer.multiplayer_peer = null
@@ -227,6 +248,9 @@ func apply_session_state(p_session_id: String, host_t: float, p_phase1: bool, da
 	if p_phase1 != Data.phase1 or data_hash != Data.hash_value:
 		Log.event(&"data_mismatch", {"peer": local_peer(), "table": "*"})
 	in_session = true
+	if not p_lobby:  # D-048: the host only lets a roster player into a running match, so this is a rejoin
+		Rejoin.save_session(Net.join_target(), session_id)
+		RejoinToast.show_line(Rejoin.line(), get_tree())
 	send_voice_setting()
 	session_started.emit()
 	_go_main()

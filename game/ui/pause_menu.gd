@@ -61,9 +61,49 @@ func _rebuild() -> void:
 	_button("Resume", set_open.bind(false))
 	if Game.in_lobby and Game.is_host():
 		_button("Start match", Game.start_match)
+	_roster_volumes()
+	_join_code()
 	_button("Settings", _open_settings)
 	_button("Leave to menu", Game.leave_session)
 	_button("Quit game", func() -> void: get_tree().quit())
+
+
+## D-049: the host's join code with a Copy button, for a dropped player who cannot use the rejoin prompt.
+func _join_code() -> void:
+	var code := Net.join_code()
+	if code == "":
+		return
+	_label("Join code: %s" % code)
+	_button("Copy join code", func() -> void: DisplayServer.clipboard_set(code))
+
+
+## D-047: one volume slider per other player; 0 is mute. Applies to their live voice and to the creature's replays of their clips.
+func _roster_volumes() -> void:
+	for p in Game.players:
+		if p <= 0 or p == Game.local_peer():
+			continue
+		var h := HBoxContainer.new()
+		var n := Label.new()
+		n.text = str(Net.profiles.get(p, {}).get("name", "Farmhand"))
+		n.custom_minimum_size.x = 110
+		h.add_child(n)
+		var s := HSlider.new()
+		s.max_value = 1.0
+		s.step = 0.05
+		s.value = Settings.peer_volume(p)
+		s.custom_minimum_size.x = 110
+		s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(s)
+		var m := CheckBox.new()
+		m.text = "Mute"
+		m.button_pressed = s.value <= 0.0
+		h.add_child(m)
+		s.value_changed.connect(func(v: float) -> void:
+			Settings.set_peer_volume(p, v)
+			Settings.save()
+			m.set_pressed_no_signal(v <= 0.0))
+		m.toggled.connect(func(on: bool) -> void: s.value = 0.0 if on else 1.0)
+		_box.add_child(h)
 
 
 func _label(t: String) -> void:
