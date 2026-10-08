@@ -218,7 +218,7 @@ section says slot; moving them to slots is a later change to the message list.
 2. Client sends `request_join(protocol_version, build_id, player_uid, display_name, voice_setting)`.
    `voice_setting` is `off` or `lobby_lines` (section 11 "Setting IDs").
 3. Host refuses (`apply_join_refused(reason)`, then disconnects) on a different protocol version or
-   build (not built yet: section 7), or a full farm (`"full"`). **After the match starts,** the host also refuses any `player_uid` not on
+   build (`"version_mismatch"`), or a full farm (`"full"`). **After the match starts,** the host also refuses any `player_uid` not on
    the match roster (`apply_join_refused("match_in_progress")`); a loaded save's lobby refuses any
    `player_uid` not in the save (`"not_in_season"`). D-048.
 4. Host sends `apply_join_accepted(slot, roster, session_state)` to the joiner and `apply_roster` to
@@ -341,7 +341,7 @@ CONTRACTS section 7 and needs the Director (D-010). D-013 confirms `request_lant
 |---|---|---|---|
 | `request_join(protocol_version, build_id, player_uid, display_name, voice_setting)` | client → host | host | Section 5 |
 | `apply_join_accepted(slot, roster, session_state)` | host → joiner | — | |
-| `apply_join_refused(reason)` | host → joiner | — | `full` (the D-038 player cap), `match_in_progress` (uid not on the match roster), `not_in_season` (a loaded save's lobby, uid not in the save), `no_identity` (running match, no `request_join` within 10 s). The main menu shows one line per reason. `version_mismatch` (section 5 step 3) is **not built**: the host only logs `net_join_version` and admits the joiner |
+| `apply_join_refused(reason)` | host → joiner | — | `full` (the D-038 player cap), `match_in_progress` (uid not on the match roster), `not_in_season` (a loaded save's lobby, uid not in the save), `no_identity` (running match, no `request_join` within 10 s). `version_mismatch` (section 5 step 3: `protocol_version` or `build_id` differs from the host's; checked first, the host also logs `net_join_version`). The main menu shows one line per reason |
 | `apply_roster(roster)` | host → all | — | slot, uid, name, voice setting, role, alive/ghost/farmhand, has recorded lines |
 | `request_role(role_id)` | client → host | host: lobby only, one player per role | Doc 01 "Roles" (optional); the result is the role in `apply_roster` |
 | `request_clips_ready(digest)` | client → host, channel 3 | host | Section 12: what the client holds; empty while recording (an md5, so no clips is never empty) |
@@ -947,7 +947,8 @@ input per copy, simulated latency and packet loss. QA's `tools/qa/multi.py` laun
 
 - **Command line** (after `--`, read with `OS.get_cmdline_user_args()`):
   `--voice-wav <path>`, `--host`, `--join <code or ip>`, `--net-sim-latency-ms <n>`,
-  `--net-sim-jitter-ms <n>`, `--net-sim-loss <0..1>`. P2-03 adds `--profile=<name>` (this copy's
+  `--net-sim-jitter-ms <n>`, `--net-sim-loss <0..1>`. P2-18 adds `--protocol-version=<n>` (a joiner
+  sends this instead of `Net.PROTOCOL_VERSION`, to test `version_mismatch`). P2-03 adds `--profile=<name>` (this copy's
   own `user://profiles/<name>/` for its uid and clips), `--voice-setting=<off|lobby_lines|unchosen>`
   (in memory only, because local copies share one settings file), `--voice-off-after=<s>` (switch to
   Off as the menu does; deletes that profile's clips), `--record-auto` (open the recording screen

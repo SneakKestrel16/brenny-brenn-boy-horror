@@ -8,7 +8,7 @@ extends Node
 ## and sends them with `apply_roster`. Debug user arg `--profile=<name>` keeps the uid and the voice
 ## clips under `user://profiles/<name>/`, so two local copies don't share them.
 ##
-## Not built yet (doc 06): apply_join_accepted, the protocol/build version refusal, slots,
+## Not built yet (doc 06): apply_join_accepted, slots,
 ## peer timeouts, rtt_ms, the --net-sim-* queue. Add each with the task that first needs it.
 
 const DEFAULT_PORT := 45120  ## doc 06 section 2; 45121..45124 if taken locally
@@ -21,7 +21,7 @@ signal bytes_received(from_peer: int, packet: PackedByteArray)
 ## The host sent `apply_teleport` (doc 06 section 7). Added in P1-04.
 signal teleport_received(position: Vector3)
 
-const PROTOCOL_VERSION := 1  ## doc 06 section 5 `request_join`; refusing a mismatch is not built yet
+const PROTOCOL_VERSION := 1  ## doc 06 section 5 `request_join`; a joiner with another one (or another build id) is refused
 const BANDWIDTH_S := 10.0  ## doc 06 s14: `net_bandwidth` interval
 const NAME_MAX := 24  ## display name characters kept (placeholder)
 
@@ -164,10 +164,15 @@ func to_peers(method: StringName, args: Array = [], targets: Array = []) -> void
 func send_bytes(peer: int, packet: PackedByteArray, channel: int = 1) -> void:
 	if not multiplayer.has_multiplayer_peer() or multiplayer.get_peers().is_empty():
 		return
-	if peer != 0 and (_refused.has(peer) or not _connected(peer)):
-		return
 	var mode := MultiplayerPeer.TRANSFER_MODE_UNRELIABLE if channel == 2 else MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED
-	(multiplayer as SceneMultiplayer).send_bytes(packet, peer, mode, channel)
+	if peer == 0 and _refused.is_empty() and _pending.is_empty():
+		(multiplayer as SceneMultiplayer).send_bytes(packet, 0, mode, channel)
+		return
+	# P2-18: a refused or not-yet-identified peer gets nothing (a broadcast to a refused peer printed
+	# "Unable to send packet ... max channels: 0" until its disconnect 0.5 s later).
+	for id in ([peer] if peer != 0 else multiplayer.get_peers()):
+		if not _refused.has(id) and not _pending.has(id) and _connected(id):
+			(multiplayer as SceneMultiplayer).send_bytes(packet, id, mode, channel)
 
 
 func _connected(peer: int) -> bool:
@@ -288,7 +293,11 @@ func _on_connected_to_server() -> void:
 	_pin_throttle(1)
 	Log.event(&"net_connected", {"target": _join_target})
 	# Doc 06 section 5. The voice setting also follows from Game.send_voice_setting once in session.
-	rpc_id(1, &"request_join", PROTOCOL_VERSION, Game.build_id(), player_uid(),
+	var version := PROTOCOL_VERSION
+	for a in OS.get_cmdline_user_args():  # QA (P2-18): `--protocol-version=<n>` poses as another version
+		if a.begins_with("--protocol-version="):
+			version = int(a.get_slice("=", 1))
+	rpc_id(1, &"request_join", version, Game.build_id(), player_uid(),
 			_clean_name(str(Settings.get_value(&"player_name"))), Game.wire_voice_setting())
 
 
@@ -385,9 +394,9 @@ func request_clips_ready(digest: String) -> void:
 	Voice.clips.on_ready_request(_sender(), digest)
 
 
-## Doc 06 section 5 (P2-03): who the joiner is. Only uid and name are kept; version refusal is not built.
+## Doc 06 section 5 (P2-03): who the joiner is. Only uid and name are kept.
 @rpc("any_peer", "call_remote", "reliable")
-func request_join(protocol_version: int, _build_id: String, uid: String, display_name: String, _voice_setting: String) -> void:
+func request_join(protocol_version: int, build_id: String, uid: String, display_name: String, _voice_setting: String) -> void:
 	var peer := _sender()
 	var waiting := _pending.has(peer)
 	if not Game.is_host() or not (waiting or Game.players.has(peer)) or not _valid_uid(uid):
@@ -395,15 +404,16 @@ func request_join(protocol_version: int, _build_id: String, uid: String, display
 	# D-048: who may be in. A running match takes only its roster; a loaded save's lobby only that season's players.
 	var in_barn := Game.in_lobby
 	var reason: StringName = &""
-	if Game.match_started() and not Game.match_roster.has(uid):
+	if protocol_version != PROTOCOL_VERSION or build_id != Game.build_id():  # P2-18, doc 06 s5 step 3
+		Log.event(&"net_join_version", {"peer": peer, "protocol_version": protocol_version, "build_id": build_id})
+		reason = &"version_mismatch"
+	elif Game.match_started() and not Game.match_roster.has(uid):
 		reason = &"match_in_progress"
 	elif in_barn and not Game.season_uids.is_empty() and not uid in Game.season_uids:
 		reason = &"not_in_season"
 	if reason != &"":
 		_refuse(peer, reason)
 		return
-	if protocol_version != PROTOCOL_VERSION:
-		Log.event(&"net_join_version", {"peer": peer, "protocol_version": protocol_version})
 	if waiting:  # the same player back before the host saw the old connection die (a crash): the old one goes, the new one is in
 		for old in profiles.keys():
 			if profiles[old].get("uid") == uid:

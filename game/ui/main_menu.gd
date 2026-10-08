@@ -14,6 +14,7 @@ const REFUSALS := {
 	"match_in_progress": "That match has already started.",
 	"not_in_season": "That farm's season belongs to other players.",
 	"no_identity": "The host didn't hear who you are. Try again.",
+	"version_mismatch": "That farm runs a different version of the game.",
 }
 
 
