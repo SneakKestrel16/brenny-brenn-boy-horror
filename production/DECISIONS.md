@@ -460,3 +460,11 @@ After the wait it lands in any state; `trap_changed` logs `late: true`. Doc 03 s
 **Why:** CEO play 2026-10-08 (`logs/qa/ceo_play5`): a lone player kept the creature in
 lure/stalk/chase all night, so no planned trap landed (P2-28). CEO chose a timed wait over setting on
 retreat.
+
+### D-057 · 2026-10-08 · CEO · DD Phase 2 closed without the STOP 3 human sessions
+P2-09 is done on its automated part (task reviews, 4-instance run, `check_logs.py`). The two human
+sessions and the "done when" measures (a recorded voice fools someone; trap sweeps feel worth doing)
+were not run. The P2-08 CEO listen is still owed.
+**Why:** CEO call. The CEO's own local plays on 2026-10-08 (P2-24 to P2-28) stand in for STOP 3.
+**How to apply:** treat both Phase 2 "done when" measures as unproven. Check them in the first
+human sessions of DD Phase 3.

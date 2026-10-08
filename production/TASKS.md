@@ -192,7 +192,7 @@ Approved by the CEO 2026-10-08. Source: doc 01 "Build Plan > Phase 2", doc 06 se
 section 8 (medical bill), doc 04 (full layout). **Done when** (doc 01): a friend's recorded voice
 fools someone, and trap sweeps feel worth doing. Checked in 2 sessions, one tester who hasn't read doc
 01, plus log measures (doc 09). The Phase 1 lure walk-toward measure (30%) is deferred to Phase 3 (CEO, 2026-10-08). The 10/30/60 m spatial
-test is closed (CEO, D-033). **STOP 3** after P2-09.
+test is closed (CEO, D-033). **STOP 3** after P2-09: closed by the CEO without human sessions (D-057).
 
 P2-01 review (D-034): sabotage from the disturbance budget moves to DD Phase 3, because doc 01 lists
 only pegboard theft for Phase 2 and the AI Director spends the budget (doc 03 s10). Three rows are
@@ -219,7 +219,7 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | P2-17 | Network & Voice | P2-16 follow-ups: a client with no clips sends digest `""`, which `clips.gd` reads as recording and holds the lobby start; align doc 06 refusal table with code (`full`, `match_in_progress`, `not_in_season`, `no_identity`); `net.gd` join timer logs "no session_state" as ERROR when the host quits after a leave; "farm is full" menu message | done | P2-16 |
 | P2-18 | Network & Voice | Join hardening: refuse a joiner whose game version differs from the host's (`version_mismatch`, doc 06; today the host only logs `net_join_version`); stop host sends to a refused peer before it disconnects (18 `Unable to send packet on channel 2` from `players.gd:71` via `net.gd` `send_bytes`, QUESTIONS P2-17 note); menu message for each | done (voice relay through the send filter not run live) | P2-17 |
 | P2-19 | Gameplay | Q-056: instant `take_trap` verb and HUD label for a loose trap (today it borrows the 5 s `disarm_bear` hold) | done (`hands_full` by code read) | P2-05 |
-| P2-09 | QA | Review each P2 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 2 gate | in progress (automated part done; human sessions at STOP 3) | all above |
+| P2-09 | QA | Review each P2 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 2 gate | done (CEO closed STOP 3 2026-10-08, D-057; human sessions not run) | all above |
 | P2-20 | Gameplay | P2-09 findings A, B, D: a bare exe launch plays the Phase 1 farm (make the full farm the default); `ERROR: 1 resources still in use at exit` on every multi run (find it with `--verbose`, free it); `--autochore`/`--autosweep` SCRIPT ERRORs in the lobby (`hold_controller.gd` null `targets`) | done | P2-09 |
 | P2-21 | Network & Voice | P2-09 finding C: log `net_rtt` per peer (doc 06 s13, doc 09 "Up to 4 players") | done | P2-09 |
 | P2-22 | QA | P2-09 findings E, F: doc 09 names `medical_bill`/`dawn_summary`, not `money_changed`; `check_logs.py` splits recorded vs generic lures, tallies trap sweeps, reports bills; fix `test_two_good_sessions_pass_every_automatic_row` 72 m fixture; repackage the playtest build clean | done (tooling; tests pass) | P2-20, P2-21 |
