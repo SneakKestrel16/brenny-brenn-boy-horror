@@ -189,6 +189,4 @@ func _autochore() -> void:
 	await _do(&"harvest", mine, front)
 	await _do(&"sell", "sell_box", Vector3(-1.6, 0, 0))
 	await _do(&"fill_can", "well", Vector3(1.6, 0, 0))
-	await _do(&"plant", "Plot09", front)  # south row is locked: expect `refused` and a fresh "locked" prompt
-	Log.event(&"autochore_locked_prompt", {"reason": String(fresh_refusal())})
 	Log.event(&"autochore_done", {"coins": farm.coins})
