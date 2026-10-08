@@ -20,6 +20,7 @@ var _dim_warm := 0.0  ## 0..1, colour drift toward DIM_WARM
 var _dim := 1.0  ## multiplier 0.35..1 from set_dim
 var _level := 1.0  ## slewed 0..1 actually shown
 var _override := -1.0  ## < 0: no override
+var _staged_out := false  ## recording staging (stage_blown)
 var _override_tint := Color.WHITE
 var _light: OmniLight3D
 var _lamp_mat: StandardMaterial3D
@@ -77,6 +78,22 @@ func set_dim(fraction: float) -> void:
 func blow_out() -> void:
 	_on = false
 	_level = 0.0
+	_puff()
+	_apply()
+
+
+## Doc 06 s11 recording staging only (game/voice/recording_screen.gd, P2-03): the barn lantern blows
+## out (instant, smoke puff, as blow_out) and stays out whatever lights.gd sets, until relit; the relight
+## rises through the slew. Kept apart from set_on so the generator's state is untouched.
+func stage_blown(out: bool) -> void:
+	if out and not _staged_out:
+		_level = 0.0
+		_puff()
+	_staged_out = out
+	_apply()
+
+
+func _puff() -> void:
 	if _smoke == null:
 		_smoke = CPUParticles3D.new()
 		_smoke.one_shot = true
@@ -94,7 +111,6 @@ func blow_out() -> void:
 		_smoke.emitting = false
 		add_child(_smoke)
 	_smoke.restart()
-	_apply()
 
 
 ## Ghost effect only (doc 07 s4.3; called from game/ghost/). value is a fraction of full energy
@@ -112,7 +128,7 @@ func current_level() -> float:
 
 
 func _process(delta: float) -> void:
-	var goal := _dim if _on else 0.0
+	var goal := _dim if _on and not _staged_out else 0.0
 	_level = move_toward(_level, goal, delta / SLEW_S)
 	_apply()
 

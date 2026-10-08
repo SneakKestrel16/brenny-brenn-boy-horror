@@ -10,10 +10,17 @@ extends Node
 ## Nothing is stored: no audio and no volume reaches disk or the log (doc 01 "Senses").
 ##
 ## User args (after `--`): `--voice-wav <path>` (or `=path`), `--ptt` (start in push-to-talk),
-## `--voice-off` (no capture at all).
+## `--voice-off` (no capture at all), `--voice-setting=<off|lobby_lines|unchosen>` (QA: this run's
+## setting, in memory; two local copies share one settings file), `--voice-off-after=<s>` (switches to
+## Off that many seconds into the session, as the menu does: deletes this profile's clips).
+##
+## P2-03 (doc 06 s11): `clips` (VoiceClips) holds the recorded lines and the pre-share; the recording
+## screen opens on `Game.recording_requested`, and in the lobby for players who haven't chosen Off and
+## have no lines. While `capturing`, no Off player's voice plays here (D-011) and the recording light
+## shows on this player's character for everyone (`apply_recording_light`).
 ##
 ## Not built yet (doc 06 sections 9 to 12): the shared voice chain buses (echo, pitch, ghost static,
-## radio), walkies, lobby lines, voice settings, mic check (NORMAL_DB is a fixed placeholder).
+## radio), walkies, mic check (NORMAL_DB is a fixed placeholder).
 
 ## Doc 06 section 7 type bytes. 0x01/0x02 were doc 06's, but movement (game/player/move_frame.gd)
 ## took 1 and 2 on the same `peer_packet` signal; voice moved to 0x10/0x11 (Q-042).
@@ -41,11 +48,18 @@ const FLAG_TALK_START := 2
 const FLAG_TALK_END := 4
 const FLAG_GHOST := 8
 
+## Every encoded 20 ms frame, sent or not: the Opus packet, its level and the PCM it came from (the
+## recording screen keeps them while capturing).
+signal frame_captured(opus: PackedByteArray, db: float, pcm: PackedVector2Array)
+
 var push_to_talk := false  ## doc 01 "Mic mode": open mic with VAD by default
 var muted := false
 var transmitting := false
 var level_db := -100.0
 var input_name := "off"
+var clips: VoiceClips
+## A take or barn chatter is being written on this machine (doc 06 s11 "The recording light").
+var capturing := false
 
 # Sender stats since start (`voice_sent`).
 var frames_encoded := 0
@@ -65,6 +79,9 @@ var _loudest: Dictionary = {}  ## host only: speaker peer -> loudest byte since 
 var _hearing_t := 0.0
 var _stats_t := 0.0
 var _relayed := 0
+var _lit := {}  ## peer -> true while their recording light is on
+var _light_nodes := {}  ## peer -> the light on their character
+var _screen: Node
 
 
 func _ready() -> void:
@@ -78,8 +95,21 @@ func _ready() -> void:
 				push_to_talk = Settings.get_value(key) == true)
 	Net.bytes_received.connect(_on_bytes)
 	Game.player_left.connect(_on_player_left)
-	if not args.has("--voice-off"):
-		Game.session_started.connect(_start_capture.bind(_arg(args, "--voice-wav")), CONNECT_ONE_SHOT)
+	Game.player_joined.connect(_on_player_joined)
+	clips = VoiceClips.new()
+	clips.name = "Clips"
+	add_child(clips)
+	var vs := _arg(args, "--voice-setting")
+	if vs in ["off", "lobby_lines", "unchosen"]:
+		Settings.set_value(&"voice_setting", vs)
+	Game.recording_requested.connect(open_recording)
+	Game.session_started.connect(func() -> void:
+		ensure_capture()
+		if args.has("--record-auto") or (Game.in_lobby and should_offer_recording()):
+			open_recording.call_deferred()
+		if _arg(args, "--voice-off-after").is_valid_float():  # QA: the menu's Off, N seconds in
+			get_tree().create_timer(float(_arg(args, "--voice-off-after"))).timeout.connect(
+					Game.set_voice_setting.bind("off")))
 
 
 static func _arg(args: PackedStringArray, key: String) -> String:
@@ -102,7 +132,39 @@ static func _bus(bus_name: String, send: String, mute: bool) -> int:
 	return idx
 
 
-## Doc 06 "Capture". wav_path empty: the microphone.
+## Doc 06 "Capture": starts the mic (or `--voice-wav`) once; the recording screen needs it outside a session too.
+func ensure_capture() -> void:
+	if _source == null and not OS.get_cmdline_user_args().has("--voice-off"):
+		_start_capture(_arg(OS.get_cmdline_user_args(), "--voice-wav"))
+
+
+func has_capture() -> bool:
+	return _encoder != null
+
+
+## Doc 06 s11 "Before recording": unchosen and Lobby-lines players with no lines are offered it.
+func should_offer_recording() -> bool:
+	return str(Settings.get_value(&"voice_setting")) != "off" and clips.own_clips().is_empty()
+
+
+func open_recording() -> void:
+	if _screen and is_instance_valid(_screen):
+		return
+	_screen = RecordingScreen.new()
+	add_child(_screen)
+
+
+## Doc 06 s11 "Recording": a take or the chatter window is being captured on this machine.
+func set_capturing(on: bool) -> void:
+	if on == capturing:
+		return
+	capturing = on
+	_apply_capture_mute()
+	if Game.in_session:
+		Net.to_host(&"request_recording_light", [on])
+
+
+## wav_path empty: the microphone.
 func _start_capture(wav_path: String) -> void:
 	_capture = AudioEffectCapture.new()
 	_capture.buffer_length = 0.5  # placeholder
@@ -110,6 +172,7 @@ func _start_capture(wav_path: String) -> void:
 	# CONTRACTS section 9: VoiceBase sits under `Voice` from the layout file once the Audio Designer
 	# ships it; until then under Master. Levels come from game/audio/mix_levels.gd later (Q-033).
 	_bus("VoiceBase", "Voice" if AudioServer.get_bus_index("Voice") >= 0 else "Master", false)
+	_bus("VoiceMuted", "Master", true)  # D-011: Off players while this machine captures (still decoded)
 	_source = AudioStreamPlayer.new()
 	_source.bus = "Mic"
 	if wav_path.is_empty():
@@ -140,11 +203,13 @@ func _start_capture(wav_path: String) -> void:
 
 
 func _process(delta: float) -> void:
-	if not Game.in_session:
-		return
 	if _encoder:
 		_pump_capture()
+	if not Game.in_session:
+		return
 	_attach_emitters()
+	_apply_capture_mute()
+	_show_lights()
 	if Game.is_host():
 		_hearing_t += delta
 		if _hearing_t >= HEARING_EVERY_S:
@@ -174,13 +239,17 @@ func _wants_to_talk(db: float) -> bool:
 
 func _pump_capture() -> void:
 	while _capture.get_frames_available() >= _in_chunk:
-		if _encoder.process_chunk(_capture.get_buffer(_in_chunk)) < 0:
+		var chunk := _capture.get_buffer(_in_chunk)
+		if _encoder.process_chunk(chunk) < 0:
 			break
 		var rms := _encoder.get_rms()
 		level_db = linear_to_db(rms) if rms > 0.0 else -100.0
 		# The encoder runs on every frame, sending or not, so the pre-roll is real audio.
 		var opus := _encoder.encode_chunk()
 		frames_encoded += 1
+		frame_captured.emit(opus, level_db, chunk)
+		if not Game.in_session:
+			continue
 		var vol := volume_byte(level_db)
 		var talk := _wants_to_talk(level_db)
 		if talk and not transmitting:
@@ -265,9 +334,16 @@ func _on_bytes(from: int, pkt: PackedByteArray) -> void:
 
 
 func _play(speaker: int, flags: int, seq: int, opus: PackedByteArray) -> void:
-	var e: VoiceEmitter = _emitters.get(speaker)
-	if e and is_instance_valid(e):
+	var e := _emitter(speaker)
+	if e:
 		e.receive(flags, seq, opus)
+
+
+## The speaker's emitter, or null once its body is gone (a scene change frees it before
+## _attach_emitters runs; assigning the freed object to a typed variable is a SCRIPT ERROR).
+func _emitter(peer: int) -> VoiceEmitter:
+	var e: Variant = _emitters.get(peer)
+	return e if is_instance_valid(e) else null
 
 
 ## Adds a VoiceEmitter to each remote player's node once the Players node has spawned it.
@@ -286,11 +362,89 @@ func _attach_emitters() -> void:
 
 
 func _on_player_left(peer: int) -> void:
-	var e: VoiceEmitter = _emitters.get(peer)
-	if e and is_instance_valid(e):
+	var e := _emitter(peer)
+	if e:
 		Log.event(&"voice_stats", e.stats())
 	_emitters.erase(peer)
 	_loudest.erase(peer)
+	_lit.erase(peer)
+
+
+# --- Capture mute and the recording light (doc 06 s11, D-011) -----------------------------------
+
+## While capturing, every speaker who isn't Lobby lines (Off, unchosen, unknown) plays into a muted bus.
+func _apply_capture_mute() -> void:
+	for peer in _emitters:
+		var e := _emitter(peer)
+		if e == null:
+			continue
+		var want := &"VoiceMuted" if capturing and Game.voice_setting_of(peer) != "lobby_lines" else &"VoiceBase"
+		if e.bus != want:
+			e.bus = want
+
+
+## Names of the players this machine won't hear while it captures (the recording screen lists them).
+func muted_while_capturing() -> Array:
+	var out := []
+	for p in Game.players:
+		if p != Game.local_peer() and Game.voice_setting_of(p) != "lobby_lines":
+			out.append(str(Net.profiles.get(p, {}).get("name", "Player %d" % p)))
+	return out
+
+
+## Host: the owner says capture is live (or not); the owner's machine is the authority.
+func on_recording_light_request(peer: int, on: bool) -> void:
+	if not Game.is_host() or not Game.players.has(peer):
+		return
+	apply_recording_light(peer, on)
+	Net.to_peers(&"apply_recording_light", [peer, on])
+	Log.event(&"recording_light", {"player": peer, "on": on})
+
+
+func apply_recording_light(peer: int, on: bool) -> void:
+	if on:
+		_lit[peer] = true
+	else:
+		_lit.erase(peer)
+
+
+func _on_player_joined(peer: int) -> void:
+	if Game.is_host() and peer != 1:
+		for p in _lit:
+			Net.to_peers(&"apply_recording_light", [p, true], [peer])
+
+
+## A steady red tally lamp over each recording player's head (doc 06 s11): an emissive bulb, not a
+## light, so it stays outside the light rules (doc 07 s4.4); on for the whole capture, then gone.
+func _show_lights() -> void:
+	for peer in _light_nodes.keys():
+		if not _lit.has(peer) or not is_instance_valid(_light_nodes[peer]):
+			if is_instance_valid(_light_nodes[peer]):
+				_light_nodes[peer].queue_free()
+			_light_nodes.erase(peer)
+	var players := get_tree().current_scene.get_node_or_null("Players") if get_tree().current_scene else null
+	if players == null:
+		return
+	for peer in _lit:
+		var body: Node = players.player(peer)
+		if peer == Game.local_peer() or _light_nodes.has(peer) or body == null:
+			continue
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(1, 0.1, 0.08)
+		mat.emission_enabled = true
+		mat.emission = Color(1, 0.1, 0.08)
+		mat.emission_energy_multiplier = 4.0
+		var m := SphereMesh.new()
+		m.radius = 0.06
+		m.height = 0.12
+		m.material = mat
+		var lamp := MeshInstance3D.new()
+		lamp.name = "RecordingLight"
+		lamp.mesh = m
+		lamp.position = Vector3(0, 2.05, 0)
+		lamp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		body.add_child(lamp)
+		_light_nodes[peer] = lamp
 
 
 # --- Logs ---------------------------------------------------------------------------------------

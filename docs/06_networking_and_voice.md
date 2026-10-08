@@ -206,6 +206,12 @@ gives each connected player a **slot** 0 to 3, which voice frames and voice mess
 the 4-byte peer id. **Logs always name players by peer id, never by slot** (D-012); the host maps
 between them.
 
+**As built (P1-15, P2-03):** the uid is `player_uid.txt` in `Net.user_dir()`, which is `user://`, or
+`user://profiles/<name>/` when a QA copy passes `--profile=<name>` (two local copies would otherwise
+share one uid and one set of clips). The host keeps `Net.profiles` (peer id -> uid and name) and sends
+it with `apply_roster(peers, profiles)`. The voice messages below carry **peer ids** where this
+section says slot; moving them to slots is a later change to the message list.
+
 ### Joining
 
 1. Client connects. ENet peer timeout is set to 5 s minimum, 10 s maximum (`placeholder`).
@@ -218,8 +224,9 @@ between them.
 5. **Lobby-lines players record first** (doc 01 "Joining"): if the joiner hasn't chosen Off and has
    no recorded lines, the staged recording is offered on their machine (section 11 "Before
    recording"). They can skip it.
-6. The joiner shares their clips (section 12) and receives everyone else's, then sends
-   `request_ready`.
+6. The joiner shares their clips (section 12) and receives everyone else's, and reports what it
+   holds with `request_clips_ready(digest)` (section 12; not `request_ready`, because
+   `Node.request_ready` exists, section 17).
 7. **In the lobby,** the player appears in the barn. **Mid-season** (doc 01 "Joining"), the host
    spawns them as a ghost at once and gives them a body at the next dawn.
 
@@ -327,7 +334,7 @@ CONTRACTS section 7 and needs the Director (D-010). D-013 confirms `request_lant
 | `apply_join_refused(reason)` | host → joiner | — | `version_mismatch`, `farm_full` |
 | `apply_roster(roster)` | host → all | — | slot, uid, name, voice setting, role, alive/ghost/farmhand, has recorded lines |
 | `request_role(role_id)` | client → host | host: lobby only, one player per role | Doc 01 "Roles" (optional); the result is the role in `apply_roster` |
-| `request_ready()` | client → host | host | After recording and clip exchange |
+| `request_clips_ready(digest)` | client → host, channel 3 | host | Section 12: what the client holds; empty while recording |
 | `apply_peer_left(slot)` | host → all | — | |
 | `apply_host_leaving()` | host → all | — | |
 | `apply_waiting_for_farmhand(on)` | host → all | — | Doc 01 "Joining and leaving" |
@@ -396,10 +403,14 @@ client rolls back its prediction). Doc 05 section 7 (hold framework) uses only t
 | `voice_frame` (client form, with volume byte) | 2, `send_bytes` | client → host | host: sender slot, radio flag against the sender's walkie and life state |
 | `voice_frame` (relay form) | 2, `send_bytes` | host → each other peer | — |
 | `request_voice_setting(setting)` / `apply_voice_setting(slot, setting)` | 0 | owner → host → all | **the owner**; the host can't refuse it |
-| `request_recording_light(on)` / `apply_recording_light(slot, on)` | 0 | owner → host → all | the owner |
-| `request_clip_manifest(manifest)` / `apply_clip_manifest(slot, manifest)` | 0 | owner → host → all | host: owner only shares own clips, caps |
-| `voice_clip_chunk(clip_id, index, count, bytes)` | 3 | owner → host → all | host: caps |
-| `request_clip_deleted(clip_id)` / `apply_clip_deleted(slot, clip_id)` | 0 | owner → host → all | the owner |
+| `request_recording_light(on)` / `apply_recording_light(peer, on)` | 0 | owner → host → all | the owner |
+| `request_clip_manifest(manifest)` / `apply_clip_manifest(owner_peer, manifest)` | 3 | owner → host → all | host: owner only shares own clips, caps |
+| `request_clip_chunk(clip_id, index, count, bytes)` / `apply_clip_chunk(owner_peer, clip_id, index, count, bytes)` | 3 | owner → host → all | host: fits the manifest, caps, hash |
+| `request_clips_ready(digest)` | 3 | client → host | host (section 12) |
+
+There is no clip-deleted message: a new manifest **replaces** the owner's whole set, so a deleted
+or re-recorded clip is a manifest without it or with a new hash (section 12). Off is an empty
+manifest plus `apply_voice_setting`.
 | `apply_lure(lure_id, source, position, target_slot, tell, ghost)` | 0 | host → target or all | — |
 | `apply_walkie(slot, has_walkie, battery)` | 0 | host → all | host (item state) |
 
@@ -737,7 +748,49 @@ Doc 01 "Recording lines that sound scared". Built in DD Phase 2 (doc 01 "Build P
   prefixed with a u16 length. Stored as `user://voice/lines/<line_id file name>.vclip` and
   `user://voice/chatter/<n>.vclip`.
 - **Review:** every clip can be played back and deleted before the match (doc 01 "Voice settings >
-  Review"). Deleting sends `request_clip_deleted`.
+  Review"). Deleting shares a new manifest without the clip (section 12).
+
+### Recording as built (P2-03)
+
+`game/voice/recording_screen.gd` (`RecordingScreen`) and `game/voice/clips.gd` (`Voice.clips`).
+
+- **Opens** on `Game.recording_requested` (the settings menu's Record button), and by itself when a
+  session starts in the lobby for a player `should_offer_recording()` picks (unchosen, or Lobby lines
+  with no lines). It is a CanvasLayer (layer 130) over a 40% black dim, so the barn stays visible.
+- **Order:** an intro page naming who won't be heard; the seven `voice_lines.json` lines of kind
+  `line`; one `name:<uid>` line per teammate in `Net.profiles`; 20 s of barn chatter (Stop ends it
+  early only past 20 s, 40 s at most); then review.
+- **Takes:** each take captures 3 s (`placeholder`) from the shared `AudioEffectCapture`, with the
+  per-frame dB the VAD uses. The take is trimmed to its voiced frames (dB at or above the VAD open
+  level) plus 5 frames (100 ms) either side. A take with no voiced frame is thrown away. Two takes
+  are captured; the player can ask for a third. **Score** = `loudness_weight_per_db` x mean dB of
+  voiced frames + `pitch_spread_weight_per_semitone` x pitch standard deviation in semitones, with
+  the weights from the line's `take_scoring` (P2-12 data). **Pitch** is plain normalised
+  autocorrelation on the voiced audio decimated to mix rate / 12, 50 ms windows, 70 to 400 Hz, a
+  window counting as voiced at r >= 0.5 (all `placeholder`; YIN if octave errors show up). The best
+  take is kept and played back; Accept saves it, Redo captures again, Skip line saves nothing. The
+  other takes are never written: they live only in the screen's memory and are dropped.
+- **Barn chatter** is saved as `chatter_0` (`user://voice/chatter/0.vclip`); there is one chatter
+  clip.
+- **The first accepted line** sets `lines_recorded` and the setting to `lobby_lines`
+  (`Game.set_voice_setting`), which sends `request_voice_setting`.
+- **No Off voice while capturing:** `Voice.set_capturing(true)` moves every emitter whose owner's
+  setting isn't `lobby_lines` to the muted `VoiceMuted` bus (decoded, not heard), and back after.
+  The intro and every take page say "While you record, you won't hear: Sam (voice Off)." A take in
+  progress is discarded if a teammate switches to Off during it.
+- **Staging:** a line's `staging_cue` from `voice_lines.json` runs 0.6 s (`placeholder`) before the
+  prompt. `lantern_out` calls `LightRig.stage_blown(true)` on the barn lantern: instant off with the
+  smoke puff, held out whatever `lights.gd` sets. The take after it ends with
+  `stage_blown(false)`, which rises through the rig's slew. The lantern is the `LightRig` in group
+  `barn_lantern`; until the level has one, the screen places its own staging `LightRig` at the
+  `barn_lantern` marker and frees it on close. `door_bang` plays the bang at the barn door. Light
+  energy changes only through the rig (doc 07 s4.4). `sfx_lantern_blow_out` and `cre_door_bang_01`
+  fall back to a short noise burst until the audio files exist.
+- **Tally:** a steady red "REC recording" label next to the page title while capture is live, and
+  `request_recording_light(true)`, so every peer shows a steady emissive red bulb over the
+  recorder's character (no light source, so no light energy changes). The host sends the current
+  lights to a newcomer.
+- **Close:** if anything was saved or deleted, the screen calls `Voice.clips.share()`.
 
 ### The recording light
 
@@ -769,6 +822,13 @@ never in the host save. Off deletes them."
   playing one of them stops at once**, and the host cancels any queued lure using them.
 - **Leaving the session:** peers free the leaver's clips (a reading; section 5 "Leaving").
 - **Logs** may name a `line_id` and the owner's peer id in `lure_played`, never audio (section 14).
+- **As built (P2-03):** "the owner's disk" is `Net.user_dir() + "voice/"`. Off is
+  `Settings.changed` on `voice_setting` becoming `off`: every `.vclip` is deleted, `lines_recorded`
+  is cleared and an empty manifest is shared, so every peer drops that owner's clips, stops any of
+  them playing and emits `clip_freed(owner, id)` (P2-04's lure player listens to it). A copy that
+  starts with the setting already `off` and clips still on disk (a crash between the two) deletes
+  them at start. The "This deletes your recorded lines" confirm belongs to the settings menu
+  (Gameplay; QUESTIONS).
 
 ## 12. Lures and clip pre-sharing
 
@@ -787,6 +847,29 @@ Doc 01 "Voice > Lures": "clips are sent to every peer at session start, so a lur
 5. Each client reports when it holds every clip in the manifest; the host doesn't start the match
    until all have, or a 30 s timeout passes (`placeholder`; any lure whose clip a target lacks is
    skipped for that target).
+
+**As built (P2-03):**
+
+- Manifest entries are `{clip_id, line_id, frames, bytes, hash}`; `hash` is the MD5 of the whole
+  `.vclip`. The owner sends its manifest and then every chunk. Manifest and chunks share channel 3,
+  so ENet keeps them in order. Only `lobby_lines` owners share clips; anyone else shares an empty
+  manifest. The owner shares at session start and whenever the recording screen closes with a
+  change.
+- The host refuses a manifest with a malformed entry, more than 64 clips or more than 400 KB
+  (`clip_refused` with the reason). A chunk is kept only if its clip is in the owner's manifest and
+  its index and count fit the manifest's size. The assembled clip must match the size, the hash and
+  its own clip id; otherwise its parts are dropped (`clip_refused`, `bad_data`).
+- A late joiner gets every owner's manifest and every chunk the host holds, from the host, as soon
+  as `player_joined` fires on the host.
+- **Ready:** each client sends `request_clips_ready(digest)` whenever its holdings change. The
+  digest is the MD5 of the sorted `owner:clip_id:hash` of every complete clip it holds from other
+  owners. The host computes the digest each client should hold from its own store. A client with the
+  recording screen open reports an empty digest, which never matches.
+- **The 30 s clock** starts when the host first tries to start the match (`Game.match_ready()`
+  calls `Voice.clips.ready_to_start()`) and **does not run while anyone is recording** (the host's
+  own screen, or a client reporting an empty digest). This is a reading (inference): the timeout is
+  for slow transfers, and a recorder can always skip; a playtest settles it. `clip_share_wait` logs
+  who it waits for; `clip_share_done` logs `waited_s`, `timed_out` and `missing`.
 
 ### A lure
 
@@ -852,7 +935,14 @@ input per copy, simulated latency and packet loss. QA's `tools/qa/multi.py` laun
 
 - **Command line** (after `--`, read with `OS.get_cmdline_user_args()`):
   `--voice-wav <path>`, `--host`, `--join <code or ip>`, `--net-sim-latency-ms <n>`,
-  `--net-sim-jitter-ms <n>`, `--net-sim-loss <0..1>`. The simulation delays and drops outgoing
+  `--net-sim-jitter-ms <n>`, `--net-sim-loss <0..1>`. P2-03 adds `--profile=<name>` (this copy's
+  own `user://profiles/<name>/` for its uid and clips), `--voice-setting=<off|lobby_lines|unchosen>`
+  (in memory only, because local copies share one settings file), `--voice-off-after=<s>` (switch to
+  Off as the menu does; deletes that profile's clips), `--record-auto` (open the recording screen
+  and answer every page: two takes per line, accept, 20 s chatter, done), `--record-shot=<png>`
+  (screenshot during the "help me" take) and `--clip-wav-out=<path>` (write the kept "help me",
+  played through the clip player into a muted bus, as WAV, outside the repo; it needs a real audio
+  driver and writes nothing under `--audio-driver Dummy`). The simulation delays and drops outgoing
   packets in `game/net/` on channels 1 and 2 (dropping reliable packets would only stall them, so
   channels 0 and 3 are only delayed).
 - **Every send goes through one `Net` wrapper.** Godot sends an RPC the moment `rpc()` or
@@ -877,6 +967,17 @@ input per copy, simulated latency and packet loss. QA's `tools/qa/multi.py` laun
 | `voice_capture` | once when capture starts: `input` (`mic` or `wav`; the WAV's file name is never logged), `mix_rate`, `push_to_talk` |
 | `voice_sent` | this machine's mic every 10 s: `input` (`mic`, `wav`, `off`), `encoded`, `sent`, `bytes`, `talk_spurts`, `push_to_talk`, `relayed` (host only: frames through the relay, its own included). No volume values |
 | `lure_played` | `lure_id`, `owner` (peer id, or null for a `sound_id` lure), `line_id` (or null), `sound_id` (or null), `target` (peer id, or null for a world lure), `position` (`[x, y, z]`), `tell`, `ghost`. No audio, no volume |
+| `clip_manifest` | `owner`, `clips`, `bytes`: on the owner when it shares, and on every machine that applies one |
+| `clip_received` | `owner`, `clip_id`, `line_id`, `bytes`, `frames`: a clip is complete in memory |
+| `clip_refused` | `owner`, `reason` (`bad_entry`, `too_many`, `too_big`, `bad_data`), and the counts or `clip_id` |
+| `clips_freed` | `owner`: that owner's clips dropped from memory (left the session, or not Lobby lines) |
+| `clips_deleted` | `reason` (`voice_off`): this machine deleted its own files |
+| `clip_share_wait` / `clip_share_done` | `missing` (peer ids); `waited_s` and `timed_out` on done |
+| `recording_open` / `recording_closed` | `auto`; `clips` (own clips on disk at close) |
+| `take_scored` | `line_id`, `take`, `frames`, `mean_db`, `pitch_sd`, `score`. Statistics only, no audio |
+| `chatter_kept` | `frames` |
+| `recording_light` | host: `player`, `on` |
+| `clip_wav_out` | `clip_id`, `ok`, `samples` (QA flag only) |
 | `lure_result` | `lure_id` (the same as its `lure_played`), `target`, `moved_m`, `within_s`, `worked` (CONTRACTS section 10; `within_s` is Q-002, doc 05's) |
 
 Measured in PP-02 on loopback: connect 18 to 20 ms by code, 18 to 19 ms by raw IP; RTT 16 to 23 ms;
@@ -1056,6 +1157,12 @@ from the cited source.
   `OS.get_cmdline_user_args()`.
 - **`rpc()` can't be delayed after the fact.** Network simulation needs every send to go through
   `Net` (section 14).
+- **`Node` already has `request_ready()` (measured (P2-03)).** An RPC named `request_ready` on an
+  autoload is a parse error, so the clip-ready message is `request_clips_ready`. A parameter named
+  `owner` shadows `Node.owner`; use `owner_peer`.
+- **Godot prints `ERROR: Couldn't create an ENet host.` on a busy port (measured (P2-03))** before
+  `Net` falls back to the next port. With two test sessions on one machine the smoke run reports it;
+  pass `--port=<n>` to keep sessions apart.
 
 ### UPnP and reachability
 
@@ -1104,6 +1211,18 @@ from the cited source.
   48 kHz on the CEO's WASAPI device, measured (PP-02)), not the mic's input rate. Passing the wrong
   one to the encoder makes voices chipmunk or slur.
 - **Stop audio players before quitting** (measured (PP-02)), or Godot reports leaked playbacks.
+- **`--clip-wav-out` wrote nothing under `--audio-driver Dummy` (measured (P2-03)).** The clip plays
+  into a muted bus and is captured there; that capture gave no frames with the Dummy driver, while an
+  earlier run with the default driver (bus not yet muted) wrote the WAV. Listening tests need a real
+  driver; the muted-bus version is unverified there.
+- **A freed emitter in a typed variable is a `SCRIPT ERROR` (measured (P2-03)).** Assigning a
+  previously freed emitter to a typed local fails before any `is_instance_valid` check. Look
+  emitters up through `Voice._emitter(peer)`, which checks first.
+- **`DirAccess.get_files_at` on a missing directory logs an engine `ERROR` (measured (P2-03)).**
+  Check `DirAccess.dir_exists_absolute` first.
+- **Local copies share one `settings.cfg`.** Two instances on one machine read and write the same
+  user settings, so per-copy QA settings (`--voice-setting`) stay in memory only, and clips live
+  under `--profile` folders.
 - **RNNoise doesn't eat synthetic voices (measured (PP-02)).** The test voices pass it unchanged,
   so WAV tests keep the full chain. Don't add a "denoise off for WAV" path.
 - **AGC breaks hearing.** Automatic gain flattens a scream to a whisper's level. Keep it off for the
