@@ -197,3 +197,9 @@ Doc 06's voice type bytes `0x01`/`0x02` collided with movement's MOVE=1 and MOVE
 `Net.bytes_received`). Ranges: `0x01`-`0x0F` movement and gameplay, `0x10`-`0x1F` voice. Voice is now
 `0x10`/`0x11` (doc 06 updated by P1-06). Gameplay adds a `push_to_talk` setting (default `false`) to
 `Settings`. **Why:** the host would read voice as movement. Answers Q-042.
+
+### D-028 · 2026-10-07 · Director · Text HUD allowed in Phase 1
+Doc 05 s3 says "No HUD markers". P1-16 adds a plain text layer (aimed-target verb prompt, stamina bar,
+clock and phase, coins, controls hint, death banner) and no world markers. **Why:** a tester who has not
+read doc 01 cannot play without it (Q-046). Doc 01 "Onboarding" in-world intros stay open; revisit after
+STOP 2 whether the text layer stays. Unverified: the aimed-target prompt has not been seen on screen.
