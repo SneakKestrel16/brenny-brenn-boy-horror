@@ -146,6 +146,34 @@ task, including voice settings and recording rules.
 
 ---
 
+## Studio phase 2: DD Phase 1 (prototype)
+
+The Director writes the rest of the `P1-` board (doc 05 section 20 order). The playtest kit came
+first, at the CEO's request, so the STOP has its tooling before the game lands.
+
+| ID | Owner | Task | Status | Depends on |
+|---|---|---|---|---|
+| P1-01 | QA | Playtest kit: session tool, observer tally, log collection, report, packager, tester brief | in review (Director) | PP-10 |
+
+### P1-01 Playtest kit
+Owner: QA. Output: `tools/qa/playtest.py`, `tools/qa/package_playtest.py`, `tools/qa/playtest/`,
+`tests/qa/test_playtest.py`, "Playtest (Windows)" export preset (D-023).
+Acceptance:
+- One command per doc 09 section 11 step: start a session folder with the build id, networks and
+  fresh testers; a silent observer's scream, laugh and bored tally timed against the logs' `t`;
+  collect every peer's section 10 logs (this machine's and a remote tester's zip) into one folder
+  and run `check_logs.py`; a report over 2 or more sessions with every doc 09 section 3 DD Phase 1
+  row as pass, fail, no data or manual.
+- A packager that exports the game and zips it with a start note, the tester brief, the licenses and
+  a script that zips the tester's logs. Refuses a dirty tree.
+- Tester brief gives controls and setup only (doc 09 section 12: no coaching); consent asked before
+  the session; tester labels only.
+- `check_logs.py` reads `spatial_audio_trial` from client files (doc 05 section 18 says the tester's
+  client writes it) and reports it per tester for doc 09 section 5's 60% floor.
+- Self-test passes with no Godot. Documented in `tools/qa/README.md`.
+
+---
+
 ## Later phases
 
 Written at the end of the previous phase's review. Not started without CEO approval.

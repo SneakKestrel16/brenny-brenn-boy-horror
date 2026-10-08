@@ -1,1 +1,2 @@
 {"t": 18.0, "day": 1, "phase": "day", "peer": 2, "event": "lure_result", "data": {"target": 2, "moved_m": 50.0, "within_s": 1, "worked": true}}
+{"t": 93.0, "day": 1, "phase": "day", "peer": 2, "event": "spatial_audio_trial", "data": {"sound": "whistle", "distance_m": 30, "correct": true}}

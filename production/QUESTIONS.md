@@ -566,3 +566,13 @@ Note on Q-028: answered by doc 09 (PP-10): three flicker greps in section 9 and 
 
 ### Q-039 · 2026-10-07 · QA reviewer → QA · open
 PP-10 passed with three nits (production/handoffs/PP-10.md "QA review"): (1) `grep_rules.py` `rpc_outside_net` misses bare `rpc_id(` calls and `@rpc` outside `game/net/`; (2) the voice-file extension rule is QA's, not CONTRACTS s11's, so mark it inference, and decide a `spikes/` exception for WAV test input; (3) doc 09 s9 hand grep 1 is looser than the script, say the script rules.
+
+### Q-040 · 2026-10-08 · QA → Gameplay Programmer · open
+P1-01 (D-023). Doc 05 section 18 logs `session_start.build_id` and doc 06 sends `build_id` in `request_join`,
+but no doc says where it comes from. `tools/qa/package_playtest.py` names a build `git describe --always
+--dirty` and writes it to `BUILD.txt` in the zip. Proposal: the export step writes the same string to
+`application/config/version` (or a `res://build_id.txt`), and `Game` reads it, so the logs and the zip
+agree. Also doc 05 section 3: `run/main_scene.voice_spike` is to go when a game preset exists; the
+"Playtest (Windows)" preset now exists, so drop it with the first `project.godot` change (the spike
+preset still needs it until then).
+

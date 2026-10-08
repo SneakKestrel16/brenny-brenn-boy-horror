@@ -21,7 +21,8 @@ Measures (doc 01 "Testing" and "Build Plan"):
   - Trap race results. Doc 01 Testing: "log whether a solo, untainted player who pries at once
     survives". Reported overall and for that subset.
   - Spatial audio trials. Doc 01 Testing: place a voice and a whistle at 10, 30 and 60 m.
-    Field names are provisional (sound, distance_m, correct) until doc 05 (PP-07) fixes them.
+    Written by the tester's own client (doc 09 sections 5 and 7), so read from every peer's
+    file, not the host's only. Also broken down by tester (file peer) for doc 09's 60% floor.
   - Also tallied: deaths, hold_completed by verb, inside_at_night seconds, money_changed count.
 A report with no measures is still a pass: absent events are reported as "none logged".
 """
@@ -204,6 +205,7 @@ def trap_race_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]
 
 def spatial_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
     cells: dict[tuple[str, float], list[int]] = defaultdict(lambda: [0, 0])
+    per_tester: dict[tuple[str, int], dict[tuple[str, float], list[int]]] = defaultdict(lambda: defaultdict(lambda: [0, 0]))
     trials = 0
     for r in recs:
         if r.event != "spatial_audio_trial":
@@ -215,9 +217,16 @@ def spatial_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
         trials += 1
         cells[(sound, dist)][0] += correct
         cells[(sound, dist)][1] += 1
+        tester = per_tester[(r.session, r.file_peer if r.file_peer is not None else r.peer)][(sound, dist)]
+        tester[0] += correct
+        tester[1] += 1
     grid = {f"{s}@{d:g}m": {"correct": c, "trials": n} for (s, d), (c, n) in sorted(cells.items())}
+    by_tester = {
+        f"{session}/peer_{peer}": {f"{s}@{d:g}m": {"correct": c, "trials": n} for (s, d), (c, n) in sorted(t.items())}
+        for (session, peer), t in sorted(per_tester.items())
+    }
     missing = [f"{s}@{d}m" for s in SPATIAL_SOUNDS for d in SPATIAL_DISTANCES_M if (s, float(d)) not in {(k[0], float(k[1])) for k in cells}]
-    return {"trials": trials, "by_sound_distance": grid, "untested_doc01_cells": missing if trials else []}
+    return {"trials": trials, "by_sound_distance": grid, "by_tester": by_tester, "untested_doc01_cells": missing if trials else []}
 
 
 def other_measures(recs: list[Record]) -> dict[str, Any]:
@@ -248,7 +257,8 @@ def analyze(paths: list[Path]) -> dict[str, Any]:
         "event_counts": dict(sorted(Counter(r.event for r in recs).items())),
         "lure": lure_measure(recs, problems),
         "trap_race": trap_race_measure(recs, problems),
-        "spatial_audio": spatial_measure(recs, problems),
+        # Clients write their own trials (doc 09 section 7), so every file counts here.
+        "spatial_audio": spatial_measure([r for r in loaded.records if r.event == "spatial_audio_trial"], problems),
         "other": other_measures(recs),
         "problems": problems,
         "warnings": loaded.warnings,

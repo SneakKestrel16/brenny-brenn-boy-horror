@@ -9,9 +9,12 @@ through `--godot`, then `$GODOT`, then the CONTRACTS section 1 path.
 | `uv run tools/qa/smoke.py` | Headless import, parse check and timed run. Fails on any `ERROR` / `SCRIPT ERROR` line |
 | `uv run tools/qa/multi.py -n 2` | Starts 2 to 4 local instances and collects their console output and section 10 logs into one folder |
 | `uv run tools/qa/check_logs.py <folder>` | Reports the doc 01 measures found in section 10 JSONL logs |
+| `uv run tools/qa/playtest.py new\|tally\|collect\|report` | Runs a DD phase playtest session (doc 09 s2, s3, s11): session folder, observer tally, log collection, pass/fail report |
+| `uv run tools/qa/package_playtest.py` | Exports the game and zips it for a remote playtester |
 | `uv run tools/qa/grep_rules.py` | Review greps: flicker (doc 07 s4.4), energy_override, light_energy, rpc outside `game/net/`, voice files in git. Exit 1 on violation |
 | `uv run tests/qa/test_harness.py` | Self-test of the three tools on fixtures. Needs no Godot |
 | `uv run tests/qa/test_grep_rules.py` | Self-test of `grep_rules.py` on temp git trees. Needs no Godot |
+| `uv run tests/qa/test_playtest.py` | Self-test of `playtest.py` and the packager's zip. Needs no Godot |
 
 Every output goes under `logs/qa/` (gitignored), in one folder per run named by its timestamp.
 
@@ -134,7 +137,7 @@ session with no `peer_1.jsonl` falls back to all of its files, with a warning.
 |---|---|---|
 | Lure success rate | `lure_result` counts as worked when `moved_m > 10` and `within_s <= 8`. The rule is recomputed, not read from the logged `worked`, and disagreements are listed. Also broken down by phase. Gate: at least 30% | Doc 01 "Testing" ("A lure worked"); Build Plan Phase 1 "Done when" |
 | Trap race | `trap_race_result` survival, overall and for the doc 01 case (`solo`, not `tainted`, `pried_at_once`). Deaths in that case are listed. Also reports the minimum and mean `seconds_spare` | Doc 01 "Testing" ("Trap race") |
-| Spatial audio | `spatial_audio_trial` correct placements by sound and distance, plus the doc 01 cells not tested yet (voice and whistle at 10, 30 and 60 m) | Doc 01 "Testing" ("Spatial audio") |
+| Spatial audio | `spatial_audio_trial` correct placements by sound and distance, overall and per tester, plus the doc 01 cells not tested yet (voice and whistle at 10, 30 and 60 m). Read from **every** peer's file: the tester's own client writes it (doc 05 s18) | Doc 01 "Testing" ("Spatial audio") |
 | Other | `death`, `trap_sprung` and `money_changed` counts; `hold_completed` mean seconds by verb; `inside_at_night` seconds by player | Doc 01 "Testing" ("Logs") |
 
 Every record is checked against the section 10 shape:
@@ -153,6 +156,46 @@ exit code 1. A log with none of these events is still a pass: each measure repor
 - The `spatial_audio_trial` fields `sound`, `distance_m` and `correct` are provisional. Section 10
   names the event but not its fields.
 - `player` in `data` is the player the event is about. When it is absent, the logging peer is used.
+
+## Playtest kit: `playtest.py`, `package_playtest.py`, `playtest/`
+
+Step by step: [playtest/checklist.md](playtest/checklist.md). Hand testers
+[playtest/tester_brief.md](playtest/tester_brief.md) (controls and setup only; no coaching).
+
+```bash
+uv run tools/qa/package_playtest.py                     # builds/playtest_<build id>.zip for a remote tester
+uv run tools/qa/playtest.py new --session 1 --networks different --fresh B --smoke
+uv run tools/qa/playtest.py tally logs/qa/playtest_p1_s1_<ts>              # observer, second terminal
+uv run tools/qa/playtest.py collect logs/qa/playtest_p1_s1_<ts> brenny_logs.zip
+uv run tools/qa/playtest.py report logs/qa/playtest_p1_s1_<ts> logs/qa/playtest_p1_s2_<ts>
+```
+
+| Command | Writes into the session folder |
+|---|---|
+| `new` | `session.json` (phase, session number, build id, networks, tester labels, fresh testers, smoke result, `valid`) and `notes.md` from `playtest/session_notes.md`. `--networks`: `different`, `same` or `one_machine` |
+| `tally` | `observer.jsonl`: one line per `s` scream, `l` laugh, `b` bored, `n` note. `g` sets game `t` = 0 when the host's session starts, so tally times match the logs. Rerunning resumes |
+| `collect` | `user_logs/<session_id>/peer_<id>.jsonl`: this machine's `user://logs` written since `new`, plus each zip or folder given. A friend's sessions this machine has no log of are skipped (`--keep-all` keeps them). A duplicate file keeps the longer copy. Then `measures.json` and `measures.txt` from `check_logs.py` |
+| `report` | `report.md` in the last folder: per-session table (build, networks, testers, screams, laughs, bored) and the doc 09 s3 rows as `PASS`, `FAIL`, `NO DATA` or `MANUAL` |
+
+Report rules for DD Phase 1 (doc 09 s2, s3, s5, s6; placeholders there are placeholders here):
+
+- A session counts when `valid` is true, it has a host file, and it has 2 players.
+- At least 2 such sessions, a fresh tester in one, and one on `different` networks.
+- Lures: at least 30% over at least 20 `lure_result`s, pooled.
+- Trap race: every solo, untainted, pried-at-once race survived. The 2.0 s minimum spare is `MANUAL`:
+  the log does not say normal or deep trap.
+- Spatial audio: each of the 6 cells at least 80% pooled, no tester below 60% in a cell, 2 testers.
+- Turnips: `plant`, `water`, `sell` holds logged; the 15% check against `data/labor.json` is `MANUAL`.
+- Generator: `generator` events present and no `speed_violation`.
+- Feel rows (day safe, night tense, Stalk by sound) and the authority grep are always `MANUAL`.
+
+`package_playtest.py` uses the "Playtest (Windows)" preset (D-023) and refuses a dirty tree, so the
+build id names a commit. The zip holds the game, the TwoVoIP DLL and licenses, `START HERE.txt`,
+`TESTER BRIEF.md`, `BUILD.txt` and `send_logs.bat`, which zips the tester's log folders from the last
+12 hours to `brenny_logs.zip` on their Desktop.
+
+**Not yet run on a real session.** Nothing in `game/` writes these events yet (DD Phase 1 builds
+them). The first real session also checks the kit: hand-count five lines (doc 09 s4).
 
 ## Self-test: `tests/qa/test_harness.py`
 
@@ -180,6 +223,7 @@ committed.
 |---|---|
 | `tools/qa/godot_qa.py` | Shared code: finds Godot, runs it, scans for errors, asks for `user://` |
 | `tools/qa/smoke.py`, `multi.py`, `check_logs.py` | The three commands |
+| `tools/qa/playtest.py`, `tools/qa/package_playtest.py`, `tools/qa/playtest/`, `tests/qa/test_playtest.py` | Playtest kit and its self-test |
 | `tools/qa/grep_rules.py`, `tests/qa/test_grep_rules.py` | Review greps and their self-test (doc 09 section 9) |
 | `tests/qa/parse_check.gd` | Loads every script so parse errors print |
 | `tests/qa/print_user_dir.gd` | Prints `OS.get_user_data_dir()` |

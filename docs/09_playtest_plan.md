@@ -119,7 +119,7 @@ three doc 01 measures plus tallies.
 |---|---|---|---|
 | Lure success | `lure_result` | worked when `moved_m > 10` and `within_s <= 8`; recomputed, mismatches with the logged `worked` listed; gate 30% | Done (PP-03); fields fixed by doc 05 section 18 |
 | Trap race | `trap_race_result` | survival overall and for `solo` and not `tainted` and `pried_at_once`; deaths in that case listed; minimum and mean `seconds_spare` | Done (PP-03) |
-| Spatial audio | `spatial_audio_trial` | correct by `sound` and `distance_m`; untested cells listed | Done (PP-03). `angle_error_deg` is logged but not tallied yet |
+| Spatial audio | `spatial_audio_trial` | correct by `sound` and `distance_m`, overall and per tester; read from every peer's file (the tester's client writes it); untested cells listed | Done (PP-03, per-tester and client files P1-01). `angle_error_deg` is logged but not tallied yet |
 | Hold times | `hold_completed` | mean seconds by verb | Done |
 | Time inside at night | `inside_at_night` | seconds by player | Done |
 | Deaths, traps, money | `death`, `trap_sprung`, `money_changed` | counts | Done |
@@ -442,6 +442,10 @@ instance.
 read from the screen and typed into the handoff.
 
 ## 11. After a session
+
+The kit in `tools/qa/playtest/` and `tools/qa/playtest.py` runs these steps (`new`, `tally`,
+`collect`, `report`; `tools/qa/README.md`). Its report applies sections 2, 3, 5 and 6; rows only
+people can judge print as `MANUAL`.
 
 1. Collect every peer's log folder into one place under `logs/qa/` and run `check_logs.py` on it.
 2. Check for the host file; a session without one is invalid (section 2).

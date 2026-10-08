@@ -63,11 +63,17 @@ class LogCheckerFixture(unittest.TestCase):
         self.assertEqual(tr["seconds_spare_min"], 2.5)
         self.assertAlmostEqual(tr["seconds_spare_mean"], 3.25)
 
-    def test_spatial_audio(self) -> None:
+    def test_spatial_audio_reads_client_files_too(self) -> None:
+        # Testers' clients write their own trials (doc 09 s7), so peer_2's whistle@30m counts.
         sp = self.rep["spatial_audio"]
-        self.assertEqual(sp["trials"], 3)
-        self.assertEqual(sp["by_sound_distance"], {"voice@10m": {"correct": 1, "trials": 2}, "whistle@60m": {"correct": 1, "trials": 1}})
-        self.assertEqual(sorted(sp["untested_doc01_cells"]), ["voice@30m", "voice@60m", "whistle@10m", "whistle@30m"])
+        self.assertEqual(sp["trials"], 4)
+        self.assertEqual(
+            sp["by_sound_distance"],
+            {"voice@10m": {"correct": 1, "trials": 2}, "whistle@30m": {"correct": 1, "trials": 1}, "whistle@60m": {"correct": 1, "trials": 1}},
+        )
+        self.assertEqual(sorted(sp["untested_doc01_cells"]), ["voice@30m", "voice@60m", "whistle@10m"])
+        self.assertEqual(sp["by_tester"]["fixture_session/peer_2"], {"whistle@30m": {"correct": 1, "trials": 1}})
+        self.assertEqual(sp["by_tester"]["fixture_session/peer_1"]["voice@10m"], {"correct": 1, "trials": 2})
 
     def test_other_measures(self) -> None:
         o = self.rep["other"]

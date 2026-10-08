@@ -164,3 +164,15 @@ synthesis (no TTS, revisit if DD Phase 1 testers cannot understand them); menu m
 undecided (not needed for DD Phase 1); whistle `max_distance` 220 m and `unit_size` 20 m accepted,
 DD Phase 1 spatial test may retune. **Why:** none of these blocks DD Phase 1. Next: Director writes
 the `P1-` tasks in `TASKS.md`.
+
+### D-023 · 2026-10-08 · Director · Playtest kit before DD Phase 1 code (P1-01)
+CEO asked for the playtest set up. Nothing in `game/` is playable yet, so the kit is built against doc
+09 and the section 10 log format, and is checked on synthetic logs only. (1) P1-01, owned by QA, is the
+first `P1-` task. (2) `export_presets.cfg` gets a second preset, "Playtest (Windows)", owned by QA:
+main scene `boot.tscn`, no custom feature, excludes `tests/`, `tools/` and `spikes/`. The voice spike
+preset is unchanged. (3) `check_logs.py` reads `spatial_audio_trial` from every peer's file, not the
+host's only: doc 05 section 18 has the tester's client write it, so the host-only rule dropped every
+client tester's trials. (4) Build id for a session is `git describe --always --dirty` until Gameplay
+says where the game's `build_id` comes from (Q-040). **Why:** the STOP after DD Phase 1 needs every
+step of doc 09 section 11 ready; building it now costs no game work and finds log gaps early.
+
