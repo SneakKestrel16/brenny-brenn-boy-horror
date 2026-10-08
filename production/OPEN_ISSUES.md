@@ -103,5 +103,5 @@ session rechecks them (P2-09, D-034).
    (`flicker`, `crow`, `rustle`, `caw`); QA adds it to doc 09 s13 and `check_logs.py`.
 4. **No dev way to reach day 5**, where hallucinations open (doc 03 s13). The dev console has no day
    command. Settled by P3-05.
-5. **Taint data has two homes.** Doc 05 s10 names `taint.json`; Taint creature numbers sit in
-   `creature.json` today. P3-02 picks one and fixes the other doc.
+5. **Taint data has two homes.** Settled in P3-02: player effects and causes in `taint.json` (doc 02 A.13),
+   creature-side tracking in `creature.json` (doc 03 s19). Different values, one home each; no doc change needed.

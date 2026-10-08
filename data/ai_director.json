@@ -1,0 +1,254 @@
+{
+  "table": "ai_director",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "meter",
+      "source": "placeholder",
+      "cite": "doc 03 section 11.1; doc 01 AI Director names the four phases only",
+      "max": 100,
+      "outside_per_s": 0.4,
+      "outside_cap_per_s": 1.2,
+      "sprint_per_s": 1.0,
+      "noise_per_radius_m": 0.1,
+      "step_cap_per_s": 1.0,
+      "lure_worked": 10,
+      "trap_sprung": 15,
+      "jumpscare": -30,
+      "jumpscare_relax_s": 45,
+      "relax_decay_per_s": 3,
+      "log_every_s": 10,
+      "sources": {
+        "log_every_s": "doc01"
+      }
+    },
+    {
+      "id": "phases",
+      "source": "placeholder",
+      "cite": "doc 03 section 11.1: build-up below peak_at, peak for at most peak_max_s, fade until fade_to, relax at least relax_min_s",
+      "peak_at": 70,
+      "peak_max_s": 20,
+      "fade_to": 30,
+      "relax_min_s": 40
+    },
+    {
+      "id": "profile_day",
+      "source": "placeholder",
+      "cite": "doc 03 section 11.2; doc 01 By day ('tunable')",
+      "buildup_events_per_player": 1,
+      "peak_chases_per_player": 0,
+      "peak_big_scares_per_player": 1,
+      "lures": true,
+      "traps": false
+    },
+    {
+      "id": "profile_night",
+      "source": "placeholder",
+      "cite": "doc 03 section 11.2; doc 01 AI Director ('tunable')",
+      "buildup_events_per_player": 2,
+      "peak_chases_per_player": 1,
+      "peak_big_scares_per_player": 0,
+      "lures": true,
+      "traps": true
+    },
+    {
+      "id": "day_arc",
+      "source": "doc01",
+      "cite": "doc 03 section 11.3; doc 01 Day arc: thirds of the day clock, as fractions of season.day_s so a short --length run keeps the arc",
+      "second_third_at": 0.3333,
+      "last_third_at": 0.6667,
+      "calm_field_keepout_m": 25,
+      "sources": {
+        "calm_field_keepout_m": "placeholder"
+      }
+    },
+    {
+      "id": "scare_rules",
+      "source": "doc01",
+      "cite": "doc 03 section 11.4 and section 13; doc 01 Scare rules",
+      "big_per_player_per_day": 1,
+      "big_gap_s": 120,
+      "unscared_weight": 3,
+      "scared_weight": 1,
+      "wrong_count_per_team_per_day": 1,
+      "own_voice_per_player_per_season": 1,
+      "sanctuary_m": 10,
+      "sources": {
+        "unscared_weight": "placeholder",
+        "wrong_count_per_team_per_day": "placeholder"
+      }
+    },
+    {
+      "id": "daily_roll",
+      "source": "placeholder",
+      "cite": "doc 03 section 11.4 Daily variation: rolled at dawn, never adds a death condition",
+      "deep_m": [8, 12],
+      "earshot_m": [18, 28]
+    },
+    {
+      "id": "trap_race",
+      "source": "placeholder",
+      "cite": "doc 03 section 7.2 (derivation there); replaces phase1.trap_race_distance_m and trap_race.gd DEEP_M when P3-04 reads it",
+      "start_distance_m": 25,
+      "deep_start_distance_m": 18,
+      "bend_m": 3,
+      "min_spare_s": 2,
+      "nightmare_bend_m": 5,
+      "nightmare_min_spare_s": 1
+    },
+    {
+      "id": "nudge",
+      "source": "placeholder",
+      "cite": "doc 03 section 11.6; D-021: one hop, regions within link_m are adjacent",
+      "cooldown_s": 20,
+      "link_m": 2
+    },
+    {
+      "id": "lures",
+      "source": "placeholder",
+      "cite": "doc 03 section 12.1 (dead : alive : own); stranger weight and day gap from creature.gd P2-04, to move here in P3-03 and P3-04",
+      "weight_dead": 3,
+      "weight_alive": 1,
+      "weight_own": 0.1,
+      "weight_stranger": 1,
+      "day_gap_s": 90
+    },
+    {
+      "id": "scare_jumpscare",
+      "source": "doc01",
+      "cite": "doc 03 section 13; doc 01 Jumpscares: Shaken, never Taint; not in a trap race, sanctuary or lit building",
+      "big": true,
+      "private": true,
+      "opens_day": 1,
+      "from_third": 3,
+      "weight": 1,
+      "sources": {
+        "weight": "placeholder"
+      }
+    },
+    {
+      "id": "scare_disarm_lunge",
+      "source": "doc01",
+      "cite": "doc 03 section 13; doc 01 Scare moments",
+      "big": true,
+      "private": true,
+      "opens_day": 1,
+      "from_third": 3,
+      "weight": 1,
+      "sources": {
+        "weight": "placeholder"
+      }
+    },
+    {
+      "id": "scare_the_trap",
+      "source": "doc01",
+      "cite": "doc 03 section 13; doc 01 Scare moments: a prying player looks up and sees it watching",
+      "big": true,
+      "private": true,
+      "opens_day": 1,
+      "from_third": 2,
+      "weight": 1,
+      "sources": {
+        "weight": "placeholder"
+      }
+    },
+    {
+      "id": "scare_shed",
+      "source": "doc01",
+      "cite": "doc 03 section 13; doc 01 Scare moments",
+      "big": true,
+      "private": true,
+      "opens_day": 1,
+      "from_third": 3,
+      "weight": 1,
+      "locked_s": 5,
+      "sources": {
+        "weight": "placeholder",
+        "locked_s": "placeholder"
+      }
+    },
+    {
+      "id": "scare_whisper",
+      "source": "doc01",
+      "cite": "doc 03 section 13; doc 01 Scare moments",
+      "big": true,
+      "private": true,
+      "opens_day": 1,
+      "from_third": 3,
+      "weight": 1,
+      "sources": {
+        "weight": "placeholder"
+      }
+    },
+    {
+      "id": "scare_own_voice",
+      "source": "doc01",
+      "cite": "doc 03 section 13; doc 01 Scare moments: very rare (scare_rules.own_voice_per_player_per_season)",
+      "big": true,
+      "private": true,
+      "opens_day": 1,
+      "from_third": 3,
+      "weight": 0.2,
+      "sources": {
+        "weight": "placeholder"
+      }
+    },
+    {
+      "id": "scare_wrong_count",
+      "source": "doc01",
+      "cite": "doc 03 section 13; doc 01 Scare moments: rare (scare_rules.wrong_count_per_team_per_day)",
+      "big": true,
+      "private": true,
+      "opens_day": 1,
+      "from_third": 3,
+      "weight": 0.5,
+      "sources": {
+        "weight": "placeholder"
+      }
+    },
+    {
+      "id": "scare_hallucination",
+      "source": "doc01",
+      "cite": "doc 03 sections 8 and 13; doc 01 Ramp-up (day 5), The Taint (more when Tainted)",
+      "big": true,
+      "private": true,
+      "opens_day": 5,
+      "from_third": 2,
+      "weight": 1,
+      "tainted_mult": 2,
+      "distance_m": [15, 30],
+      "vanish_look_s": 1.5,
+      "vanish_approach_m": 5,
+      "sources": {
+        "weight": "placeholder",
+        "tainted_mult": "placeholder",
+        "distance_m": "placeholder",
+        "vanish_look_s": "placeholder",
+        "vanish_approach_m": "placeholder"
+      }
+    },
+    {
+      "id": "scare_fake_out",
+      "source": "doc01",
+      "cite": "doc 03 section 13; doc 01 Scare moments: a crow bursts from the corn; public, not big",
+      "big": false,
+      "private": false,
+      "opens_day": 1,
+      "from_third": 2,
+      "weight": 1,
+      "sources": {
+        "weight": "placeholder"
+      }
+    },
+    {
+      "id": "scare_scarecrow_moved",
+      "source": "doc01",
+      "cite": "doc 03 section 13; placed each morning by sabotage.scarecrow_moved, listed here so the scare log names it",
+      "big": false,
+      "private": false,
+      "opens_day": 1,
+      "from_third": 1,
+      "weight": 0
+    }
+  ]
+}

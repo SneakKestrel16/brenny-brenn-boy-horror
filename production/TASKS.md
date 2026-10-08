@@ -396,7 +396,7 @@ that belong to Phase 4, so these wait: the `harvest_moon` profile and acts (doc 
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
 | P3-01 | Director | Between-phase review: OPEN_ISSUES, settle what Phase 3 needs, write acceptance for the rows below | done (D-059) | — |
-| P3-02 | Game Designer | Phase 3 data (doc 03 s19): Director profiles and tension meter, day arc, scare rules, disturbance budget, Taint and Shaken numbers, Dawn Report templates (doc 03 s8, s10, s11, s13, s17) | todo | P3-01 |
+| P3-02 | Game Designer | Phase 3 data (doc 03 s19): Director profiles and tension meter, day arc, scare rules, disturbance budget, Taint and Shaken numbers, Dawn Report templates (doc 03 s8, s10, s11, s13, s17) | done (D-060) | P3-01 |
 | P3-03 | AI Programmer | Dead players' voices favored in lure choice (doc 03 s12.1; today `WEIGHT_*` in `creature.gd`) | todo | P3-02 |
 | P3-04 | AI Programmer | AI Director: tension meter, profiles, day arc, region nudges, private events, debug (doc 03 s11); it budgets lures in place of `DAY_LURE_GAP_S` | todo | P3-02 |
 | P3-05 | AI Programmer, Audio Designer | Jumpscares, fake-outs, hallucinations (doc 03 s13), spent by the Director | todo | P3-04 |

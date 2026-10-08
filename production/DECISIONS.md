@@ -483,3 +483,14 @@ rustle; P3-05 adds a dev command to set the day.
 **Why:** doc 01 "Build Plan > Phase 3" lists the AI Director, sabotage, scares, Taint, dead voices,
 ghosts, whistle, emotes and the Dawn Report; the waiting items depend on Phase 4 content.
 **How to apply:** acceptance for P3-02 to P3-13 is in `production/TASKS.md`.
+
+### D-060 · 2026-10-08 · Director · Phase 3 data schemas approved (P3-02)
+`ai_director`, `sabotage`, `taint` and `dawn_report_templates` are final as written in
+`data/*.schema.json`. `taint` is doc 02 A.13 plus a `causes` list. `ai_director` keeps one record
+per scare kind (`scare_*`: `big`, `private`, `opens_day`, `from_third`, `weight`) and takes the trap
+race distances and lure weights (doc 03 s7.2, s12.1). The day arc is stored as fractions of
+`season.day_s`, not 180 s. `broken_fence` and `pumpkin_gnaw` stay in `sabotage.json` with
+`enabled: false` (D-059).
+**Why:** doc 03 s19 proposed the files; CONTRACTS s6 makes schemas final on Director approval.
+**How to apply:** P3-03 to P3-07 read these files and drop their constants (`WEIGHT_*`,
+`DAY_LURE_GAP_S`, `DEEP_M`, `SHAKEN_*`, `TAINT_STEP_MULT`). See `production/handoffs/P3-02.md`.

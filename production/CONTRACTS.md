@@ -147,7 +147,8 @@ this section does not copy them.** The files do not exist yet; the Game Designer
   `difficulty`, `store`, `ramp_up`, `traps`, `taint`, `roles` (doc 02); `creature`, `sabotage`,
   `ai_director`, `voice_lines`, `dawn_report_templates` (doc 03). `phase1.json` (scripted DD Phase 1 timers,
   doc 03 section 18) is loaded by `Data` only with `--phase1` (D-023). `creature` and `voice_lines`
-  schemas are as written in `data/*.schema.json` (D-023).
+  schemas are as written in `data/*.schema.json` (D-023), as are `ai_director`, `sabotage`, `taint` and
+  `dawn_report_templates` (P3-02, D-060).
 - **Envelope:** `{"table": "<file name>", "schema_version": 1, "records": [{"id", "source", "cite", ...}]}`.
   `season.json` records are `{id, value, unit, source}`.
 - **Ids:** `snake_case`, unique per file (the `Data` loader and the simulator reject duplicates; JSON

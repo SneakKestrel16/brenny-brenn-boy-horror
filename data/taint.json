@@ -1,0 +1,38 @@
+{
+  "table": "taint",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "taint",
+      "source": "doc01",
+      "cite": "doc 02 section 13; doc 01 The Taint; causes doc 03 section 8; cure hold is labor.json wash",
+      "sprint_mult": 0.6,
+      "pry_mult": 1.5,
+      "footstep_radius_mult": 1.5,
+      "cure_verb": "wash",
+      "lasts": "wash_or_dawn",
+      "causes": ["leavings", "stolen_tool", "field_item_at_dusk", "moonflower", "dead_crow", "strange_seeds"],
+      "sources": {
+        "pry_mult": "placeholder"
+      }
+    },
+    {
+      "id": "shaken",
+      "source": "doc01",
+      "cite": "doc 02 section 13; doc 01 The Taint (60 s)",
+      "sprint_mult": 0.6,
+      "duration_s": 60,
+      "restarts_on_new_cause": true,
+      "sources": {
+        "sprint_mult": "placeholder",
+        "restarts_on_new_cause": "placeholder"
+      }
+    },
+    {
+      "id": "stacking",
+      "source": "placeholder",
+      "cite": "doc 02 section 13: Taint and Shaken multiply (sprint x0.36)",
+      "rule": "multiply"
+    }
+  ]
+}

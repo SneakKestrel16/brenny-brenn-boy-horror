@@ -1,0 +1,23 @@
+{
+  "table": "dawn_report_templates",
+  "schema_version": 1,
+  "records": [
+    {"id": "best_impression", "source": "doc01", "cite": "doc 03 section 17.1", "section": "headline", "text": "BEST IMPRESSION: the creature as {owner_name} said '{line_text}' and {target_name} walked {moved_m} m toward it."},
+    {"id": "most_wanted", "source": "doc01", "cite": "doc 03 section 17.1", "section": "headline", "text": "MOST WANTED: {owner_name}, last seen {place_name}, wanted for questions about {fake_count} calls."},
+    {"id": "hero_of_the_night", "source": "doc01", "cite": "doc 03 section 17.1", "section": "headline", "text": "HERO OF THE NIGHT: {name} {hero_action}."},
+    {"id": "no_deaths", "source": "placeholder", "cite": "doc 03 section 17.1", "section": "headline", "text": "No obituaries this morning. The town is suspicious."},
+    {"id": "full_wipe", "source": "placeholder", "cite": "doc 03 section 17.1", "section": "headline", "text": "THE FARM WENT QUIET. Four chairs, no farmers."},
+    {"id": "lure_replay", "source": "doc01", "cite": "doc 03 section 17.1 (replays targeted lures)", "section": "replay", "text": "{target_name} heard {owner_name} say '{line_text}'. {owner_name} was {owner_place}."},
+    {"id": "off_player", "source": "doc01", "cite": "doc 03 section 17.5; doc 06 section 11: text plus a neutral sound cue, never voiced", "section": "replay", "text": "{name} said something."},
+    {"id": "obit_trap_race", "source": "doc01", "cite": "doc 03 section 17.2", "section": "obituary", "text": "{name} was pried loose from this life at {place_name}, a few seconds short. Survived by {n} unharvested plots."},
+    {"id": "obit_deep_corn", "source": "placeholder", "cite": "doc 03 section 17.2", "section": "obituary", "text": "{name} took a walk in the corn alone and was missed, eventually, by {teammate}."},
+    {"id": "obit_night_chase", "source": "placeholder", "cite": "doc 03 section 17.2", "section": "obituary", "text": "{name} ran toward the barn lights. The barn lights were {distance} m away."},
+    {"id": "obit_night_trap", "source": "placeholder", "cite": "doc 03 section 17.2", "section": "obituary", "text": "{name} stepped on a thing that was not there yesterday."},
+    {"id": "obit_harvest_moon", "source": "placeholder", "cite": "doc 03 section 17.2; used from Phase 4 (D-059)", "section": "obituary", "text": "{name} gave the cart one more push."},
+    {"id": "hero_disarmed", "source": "placeholder", "cite": "doc 03 section 17.3", "section": "hero_action", "text": "disarmed {n} traps"},
+    {"id": "hero_washed", "source": "placeholder", "cite": "doc 03 section 17.3", "section": "hero_action", "text": "pumped the well for {teammate}"},
+    {"id": "hero_generator", "source": "placeholder", "cite": "doc 03 section 17.3", "section": "hero_action", "text": "carried the generator through"},
+    {"id": "hero_cart", "source": "placeholder", "cite": "doc 03 section 17.3; used from Phase 4 (D-059)", "section": "hero_action", "text": "pushed the cart {m} m alone"},
+    {"id": "hero_stayed_out", "source": "placeholder", "cite": "doc 03 section 17.3", "section": "hero_action", "text": "stayed outside while we hid"}
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/ai_director.schema.json",
+  "title": "AI Director (doc 03 sections 7.2, 11, 12.1 and 13); scare_* records are one per scare kind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["table", "schema_version", "records"],
+  "properties": {
+    "table": {"const": "ai_director"},
+    "schema_version": {"const": 1},
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"$ref": "#/$defs/id"},
+          "source": {"$ref": "#/$defs/source"},
+          "cite": {"type": "string"},
+          "sources": {"$ref": "#/$defs/sources"}
+        },
+        "additionalProperties": {
+          "oneOf": [
+            {"type": "number"},
+            {"type": "boolean"},
+            {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}}
+          ]
+        },
+        "required": ["id", "source"],
+        "if": {"properties": {"id": {"pattern": "^scare_(?!rules$)"}}},
+        "then": {
+          "properties": {
+            "big": {"type": "boolean"},
+            "private": {"type": "boolean"},
+            "opens_day": {"type": "integer", "minimum": 1, "maximum": 7},
+            "from_third": {"enum": [1, 2, 3]},
+            "weight": {"type": "number", "minimum": 0}
+          },
+          "required": ["big", "private", "opens_day", "from_third", "weight"]
+        }
+      },
+      "allOf": [
+        {"contains": {"properties": {"id": {"const": "meter"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "phases"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "profile_day"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "profile_night"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "day_arc"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "scare_rules"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "trap_race"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "nudge"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "lures"}}, "required": ["id"]}}
+      ]
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "source": {"enum": ["doc01", "sim", "placeholder"]},
+    "sources": {"type": "object", "additionalProperties": {"enum": ["doc01", "sim", "placeholder"]}}
+  }
+}

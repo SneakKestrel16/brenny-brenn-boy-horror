@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/taint.schema.json",
+  "title": "Taint and Shaken effects (doc 02 section 13, A.13; causes added in P3-02)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["table", "schema_version", "records"],
+  "properties": {
+    "table": {"const": "taint"},
+    "schema_version": {"const": 1},
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {"const": "taint"},
+              "source": {"$ref": "#/$defs/source"},
+              "cite": {"type": "string"},
+              "sources": {"$ref": "#/$defs/sources"},
+              "sprint_mult": {"type": "number", "exclusiveMinimum": 0},
+              "pry_mult": {"type": "number", "exclusiveMinimum": 0},
+              "footstep_radius_mult": {"type": "number", "exclusiveMinimum": 0},
+              "cure_verb": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+              "lasts": {"const": "wash_or_dawn"},
+              "causes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}
+            },
+            "required": [
+              "id", "source", "sprint_mult", "pry_mult", "footstep_radius_mult", "cure_verb",
+              "lasts", "causes"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {"const": "shaken"},
+              "source": {"$ref": "#/$defs/source"},
+              "cite": {"type": "string"},
+              "sources": {"$ref": "#/$defs/sources"},
+              "sprint_mult": {"type": "number", "exclusiveMinimum": 0},
+              "duration_s": {"type": "number", "exclusiveMinimum": 0},
+              "restarts_on_new_cause": {"type": "boolean"}
+            },
+            "required": ["id", "source", "sprint_mult", "duration_s", "restarts_on_new_cause"]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {"const": "stacking"},
+              "source": {"$ref": "#/$defs/source"},
+              "cite": {"type": "string"},
+              "sources": {"$ref": "#/$defs/sources"},
+              "rule": {"const": "multiply"}
+            },
+            "required": ["id", "source", "rule"]
+          }
+        ]
+      },
+      "maxItems": 3,
+      "allOf": [
+        {"contains": {"properties": {"id": {"const": "taint"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "shaken"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "stacking"}}, "required": ["id"]}}
+      ]
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "source": {"enum": ["doc01", "sim", "placeholder"]},
+    "sources": {"type": "object", "additionalProperties": {"enum": ["doc01", "sim", "placeholder"]}}
+  }
+}

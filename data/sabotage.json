@@ -1,0 +1,141 @@
+{
+  "table": "sabotage",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "trample",
+      "source": "doc01",
+      "cite": "doc 03 section 10.1; doc 01 Daytime Threats; doc 02 section 14",
+      "cost_points": 2,
+      "opens_day": 1,
+      "fix": "plant",
+      "fix_hold_s": null,
+      "clue": "footprints",
+      "budget": true,
+      "enabled": true,
+      "per_night": 1,
+      "nobody_outside_s": 30,
+      "nobody_outside_extra": 1,
+      "dead_generator_extra": 1,
+      "unattended_every_s": 60,
+      "unattended_cap": 3,
+      "sources": {
+        "cost_points": "placeholder",
+        "unattended_every_s": "placeholder",
+        "unattended_cap": "placeholder"
+      }
+    },
+    {
+      "id": "stolen_tool",
+      "source": "doc01",
+      "cite": "doc 03 section 10.1; doc 01 Daytime Threats: reappears creepy, often by an armed trap, Taints on pickup",
+      "cost_points": 2,
+      "opens_day": 1,
+      "fix": "wash",
+      "fix_hold_s": null,
+      "clue": "claw_marks",
+      "budget": true,
+      "enabled": true,
+      "near_trap_pct": 60,
+      "taints_on_pickup": true,
+      "sources": {
+        "cost_points": "placeholder",
+        "near_trap_pct": "placeholder"
+      }
+    },
+    {
+      "id": "dead_crow",
+      "source": "doc01",
+      "cite": "doc 03 section 10.1; doc 01 Taint sources; bury hold is not a labor.json verb, so it lives here",
+      "cost_points": 1,
+      "opens_day": 3,
+      "fix": "bury",
+      "fix_hold_s": 4,
+      "clue": "feathers",
+      "budget": true,
+      "enabled": true,
+      "sources": {
+        "cost_points": "placeholder",
+        "fix_hold_s": "placeholder"
+      }
+    },
+    {
+      "id": "strange_seeds",
+      "source": "doc01",
+      "cite": "doc 03 section 10.1; doc 01 Taint sources",
+      "cost_points": 1,
+      "opens_day": 3,
+      "fix": "pull_seeds",
+      "fix_hold_s": 3,
+      "clue": "footprints",
+      "budget": true,
+      "enabled": true,
+      "sources": {
+        "cost_points": "placeholder",
+        "fix_hold_s": "placeholder"
+      }
+    },
+    {
+      "id": "scarecrow_moved",
+      "source": "doc01",
+      "cite": "doc 03 sections 10.1 and 13: free and daily, outside the budget; never dangerous",
+      "cost_points": 0,
+      "opens_day": 1,
+      "fix": "none",
+      "fix_hold_s": null,
+      "clue": "none",
+      "budget": false,
+      "enabled": true,
+      "trap_clear_m": 4,
+      "sources": {
+        "trap_clear_m": "placeholder"
+      }
+    },
+    {
+      "id": "generator_kill",
+      "source": "doc01",
+      "cite": "doc 03 section 10.1; doc 01 Nights; refuel hold is labor.json refuel",
+      "cost_points": 4,
+      "opens_day": 4,
+      "fix": "refuel",
+      "fix_hold_s": null,
+      "clue": "none",
+      "budget": true,
+      "enabled": true,
+      "sources": {
+        "cost_points": "placeholder"
+      }
+    },
+    {
+      "id": "broken_fence",
+      "source": "doc01",
+      "cite": "doc 03 section 10.1; D-059: waits for Phase 4 (no animals or pen)",
+      "cost_points": 3,
+      "opens_day": 2,
+      "fix": "repair_fence",
+      "fix_hold_s": null,
+      "clue": "claw_marks",
+      "budget": true,
+      "enabled": false,
+      "sources": {
+        "cost_points": "placeholder",
+        "opens_day": "placeholder"
+      }
+    },
+    {
+      "id": "pumpkin_gnaw",
+      "source": "doc01",
+      "cite": "doc 03 section 10.1; D-059: waits for Phase 4 (no Prize Pumpkin); a lost size stays",
+      "cost_points": 3,
+      "opens_day": 3,
+      "fix": "none",
+      "fix_hold_s": null,
+      "clue": "teeth_marks",
+      "budget": true,
+      "enabled": false,
+      "sources": {
+        "cost_points": "placeholder"
+      }
+    }
+  ]
+}

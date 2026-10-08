@@ -25,6 +25,11 @@ func _init() -> void:
 	_check(is_equal_approx(d.hold_s(&"plant"), 3.0), "hold_s(plant) is 3")
 	_check(is_equal_approx(d.speed(&"sprint"), 5.0), "speed(sprint) is 5")
 	_check(d.value(&"crops", &"turnip", &"sell") == 10, "turnip sells for 10")
+	# Doc 03 section 10.1: every disturbance has a fix.
+	var pool: Array[Dictionary] = d.records(&"sabotage")
+	_check(not pool.is_empty(), "sabotage.json loads")
+	for r in pool:
+		_check(r.get("fix") is String and r["fix"] != "", "sabotage.%s has a fix" % r["id"])
 	_check(not d.load_dir("res://no_such_dir"), "missing required files fail loudly")
 
 	# Data.scaled: ceil(v * pct / 100) in integer math; debt rounds to nearest (doc 02 section 4, D-017).

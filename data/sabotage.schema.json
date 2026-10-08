@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/sabotage.schema.json",
+  "title": "Sabotage pool (doc 03 sections 10.1 and 19)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["table", "schema_version", "records"],
+  "properties": {
+    "table": {"const": "sabotage"},
+    "schema_version": {"const": 1},
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {"$ref": "#/$defs/id"},
+          "source": {"$ref": "#/$defs/source"},
+          "cite": {"type": "string"},
+          "sources": {"$ref": "#/$defs/sources"},
+          "cost_points": {"type": "integer", "minimum": 0},
+          "opens_day": {"type": "integer", "minimum": 1, "maximum": 7},
+          "fix": {"$ref": "#/$defs/id"},
+          "fix_hold_s": {"type": ["number", "null"], "exclusiveMinimum": 0},
+          "clue": {"$ref": "#/$defs/id"},
+          "budget": {"type": "boolean"},
+          "enabled": {"type": "boolean"},
+          "per_night": {"type": "integer", "minimum": 0},
+          "nobody_outside_s": {"type": "number", "minimum": 0},
+          "nobody_outside_extra": {"type": "integer", "minimum": 0},
+          "dead_generator_extra": {"type": "integer", "minimum": 0},
+          "unattended_every_s": {"type": "number", "exclusiveMinimum": 0},
+          "unattended_cap": {"type": "integer", "minimum": 0},
+          "near_trap_pct": {"type": "integer", "minimum": 0, "maximum": 100},
+          "taints_on_pickup": {"type": "boolean"},
+          "trap_clear_m": {"type": "number", "minimum": 0}
+        },
+        "required": ["id", "source", "cost_points", "opens_day", "fix", "fix_hold_s", "clue", "budget", "enabled"]
+      }
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "source": {"enum": ["doc01", "sim", "placeholder"]},
+    "sources": {"type": "object", "additionalProperties": {"enum": ["doc01", "sim", "placeholder"]}}
+  }
+}
