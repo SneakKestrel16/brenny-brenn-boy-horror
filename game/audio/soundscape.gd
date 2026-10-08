@@ -75,6 +75,16 @@ func _ready() -> void:
 	_start_layers()
 
 
+## Free players and drop cached streams so no AudioStreamWAV / playback outlives the tree ("resources still in use at exit").
+func _exit_tree() -> void:
+	for p in _players.values():
+		p.stop()
+		p.stream = null
+		p.free()
+	_players.clear()
+	_cache.clear()
+
+
 ## Streams exist only after the editor import has run (clean checkout); a missing one is a silent layer.
 func _stream(id: String, loop: bool = false) -> AudioStream:
 	if _cache.has(id):
