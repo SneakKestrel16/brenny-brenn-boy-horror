@@ -231,7 +231,11 @@ section says slot; moving them to slots is a later change to the message list.
    `Node.request_ready` exists, section 17).
 7. **In the lobby,** the player appears in the barn. **A roster player reconnecting mid-session**
    (doc 01 "Joining", D-048) is matched by `player_uid`, keeps their slot and role, re-shares their
-   clips, spawns as a ghost at once and gets a body at the next dawn.
+   clips, spawns as a ghost at once and gets a body at the next dawn. D-049: each client writes
+   `user://last_session.cfg` (host address, port, session id) at match start and deletes it on a
+   clean Leave or match end; a launch that finds it offers "Rejoin your last match?". The lobby and
+   pause menu show the host's section 4 join code as the fallback. On rejoin the client shows one
+   random line from `data/rejoin_lines.json` (doc 01 "Joining and leaving").
 
 ### Leaving
 

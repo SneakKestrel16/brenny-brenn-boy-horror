@@ -497,6 +497,19 @@ Payments, medical bills, trap counts and the disturbance budget scale to 80% at 
 - **Joining:** new players join only in the lobby, before the host starts the match. Lobby-lines players record first.
 - **No mid-session joins:** once the match starts, the host refuses anyone who is not on the match roster.
 - **Rejoining:** a roster player who drops (crash or disconnect) can reconnect to the same session. They come back as a ghost at once and get their own farmer back at the next dawn, keeping their role (and imposter status in Imposter mode).
+  - **Rejoin prompt:** after a crash or disconnect, the next launch opens with "Rejoin your last match?" and connects in one click. A clean "Leave" or the end of the match clears it.
+  - **Join code fallback:** the lobby and pause menu show the host's join code. If the prompt fails, a teammate reads the code out and the dropped player enters it on the Join screen (an IP still works too).
+  - **Welcome back:** the rejoining player sees one random line mocking them for crashing:
+    - "Haha, you crashed."
+    - "Welcome back. The farm didn't miss you."
+    - "Your PC took one look at the corn and gave up."
+    - "Crashed? The creature didn't even have to try."
+    - "Even your computer was too scared to stay."
+    - "Your farmer stood there drooling the whole time."
+    - "The crows saw everything."
+    - "Skill issue. Hardware edition."
+    - "Back from the dead, the boring way."
+    - "Your teammates have already made fun of you. Now it's official."
 - **Loading a save:** a saved season opens a lobby only to the players from that season.
 - **Leaving:** a player who drops counts as absent from the next dawn. Their character stays as an idle farmhand that doesn't count.
 

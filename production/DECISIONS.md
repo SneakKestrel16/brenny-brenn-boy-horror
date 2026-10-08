@@ -390,3 +390,12 @@ can reconnect to the same session: ghost at once, own farmer back at the next da
 (imposter status too). One player left now waits for a roster teammate to reconnect. Replaces doc 01's
 "late joiners enter as a ghost" and D-041's late-joiner role pick. Field plots stay fixed at match
 start (D-039), which this makes final. Docs 01, 02, 05, 06 updated; task P2-16. **Why:** CEO.
+
+### D-049 · 2026-10-08 · CEO · Rejoin prompt, join codes back, crash mockery
+A player who crashes or disconnects gets "Rejoin your last match?" on the next launch (client file
+`user://last_session.cfg`, cleared on a clean Leave or match end). Fallback: the lobby and pause menu
+show the host's join code (doc 06 s4 format, already specified in the voice spike), and the Join
+screen accepts a code or an IP. This is the CEO asking for join codes, so D-024's "no new work on join
+codes" ends for this use; Tailscale addresses encode like any IPv4. The rejoiner sees one random
+mocking line from doc 01 "Joining and leaving" (10 lines, data in `data/rejoin_lines.json`). Part of
+P2-16. **Why:** CEO.

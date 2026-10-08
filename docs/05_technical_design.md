@@ -685,7 +685,7 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
     control and no screen pass. At 0.2 the slider equals the default because doc 07 s3 holds the night
     ambient at 0.25 or more (inference; the CEO or Technical Artist can rule otherwise).
 - **Flow.** Launching with no arguments in a window opens the main menu (`game/ui/main_menu.tscn`):
-  Host (port), Join (a raw IP or `IP:port`; D-024: Tailscale, no join codes), Settings, Quit. Host and
+  Host (port), Join (a join code, a raw IP or `IP:port`; D-049 brings back doc 06 s4 join codes for rejoining), Settings, Quit. Host and
   Join turn Phase 1 data on and reload it (a bare exe has no `--phase1`; remove when the full farm lands).
   Both land in the **lobby** (`game/ui/lobby.tscn`): the barn from `Game.world_path()` (the full farm with `--full-farm`, Phase 1's
   scene otherwise), WorldLook at night (no lights built in the lobby), the `Players` node, and a roster with each
