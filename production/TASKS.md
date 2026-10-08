@@ -224,10 +224,11 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | P2-21 | Network & Voice | P2-09 finding C: log `net_rtt` per peer (doc 06 s13, doc 09 "Up to 4 players") | done | P2-09 |
 | P2-22 | QA | P2-09 findings E, F: doc 09 names `medical_bill`/`dawn_summary`, not `money_changed`; `check_logs.py` splits recorded vs generic lures, tallies trap sweeps, reports bills; fix `test_two_good_sessions_pass_every_automatic_row` 72 m fixture; repackage the playtest build clean | done (tooling; tests pass) | P2-20, P2-21 |
 | P2-23 | Network & Voice | Q-057: `tests/net/test_voice.gd` fails and hangs; `voice_emitter.gd:45` cannot resolve `Settings` in `-s` mode | todo | — |
-| P2-24 | Gameplay | CEO local play 2026-10-08: well gives no refill prompt (`station.gd:8` typed-array SCRIPT ERROR, 471 lines); locked plots give no message; dev command to grow crops; physical fuel can and watering can on the map; make Phase 1 night data the default so a launch without `--phase1` doesn't idle the creature | done (windowed CEO check owed) | — |
-| P2-25 | Level Designer | CEO local play 2026-10-08: two barns on the full farm (doc 04 has one) | done (windowed CEO check owed) | — |
-| P2-26 | AI Programmer | CEO local play 2026-10-08: creature parks in front of the barn; traps still not visible | done (windowed CEO check owed) | P2-24 |
-| P2-27 | Gameplay | D-054: watering and fuel cans as physical pickups (pick up, carry, drop, shared); replace the per-player can count; update bots, QA scripts and creature tool theft | done (windowed CEO check owed) | P2-24 |
+| P2-24 | Gameplay | CEO local play 2026-10-08: well gives no refill prompt (`station.gd:8` typed-array SCRIPT ERROR, 471 lines); locked plots give no message; dev command to grow crops; physical fuel can and watering can on the map; make Phase 1 night data the default so a launch without `--phase1` doesn't idle the creature | done | — |
+| P2-25 | Level Designer | CEO local play 2026-10-08: two barns on the full farm (doc 04 has one) | done | — |
+| P2-26 | AI Programmer | CEO local play 2026-10-08: creature parks in front of the barn; traps still not visible | done | P2-24 |
+| P2-27 | Gameplay | D-054: watering and fuel cans as physical pickups (pick up, carry, drop, shared); replace the per-player can count; update bots, QA scripts and creature tool theft | done | P2-24 |
+| P2-28 | AI Programmer | CEO play 2026-10-08 (`logs/qa/ceo_play5`): creature set no trap all night; sets wait for lurk (doc 03 s9) and a lone player kept it in lure/stalk/chase. Decide a fallback (e.g. set on retreat or after a wait) so planned traps land | todo | — |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
 s3 "DD Phase 2" reads, and leaves a handoff note. Placeholders cite doc 01 or say `placeholder`.
