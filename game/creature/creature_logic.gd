@@ -43,3 +43,9 @@ static func pick_heard(memory: Array, now: float, memory_s: float, replace_s: fl
 ## the source since the lure started. Returns the new `moved_m` after one more sample.
 static func lure_moved(moved_m: float, start_dist_m: float, now_dist_m: float) -> float:
 	return maxf(moved_m, start_dist_m - now_dist_m)
+
+
+## Doc 03 section 12.1 "Whose voice": one weight for a lure at `p` in `owner`'s voice. `w` holds
+## `ai_director.json` `lures` (`weight_own`, `weight_dead`, `weight_alive`).
+static func voice_weight(owner: int, p: int, dead: bool, w: Dictionary) -> float:
+	return w[&"weight_own"] if owner == p else (w[&"weight_dead"] if dead else w[&"weight_alive"])

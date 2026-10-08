@@ -55,11 +55,7 @@ const ARRIVE_M := 1.0
 const DAY_COVER := "cover_15"  ## doc 04 sec 9: the far south cover point; where it waits by day (placeholder)
 const BODY := &"body_gaunt"  ## doc 03 section 2: Phase 1 shows one body (placeholder choice)
 const TELLS: Array[StringName] = [&"none", &"echo", &"pitch_up", &"pitch_down", &"no_crackle"]  ## doc 03 section 12.2
-# P2-04 recorded lures (doc 03 section 12.1). Weights dead 3 : alive 1 : own 0.1 are doc 03's placeholders.
-const WEIGHT_DEAD := 3.0
-const WEIGHT_ALIVE := 1.0
-const WEIGHT_OWN := 0.1
-const WEIGHT_STRANGER := 1.0  ## placeholder: doc 03 gives no weight for the unattributed voice; a playtest settles it
+# P2-04 recorded lures (doc 03 section 12.1). Whose-voice weights are `ai_director.json` `lures` (P3-03).
 ## Doc 03 section 16 "Day or night use"; which lines fit both is a placeholder reading. A name call fits both.
 const DAY_LINES := ["come_look_at_this", "i_found_something", "its_fine_come_on", "wait_for_me"]
 const NIGHT_LINES := ["over_here", "help_me", "where_are_you", "wait_for_me", "its_fine_come_on"]
@@ -176,6 +172,8 @@ func _ready() -> void:
 	for id in [&"reach_m", &"sight_night_m", &"sight_day_m", &"sight_still_crouch_m", &"scripted_standoff_m", &"trap_lure_m"]:
 		_num[id] = float(Data.value(&"creature", id, &"metres"))
 	_num[&"corn_damp_mult"] = float(Data.value(&"creature", &"corn_damp_mult", &"mult"))
+	for f in [&"weight_dead", &"weight_alive", &"weight_own", &"weight_stranger"]:
+		_num[f] = float(Data.value(&"ai_director", &"lures", f))
 	for id in [&"night_s", &"scripted_lurk_s", &"scripted_chase_after_stalk_s", &"scripted_retreat_s"]:
 		_num[id] = float(Data.value(&"phase1", id, &"seconds"))
 	for door in get_tree().get_nodes_in_group(&"doors"):
@@ -542,7 +540,8 @@ func _lure_at(p: int, day: bool) -> bool:
 		"recorded_line": v.get("line_id") if v.kind == "clip" else null}
 	Log.event(&"lure_played", {"lure_id": lure_id, "kind": v.kind, "owner": v.owner if int(v.owner) != 0 else null,
 		"line_id": v.get("line_id"), "clip_id": v.get("clip_id"), "sound_id": v.get("sound_id"), "target": p,
-		"heard_by": p if day else -1, "position": _v(src), "tell": String(tell), "ghost": ghost, "day": Clock.day, "exact": true})
+		"heard_by": p if day else -1, "position": _v(src), "tell": String(tell), "ghost": ghost, "day": Clock.day, "exact": true,
+		"owner_dead": int(v.owner) != 0 and Game.is_ghost(int(v.owner))})
 	_send_lure([lure_id, source, src, p if day else -1, tell, ghost])
 	return true
 
@@ -552,9 +551,9 @@ func _lure_at(p: int, day: bool) -> bool:
 ## unchosen, a bot) gets a sound lure instead: footsteps and tools only (doc 01 "Habits").
 func _choose_voice(p: int, day: bool) -> Dictionary:
 	var opts: Array = [{"kind": "stranger", "owner": 0}]
-	var w := PackedFloat32Array([WEIGHT_STRANGER])
+	var w := PackedFloat32Array([_num[&"weight_stranger"]])
 	for q: int in Game.players:
-		w.append(WEIGHT_OWN if q == p else (WEIGHT_DEAD if Game.is_ghost(q) else WEIGHT_ALIVE))
+		w.append(Logic.voice_weight(q, p, Game.is_ghost(q), _num))
 		var clips := _fitting_clips(q, p, day) if Game.voice_setting_of(q) == "lobby_lines" else []
 		if clips.is_empty():
 			opts.append({"kind": "sound", "owner": q, "sound_id": SOUND_LURES.keys()[_rng.randi() % SOUND_LURES.size()]})

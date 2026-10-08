@@ -33,6 +33,23 @@ func _init() -> void:
 	for d in [30.0, 25.0, 18.0, 22.0]:
 		moved = Logic.lure_moved(moved, 30.0, d)
 	_check(is_equal_approx(moved, 12.0), "moved_m keeps the largest reduction (12)")
+	# whose voice (P3-03): ai_director.json lures, target 1, bot -2 dead, -1 and -3 alive
+	var d: Node = preload("res://game/core/data.gd").new()
+	d.load_dir("res://data")
+	var lw := {}
+	for f in [&"weight_dead", &"weight_alive", &"weight_own", &"weight_stranger"]:
+		lw[f] = float(d.value(&"ai_director", &"lures", f))
+	d.free()
+	var w := PackedFloat32Array([lw[&"weight_stranger"]])
+	for q in [1, -1, -2, -3]:
+		w.append(Logic.voice_weight(q, 1, q == -2, lw))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var dead_n := 0
+	for i in 10000:
+		dead_n += int(rng.rand_weighted(w) == 3)
+	_check(w[3] > w[2] and w[2] > w[1], "dead outweighs alive outweighs own")
+	_check(dead_n > 10000 / 5, "dead bot voiced more than a fair 1-in-5 share (%d of 10000)" % dead_n)
 	print("test_creature_logic: %s" % ("PASS" if _fails == 0 else "%d FAILED" % _fails))
 	quit(0 if _fails == 0 else 1)
 

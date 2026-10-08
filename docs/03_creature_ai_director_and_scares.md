@@ -623,7 +623,9 @@ Doc 01 "Voice mimicry". Playback is doc 06's `apply_lure`; **choosing** is here.
 `game/creature/creature.gd`, host only, until the AI Director (DD Phase 3) takes over the timing.
 
 - **Whose voice.** One weighted pick among the stranger (weight 1, placeholder) and every player in
-  the session: dead 3, alive 1, the target's own 0.1 (12.1). A player voices a **clip** only with
+  the session: dead 3, alive 1, the target's own 0.1 (12.1). Since P3-03 the weights are
+  `ai_director.json` `lures` and the rule is `creature_logic.gd` `voice_weight`; `lure_played` logs
+  `owner_dead`. A dead owner's night lure sends `ghost` true (the ghost static chain is P3-10). A player voices a **clip** only with
   `lobby_lines` and a fitting clip the host holds: the phase's lines from section 16 (day:
   `come_look_at_this`, `i_found_something`, `its_fine_come_on`, `wait_for_me`; night: `over_here`,
   `help_me`, `where_are_you`, `wait_for_me`, `its_fine_come_on`; placeholder reading of the "Day or
