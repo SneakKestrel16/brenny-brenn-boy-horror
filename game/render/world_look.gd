@@ -56,9 +56,40 @@ func _ready() -> void:
 			m.albedo_color = Color(0.30, 0.34, 0.22)
 			m.roughness = 1.0
 			floor_mesh.material_override = m
+		_paint_props(world)
 	_apply(_state())
 	if _shot != "":
 		_shot_camera()
+
+
+## Flat colours so the props read at a glance: generator dark green + light panel, well blue water top,
+## fuel drum red + yellow band, sell box brown. Plain materials only: no lights, no energy changes.
+func _paint_props(world: Node) -> void:
+	for spec in [[&"generator", Color(0.12, 0.30, 0.16), Vector3(1.6, 0.6, 0.06), Vector3(0, 0.05, 0.53), Color(0.75, 0.82, 0.7)],
+			[&"fuel_drum", Color(0.8, 0.1, 0.08), Vector3(1.02, 0.12, 1.02), Vector3(0, 0.1, 0), Color(0.95, 0.8, 0.1)],
+			[&"well", Color(0.4, 0.38, 0.36), Vector3(1.5, 0.05, 1.5), Vector3(0, 0.51, 0), Color(0.2, 0.5, 0.95)],
+			[&"sell_box", Color(0.45, 0.28, 0.12), Vector3(1.3, 0.05, 1.3), Vector3(0, 0.51, 0), Color(0.7, 0.5, 0.25)]]:
+		var body := get_tree().get_first_node_in_group(spec[0]) as Node3D
+		if body == null or not world.is_ancestor_of(body):
+			continue
+		var mi := body.get_node_or_null("Mesh") as MeshInstance3D
+		if mi == null:
+			continue
+		mi.material_override = _flat(spec[1])
+		var accent := MeshInstance3D.new()
+		var b := BoxMesh.new()
+		b.size = spec[2]
+		accent.mesh = b
+		accent.position = spec[3]
+		accent.material_override = _flat(spec[4])
+		body.add_child(accent)
+
+
+func _flat(c: Color) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = c
+	m.roughness = 0.8
+	return m
 
 
 func _parse_args() -> void:

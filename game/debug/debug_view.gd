@@ -78,17 +78,31 @@ func _draw_panel() -> void:
 	c.draw_rect(Rect2(Vector2.ZERO, PANEL), Color(0, 0, 0, 0.7))
 	c.draw_rect(Rect2(_px(Vector3(-WORLD_HALF.x, 0, -WORLD_HALF.y)), WORLD_HALF * 2.0 * _scale()), Color(1, 1, 1, 0.25), false)
 	var tr := get_tree().get_first_node_in_group(&"trap_race")
-	var armed: Array = []  # host only: the Creature's own record of the traps it set
+	var armed: Dictionary = {}  # host only: trap id -> kind, the Creature's own record of the traps it set
 	var cr0 := get_tree().get_first_node_in_group(&"creature")
 	if Game.is_host() and cr0 and cr0.has_method(&"debug_state"):
-		armed = cr0.debug_state().traps.values().filter(func(t: Dictionary) -> bool: return t.armed).map(func(t: Dictionary) -> String: return t.id)
+		for t: Dictionary in cr0.debug_state().traps.values():
+			if t.armed:
+				armed[t.id] = t.kind
 	for m in get_tree().get_nodes_in_group(&"trap_spots"):  # grey = unknown, orange = set (host), red = sprung, green = disarmed
 		var tc := Color(0.5, 0.5, 0.5)
-		if String(m.name) in armed:
+		var label := "trap spot"
+		var id := String(m.name)
+		if armed.has(id):
 			tc = Color.ORANGE
-		elif tr and tr.traps.has(String(m.name)):
-			tc = Color.RED if tr.traps[String(m.name)].state == &"sprung" else Color.GREEN
+			label = "%s SET (creature)" % armed[id]
+		elif tr and tr.traps.has(id):
+			var t: Dictionary = tr.traps[id]
+			tc = Color.RED if t.state == &"sprung" else Color.GREEN
+			label = "%s %s" % [t.kind, t.state]
 		c.draw_rect(Rect2(_px(m.global_position) - Vector2(3, 3), Vector2(6, 6)), tc)
+		c.draw_string(font, _px(m.global_position) + Vector2(5, -3), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, tc)
+	# Fixed props: the well is the only watering-can fill point; the drum fills the fuel can.
+	for g: Array in [[&"well", "WELL: fill watering can", Color.CYAN], [&"fuel_drum", "FUEL DRUM: fill fuel can", Color.YELLOW], [&"generator", "GENERATOR", Color.ORANGE]]:
+		for m in get_tree().get_nodes_in_group(g[0]):
+			var gp := _px((m as Node3D).global_position)
+			c.draw_rect(Rect2(gp - Vector2(4, 4), Vector2(8, 8)), g[2])
+			c.draw_string(font, gp + Vector2(6, 4), g[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, g[2])
 	for m in get_tree().get_nodes_in_group(&"plot_spots"):
 		c.draw_circle(_px(m.global_position), 1.5, Color(0.4, 0.7, 0.3))
 	for n: Dictionary in _noise:

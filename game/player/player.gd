@@ -86,7 +86,7 @@ func _make_held() -> void:
 	_held = Node3D.new()
 	_held.position = Vector3(0.35, -0.35, -0.6)
 	_cam.add_child(_held)
-	_water_can = _prop(Vector3(0.22, 0.22, 0.3), Color(0.2, 0.4, 0.9))
+	_water_can = _prop(Vector3(0.22, 0.22, 0.3), Color(0.5, 0.58, 0.64))
 	_fuel_can = _prop(Vector3(0.2, 0.3, 0.14), Color(0.85, 0.15, 0.1))
 	_fuel_can.visible = false
 	var farm := get_tree().get_first_node_in_group(&"farm")  # a late spawn still shows what the farm already knows
@@ -112,7 +112,7 @@ func _on_carry(what: StringName, args: Array) -> void:
 		return
 	_fuel_can.visible = bool(args[3])
 	_water_can.visible = not bool(args[3])
-	(_water_can.material_override as StandardMaterial3D).albedo_color = Color(0.2, 0.4, 0.9) if int(args[1]) > 0 else Color(0.7, 0.75, 0.85)
+	(_water_can.material_override as StandardMaterial3D).albedo_color = Color(0.15, 0.4, 0.95) if int(args[1]) > 0 else Color(0.5, 0.58, 0.64)  # galvanized gray-blue when empty
 
 
 func _apply_height(crouch: bool) -> void:

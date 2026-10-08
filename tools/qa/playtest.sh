@@ -2,7 +2,8 @@
 # One entry point for a doc 09 playtest. Run from the repo root in Git Bash.
 #
 #   tools/qa/playtest.sh check            pre-flight: clean smoke run, self-tests, review greps
-#   tools/qa/playtest.sh local [2-4]      2 to 4 windows on this PC, first one hosts (default 2)
+#   tools/qa/playtest.sh local [2-4]      2 to 4 windows on this PC, first one hosts (default 2);
+#                                         joiners speak a synthetic test voice, the host uses the mic
 #   tools/qa/playtest.sh host             host a real session (shows the join code)
 #   tools/qa/playtest.sh join <code|ip>   join a real session
 #   tools/qa/playtest.sh logs [folder]    log measures: newest multi run, or this PC's user://logs
@@ -26,8 +27,14 @@ case "$cmd" in
   local)
     n=2
     if [[ "${1:-}" =~ ^[2-4]$ ]]; then n=$1; shift; fi
+    # One PC has one mic: every window captures it, so your voice only comes back as a faint copy
+    # under your own speech. Joiners talk with a synthetic test voice instead (doc 01 "Testing > Fake
+    # input"), so the host window plays a voice you can hear. CONTRACTS section 11: kept outside the repo.
+    wav="${TMPDIR:-/tmp}/bbb_test_voice.wav"
+    [[ -f "$wav" ]] || uv run spikes/voice/make_test_wav.py "$wav" >/dev/null
+    wav=$(cygpath -m "$wav")
     joins=()
-    for ((i = 1; i < n; i++)); do joins+=(--args "-- --join=127.0.0.1"); done
+    for ((i = 1; i < n; i++)); do joins+=(--args "-- --join=127.0.0.1 --voice-wav='$wav'"); done
     uv run tools/qa/multi.py -n "$n" --common "-- --phase1 $*" --args "-- --host" "${joins[@]}"
     ;;
   host)
@@ -48,7 +55,7 @@ case "$cmd" in
     fi
     ;;
   *)
-    sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
     exit 1
     ;;
 esac
