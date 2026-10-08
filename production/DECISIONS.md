@@ -347,3 +347,11 @@ role and perks. The imposter wins on foreclosure, lies through signals and open 
 the Dawn Report reveals them at season end. The normal game keeps D-042's no-imposter rule.
 **Why:** CEO; the mode signalling "there is an imposter" and obvious roles giving them away were the
 CEO's concerns.
+
+### D-044 · 2026-10-08 · CEO · Hidden imposter dev setting, CEO's PC only
+Imposter mode (D-043) gets a hidden dev setting: guarantee an imposter and choose the player. No menu
+shows it. It unlocks only when the host's `OS.get_unique_id()` SHA-256 matches a hash baked into the
+game; the existing `--dev` / debug-build gate (`game/debug/dev_console.gd:38`) is not enough, since any
+PC can pass `--dev`. Only the hash goes in the repo, never the raw ID. The host assigns the imposter,
+so the setting works only when the CEO's PC hosts. Built with Imposter mode, after DD Phase 4.
+**Why:** CEO.

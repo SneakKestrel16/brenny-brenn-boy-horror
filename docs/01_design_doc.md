@@ -582,6 +582,10 @@ A lobby toggle, off by default, for groups who want betrayal on top of the creat
   and leave gates or doors open. Deaths still come from the creature. Exact kit is set by the Game
   Designer.
 - The Dawn Report reveals the imposter, or that there was none, at the end of the season.
+- **Hidden dev setting (CEO's PC only):** forces an imposter this season and picks who it is. It
+  never shows in any menu. It works only when the host machine's `OS.get_unique_id()` hash matches
+  one baked into the game, so `--dev` or a debug build on another PC does not unlock it. Peers see
+  nothing different.
 
 This mode bends two pillars on purpose: "Honest signals cost something" (the imposter's signals lie)
 and the creature as the only liar. The normal game stays as written.
