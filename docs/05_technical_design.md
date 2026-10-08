@@ -151,7 +151,7 @@ res://game/player/ghost.tscn       Ghost body: spectator camera, no collision wi
 
 - `Boot` is a `Node3D` today (`game/core/boot.tscn`, D-014). Its script parses the user arguments
   from doc 06 section 14 (`--host`, `--join`, `--voice-wav`, `--net-sim-*`) plus the ones this doc
-  adds: `--debug-view`, `--bots <n>`, `--phase1` (Phase 1 content), `--seed <n>`.
+  adds: `--debug-view`, `--bots <n>`, `--phase1` (Phase 1 content), `--seed <n>`. With no arguments and a window, `Boot` shows the main menu (section 16); any argument takes the legacy path.
 - `Main` is built from code plus the scenes above, not one giant scene, so the level scene can be
   swapped for the Phase 1 gray box and later the full farm without touching any player code.
 - A `Player` is the same scene on every machine. `is_multiplayer_authority()` (set to the owning
@@ -604,11 +604,67 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   difficulty, group options), pause overlay, host-left card, "waiting for a farmhand" card (doc 06
   section 5), Dawn Report, Season Awards. The Host and Join screens are doc 06 sections 3 and 4;
   `game/ui/` embeds `game/net/`'s screens.
-- **Settings** live in `user://settings.cfg` (a `ConfigFile`) on **each client's disk and never in
-  the host's save** (doc 01 "Voice settings > Storage"; CONTRACTS section 5). Contents: audio
-  volumes, mouse sensitivity, FOV, keybinds, toggle crouch, push-to-talk vs open mic and its
-  threshold, denoise, six volume sliders `volume_master`, `volume_music`, `volume_sfx`, `volume_ambience`, `volume_voice`, `volume_ui` (0 to 1, each sets its bus; Q-032, doc 08 section 10), `reduce_scares` (bool, default false; `Soundscape` softens stingers and sudden creature cues, read live; accessibility, inference: no doc 01 number), voice setting (`off` / `lobby_lines` / unchosen), streamer-safe, subtitles for
-  none (no voice subtitles, D-019).
+- **Settings** live in `user://settings.cfg` (a `ConfigFile`, autoload `Settings`) on **each client's
+  disk and never in the host's save** (doc 01 "Voice settings > Storage"; CONTRACTS section 5).
+  `Settings.DEFAULTS` is the key list; `Settings.set_value` + `Settings.save()` write it and emit
+  `changed(key)`. `SettingsApply` (`game/core/settings_apply.gd`, a node on the root made by `Settings`)
+  pushes every key to the engine at boot and on each change. Display and graphics keys apply only
+  once the player has set them (`Settings.is_set`), so launch flags and the QA window tiling still work.
+  Keys: `mouse_sensitivity`, `fov` (read live by the local Player), `toggle_crouch`, `reduce_scares`
+  (default false; `Soundscape` softens stingers and sudden creature cues, read live; accessibility,
+  inference: no doc 01 number), `push_to_talk` (Voice reads it live), `voice_gain_db`, `player_name`,
+  the six volume sliders `vol_master`, `vol_music`, `vol_sfx`, `vol_ambience`, `vol_voice`, `vol_ui`
+  (0 to 1, each sets its bus, muted at 0; Q-032, doc 08 section 10), `voice_setting` (`unchosen` /
+  `off` / `lobby_lines`) and `lines_recorded` (P2-03 sets it), `keybinds`, `mic_device`,
+  `quality_preset`, `render_scale`, `shadow_quality`, `vsync`, `fps_cap`, `window_mode`, `resolution`,
+  `monitor`, `brightness`, `gamma`. Streamer-safe and denoise are not built. There are no voice
+  subtitles (D-019).
+- **Settings screen** (`game/ui/settings_menu.gd`, shared by the main menu and the pause menu), four tabs:
+  - **Keybinds:** every non-`ui_*` InputMap action. Click an action, press the new key or mouse button;
+    Esc cancels. A key already used by another action shows a warning and is still bound (the ghost
+    spectate keys deliberately share E and Q with interact and whistle, so those pairs never warn).
+    Stored as `keybinds`: action -> `[{"t": "k", "c": physical_keycode}]` or `{"t": "m", "b": button}`;
+    only changed actions are stored, "Reset all" empties it.
+  - **Audio:** the six volume sliders, push-to-talk, the mic device (`AudioServer.input_device`, shown
+    when more than one exists), and the voice setting with doc 06 section 11 copy and the Discord line.
+    No mic gain control: Voice exposes none (inference: remote-voice gain `voice_gain_db` is a tuning
+    value, not a player option; add a slider if Network & Voice exposes a capture gain).
+  - **Graphics:** quality preset (`low`, `medium`, `high`, `custom`: each sets `render_scale` and
+    `shadow_quality`, placeholders; touching either switches to `custom`), shadow quality (directional
+    and positional shadow atlas 1024, 2048, 4096; doc 07 section 10 makes shadows the first cut), render
+    scale 0.5 to 1.0 (`scaling_3d_scale`), VSync, FPS cap (`Engine.max_fps`). **No fog or corn density
+    knob:** the corn budget (doc 07 section 10) and the fog values (doc 07 section 3) are fixed so every
+    player sees the same night, and light rules (D-019, doc 07 section 4) stay untouched.
+  - **Display:** window mode (windowed, borderless, fullscreen), resolution (windowed), monitor, FOV,
+    brightness and gamma (a screen pass on `CanvasLayer` 127, hidden at the defaults, applied above
+    every menu).
+- **Flow.** Launching with no arguments in a window opens the main menu (`game/ui/main_menu.tscn`):
+  Host (port), Join (a raw IP or `IP:port`; D-024: Tailscale, no join codes), Settings, Quit. Host and
+  Join turn Phase 1 data on and reload it (a bare exe has no `--phase1`; remove when the full farm lands).
+  Both land in the **lobby** (`game/ui/lobby.tscn`): the barn from `Game.LOBBY_WORLD` (the hook to point
+  at the full farm), a dark environment, one static lantern, the `Players` node, and a roster with each
+  player's voice setting and doc 01's Discord line. The host starts the match with Enter or the pause
+  menu: `Game.start_match()` waits for `Game.match_ready()` (P2-03 clip pre-share hook, doc 06 section 12
+  step 5), clears each player's movement state (the host drops frames with a stale `seq`), starts the
+  `Clock`, sends `apply_match_start` and everyone changes to `main.tscn`. A client that joins during
+  the lobby gets `p_lobby = true` in `apply_session_state`. The pause menu (`PauseMenu`, `CanvasLayer`
+  120, Esc) does not pause the session: Resume, Settings, Start match (host, lobby), Leave to menu,
+  Quit. While open it sets `Game.console_open` so Player and HoldController ignore game keys. It also
+  shows the host-left card (`multiplayer.server_disconnected`) with a way back to the menu.
+- **Voice setting on the wire.** `Game.set_voice_setting` saves locally and sends `request_voice_setting`
+  (`unchosen` is sent as `off`); the host accepts `off` and `lobby_lines`, refuses `live_clips`, logs
+  `voice_setting`, and broadcasts `apply_voice_setting(peer, setting)` (the peer id, not a slot: slots are
+  not built). A joiner sends its setting after `apply_session_state` and the host tells it everyone's.
+  "Record lines" is offered to unchosen players and to Lobby-lines players with no lines recorded,
+  "Re-record" once `lines_recorded`, and never to a player who chose Off. The button emits
+  `Game.recording_requested`; the recording screen is P2-03's.
+- **Build id.** `Game.build_id()` returns `res://build_id.txt` if present (the packager writes it for
+  the export only, from `git describe --always --dirty`; the export preset includes it), else
+  `application/config/version` (`dev`). `session_start` logs it as `build_id` and the data hash as
+  `data_hash` (Q-047).
+- **Debug arguments:** `--menu` (menu even headless), `--lobby` (host through the lobby),
+  `--lobby-start=<n>` (host starts the match when n players are in), `--menu-open=settings`,
+  `--settings-tab=<0..3>`, `--pause-open`, `--ui-shot=<png>` (saves the window after 90 frames and quits).
 - **Difficulty and group options** are chosen in the lobby by the host and saved in the season
   (`Easy`, `Normal`, `Hard`, `Nightmare`, `difficulty.json`; "no live clips" and "streamer-safe" are
   flags; doc 01 "Difficulty and group settings"). They go in the save (section 17); the voice

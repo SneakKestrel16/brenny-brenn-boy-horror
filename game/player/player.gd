@@ -61,6 +61,7 @@ func _ready() -> void:
 	if is_local:
 		_cam.current = true
 		_cam.fov = float(Settings.get_value(&"fov"))
+		Settings.changed.connect(func(k: StringName) -> void: if k == &"fov": _cam.fov = float(Settings.get_value(&"fov")))
 		_mesh.visible = false
 		stamina = float(Data.value(&"labor", &"sprint", &"max_s"))
 		_autowalk = OS.get_cmdline_user_args().has("--autowalk")
@@ -142,8 +143,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		var s := float(Settings.get_value(&"mouse_sensitivity"))
 		yaw -= event.relative.x * s
 		pitch = clampf(pitch - event.relative.y * s, -1.5, 1.5)
-	elif event.is_action_pressed(&"pause"):  # placeholder until the pause menu (game/ui/)
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
 	elif event.is_action_pressed(&"crouch") and bool(Settings.get_value(&"toggle_crouch")):
 		_set_crouch(not crouching)
 

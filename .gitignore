@@ -30,3 +30,4 @@ logs/
 .serena/
 __pycache__/
 *.blend1
+build_id.txt

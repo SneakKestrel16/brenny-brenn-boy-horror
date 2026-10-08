@@ -589,6 +589,8 @@ The autoload `Noise` (CONTRACTS section 8, doc 05 section 8) shares its name wit
 3. **Gameplay: `project.godot` autoload.** P1-06 added `Voice="*res://game/voice/voice.gd"` after
    `NoiseBus` (CONTRACTS section 8 load order, asked in Q-006). Please confirm, since you own the file.
 
+**Answer (Gameplay, P2-10):** (2) done: `push_to_talk` was already in `Settings.DEFAULTS`; the Audio tab of the settings screen (main menu and pause menu) has the toggle, and `Voice` reads it live via `Settings.changed`. (3) confirmed: `Voice` is in `project.godot` after `NoiseBus`. (1) is the Director's.
+
 ### Q-043 · 2026-10-07 · AI Programmer → Gameplay · answered
 P1-13 (bots, doc 05 s19) touched two Gameplay files; please confirm or redo them your way. (1) `game/core/main.gd`: adds the `Bots` node after `Players`. (2) `game/interaction/hold_registry.gd` `_reply`: `else:` became `elif peer > 1:`, because bots use negative peer ids and have no connection (they poll `holds` instead). Three asks: (a) a public `Players.submit(peer, frame)` so `game/bots/bot.gd` stops calling the private `_ingest`; (b) `players.gd` line 134 sends `apply_teleport` to any `peer != 1`, so a bot speed violation errors "unknown peer ID -1"; guard it `peer > 1` (bots now resync to the host's kept position, so it no longer fires in runs); (c) existing bug, not mine (inference from reading, not seen in a log): `player_left` makes the registry cancel a hold and `_reply` to the disconnected peer. (d) Debug view (P1-12): tag bots, they are `peer < 0` and `Game.players[peer].bot == true` (doc 05 s19).
 **Answer (Gameplay, P1-09):** (a) done: `Players.submit(peer, f)` is public, `bot.gd` calls it. (b) done: `apply_teleport` guarded `peer > 1`. (c) done: `HoldRegistry.cancel(peer, reason, notify)`; the `player_left` path passes `notify=false`. (d) done: debug view tags bots (`bot`, `peer < 0`). Your `main.gd` Bots block and the `_reply` `elif peer > 1` are kept.
@@ -603,6 +605,10 @@ P1-10 added one line to `project.godot` (your file): `Soundscape="*res://game/au
 ### Q-046 · 2026-10-07 · QA → Director (for Gameplay) · open
 P1-14 findings, each wants a task. (1) `speed_violation` on `autowalk`: probable stamina flicker at 0 in `player.gd` (OPEN_ISSUES P1-14 entry). A human who holds Shift past 6 s likely logs violations, and doc 09 s3 says no `speed_violation` on a normal client. Gameplay: refill threshold or hysteresis, then rerun `--autowalk` and expect 0. (2) Corn budget wording (Technical Artist / Director): doc 07 s10.2 "corn stalk instances 25,000 or fewer"; `look_stats` reports `stalks=55704` for the whole field (53 cells). Say if the budget means total or in view (instances within the 30 m MultiMesh range). Frame time, draws and triangles are far inside budget either way (handoff P1-14). (3) No HUD or menu exists (`game/ui/` absent): a first-time tester sees no prompt text beyond the placeholder ring; doc 01 "Onboarding" (one intro per verb) is not met. Out of P1 scope per TASKS, but a tester who has not read doc 01 will be lost; Director decides whether STOP 2 needs a minimal prompt layer. (4) Doc 09 s3 needs 20 lure results over 2 sessions; creature in `--creature-test` produced 4 lures in 1500 s of 2-instance runs (lone-player condition). Two humans in a real session may produce few; Game Designer/AI Programmer: say whether a lone-player rule leaves 30% measurable in 5 minutes of night.
 
+**Answer (Director, P2-02):** (2) in view. Doc 07 s10.2's row reads "Corn stalk instances drawn", so the
+budget counts stalks inside the camera frustum and the 30 m MultiMesh range. P2-02 measured 926 to 4,820
+drawn on the full farm (100,164 total) with 4 instances, inside the 25,000 budget.
+
 ### Q-047 · 2026-10-08 · QA → Gameplay Programmer · open
 P1-17 (D-029). (1) `session_start.build_id` is `str(Data.hash_value)`, a data hash, not a build. `package_playtest.py`
 names a build `git describe --always --dirty` and writes it to `BUILD.txt`. Proposal: the export step writes it to
@@ -610,6 +616,8 @@ names a build `git describe --always --dirty` and writes it to `BUILD.txt`. Prop
 `run/main_scene.voice_spike` is to go once a game preset exists; "Playtest (Windows)" now exists. (3) Without a menu,
 a bare exe double-click hosts solo without `--phase1`; the zip works around it with `Host.bat`/`Join.bat`. A host/join
 menu (or `--phase1` as the default in an export) removes the need.
+
+**Answer (Gameplay, P2-10):** (1) done your way: `Game.build_id()` reads `res://build_id.txt`, else `application/config/version` (now `dev`); `session_start` logs `build_id` plus `data_hash`. `package_playtest.py` writes `build_id.txt` from `git describe` for the export only and deletes it after (try/finally; the file is in `.gitignore`); the "Playtest (Windows)" preset `include_filter` now has `build_id.txt`. I edited `tools/qa/package_playtest.py` and `export_presets.cfg` for that: please review. Not run: a full export (needs a clean tree). (2) left as is: `run/main_scene.voice_spike` is a feature-tag override of the Phase 1 spike; say if you want it removed. (3) done: a bare launch with a window opens the main menu (Host / Join / Settings / Quit); Host and Join turn Phase 1 data on. `Host.bat`/`Join.bat` still work and can stay.
 
 ### Q-048 · 2026-10-08 · AI Programmer → Game Designer, Audio Designer, Network & Voice, Gameplay · open
 P1-20 (OPEN_ISSUES playtest 6, 7, 8; handoff `production/handoffs/P1-20.md`).
@@ -632,3 +640,10 @@ P1-20 (OPEN_ISSUES playtest 6, 7, 8; handoff `production/handoffs/P1-20.md`).
    state; nothing breaks, but the debug view on a client may colour a set trap as if open. Filter on
    `state` if that matters.
 
+
+**Answer to Q-048 (1), Game Designer, P2-12, 2026-10-08.** Confirmed as placeholders, now in `data/creature.json`
+(and `creature.gd` reads them from `_num`; the three consts are gone): `chase_tell_s` 2, `scripted_standoff_m` 18,
+`trap_lure_m` 15. A Phase 2 playtest settles them. Items 2 to 4 are for the other roles.
+
+### Q-053 · 2026-10-08 · Level Designer → Gameplay Programmer · open
+P2-02 (handoff `production/handoffs/P2-02.md`). `res://game/world/farm.tscn` (full farm) is built; `Main.FARM` still loads `farm_phase1.tscn`. (1) Please add a flag (or make full farm the default and `--phase1` the Phase 1 scene) so `Main` loads `farm.tscn`. (2) New groups in `farm.tscn` for your code: `store_crate` (shipping crate = store only, D-017), `sell_box` now sits on the town stand (120, -5), `sanctuary` (Marker3D, meta `radius_m` 10), `farm_gate`, `pumpkin_patch`, `moonflower_bed`, `pegboard_slots` (5 children of the pegboard, count from `season.json`), `recording_spots`, `barn_lantern` (both in the barn). Plots: 28 `plot_spots`, meta `field` = `a`, `b` or `moonflower`; `upgrade` true on the south row of each field (8), so 16 field plots start open plus 4 moonflower. `CartRoute` is a `Path3D` with R0..R8. (3) `farm.gd` and `bot_route.gd` assume Phase 1 (field A only; hand-made bot route); check both before the switch. Director: add the new groups to CONTRACTS s4.

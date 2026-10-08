@@ -132,7 +132,7 @@ def build_id() -> str:
     return out.stdout.strip()
 
 
-def export(godot: Path) -> None:
+def export(godot: Path, bid: str) -> None:
     EXPORT_DIR.mkdir(parents=True, exist_ok=True)
     # A clean checkout must register TwoVoIP before the import, or the import crashes (Q-008, Q-010).
     ext_list = REPO_ROOT / ".godot" / "extension_list.cfg"
@@ -140,7 +140,14 @@ def export(godot: Path) -> None:
         ext_list.parent.mkdir(exist_ok=True)
         ext_list.write_bytes(b"".join(f"res://{p.relative_to(REPO_ROOT).as_posix()}\n".encode() for p in sorted((REPO_ROOT / "addons").glob("*/*.gdextension"))))
     cmd = [str(godot), "--headless", "--path", str(REPO_ROOT), "--export-release", PRESET, str(EXPORT_DIR / EXE)]
-    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+    # Game.build_id() reads res://build_id.txt (Q-047): written for the export only, then removed.
+    stamp = REPO_ROOT / "build_id.txt"
+    stamp.write_bytes(bid.encode() + b"
+")
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
+    finally:
+        stamp.unlink(missing_ok=True)
     errors = scan_errors(result.stdout + "\n" + result.stderr)
     if result.returncode != 0 or errors or not (EXPORT_DIR / EXE).exists():
         print(result.stdout + result.stderr, file=sys.stderr)
@@ -190,7 +197,7 @@ def main() -> int:
     if (out == REPO_ROOT or REPO_ROOT in out.parents) and (REPO_ROOT / "builds") not in out.parents:
         print("Write the zip under builds/ (gitignored) or outside the repo.", file=sys.stderr)
         return 2
-    export(find_godot(a.godot))
+    export(find_godot(a.godot), bid)
     names = write_zip(out, bid)
     print(f"wrote {out} ({out.stat().st_size / 1e6:.1f} MB, {len(names)} files)")
     for n in names:

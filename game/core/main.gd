@@ -41,6 +41,7 @@ func _ready() -> void:
 	traps.set_script(load("res://game/traps_player/trap_race.gd"))
 	traps.name = "TrapRace"
 	add_child(traps)
+	add_child(PauseMenu.new())  # P2-10
 	add_child(DebugView.new())  # P1-12: hidden unless --debug-view or F3 (host)
 	if DevConsole.enabled():  # D-031: ` opens it in debug runs or with --dev
 		add_child(DevConsole.new())

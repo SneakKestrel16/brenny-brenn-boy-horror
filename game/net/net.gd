@@ -123,8 +123,11 @@ func _on_peer_connected(id: int) -> void:
 	if not Game.is_host():
 		return
 	Game.players[id] = {}
-	to_peers(&"apply_session_state", [Game.session_id, Log.now(), Data.phase1, Data.hash_value, Game.difficulty], [id])
+	to_peers(&"apply_session_state", [Game.session_id, Log.now(), Data.phase1, Data.hash_value, Game.difficulty, Game.in_lobby], [id])
 	to_peers(&"apply_roster", [Game.players.keys()])
+	for p in Game.players:  # the newcomer learns everyone's voice setting (P2-10)
+		if p != id:
+			to_peers(&"apply_voice_setting", [p, Game.voice_setting_of(p)], [id])
 	to_peers(&"apply_clock", [Clock.day, Clock.phase, Clock.t_phase], [id])
 	Log.event(&"player_joined", {"player": id})
 	Game.player_joined.emit(id)
@@ -159,8 +162,25 @@ func _on_server_disconnected() -> void:
 # --- RPCs (doc 06 section 7); handlers live in the owning autoload -------------------------------
 
 @rpc("authority", "call_remote", "reliable")
-func apply_session_state(p_session_id: String, host_t: float, p_phase1: bool, data_hash: int, p_difficulty: StringName) -> void:
-	Game.apply_session_state(p_session_id, host_t, p_phase1, data_hash, p_difficulty)
+func apply_session_state(p_session_id: String, host_t: float, p_phase1: bool, data_hash: int, p_difficulty: StringName, p_lobby: bool = false) -> void:
+	Game.apply_session_state(p_session_id, host_t, p_phase1, data_hash, p_difficulty, p_lobby)
+
+
+## P2-10 (doc 06 s7, s11): the host left the barn lobby for the match.
+@rpc("authority", "call_remote", "reliable")
+func apply_match_start() -> void:
+	Game.apply_match_start()
+
+
+## Doc 06 s11: the owner's voice setting (`off` / `lobby_lines`). Slots are not built, so this names the peer id.
+@rpc("any_peer", "call_remote", "reliable")
+func request_voice_setting(setting: String) -> void:
+	Game.on_voice_setting_request(_sender(), setting)
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_voice_setting(peer: int, setting: String) -> void:
+	Game.apply_voice_setting(peer, setting)
 
 
 @rpc("authority", "call_remote", "reliable")
