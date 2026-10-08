@@ -62,7 +62,7 @@ func _physics_process(delta: float) -> void:
 		if tgt != null:
 			var vs: Array[StringName] = tgt.verbs_for({})
 			aimed_verb = vs[0] if not vs.is_empty() else &""
-		if tgt != null and Input.is_action_pressed(&"interact"):
+		if tgt != null and Input.is_action_pressed(&"interact") and not Game.console_open:
 			var verbs: Array[StringName] = tgt.verbs_for({})
 			if not verbs.is_empty():
 				start(verbs[0], tgt)

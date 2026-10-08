@@ -194,7 +194,9 @@ build id names a commit. The zip holds the game and its console wrapper, the Two
 licenses, `START HERE.txt`, `TESTER BRIEF.md`, `BUILD.txt`, `Host.bat`, `Join.bat` and
 `send_logs.bat`. There is no menu yet, so a bare double-click on the exe starts a solo session without
 `--phase1` content; `Host.bat` runs `-- --host --phase1 --port=45120` and `Join.bat` asks for the host's
-Tailscale address and runs `-- --join=<ip>:45120 --phase1` (D-024). `send_logs.bat` zips the log
+Tailscale address and runs `-- --join=<ip>:45120 --phase1` (D-024). Both pass the playtest pacing
+`--day-s=180 --dusk-s=30 --night-s=300` (D-030; edit the `set` lines at the top of both files to change
+it). `Host.bat` also passes `--dev`, so the host can open the dev console with the backquote key (D-031). `send_logs.bat` zips the log
 folders and `godot*.log` from the last 12 hours to `brenny_logs.zip` on the Desktop.
 
 **Not yet run on a real session.** Nothing in `game/` writes these events yet (DD Phase 1 builds

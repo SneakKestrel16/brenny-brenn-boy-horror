@@ -78,9 +78,10 @@ HOST_BAT = r"""@echo off
 cd /d "%~dp0"
 rem Phase lengths in seconds; Join.bat must match. Normal game: 540, 60, 300.
 """ + _PACING_SET + r"""echo Hosting on UDP port {port}. Day %DAY_S% s, dusk %DUSK_S% s, night %NIGHT_S% s.
+echo Dev console: press the backquote key (`), then type help.
 echo Give the other player this PC's Tailscale address:
 tailscale ip -4 2>nul || echo   (tailscale not found: open Tailscale and copy the 100.x.y.z address)
-start "" "{exe}" -- --host --phase1 --port={port} """ + _PACING_ARGS + r"""
+start "" "{exe}" -- --host --phase1 --dev --port={port} """ + _PACING_ARGS + r"""
 pause
 """
 

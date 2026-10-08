@@ -223,3 +223,15 @@ and `Join.bat` pass day 180, dusk 30, night 300. Night stays full length: Phase 
 into it and the scripted stalk starts at 60 s. **Why:** shorter days give more nights (lures, chases) per
 session hour. Doc 09 s2's session length assumes 540 s days; the notes record the override.
 
+### D-031 · 2026-10-08 · CEO · Dev console until release
+CEO asked for a dev command tool kept until the game is finished. `game/debug/dev_console.gd` (`DevConsole`,
+added by `Main`): backquote opens it in debug runs or any build started with `--dev`; the playtest `Host.bat`
+passes `--dev`, `Join.bat` does not. Commands: `help`, `status`, `skip`, `phase`, `time`, `length`, `coins`,
+`fuel`, `gen`, `creature`, `kill`, `respawn`, `debug`, `clear`; `--dev-exec="a; b"` runs commands at session
+start for scripted QA. State-changing commands run on the host only (CONTRACTS section 5), through the
+systems' own host functions, so clients get the normal `apply_*` messages; no new RPC. Each is logged as
+`dev_command`; a playtest session with any `dev_command` must say so in its notes (doc 09 s2 measures can be
+skewed). `Game.console_open` makes Player and HoldController ignore game keys while typing. **Remove before
+release:** delete the `Main` line and the file, or gate it on `OS.is_debug_build()` only. Gameplay owns
+`game/debug/` and reviews the edits to `clock.gd`, `game.gd`, `player.gd`, `hold_controller.gd`, `main.gd`.
+

@@ -46,6 +46,16 @@ func length_of(p: StringName) -> float:
 	return DAWN_S
 
 
+## Host only: dev console `length` (D-031). Same effect as the command-line override.
+func set_length(p: StringName, seconds: float) -> void:
+	_override[p] = seconds
+
+
+## Host only: dev console `phase` (D-031). Ends the current phase now, as its timer would.
+func dev_advance() -> void:
+	_advance()
+
+
 ## Host only.
 func start() -> void:
 	day = 1

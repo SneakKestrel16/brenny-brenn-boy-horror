@@ -42,4 +42,6 @@ func _ready() -> void:
 	traps.name = "TrapRace"
 	add_child(traps)
 	add_child(DebugView.new())  # P1-12: hidden unless --debug-view or F3 (host)
+	if DevConsole.enabled():  # D-031: ` opens it in debug runs or with --dev
+		add_child(DevConsole.new())
 	Log.event(&"main_ready", {"players": Game.players.keys()})

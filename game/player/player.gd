@@ -170,7 +170,7 @@ func _spectate(dir: Vector2) -> void:
 
 
 func _local_ghost(delta: float) -> void:
-	var dir := Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
+	var dir := Vector2.ZERO if Game.console_open else Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
 	_spectate(dir)
 	if _spec == 0:
 		var fly := (_cam.global_transform.basis * Vector3(dir.x, 0, dir.y)) * Data.speed(&"sprint")
@@ -191,9 +191,10 @@ func _local(delta: float) -> void:
 		_shaken_s -= delta
 		if _shaken_s <= 0.0:
 			speed_mult = 1.0
-	var still := Input.is_action_pressed(&"go_still")  # doc 05 section 6: freezes the body, sends nothing special
-	var dir := Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
-	var want_sprint := Input.is_action_pressed(&"sprint")
+	var typing := Game.console_open  # D-031: keys go to the dev console, not the body
+	var still := not typing and Input.is_action_pressed(&"go_still")  # doc 05 section 6: freezes the body, sends nothing special
+	var dir := Vector2.ZERO if typing else Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
+	var want_sprint := not typing and Input.is_action_pressed(&"sprint")
 	if _autowalk:
 		yaw = _t * 0.5
 		dir = Vector2(0, -1)
@@ -207,7 +208,7 @@ func _local(delta: float) -> void:
 			yaw = atan2(-d.x, -d.z)
 			dir = Vector2(0, -1)
 			want_sprint = false  # walking: a stamina-flipping sprint trips the host speed check
-	if not bool(Settings.get_value(&"toggle_crouch")):
+	if not bool(Settings.get_value(&"toggle_crouch")) and not typing:
 		_set_crouch(Input.is_action_pressed(&"crouch"))
 	if still or pinned:
 		dir = Vector2.ZERO

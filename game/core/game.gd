@@ -17,6 +17,7 @@ var seed_value := 0
 var debug_view := false
 var bots := 0
 var in_session := false
+var console_open := false  ## the dev console has the keyboard (D-031); Player and HoldController ignore game input
 
 
 func is_host() -> bool:
