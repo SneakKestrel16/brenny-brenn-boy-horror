@@ -374,3 +374,11 @@ lunge cut, a steady glow for the whistle fallback, no disco lights or nuke glow.
 flashes (`LightRig` is slew-limited to 0.2 s, the ghost flicker is Phase 3); the setting and warning
 ship with the ghost flicker. QA adds a doc 09 check when the flicker lands: log light transitions and
 fail any light passing 3 per second. **Why:** CEO; player safety outranks the flicker's punch.
+
+### D-047 · 2026-10-08 · CEO · Comfort and convenience settings
+Added (doc 01 "Comfort and convenience settings", doc 05 s16 keys, task P2-15): camera shake and
+head-bob slider with a level knockdown camera at off, centre dot, per-player voice volume and mute
+(also mutes the creature's replays of that player, so a mute never exposes a fake), toggle holds
+(same hold times), toggle sprint, invert Y, menu text size. Not added: panic key, scare volume cap,
+colour-blind Taint option. On-screen captions or subtitles for sounds are rejected for good (they
+would give away where sounds come from; D-019) and are not to be raised again. **Why:** CEO.

@@ -682,6 +682,20 @@ PC like the other settings). It changes only that player's screen:
 - the whistle fallback flash becomes a steady 1-second glow;
 - dev toys show no disco lights and no nuke glow.
 
+### Comfort and convenience settings
+
+Per player, stored on each player's own PC (D-047):
+- **Camera shake and head bob:** one slider from 100% to off. At off, the knockdown camera stays level
+  instead of tumbling with the ragdoll.
+- **Centre dot:** an optional small dot in the middle of the screen. It is not a marker and points at
+  nothing.
+- **Per-player voice volume and mute:** set from the pause menu roster. Muting a player also mutes
+  the creature's replays of that player's voice for you, so it never exposes a fake.
+- **Toggle holds:** press once to start a hold action (disarm, pry, pour) and again to stop. Hold
+  times do not change.
+- **Toggle sprint** and **invert mouse Y.**
+- **Menu text size.**
+
 ---
 
 ## Build Plan

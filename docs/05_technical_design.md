@@ -654,6 +654,11 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   `quality_preset`, `render_scale`, `shadow_quality`, `vsync`, `fps_cap`, `window_mode`, `resolution`,
   `monitor`, `brightness`, `photosensitive_safe` (default false; asked on first launch; doc 01
   "Photosensitivity safety", D-046; read live by `LightFlicker`, the lunge cut and the dev toys).
+  D-047 (doc 01 "Comfort and convenience settings"): `camera_shake` (0 to 1, default 1; 0 also
+  keeps the knockdown camera level), `centre_dot` (default false), `voice_peer_volume` (player id to
+  0 to 1, 0 is mute; applies to that player's live voice and the creature's replays of their clips
+  alike), `toggle_holds`, `toggle_sprint`, `invert_y` (default false), `ui_text_scale` (0.8 to 1.5,
+  default 1).
   Streamer-safe and denoise are not built. There are no voice
   subtitles (D-019).
 - **Settings screen** (`game/ui/settings_menu.gd`, shared by the main menu and the pause menu), four tabs:
