@@ -38,7 +38,7 @@ least one tester who has not read doc 01, and at least one session on **two home
 - [ ] Trap race: at least 3 springs where the tester pries at once (doc 09 s6). A 2 s hesitation
       too, if there is time.
 - [ ] Night: both testers out at least once. Note whether either names Stalk by sound.
-- [ ] Spatial audio test scene: 36 trials per tester, rest after 18 (doc 09 s5). Ask the tester to
+- [ ] Spatial audio test scene (`SpatialTest.bat` in the zip): 36 trials per tester, rest after 18 (doc 09 s5). Ask the tester to
       name the left side first with a 10 m sound.
 - [ ] If a tester asks to stop, stop. A crash or desync: note it, `n crash`, restart, keep the logs.
 

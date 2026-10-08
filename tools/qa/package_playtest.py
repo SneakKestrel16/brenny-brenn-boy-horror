@@ -49,8 +49,10 @@ START_HERE = """Brenny Brenn Boy Horror: playtest build {build_id} (gray box, no
    If SmartScreen says "Windows protected your PC", choose More info, then Run anyway
    (the build isn't signed).
 3. Gray screen or a crash: run "Brenny Brenn Boy Horror.console.exe" from Host.bat's
-   folder to see the error, or send the logs (step 4); they include godot.log.
-4. Afterwards, double-click send_logs.bat. It writes brenny_logs.zip to your Desktop.
+   folder to see the error, or send the logs (step 5); they include godot.log.
+4. Spatial audio test (once per tester, on your own, about 5 minutes): double-click SpatialTest.bat
+   with headphones on and follow the screen.
+5. Afterwards, double-click send_logs.bat. It writes brenny_logs.zip to your Desktop.
    Send that file to the host. It holds game events and connection statistics only:
    no audio, no names, no volume values.
 
@@ -85,6 +87,17 @@ cd /d "%~dp0"
 set /p HOSTIP=Host's Tailscale address (100.x.y.z): 
 if "%HOSTIP%"=="" exit /b 1
 start "" "{exe}" -- --join=%HOSTIP%:{port} --phase1
+"""
+
+# Doc 09 s5 spatial audio test, one per tester, solo (no host or join). An exported build runs a scene
+# given as a res:// path on the command line, the same as the editor build (P1-12 handoff).
+SPATIAL_BAT = r"""@echo off
+cd /d "%~dp0"
+echo Spatial audio test: stereo headphones on, left on left, Windows spatial sound off.
+echo 36 sounds, rest after 18, about 5 minutes. Turn to face each sound with the mouse, then press 1, 2 or 3.
+echo When it says Done, run send_logs.bat and send brenny_logs.zip to the host.
+start "" "{exe}" res://game/debug/spatial_audio_test.tscn
+pause
 """
 
 # Zips the section 10 log folders written in the last 12 hours (CONTRACTS s10: user://logs/<session_id>/)
@@ -134,6 +147,7 @@ def write_zip(out: Path, bid: str) -> list[str]:
         z.writestr(f"{TOP}/START HERE.txt", START_HERE.format(build_id=bid, exe=EXE, port=PORT).replace("\n", "\r\n"))
         z.writestr(f"{TOP}/Host.bat", HOST_BAT.format(exe=EXE, port=PORT).replace("\n", "\r\n"))
         z.writestr(f"{TOP}/Join.bat", JOIN_BAT.format(exe=EXE, port=PORT).replace("\n", "\r\n"))
+        z.writestr(f"{TOP}/SpatialTest.bat", SPATIAL_BAT.format(exe=EXE).replace("\n", "\r\n"))
         z.writestr(f"{TOP}/TESTER BRIEF.md", BRIEF.read_text(encoding="utf-8").replace("\n", "\r\n"))
         z.writestr(f"{TOP}/send_logs.bat", SEND_LOGS.replace("\n", "\r\n"))
         z.writestr(f"{TOP}/BUILD.txt", bid + "\r\n")

@@ -193,8 +193,8 @@ Report rules for DD Phase 1 (doc 09 s2, s3, s5, s6; placeholders there are place
 
 `package_playtest.py` uses the "Playtest (Windows)" preset (D-029) and refuses a dirty tree, so the
 build id names a commit. The zip holds the game and its console wrapper, the TwoVoIP DLL and
-licenses, `START HERE.txt`, `TESTER BRIEF.md`, `BUILD.txt`, `Host.bat`, `Join.bat` and
-`send_logs.bat`. There is no menu yet, so a bare double-click on the exe starts a solo session without
+licenses, `START HERE.txt`, `TESTER BRIEF.md`, `BUILD.txt`, `Host.bat`, `Join.bat`, `SpatialTest.bat` (runs
+`res://game/debug/spatial_audio_test.tscn` solo; logs land in `audiotest_<time>/`) and `send_logs.bat`. There is no menu yet, so a bare double-click on the exe starts a solo session without
 `--phase1` content; `Host.bat` runs `-- --host --phase1 --port=45120` and `Join.bat` asks for the host's
 Tailscale address and runs `-- --join=<ip>:45120 --phase1` (D-024). Both run the game's own phase
 lengths (D-032); the host speeds things up in play with the dev console. `Host.bat` passes `--dev`, so the host can open the dev console with the backquote key (D-031). `send_logs.bat` zips the log

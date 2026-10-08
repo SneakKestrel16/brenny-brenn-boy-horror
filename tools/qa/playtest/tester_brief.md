@@ -58,5 +58,8 @@ keeps stays on your own disk, and Off deletes it.
    Tailscale address (`100.x.y.z`) and press Enter. If Windows Firewall asks, allow it on Private
    networks. If SmartScreen says "Windows protected your PC", choose More info, then Run anyway (the
    build is not signed).
-3. Afterwards, double-click `send_logs.bat`. It puts `brenny_logs.zip` on your Desktop. Send us that
+3. Spatial audio test, on your own, about 5 minutes: put headphones on and double-click
+   `SpatialTest.bat`. Turn to face each sound with the mouse, then press 1, 2 or 3 for the post you
+   heard it from.
+4. Afterwards, double-click `send_logs.bat`. It puts `brenny_logs.zip` on your Desktop. Send us that
    file. It holds game events and connection statistics only: no audio, no names.
