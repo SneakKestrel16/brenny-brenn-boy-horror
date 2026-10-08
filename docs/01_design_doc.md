@@ -562,9 +562,11 @@ Bought by the shipping crate. "sim" means the price is set with the simulator be
 | Night Owl (placeholder) | Quieter at night (steps, tools, crouch) and picks moonflowers faster |
 | Radio Operator (placeholder) | Walkie-talkie reaches further and its batteries last longer; their voice carries too, so lures favor them |
 | Warden (placeholder) | More flare shots and a faster refill. A hit only drives the creature into Retreat, never harms it; the shot is the loudest noise on the farm and gives the Warden's position away |
+| Medium (placeholder) | Hears dead teammates' ghost voices through less static. Never tells a real ghost voice from the creature's fake; the flicker stays the only tiebreaker |
 
 There are more roles than players, so each player picks one they want and no team has every role. Roles
-never let anyone harm the creature or see it clearly ("Glimpsed, never seen"). Placeholder perks are
+never let anyone harm the creature or see it clearly ("Glimpsed, never seen"). No role sides with the
+creature: honest signals must stay honest, so the only liar on the farm is the creature. Placeholder perks are
 set before roles are built.
 
 **Picking a role:** each player picks a role in the barn lobby before the match starts.

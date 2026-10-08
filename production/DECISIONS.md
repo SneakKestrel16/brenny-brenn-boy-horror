@@ -328,3 +328,12 @@ barn lobby: one player per role, "No role" always open, picks change until the h
 for the season; late joiners pick from what is free; bots take none (placeholder). Roles and the lobby
 pick are built with DD Phase 4 "upgrades, roles and payments". **Why:** CEO; 5 and 6 player
 teams (D-038) need distinct jobs.
+
+### D-042 · 2026-10-08 · CEO, Director · Medium added; no imposter role
+Doc 01 "Roles" gains the Medium (placeholder, 10 roles): hears ghost voices through less static, never
+learns which voice is the creature's fake, so the flicker stays the only tiebreaker (doc 01 "Ghosts").
+An imposter role siding with the creature is rejected: it breaks "Honest signals cost something"
+(pegboard, flags, whistle, flicker and radios must tell the truth), moves deaths from player risk to
+betrayal ("Deaths come from player choices"), and turns "is that the creature?" into "is that the
+imposter?", which weakens voice mimicry. A separate opt-in mode may be considered after DD Phase 4,
+not before. **Why:** CEO asked; Director recommendation.
