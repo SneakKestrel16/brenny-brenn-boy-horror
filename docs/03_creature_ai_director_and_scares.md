@@ -355,7 +355,9 @@ Effects on the player are doc 02 section 13. What the creature does:
 ## 9. Night traps
 
 Doc 01 "Night Traps". The creature sets traps while in `lurk` at night, counts from doc 02 section
-11 (scaled by headcount, difficulty).
+11 (scaled by headcount, difficulty). A set that has waited 30 s (placeholder) for `lurk` lands in
+any state, so a lone player who keeps the creature busy still meets planned traps (P2-28, CEO
+2026-10-08; `trap_changed` carries `late: true`).
 
 | Item | Rule | Source |
 |---|---|---|

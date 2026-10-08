@@ -228,7 +228,7 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | P2-25 | Level Designer | CEO local play 2026-10-08: two barns on the full farm (doc 04 has one) | done | — |
 | P2-26 | AI Programmer | CEO local play 2026-10-08: creature parks in front of the barn; traps still not visible | done | P2-24 |
 | P2-27 | Gameplay | D-054: watering and fuel cans as physical pickups (pick up, carry, drop, shared); replace the per-player can count; update bots, QA scripts and creature tool theft | done | P2-24 |
-| P2-28 | AI Programmer | CEO play 2026-10-08 (`logs/qa/ceo_play5`): creature set no trap all night; sets wait for lurk (doc 03 s9) and a lone player kept it in lure/stalk/chase. Decide a fallback (e.g. set on retreat or after a wait) so planned traps land | todo | — |
+| P2-28 | AI Programmer | CEO play 2026-10-08 (`logs/qa/ceo_play5`): creature set no trap all night; sets wait for lurk (doc 03 s9) and a lone player kept it in lure/stalk/chase. Decide a fallback (e.g. set on retreat or after a wait) so planned traps land | done (D-056: 30 s wait, then any state) | — |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
 s3 "DD Phase 2" reads, and leaves a handoff note. Placeholders cite doc 01 or say `placeholder`.

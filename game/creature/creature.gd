@@ -77,6 +77,7 @@ const SANCTUARY_M := 10.0  ## doc 01 "Sanctuary"; the marker's `radius_m` wins
 const WORK_MAX := 64  ## placeholder: heard player noises kept as "where they work" for spot choice
 const TRAP_SET_FROM := 0.1  ## placeholder: the night's sets spread from 10% to 75% of the night
 const TRAP_SET_SPAN := 0.65
+const TRAP_WAIT_S := 30.0  ## placeholder (P2-28, CEO): a set waits this long for lurk, then lands in any state
 const TRAP_KINDS := {&"bear": [&"bear_trap", "bear_4p"], &"pit": [&"pit", "pit_4p"]}  ## traps.json id, ramp_up field; bells wait (enabled false)
 
 var state: StringName = &"lurk"
@@ -268,8 +269,9 @@ func _night(delta: float) -> void:
 		_start_night()
 		return
 	if _full:
-		while not _plan.is_empty() and _night_t >= float(_plan[0].t) and state == &"lurk":  # section 9: sets while in lurk
-			_place_trap(_plan.pop_front().kind)
+		# Section 9: sets while in lurk; P2-28 (CEO): a set TRAP_WAIT_S overdue lands in any state.
+		while not _plan.is_empty() and _night_t >= float(_plan[0].t) and (state == &"lurk" or _night_t >= float(_plan[0].t) + TRAP_WAIT_S):
+			_place_trap(_plan.pop_front().kind, state != &"lurk")
 		_theft_t += delta
 		if _theft_t >= 1.0:
 			_theft_t = 0.0
@@ -760,7 +762,8 @@ func _plan_traps() -> void:
 
 
 ## Doc 03 section 9 spot choice, then arms it. A bear set needs a taken trap (D-053): none left, it is skipped.
-func _place_trap(kind: StringName) -> void:
+## `late`: the set waited TRAP_WAIT_S for lurk and lands in another state (P2-28).
+func _place_trap(kind: StringName, late := false) -> void:
 	if kind == &"bear" and _stash <= 0:
 		Log.event(&"trap_skipped", {"kind": String(kind), "reason": "no_supply"})
 		return
@@ -770,7 +773,7 @@ func _place_trap(kind: StringName) -> void:
 		return
 	if kind == &"bear":
 		_stash -= 1
-	_arm(pick.node, kind, {"stolen": kind == &"bear", "region": pick.region, "work_m": pick.work_m})
+	_arm(pick.node, kind, {"stolen": kind == &"bear", "region": pick.region, "work_m": pick.work_m, "late": late})
 
 
 ## A free `trap_spots` marker for `kind`: no deep spot for a pit, none in sanctuary or within LIT_DOOR_M of

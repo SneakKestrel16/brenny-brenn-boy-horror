@@ -453,3 +453,10 @@ Doc 03 s9's clue-only rule (a trap shows only within 4 m) is paused until trap a
 logic and `trap_clue_shown` logs stay.
 **Why:** CEO ask. Testers couldn't find traps by eye, so trap sweeps (the Phase 2 "done when") had
 nothing to sweep.
+
+### D-056 · 2026-10-08 · CEO · A trap set waits for lurk, then lands anyway
+A planned night trap set waits up to 30 s (placeholder, `TRAP_WAIT_S` in `creature.gd`) for `lurk`.
+After the wait it lands in any state; `trap_changed` logs `late: true`. Doc 03 s9 updated.
+**Why:** CEO play 2026-10-08 (`logs/qa/ceo_play5`): a lone player kept the creature in
+lure/stalk/chase all night, so no planned trap landed (P2-28). CEO chose a timed wait over setting on
+retreat.
