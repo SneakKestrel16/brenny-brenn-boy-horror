@@ -202,17 +202,17 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
 | P2-01 | Director | Between-phase review: read Phase 1 logs and notes, add new problems to OPEN_ISSUES, settle what Phase 2 needs, turn rows below into acceptance | done | — |
-| P2-12 | Game Designer | Phase 2 data: medical bill, night trap counts, pegboard lock, recording takes; Q-048 (1) numbers | in review | P2-01 |
-| P2-02 | Level Designer | Full farm: second field, corn between the two fields, 4-player spawns, pegboard and recording-spot markers (doc 04) | in review | P2-01 |
+| P2-12 | Game Designer | Phase 2 data: medical bill, night trap counts, pegboard lock, recording takes; Q-048 (1) numbers | done | P2-01 |
+| P2-02 | Level Designer | Full farm: second field, corn between the two fields, 4-player spawns, pegboard and recording-spot markers (doc 04) | done | P2-01 |
 | P2-10 | Gameplay | Host/join menu, barn lobby before the match, pause menu with voice setting and push-to-talk (doc 05 s16, Q-042, Q-047) | in review | P2-01 |
-| P2-03 | Network & Voice | Staged barn recording: lobby lines, chatter and voice settings, clip capture and pre-share to all peers (doc 06 s11-12) | todo | P2-10 |
+| P2-03 | Network & Voice | Staged barn recording: lobby lines, chatter and voice settings, clip capture and pre-share to all peers (doc 06 s11-12) | in review | P2-10 |
 | P2-04 | AI Programmer | Replay recorded clips as lures, voice mimicry choice, tells and success logging (doc 03 s12) | todo | P2-03 |
-| P2-11 | Gameplay | Trap sweeps, player side: disarm, fill pit with a shovel, flags, hang traps on the pegboard (doc 05 s11) | todo | P2-02, P2-12 |
+| P2-11 | Gameplay | Trap sweeps, player side: disarm, fill pit with a shovel, flags, hang traps on the pegboard (doc 05 s11) | in review | P2-02, P2-12 |
 | P2-05 | AI Programmer | Night traps on the full farm from doc 02 s11 counts; pegboard theft and lock (doc 03 s9) | todo | P2-02, P2-11, P2-12 |
 | P2-06 | Gameplay | Dawn respawn and medical bills, day deaths billed at next dawn (doc 02 s8) | todo | P2-12 |
 | P2-07 | Gameplay | Up to 4 players: roster, spawn, player scaling data, bots fill (doc 05, `player_scaling.json`) | todo | P2-02 |
 | P2-08 | Audio Designer | Clip playback tells, chase sting (Q-048), barn ambience for the recording spot | todo | P2-03 |
-| P2-09 | QA | Review each P2 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 2 gate | todo | all above |
+| P2-09 | QA | Review each P2 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 2 gate | in progress | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
 s3 "DD Phase 2" reads, and leaves a handoff note. Placeholders cite doc 01 or say `placeholder`.
@@ -305,6 +305,7 @@ Acceptance:
   one trap a night; a trap in a lit building stays, in a dark one vanishes. Stolen traps are set next
   night on the ordinary list.
 - `--phase1` keeps the scripted traps.
+- The Creature exposes `clear_trap(id)`; `trap_race.gd` stops reaching into `_traps` (P2-11 handoff).
 
 ### P2-06 Dawn respawn and medical bills
 Owner: Gameplay. Output: `game/ghost/`, `game/core/`.

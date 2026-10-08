@@ -269,3 +269,22 @@ Audio (six volume sliders, voice setting, push-to-talk, mic device and gain), Gr
 shadows, render scale, VSync, FPS cap) and Display (window mode, resolution, monitor, FOV, brightness).
 All are saved through `Settings` and applied at boot. Graphics knobs must not break the doc 07 s10 corn
 budget or the light rules. **Why:** CEO request; players expect to set these before a session.
+
+### D-036 · 2026-10-08 · Director · P2 QA round 1 (P2-12, P2-02, P2-10)
+P2-12 and P2-02 pass QA and are done. P2-10 fails on two findings (QA-P2-10.md 1 and 2) and goes back to
+Gameplay: brightness follows doc 07 (ambient floor 0.2 to 0.4, no screen pass, no gamma), and the lobby
+light goes through the light rig. Cross-path edits are ratified: the CONTRACTS s4 Phase 2 groups (Director),
+P2-10's `tools/qa/package_playtest.py`, `project.godot`, `export_presets.cfg` and `.gitignore` changes
+(packager test and a real export run in P2-09), and P2-10's `net.gd` RPCs pending the Network & Voice
+owner review inside P2-03. QA's `tests/ui/test_settings_binds.gd` joins the suite. `grep_rules.py` no longer matches `ambient_light_energy` (Environment, not a light). **Why:** doc 07 sets
+the brightness rule and the light rules; changing them needs the CEO, and the menu does not need it.
+
+### D-037 · 2026-10-08 · Director · P2-03 and P2-11 in review; test runs stay off the CEO's desk
+(1) The pegboard starts full (5 bear traps, doc 02 s12). A disarmed trap is refused with `pegboard_full`
+until P2-05 theft frees a slot; `--pegboard-empty` stays a QA start. (2) P2-05 adds `clear_trap(id)` on the
+Creature so `trap_race.gd` stops writing the Creature's private `_traps`. (3) CONTRACTS s4 gains the
+`trap_sweep` group. (4) P2-11's QA screenshot lamp is removed: clue shots show what a player sees, and
+`grep_rules.py` passes. (5) Test runs: `multi.py` launches every instance with `--audio-driver Dummy`
+(`--sound` turns audio on) and the game arg `--free-mouse` (`Game.free_mouse`, never captures the mouse).
+**Why:** (1) doc 02 is the source and a theft-free pegboard is not testable before P2-05; (5) CEO request,
+test windows played audio and took the mouse while the CEO worked.

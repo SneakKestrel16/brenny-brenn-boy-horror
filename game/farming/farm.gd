@@ -19,7 +19,9 @@ func _ready() -> void:
 	add_to_group(&"farm")
 	for m in get_tree().get_nodes_in_group(&"plot_spots"):
 		var p := Plot.new()
-		p.locked = false  # Phase 1: all 12 plots open (doc 04 section 4 "switched on"); the upgrade row was unplantable at the playtest
+		# Phase 1: all plots open (the upgrade row was unplantable at the playtest). The full farm
+		# (--full-farm) keeps the `upgrade` plots locked until the shop sells them (P2-06).
+		p.locked = Game.full_farm and bool(m.get_meta(&"upgrade", false))
 		_attach(m, p, String(m.name), Vector3(2.8, 0.3, 2.8))
 	for g in [[&"sell_box", &"sell", "sell_box"], [&"well", &"well", "well"]]:
 		for n in get_tree().get_nodes_in_group(g[0]):
@@ -69,6 +71,14 @@ func add_coins(n: int, reason: StringName, peer: int) -> void:
 	_broadcast(&"money_changed", [coins])
 
 
+## Host: the shovel and bear trap in `peer`'s hands (P2-11); the cans and bag go out as `carry`.
+func set_hands(peer: int, shovel: bool, trap: bool) -> void:
+	var st := pstate(peer)
+	st.shovel = shovel
+	st.trap = trap
+	_broadcast(&"hands", [peer, shovel, trap])
+
+
 ## Host: tell every peer what `peer` now carries.
 func send_carry(peer: int) -> void:
 	var st := pstate(peer)
@@ -95,6 +105,9 @@ func _on_request(what: StringName, peer: int, args: Array) -> void:
 			for p in Game.players:
 				var cs := pstate(p)
 				Net.to_peers(&"apply_carry", [p, int(cs.can), int(cs.bag), bool(cs.get("fuel_can", false))], [peer])
+			for p in Game.players:
+				var hs := pstate(p)
+				Net.to_peers(&"apply_hands", [p, bool(hs.get("shovel", false)), bool(hs.get("trap", false))], [peer])
 			for t in targets.values():
 				if t is Plot:
 					Net.to_peers(&"apply_plot_changed", [t.id, t.state, t.watered, t.age], [peer])
@@ -104,7 +117,20 @@ func _on_apply(what: StringName, args: Array) -> void:
 	if _log_farm and what in [&"plot_changed", &"money_changed"]:  # QA: what this machine sees
 		Log.event(&"farm_seen", {"what": String(what), "args": args.map(func(a: Variant) -> Variant: return str(a) if a is StringName else a)})
 	match what:
-		&"carry": carry[args[0]] = {"can": args[1], "bag": args[2], "fuel_can": args[3]}
+		&"carry":
+			var old: Dictionary = carry.get(args[0], {})
+			carry[args[0]] = {"can": args[1], "bag": args[2], "fuel_can": args[3],
+					"shovel": old.get("shovel", false), "trap": old.get("trap", false)}
+		&"hands":
+			var c: Dictionary = carry.get(args[0], {"can": 0, "bag": 0, "fuel_can": false})
+			c.shovel = args[1]
+			c.trap = args[2]
+			carry[args[0]] = c
+		&"death":
+			if Game.is_host() and Game.players.has(args[0]):  # the dead drop the shovel and trap (placeholder: they vanish)
+				var ds := pstate(args[0])
+				if ds.get("shovel", false) or ds.get("trap", false):
+					set_hands.call_deferred(args[0], false, false)
 		&"money_changed": coins = int(args[0])
 		&"plot_changed":
 			if not Game.is_host() and targets.has(args[0]):

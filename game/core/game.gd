@@ -14,10 +14,10 @@ signal recording_requested
 const MAIN_SCENE := "res://game/core/main.tscn"
 const MENU_SCENE := "res://game/ui/main_menu.tscn"
 const LOBBY_SCENE := "res://game/ui/lobby.tscn"
-## Hook (P2-10): the world the lobby stands in (the dark barn, doc 04 s4). Point it at the full farm
-## scene when it lands; its `player_spawns` markers must lie inside the barn.
-const LOBBY_WORLD := "res://game/world/farm_phase1.tscn"
+const WORLD_PHASE1 := "res://game/world/farm_phase1.tscn"
+const WORLD_FULL := "res://game/world/farm.tscn"  ## DD Phase 2 full farm (P2-02); chosen by `--full-farm` (Q-053)
 
+var full_farm := OS.get_cmdline_user_args().has("--full-farm")  ## host and joiners both pass it: the session handshake does not carry it
 var players: Dictionary = {}  ## peer id -> PlayerState (a Dictionary until P1-04)
 var session_id := ""
 var difficulty: StringName = &"normal"
@@ -28,6 +28,18 @@ var in_session := false
 var in_lobby := false  ## the barn before the match: the host's Clock has not started (P2-10)
 var lobby_autostart := 0  ## QA: `--lobby-start=<n>` starts the match when n players are in the barn
 var console_open := false  ## the dev console or a menu has the keyboard (D-031); Player and HoldController ignore game input
+var free_mouse := OS.get_cmdline_user_args().has("--free-mouse")  ## test runs never capture the mouse (multi.py passes it)
+
+
+## `--free-mouse`: undo any capture (Player, pause menu, recording screen) so a test window never holds the mouse.
+func _process(_delta: float) -> void:
+	if free_mouse and Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+## The level scene Main and the lobby load (the lobby barn is the same scene; spawns lie in the barn).
+func world_path() -> String:
+	return WORLD_FULL if full_farm else WORLD_PHASE1
 
 
 func is_host() -> bool:
@@ -115,7 +127,7 @@ func _go_main() -> void:
 
 ## Hook for P2-03 (doc 06 s12 step 5): true once every clip is pre-shared. Start waits for it.
 func match_ready() -> bool:
-	return true
+	return Voice.clips.ready_to_start()
 
 
 ## Host: leaves the lobby for the match. Movement state from the lobby is dropped so the new Player

@@ -4,6 +4,8 @@ extends Node
 ## leaving range. The host decides everything. `-- --autochore` drives a scripted chore loop for the
 ## 2-instance test (QA only).
 
+const Interactable := preload("res://game/interaction/interactable.gd")
+const FlagSpot := preload("res://game/traps_player/flag_spot.gd")
 const REACH_M := 3.0  ## ray length from the eye (placeholder; the host range check is range_m)
 const PICK_MASK := 8  ## layer 4 "interactable"
 const REFUSED_SHOW_MS := 2000  ## how long a refusal reason stays on screen (placeholder)
@@ -17,6 +19,8 @@ var _t := 0.0
 var _ring: MeshInstance3D
 var _result := &""  ## last host answer for the autochore: done / refused / cancelled
 var _holding := false
+var _action := &"interact"  ## the input that started this hold (releasing it cancels)
+var _flag: Node  ## P2-11: the FlagSpot the ring follows during a place_flag hold
 var _need_release := false  ## a refused hold waits for `interact` to be released before it retries
 var target_farm: Node  ## the Farm (found lazily); its `carry` is what this player holds
 var _autopry := OS.get_cmdline_user_args().has("--autopry")
@@ -41,6 +45,8 @@ func _ready() -> void:
 	add_child(_ring)
 	if OS.get_cmdline_user_args().has("--autochore"):
 		_autochore.call_deferred()
+	if OS.get_cmdline_user_args().has("--autosweep"):
+		_autosweep.call_deferred()
 
 
 func _physics_process(delta: float) -> void:
@@ -70,8 +76,14 @@ func _physics_process(delta: float) -> void:
 		if tgt != null:
 			var vs: Array[StringName] = tgt.verbs_for(mine)
 			aimed_verb = vs[0] if not vs.is_empty() else &""
-		if not Input.is_action_pressed(&"interact"):
+		if not Input.is_action_pressed(&"interact") and not Input.is_action_pressed(&"alt_use"):
 			_need_release = false
+		if tgt == null and not _need_release and Input.is_action_pressed(&"alt_use") and not Game.console_open:
+			var spot := _ground_spot()  # right mouse: plant a flag where the ray lands (doc 01 "Flags")
+			if spot != null:
+				_flag = spot
+				start(&"place_flag", spot, &"alt_use")
+				return
 		if tgt != null and not _need_release and Input.is_action_pressed(&"interact") and not Game.console_open:
 			var verbs: Array[StringName] = tgt.verbs_for(mine)
 			if not verbs.is_empty():
@@ -80,7 +92,7 @@ func _physics_process(delta: float) -> void:
 	_t += delta
 	_ring.scale = Vector3.ONE * clampf(_t / _hold_s, 0.01, 1.0)
 	_ring.global_position = _target.target_pos() + Vector3(0, 1.4, 0)
-	if not Input.is_action_pressed(&"interact") and not _scripted:
+	if not Input.is_action_pressed(_action) and not _scripted:
 		cancel()
 
 
@@ -97,10 +109,11 @@ func fresh_refusal() -> StringName:
 	return refused_reason if Time.get_ticks_msec() - _refused_ms < REFUSED_SHOW_MS else &""
 
 
-func start(verb: StringName, target: Node) -> void:
+func start(verb: StringName, target: Node, action: StringName = &"interact") -> void:
 	_verb = verb
 	_target = target
-	_hold_s = Data.hold_s(verb)
+	_action = action
+	_hold_s = Interactable.hold_seconds(verb)
 	_t = 0.0
 	_holding = true
 	_result = &""
@@ -116,8 +129,24 @@ func cancel() -> void:
 
 func _end(result: StringName) -> void:
 	_holding = false
+	if _flag != null:
+		_flag.free()
+		_flag = null
 	_ring.visible = false
 	_result = result
+
+
+## A FlagSpot on the ground the ray hits (world layer 1), or null. The wire id carries the position.
+func _ground_spot() -> Node:
+	var from := _cam.global_position
+	var q := PhysicsRayQueryParameters3D.create(from, from - _cam.global_transform.basis.z * REACH_M, 1)
+	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
+	if hit.is_empty():
+		return null
+	var spot := FlagSpot.new()
+	spot.id = FlagSpot.make_id(hit.position)
+	spot.pos = FlagSpot.from_id(spot.id)
+	return spot
 
 
 func _look_target() -> Node:
@@ -133,7 +162,10 @@ func _on_apply(what: StringName, args: Array) -> void:
 	if what == &"hold_done" and args[1] != _target.id:
 		return  # a late answer for an earlier hold of the same verb
 	match what:
-		&"hold_done": _end(&"done")
+		&"hold_done":
+			_end(&"done")
+			if Interactable.INSTANT_S.has(args[0]) or args[0] == &"place_flag":
+				_need_release = true  # one press, one action (no shovel flapping)
 		&"refused":
 			_need_release = true
 			refused_reason = args[1]
@@ -190,3 +222,65 @@ func _autochore() -> void:
 	await _do(&"sell", "sell_box", Vector3(-1.6, 0, 0))
 	await _do(&"fill_can", "well", Vector3(1.6, 0, 0))
 	Log.event(&"autochore_done", {"coins": farm.coins})
+
+
+# --- QA script (`-- --autosweep`, P2-11) -----------------------------------------------------------------
+# Host: waits for a set bear trap, takes the shovel, disarms it, hangs it, plants a flag. Joiner: waits for
+# a set pit, takes the shovel, fills it, plants a flag. Teleports (the host speed check is off under --autosweep).
+
+func _sweep_go(verb: StringName, target: Node, stand: Vector3) -> void:
+	var tid := String(target.id)
+	var tpos: Vector3 = target.target_pos()
+	var pin := func() -> void:  # the creature's QA walker also steers this body: hold it at the spot
+		player.nav_path.clear()
+		player.global_position = Vector3(stand.x, player.global_position.y, stand.z)
+	var settle := get_tree().create_timer(0.6)  # let the host see the move
+	while settle.time_left > 0.0:
+		pin.call()
+		await get_tree().physics_frame
+	_scripted = true
+	start(verb, target)
+	var timeout := get_tree().create_timer(_hold_s + 4.0)
+	while _holding and timeout.time_left > 0.0:
+		pin.call()
+		await get_tree().physics_frame
+	_scripted = false
+	if _holding:
+		_end(&"timeout")
+	Log.event(&"autosweep_step", {"verb": String(verb), "target": tid, "result": String(_result), "at": [player.global_position.x, player.global_position.z], "target_at": [tpos.x, tpos.z]})
+
+
+func _autosweep() -> void:
+	var farm := get_tree().get_first_node_in_group(&"farm")
+	var race := get_tree().get_first_node_in_group(&"trap_race")
+	var kind := &"bear" if Game.is_host() else &"pit"
+	await get_tree().create_timer(2.0).timeout
+	var peg: Node = farm.targets["pegboard"]
+	var board := peg.get_parent() as Node3D
+	var at_board := board.global_position + board.global_transform.basis * Vector3(0, -1.5, -1.5)
+	if not Game.is_host():
+		at_board += Vector3(1.0, 0, 0)
+	var timeout := get_tree().create_timer(160.0)
+	var id := ""
+	while id == "" and timeout.time_left > 0.0:
+		for k in race.traps:
+			if race.traps[k].kind == kind and race.traps[k].state == &"set":
+				id = k
+		await get_tree().create_timer(0.5).timeout
+	if id == "":
+		Log.event(&"autosweep_step", {"verb": "wait_trap", "target": "", "result": "timeout"})
+		return
+	await _sweep_go(&"take_shovel", peg, at_board)
+	var t: Node = farm.targets[id]
+	var tp: Vector3 = t.target_pos()
+	await _sweep_go(&"disarm_bear" if kind == &"bear" else &"fill_pit", t, tp + Vector3(1.9, 0, 0))
+	if kind == &"bear":
+		await _sweep_go(&"hang_trap", peg, at_board)
+	await _sweep_go(&"return_shovel", peg, at_board)
+	var spot := FlagSpot.new()
+	var p := at_board + Vector3(-2.0 if Game.is_host() else 2.0, 0, -2.0)
+	spot.id = FlagSpot.make_id(p)
+	spot.pos = FlagSpot.from_id(spot.id)
+	_flag = spot
+	await _sweep_go(&"place_flag", spot, at_board)
+	Log.event(&"autosweep_done", {})

@@ -4,9 +4,17 @@ extends Node
 ## `st` is the host's per-player dictionary (`Game.players[peer]` plus `can` and `bag`); on a client
 ## `verbs_for` gets the local replicated view only (it picks the prompt, the host decides).
 
+## Verbs that are not chores, so labor.json has no entry: taking and returning the shovel (P2-11).
+const INSTANT_S := {&"take_shovel": 0.3, &"return_shovel": 0.3}  ## placeholder
+
 var id := ""
 var range_m := 2.0  ## doc 05 section 7 step 2 (placeholder)
 var farm: Node  ## the Farm that owns this
+
+
+## Hold seconds for a verb: labor.json, or INSTANT_S for the few verbs that are not chores.
+static func hold_seconds(verb: StringName) -> float:
+	return float(INSTANT_S[verb]) if INSTANT_S.has(verb) else Data.hold_s(verb)
 
 
 func target_pos() -> Vector3:
@@ -20,6 +28,11 @@ func verbs_for(_st: Dictionary) -> Array[StringName]:
 ## Empty StringName for OK, else the refusal reason.
 func can_start(_verb: StringName, _st: Dictionary) -> StringName:
 	return &"no_such_verb"
+
+
+## Host only: the hold has just been accepted (a noise at hold start, doc 05 section 8).
+func on_start(_verb: StringName, _peer: int) -> void:
+	pass
 
 
 ## Host only: apply the effect (the registry has already logged and will log `hold_completed`).

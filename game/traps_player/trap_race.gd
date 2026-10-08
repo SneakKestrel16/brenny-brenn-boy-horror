@@ -4,8 +4,10 @@ extends Node
 ## living player on an armed trap, a bear trap pins them and starts the race (start distance over
 ## `trap_race_speed_mps` seconds), a finished `pry` frees them and starts Shaken, the deadline kills
 ## (`Death`). A pit only makes the player drop the bag (doc 01 "Night Traps").
-## Not built yet (later phases): disarm, fill_pit, bells, flags, pegboard, Taint, the half-RTT credit
-## (needs `Net.rtt_ms`, so `credit_ms` is logged 0).
+## P2-11 adds the sweep side: every set trap gets a `TrapTarget` (disarm_bear, fill_pit), `clear_trap`
+## ends one (`trap_changed` `disarmed` / `filled`), flags and the pegboard are in `trap_sweep.gd`.
+## Not built yet (later phases): bells, Taint, the half-RTT credit (needs `Net.rtt_ms`, so `credit_ms`
+## is logged 0).
 
 const TrapTarget := preload("res://game/traps_player/trap_target.gd")
 const DEEP_M := 18.0  ## doc 03 section 7 deep trap start distance (placeholder)
@@ -22,6 +24,7 @@ var _death: Node
 var _registry: Node
 var _force := OS.get_cmdline_user_args().has("--force-spring")  # QA: spring the first armed bear trap on the host player (and let pry reach it)
 var _force_t := 0.0
+var _sync_t := 0.0
 
 
 func _ready() -> void:
@@ -81,6 +84,10 @@ func _physics_process(delta: float) -> void:
 	if not Game.is_host():
 		return
 	_force_t += delta
+	_sync_t += delta
+	if _sync_t >= 0.5:
+		_sync_t = 0.0
+		sync_set()
 	if _force and _force_t >= 3.0 and races.is_empty() and not Game.is_ghost(1):
 		_force_t = 0.0
 		for t in _creature.debug_state().traps.values():
@@ -106,6 +113,36 @@ func _physics_process(delta: float) -> void:
 					r.helped = true
 		if r.t >= r.deadline:
 			_lose(id, r)
+
+
+## Host: the Creature tells only the other peers about `set` and `moved` (its own copy keeps the host's
+## clue), so the host reads its trap table to learn which spots hold an armed trap (doc 03 section 9).
+func sync_set() -> void:
+	var live := {}
+	for t in _creature.debug_state().traps.values():
+		if t.armed:
+			live[t.id] = true
+			if traps.get(t.id, {}).get("state", &"") != &"set":
+				Net.apply_received.emit(&"trap_changed", [t.id, t.kind, &"set", t.position])
+	for id in traps.keys():
+		if traps[id].state == &"set" and not live.has(id):
+			Net.apply_received.emit(&"trap_changed", [id, traps[id].kind, &"moved", traps[id].position])
+
+
+## Host: a sweep hold finished (`disarmed` for a bear trap in hand, `filled` for a pit). Doc 09 section 3
+## reads the `trap_changed` line.
+func clear_trap(id: String, state: StringName, peer: int) -> void:
+	var t: Dictionary = traps[id]
+	Log.event(&"trap_changed", {"trap_id": id, "state": String(state), "by": peer, "kind": String(t.kind)})
+	# The Creature's table is private and `debug_state()` is a copy. Without this it never sets that kind
+	# again (`_set_trap` keeps a not-armed entry). Inference: needs a `clear_trap` on the Creature (AI Programmer).
+	var table: Dictionary = _creature.get("_traps")
+	if table.has(t.kind) and table[t.kind].id == id:
+		table.erase(t.kind)
+	_bcast(&"trap_changed", [id, t.kind, state, t.position])
+	var sweep := get_tree().get_first_node_in_group(&"trap_sweep")
+	if sweep:
+		sweep.remove_flags_near(t.position, 2.0)
 
 
 ## Host: the victim's pry finished (a helper's hold only shortens it, doc 03 section 7).
@@ -153,10 +190,17 @@ func _on_apply(what: StringName, args: Array) -> void:
 	match what:
 		&"trap_changed":
 			var id: String = args[0]
-			traps[id] = {"kind": args[1], "state": args[2], "position": args[3]}
-			if args[2] == &"sprung":
-				_show(id, args[1])
-			elif victims.has(id):
+			if args[2] == &"moved":
+				traps.erase(id)
+			else:
+				traps[id] = {"kind": args[1], "state": args[2], "position": args[3]}
+			match args[2]:
+				&"set": _ensure_target(id)
+				&"sprung":
+					_ensure_target(id)
+					_show(id, args[1])
+				_: _forget(id)  # moved, disarmed, filled
+			if args[2] != &"sprung" and victims.has(id):
 				_pin(victims[id], false)
 				victims.erase(id)
 		&"trap_race":
@@ -187,31 +231,58 @@ func _player(peer: int) -> Node:
 	return players.player(peer) if players else null
 
 
+func _spot(id: String) -> Node:
+	for m in get_tree().get_nodes_in_group(&"trap_spots"):
+		if String(m.name) == id:
+			return m
+	return null
+
+
+## One hold target per spot with a live trap (or a sprung one), made on first sight.
+func _ensure_target(id: String) -> void:
+	var farm := get_parent().get_node("Farm")
+	var m := _spot(id)
+	if m == null or farm.targets.has(id):
+		return
+	var t := TrapTarget.new()
+	t.race = self
+	t.id = id
+	t.farm = farm
+	m.add_child(t)
+	t.add_pick_body(Vector3(1.6, 0.6, 1.6))
+	t.pick = m.get_child(m.get_child_count() - 1)
+	if _force:
+		t.range_m = 1000.0  # QA: the host player is not at the trap
+	farm.targets[id] = t
+
+
+## The trap is gone (moved, disarmed, filled): no disc, no hold target. Deferred so a hold finishing this
+## frame can still read its target.
+func _forget(id: String) -> void:
+	var m := _spot(id)
+	if m and m.get_node_or_null(^"Sprung"):
+		m.get_node(^"Sprung").free()
+	var farm := get_parent().get_node("Farm")
+	if farm.targets.has(id) and farm.targets[id] is TrapTarget:
+		var t = farm.targets[id]
+		farm.targets.erase(id)
+		t.pick.queue_free()
+		t.queue_free()
+
+
 ## Placeholder art until the Technical Artist's models: a flat disc, red for a bear trap.
 func _show(id: String, kind: StringName) -> void:
-	var farm := get_parent().get_node("Farm")
-	if farm.targets.has(id):
+	var m := _spot(id)
+	if m == null or m.get_node_or_null(^"Sprung"):
 		return
-	for m in get_tree().get_nodes_in_group(&"trap_spots"):
-		if String(m.name) != id:
-			continue
-		var mesh := MeshInstance3D.new()
-		var c := CylinderMesh.new()
-		c.top_radius = 0.5 if kind == &"bear" else 0.8
-		c.bottom_radius = c.top_radius
-		c.height = 0.06
-		mesh.mesh = c
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = Color(0.45, 0.08, 0.06) if kind == &"bear" else Color(0.1, 0.07, 0.04)
-		mesh.material_override = mat
-		m.add_child(mesh)
-		var t := TrapTarget.new()
-		t.race = self
-		t.id = id
-		t.farm = farm
-		m.add_child(t)
-		t.add_pick_body(Vector3(1.6, 0.6, 1.6))
-		if _force:
-			t.range_m = 1000.0  # QA: the host player is not at the trap
-		farm.targets[id] = t
-		return
+	var mesh := MeshInstance3D.new()
+	mesh.name = "Sprung"
+	var c := CylinderMesh.new()
+	c.top_radius = 0.5 if kind == &"bear" else 0.8
+	c.bottom_radius = c.top_radius
+	c.height = 0.06
+	mesh.mesh = c
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.45, 0.08, 0.06) if kind == &"bear" else Color(0.1, 0.07, 0.04)
+	mesh.material_override = mat
+	m.add_child(mesh)

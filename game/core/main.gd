@@ -2,11 +2,8 @@ extends Node3D
 ## Doc 05 section 3: the running session. World is the level scene; Players is the per-peer Player
 ## nodes and the move stream (game/player/players.gd).
 
-const FARM := "res://game/world/farm_phase1.tscn"
-
-
 func _ready() -> void:
-	var world := (load(FARM) as PackedScene).instantiate()
+	var world := (load(Game.world_path()) as PackedScene).instantiate()
 	world.name = "World"
 	add_child(world)
 	var farm := Node.new()
@@ -41,6 +38,10 @@ func _ready() -> void:
 	traps.set_script(load("res://game/traps_player/trap_race.gd"))
 	traps.name = "TrapRace"
 	add_child(traps)
+	var sweep := Node.new()  # P2-11: flags and the shed pegboard (game/traps_player/); after Farm
+	sweep.set_script(load("res://game/traps_player/trap_sweep.gd"))
+	sweep.name = "TrapSweep"
+	add_child(sweep)
 	add_child(PauseMenu.new())  # P2-10
 	add_child(DebugView.new())  # P1-12: hidden unless --debug-view or F3 (host)
 	if DevConsole.enabled():  # D-031: ` opens it in debug runs or with --dev

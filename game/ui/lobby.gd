@@ -1,7 +1,7 @@
 extends Node3D
 ## P2-10 lobby (doc 04 section 4, doc 06 section 11): players stand in the dark barn before the match.
-## It loads `Game.LOBBY_WORLD` (hook: point it at the full farm), one static warm lantern (only ghosts
-## flicker lights, doc 07 section 4), the Players node and a text roster. The host starts the match
+## It loads `Game.world_path()` (the full farm with `--full-farm`) under WorldLook at night (every light goes
+## through the render layer, doc 07 section 4), the Players node and a text roster. The host starts the match
 ## with Enter or the pause menu; `Game.match_ready()` is the P2-03 clip pre-share hook.
 ## Debug: `--lobby-start=<n>` (Game.lobby_autostart) starts when n players are present.
 
@@ -13,24 +13,14 @@ var _autostart_t := 0.0
 
 
 func _ready() -> void:
-	var world := (load(Game.LOBBY_WORLD) as PackedScene).instantiate()
+	var world := (load(Game.world_path()) as PackedScene).instantiate()
 	world.name = "World"
 	add_child(world)
-	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.01, 0.012, 0.02)
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.25, 0.28, 0.4)
-	env.ambient_light_energy = 0.35
-	var we := WorldEnvironment.new()
-	we.environment = env
-	add_child(we)
-	var lantern := OmniLight3D.new()  # static: it blows out in the recording scene (P2-03), never flickers
-	lantern.light_color = Color(1.0, 0.7, 0.4)
-	lantern.light_energy = 2.0
-	lantern.omni_range = 9.0
-	lantern.position = Vector3(0, 2.2, -8)
-	add_child(lantern)
+	Clock.phase = &"night"  # the clock is idle in the lobby; WorldLook reads the phase. Clock.start() resets it at match start.
+	var look := Node.new()  # lighting and the building lights come from the render layer, not from here
+	look.set_script(load("res://game/render/world_look.gd"))
+	look.name = "Look"
+	add_child(look)
 	var players := Node3D.new()
 	players.set_script(load("res://game/player/players.gd"))
 	players.name = "Players"

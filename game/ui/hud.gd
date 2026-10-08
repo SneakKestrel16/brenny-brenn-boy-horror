@@ -6,8 +6,11 @@ extends CanvasLayer
 const HINT_S := 20.0  ## controls hint stays this long after first spawn (placeholder)
 const PHASE_TEXT := {&"day": "Daylight", &"dusk": "Dusk", &"night": "NIGHT", &"dawn": "Dawn", &"harvest_moon": "HARVEST MOON"}
 const VERB_TEXT := {&"plant": "Plant", &"water": "Water", &"harvest": "Harvest", &"sell": "Sell the crop",
-		&"fill_can": "Fill the watering can", &"pry": "Pry free", &"refuel": "Refuel"}
-const REFUSED_TEXT := {&"locked": "Locked"}
+		&"fill_can": "Fill the watering can", &"pry": "Pry free", &"refuel": "Refuel",
+		&"disarm_bear": "Disarm the bear trap", &"fill_pit": "Fill the pit", &"place_flag": "Plant a flag",
+		&"hang_trap": "Hang the trap on the board", &"take_shovel": "Take the shovel", &"return_shovel": "Hang the shovel back"}
+const REFUSED_TEXT := {&"locked": "Locked", &"need_shovel": "You need the shovel", &"hands_full": "Your hands are full",
+		&"pegboard_full": "No free hook", &"flag_here": "A flag is already here", &"not_armed": "Nothing set here"}
 
 var player: CharacterBody3D
 var hold: Node  ## the player's HoldController
@@ -42,8 +45,8 @@ func _ready() -> void:
 	_hint.offset_right = 260
 	_hint.offset_top = -150
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hint.text = "CONTROLS\n%s  move\n%s  sprint (runs out, and it is loud)\n%s  crouch (quiet)\n%s  stand still (silent)\nHold %s  work the thing you look at\n%s  free the mouse" % [
-			_move_keys(), _key(&"sprint"), _key(&"crouch"), _key(&"go_still"), _key(&"interact"), _key(&"pause")]
+	_hint.text = "CONTROLS\n%s  move\n%s  sprint (runs out, and it is loud)\n%s  crouch (quiet)\n%s  stand still (silent)\nHold %s  work the thing you look at\nHold %s  plant a flag where you look\n%s  free the mouse" % [
+			_move_keys(), _key(&"sprint"), _key(&"crouch"), _key(&"go_still"), _key(&"interact"), _key(&"alt_use"), _key(&"pause")]
 	_bar = ProgressBar.new()
 	_bar.show_percentage = false
 	_bar.custom_minimum_size = Vector2(220, 14)
@@ -84,7 +87,7 @@ func _process(delta: float) -> void:
 	_bar.value = player.stamina
 	_bar.modulate = Color(1, 0.4, 0.3) if player.exhausted else Color.WHITE
 	_bar.visible = not player.ghost
-	_hint.visible = _t < HINT_S
+	_hint.visible = _t < HINT_S and not Game.console_open  # hidden behind the pause menu
 	_hint.modulate.a = clampf((HINT_S - _t) / 3.0, 0.0, 1.0)
 	var text := ""
 	if player.ghost:

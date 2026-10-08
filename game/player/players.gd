@@ -136,6 +136,9 @@ func _on_bytes(from: int, pkt: PackedByteArray) -> void:
 
 ## Host only. Validates one frame against the host's own state for the peer, keeps and relays the
 ## (possibly clamped) result, and emits footstep Noise once per stride from the same stream.
+var _qa_free := OS.get_cmdline_user_args().has("--autosweep")  # QA: the sweep script teleports between work spots
+
+
 func submit(peer: int, f: Dictionary) -> void:
 	var st: Dictionary = Game.players.get(peer, {})
 	if not Game.players.has(peer):
@@ -155,7 +158,7 @@ func submit(peer: int, f: Dictionary) -> void:
 		var dt := maxf((now - st.t_ms) / 1000.0, (f.seq - st.seq) / SEND_HZ)
 		var mode := &"crouch" if f.crouch else (&"sprint" if f.sprint else &"walk")
 		var max_speed := Data.speed(mode) * float(st.get("speed_mult", 1.0))
-		if ghost:
+		if ghost or _qa_free:
 			max_speed = 1000.0  # ponytail: ghosts fly free until Phase 3 gives them a ghost speed
 		var r := SpeedCheck.check(st.pos, f.pos, dt, max_speed)
 		if r.violation:

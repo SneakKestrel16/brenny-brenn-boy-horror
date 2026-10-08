@@ -31,6 +31,8 @@ var _cam: Camera3D
 var _held: Node3D
 var _water_can: MeshInstance3D
 var _fuel_can: MeshInstance3D
+var _shovel: MeshInstance3D  ## P2-11 placeholder props
+var _trap_prop: MeshInstance3D
 var _shape: CollisionShape3D
 var _mesh: MeshInstance3D
 var _seq := 0
@@ -90,10 +92,17 @@ func _make_held() -> void:
 	_water_can = _prop(Vector3(0.22, 0.22, 0.3), Color(0.5, 0.58, 0.64))
 	_fuel_can = _prop(Vector3(0.2, 0.3, 0.14), Color(0.85, 0.15, 0.1))
 	_fuel_can.visible = false
+	_shovel = _prop(Vector3(0.08, 0.08, 1.1), Color(0.45, 0.32, 0.18))  # long wooden handle
+	_shovel.position = Vector3(0.15, 0.05, -0.2)
+	_shovel.visible = false
+	_trap_prop = _prop(Vector3(0.35, 0.08, 0.35), Color(0.2, 0.2, 0.22))  # a disarmed bear trap, dark iron
+	_trap_prop.position = Vector3(-0.35, 0.0, 0.0)
+	_trap_prop.visible = false
 	var farm := get_tree().get_first_node_in_group(&"farm")  # a late spawn still shows what the farm already knows
 	if farm and farm.carry.has(peer):
 		var c: Dictionary = farm.carry[peer]
 		_on_carry(&"carry", [peer, c.can, c.bag, c.fuel_can])
+		_on_carry(&"hands", [peer, c.get("shovel", false), c.get("trap", false)])
 
 
 func _prop(size: Vector3, col: Color) -> MeshInstance3D:
@@ -109,6 +118,10 @@ func _prop(size: Vector3, col: Color) -> MeshInstance3D:
 
 
 func _on_carry(what: StringName, args: Array) -> void:
+	if what == &"hands" and args[0] == peer:
+		_shovel.visible = bool(args[1])
+		_trap_prop.visible = bool(args[2])
+		return
 	if what != &"carry" or args[0] != peer:
 		return
 	_fuel_can.visible = bool(args[3])

@@ -4,9 +4,12 @@ extends Node
 ## sends it. Join is by raw IP[:port] only (D-024: friends join over Tailscale); join codes and UPnP
 ## stay in spikes/voice/ until a task asks for them.
 ##
-## Not built yet (doc 06): request_join / apply_join_accepted / apply_join_refused (build id, full
-## farm), slots, player_uid, host-left card, peer timeouts, rtt_ms, the --net-sim-* queue. Add each
-## with the task that first needs it.
+## Identity (P2-03): `player_uid()` and `request_join`; the host keeps `profiles` (peer -> uid, name)
+## and sends them with `apply_roster`. Debug user arg `--profile=<name>` keeps the uid and the voice
+## clips under `user://profiles/<name>/`, so two local copies don't share them.
+##
+## Not built yet (doc 06): apply_join_accepted / apply_join_refused (build id, full farm), slots,
+## peer timeouts, rtt_ms, the --net-sim-* queue. Add each with the task that first needs it.
 
 const DEFAULT_PORT := 45120  ## doc 06 section 2; 45121..45124 if taken locally
 const PORT_TRIES := 4
@@ -19,8 +22,13 @@ signal bytes_received(from_peer: int, packet: PackedByteArray)
 ## The host sent `apply_teleport` (doc 06 section 7). Added in P1-04.
 signal teleport_received(position: Vector3)
 
+const PROTOCOL_VERSION := 1  ## doc 06 section 5 `request_join`; refusing a mismatch is not built yet
+const NAME_MAX := 24  ## display name characters kept (placeholder)
+
 var port := 0  ## the port actually opened (host) or dialled (client)
+var profiles := {}  ## peer id -> {"uid": 32 hex, "name": display name}; the host's copy is the truth
 var _join_target := ""
+var _uid := ""
 
 
 func _ready() -> void:
@@ -48,7 +56,40 @@ func host(p_port: int = DEFAULT_PORT) -> Error:
 		return err
 	_use(peer)
 	port = p_port
+	profiles = {1: {"uid": player_uid(), "name": _clean_name(str(Settings.get_value(&"player_name")))}}
 	return OK
+
+
+## This install's folder in `user://` (doc 06 section 5); `--profile=<name>` gives each local copy its own.
+static func user_dir() -> String:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--profile=") and a.substr(10).is_valid_ascii_identifier():
+			return "user://profiles/%s/" % a.substr(10)
+	return "user://"
+
+
+## Doc 06 section 5: a random 128-bit id made once per install, as 32 hex digits.
+func player_uid() -> String:
+	if _uid.is_empty():
+		var path := user_dir() + "player_uid.txt"
+		if FileAccess.file_exists(path):
+			_uid = FileAccess.get_file_as_string(path).strip_edges()
+		if not _valid_uid(_uid):
+			_uid = Crypto.new().generate_random_bytes(16).hex_encode()
+			DirAccess.make_dir_recursive_absolute(user_dir())
+			var f := FileAccess.open(path, FileAccess.WRITE)
+			if f:
+				f.store_string(_uid)
+	return _uid
+
+
+static func _valid_uid(uid: String) -> bool:
+	return uid.length() == 32 and uid.is_valid_hex_number()
+
+
+static func _clean_name(n: String) -> String:
+	n = n.strip_edges().substr(0, NAME_MAX)
+	return n if not n.is_empty() else "Farmer"
 
 
 ## Client. `address` is `ip` or `ip:port` (IPv6 literals take the default port).
@@ -124,7 +165,7 @@ func _on_peer_connected(id: int) -> void:
 		return
 	Game.players[id] = {}
 	to_peers(&"apply_session_state", [Game.session_id, Log.now(), Data.phase1, Data.hash_value, Game.difficulty, Game.in_lobby], [id])
-	to_peers(&"apply_roster", [Game.players.keys()])
+	to_peers(&"apply_roster", [Game.players.keys(), profiles])
 	for p in Game.players:  # the newcomer learns everyone's voice setting (P2-10)
 		if p != id:
 			to_peers(&"apply_voice_setting", [p, Game.voice_setting_of(p)], [id])
@@ -137,7 +178,8 @@ func _on_peer_disconnected(id: int) -> void:
 	if not Game.is_host():
 		return
 	Game.players.erase(id)
-	to_peers(&"apply_roster", [Game.players.keys()])
+	profiles.erase(id)
+	to_peers(&"apply_roster", [Game.players.keys(), profiles])
 	Log.event(&"player_left", {"player": id})
 	Game.player_left.emit(id)
 
@@ -147,6 +189,9 @@ func _on_peer_disconnected(id: int) -> void:
 func _on_connected_to_server() -> void:
 	_pin_throttle(1)
 	Log.event(&"net_connected", {"target": _join_target})
+	# Doc 06 section 5. The voice setting also follows from Game.send_voice_setting once in session.
+	rpc_id(1, &"request_join", PROTOCOL_VERSION, Game.build_id(), player_uid(),
+			_clean_name(str(Settings.get_value(&"player_name"))), Game.wire_voice_setting())
 
 
 func _on_connection_failed() -> void:
@@ -183,8 +228,64 @@ func apply_voice_setting(peer: int, setting: String) -> void:
 	Game.apply_voice_setting(peer, setting)
 
 
+# --- Recording light and clip pre-share (doc 06 sections 11 and 12); added in P2-03 ---------------
+# Every clip message, `request_clips_ready` included, rides reliable channel 3 so they stay in order: a
+# manifest before its chunks, and a client's ready report after the clips it sent.
+
+## Owner to host to all: capture is live on the owner's machine (doc 06 s11 "The recording light").
+@rpc("any_peer", "call_remote", "reliable")
+func request_recording_light(on: bool) -> void:
+	Voice.on_recording_light_request(_sender(), on)
+
+
 @rpc("authority", "call_remote", "reliable")
-func apply_roster(peers: Array) -> void:
+func apply_recording_light(peer: int, on: bool) -> void:
+	Voice.apply_recording_light(peer, on)
+
+
+## Owner to host: the owner's whole clip set (an empty one deletes them all). It replaces the last.
+@rpc("any_peer", "call_remote", "reliable", 3)
+func request_clip_manifest(manifest: Array) -> void:
+	Voice.clips.on_manifest_request(_sender(), manifest)
+
+
+@rpc("authority", "call_remote", "reliable", 3)
+func apply_clip_manifest(owner_peer: int, manifest: Array) -> void:
+	Voice.clips.apply_manifest(owner_peer, manifest)
+
+
+@rpc("any_peer", "call_remote", "reliable", 3)
+func request_clip_chunk(clip_id: String, index: int, count: int, bytes: PackedByteArray) -> void:
+	Voice.clips.on_chunk_request(_sender(), clip_id, index, count, bytes)
+
+
+@rpc("authority", "call_remote", "reliable", 3)
+func apply_clip_chunk(owner_peer: int, clip_id: String, index: int, count: int, bytes: PackedByteArray) -> void:
+	Voice.clips.apply_chunk(owner_peer, clip_id, index, count, bytes)
+
+
+## Client to host: a digest of the complete clips it holds ("" while its recording screen is open).
+@rpc("any_peer", "call_remote", "reliable", 3)
+func request_clips_ready(digest: String) -> void:
+	Voice.clips.on_ready_request(_sender(), digest)
+
+
+## Doc 06 section 5 (P2-03): who the joiner is. Only uid and name are kept; version refusal is not built.
+@rpc("any_peer", "call_remote", "reliable")
+func request_join(protocol_version: int, _build_id: String, uid: String, display_name: String, _voice_setting: String) -> void:
+	var peer := _sender()
+	if not Game.is_host() or not Game.players.has(peer) or not _valid_uid(uid):
+		return
+	if protocol_version != PROTOCOL_VERSION:
+		Log.event(&"net_join_version", {"peer": peer, "protocol_version": protocol_version})
+	profiles[peer] = {"uid": uid, "name": _clean_name(display_name)}
+	to_peers(&"apply_roster", [Game.players.keys(), profiles])
+
+
+## `p_profiles`: peer -> {uid, name} (P2-03). The names are for the recording screen's lines and lists.
+@rpc("authority", "call_remote", "reliable")
+func apply_roster(peers: Array, p_profiles: Dictionary) -> void:
+	profiles = p_profiles
 	Game.apply_roster(peers)
 
 
@@ -292,7 +393,8 @@ func apply_lure(lure_id: String, source: String, position: Vector3, target_slot:
 
 # --- Traps, death and ghosts (doc 05 sections 11 and 14, doc 06 section 7); added in P1-09 -------------
 
-## Host to all: a trap changed (`sprung`, `disarmed`). Set traps are never sent: they are hidden (doc 01 "Night Traps").
+## Host to all: a trap changed (`set`, `moved`, `sprung`, `disarmed`). Set traps are sent so every
+## peer can draw the close-range clue (doc 03 s9); they stay hidden beyond it (doc 01 "Night Traps").
 @rpc("authority", "call_remote", "reliable")
 func apply_trap_changed(trap_id: String, kind: StringName, state: StringName, position: Vector3) -> void:
 	apply_received.emit(&"trap_changed", [trap_id, kind, state, position])
@@ -318,3 +420,23 @@ func apply_death(peer: int, cause: StringName, position: Vector3) -> void:
 @rpc("authority", "call_remote", "reliable")
 func apply_respawn(peer: int, position: Vector3) -> void:
 	apply_received.emit(&"respawn", [peer, position])
+
+
+# --- Trap sweeps (doc 05 section 11); added in P2-11 ----------------------------------------------
+
+## Host to all: every flag position (doc 01 "Night Traps > Flags").
+@rpc("authority", "call_remote", "reliable")
+func apply_flags(positions: Array) -> void:
+	apply_received.emit(&"flags", [positions])
+
+
+## Host to all: which pegboard slots hold a bear trap (one bool per `pegboard_slots` marker, in order).
+@rpc("authority", "call_remote", "reliable")
+func apply_pegboard_changed(filled: Array) -> void:
+	apply_received.emit(&"pegboard_changed", [filled])
+
+
+## Host to all: whether `peer` has the shovel and a disarmed bear trap in hand (doc 05 section 9).
+@rpc("authority", "call_remote", "reliable")
+func apply_hands(peer: int, shovel: bool, trap: bool) -> void:
+	apply_received.emit(&"hands", [peer, shovel, trap])

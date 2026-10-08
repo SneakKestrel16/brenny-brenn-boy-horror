@@ -151,7 +151,7 @@ res://game/player/ghost.tscn       Ghost body: spectator camera, no collision wi
 
 - `Boot` is a `Node3D` today (`game/core/boot.tscn`, D-014). Its script parses the user arguments
   from doc 06 section 14 (`--host`, `--join`, `--voice-wav`, `--net-sim-*`) plus the ones this doc
-  adds: `--debug-view`, `--bots <n>`, `--phase1` (Phase 1 content), `--seed <n>`. With no arguments and a window, `Boot` shows the main menu (section 16); any argument takes the legacy path.
+  adds: `--debug-view`, `--bots <n>`, `--phase1` (Phase 1 content), `--seed <n>`. `--full-farm` (P2-11, Q-053) makes `Main` and the lobby load `game/world/farm.tscn` through `Game.world_path()`; without it they load `farm_phase1.tscn`. Every peer must pass it (the handshake does not check). It does not turn Phase 1 data on: add `--phase1` for the creature and traps. With no arguments and a window, `Boot` shows the main menu (section 16); any argument takes the legacy path.
 - `Main` is built from code plus the scenes above, not one giant scene, so the level scene can be
   swapped for the Phase 1 gray box and later the full farm without touching any player code.
 - A `Player` is the same scene on every machine. `is_multiplayer_authority()` (set to the owning
@@ -468,16 +468,42 @@ Traps are host-owned (doc 03 section 8). The player side is:
 - **Prying free.** `request_pry` hold (4 s solo, x1.5 Tainted, x0.6 helped, doc 03 section 7);
   completion frees the player and starts Shaken. Failing the deadline is `death` with cause
   `trap_race`.
-- **Disarming.** `request_disarm` (bear trap hold `disarm_bear` 5 s, Tracker x0.6), `request_fill_pit`
-  (4 s), `request_cut_tripwire`. Cutting bells is `cut_bells` 1 s. All are holds with the Noise in
-  section 8.
-- **Flags.** Players mark a found trap with a flag (`request_place_flag`, 1 s, doc 01 "Night Traps >
-  Flags"); `apply_flags` broadcasts positions and the flag is a world object, visible to everyone and
-  hidden from nothing. The creature ignores flags except where doc 03 says (it can be baited near
-  them; the AI Programmer's).
-- **Pegboard.** The shed's pegboard holds trap items; `request_hang_trap` (1 s) puts one up on a
-  slot, `apply_pegboard_changed` shows it; the host reads the pegboard for the AI Director's trap
-  budget.
+- **Disarming and filling (built, P2-11).** All are `request_hold` verbs (section 7), not separate
+  requests. `disarm_bear` (5 s) works on a *set* bear trap; the trap leaves the ground, `trap_changed`
+  `disarmed` goes out and the player holds a disarmed trap (`apply_hands`, one trap, no stacking: a
+  second disarm is refused `hands_full`). `fill_pit` (4 s) works on a set or sprung pit and needs the
+  shovel (refused `need_shovel`); it ends in `trap_changed` `filled`. `Interactable.INSTANT_S` holds the
+  verbs with no `labor.json` entry. Both clear the Creature's table entry (`TrapRace.clear_trap`) so it
+  can set that kind again. Noises: `disarm_bear` emits `tool_disarm` (8 m) at completion; `fill_pit`
+  emits `tool_shovel` (25 m) at start and completion (the section 8 table). `place_flag` and `hang_trap`
+  emit nothing: neither has a kind in doc 03 section 3.1 (placeholder, *inference*; the AI Programmer
+  can add `noise_flag` / `noise_hang`). Not built: the Tracker x0.6, the kneeling-still check, Taint,
+  `request_cut_tripwire` / `cut_bells`.
+- **The shovel.** Taken and hung back at the pegboard (`take_shovel` / `return_shovel`, 0.3 s, both
+  placeholders in `INSTANT_S`). It is a flag on the player (`Game.players[peer].shovel`), not an item
+  yet; `apply_hands(peer, shovel, trap)` shows it (a brown stick in the hand) to everyone. Death drops
+  both. No shovel marker exists in `farm.tscn`: the pegboard is the rack.
+- **Flags (built, P2-11).** Right mouse (`alt_use`) held 1 s on the ground the ray hits (3 m) is a
+  `place_flag` hold; the target id is the wire name `flag:<x>,<z>` (one decimal, `FlagSpot`), built by
+  the client for its ring and by the host per request (the registry frees it). Refused `flag_here`
+  within 1 m of another flag. `TrapSweep` (`game/traps_player/trap_sweep.gd`, host) keeps the list and
+  sends `apply_flags(positions)`; every peer draws a pole and red cloth (placeholder art). Disarming or
+  filling a trap clears flags within 2 m. Free and unlimited (doc 01 "Night Traps > Flags"). A late
+  joiner gets the list on `farm_state`. Not built: `request_remove_flag`, the creature moving flags.
+- **Pegboard (built, P2-11).** `TrapSweep` also keeps `filled`, one bool per `pegboard_slots` marker
+  (sorted by name), and `apply_pegboard_changed(filled)` sends it. The board is one target (`pegboard`,
+  on the `pegboard_spots` marker): with a trap in hand it offers `hang_trap` (1 s, first empty slot;
+  refused `pegboard_full` with none), otherwise the shovel. A filled slot is a dark block on the
+  board, an empty one a pale slab. The start state is all full (doc 02 section 12, placeholder);
+  `-- --pegboard-empty` starts empty for tests. API for the AI Director and P2-05 (theft):
+  `TrapSweep.filled` and `TrapSweep.take_trap() -> bool` (host). **Open:** with a full start board a
+  disarmed trap has no free hook until a trap is stolen or the start is lowered.
+- **Clues (P1-20, unchanged).** The Creature draws a set trap's clue disc on every peer, seen within
+  4 m and facing it. `TrapRace` gives every set or sprung spot a `TrapTarget` (`sync_set()` on the host
+  because the Creature tells only the *other* peers about `set` and `moved`).
+- **Log events.** `trap_changed` (`set`, `sprung`, `disarmed`, `filled`) with `by` and `kind`;
+  `flag_placed`, `pegboard_changed`; every peer logs `apply_flags` and `apply_pegboard_changed` when it
+  receives them. Doc 09 section 3 reads `trap_changed`.
 - **Scarecrows and fences.** `request_place_defense(kind, position, yaw)`; the host validates:
   a placement spot on open ground, no overlap with a plot or a trap spot, **and no closer than 3 m to
   the cart route** polyline (doc 04 section 6.1, waypoints R0 to R8, 147.9 m; this answers Q-014
@@ -617,7 +643,7 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   (0 to 1, each sets its bus, muted at 0; Q-032, doc 08 section 10), `voice_setting` (`unchosen` /
   `off` / `lobby_lines`) and `lines_recorded` (P2-03 sets it), `keybinds`, `mic_device`,
   `quality_preset`, `render_scale`, `shadow_quality`, `vsync`, `fps_cap`, `window_mode`, `resolution`,
-  `monitor`, `brightness`, `gamma`. Streamer-safe and denoise are not built. There are no voice
+  `monitor`, `brightness`. Streamer-safe and denoise are not built. There are no voice
   subtitles (D-019).
 - **Settings screen** (`game/ui/settings_menu.gd`, shared by the main menu and the pause menu), four tabs:
   - **Keybinds:** every non-`ui_*` InputMap action. Click an action, press the new key or mouse button;
@@ -636,13 +662,16 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
     knob:** the corn budget (doc 07 section 10) and the fog values (doc 07 section 3) are fixed so every
     player sees the same night, and light rules (D-019, doc 07 section 4) stay untouched.
   - **Display:** window mode (windowed, borderless, fullscreen), resolution (windowed), monitor, FOV,
-    brightness and gamma (a screen pass on `CanvasLayer` 127, hidden at the defaults, applied above
-    every menu).
+    brightness. Brightness is the night ambient floor, 0.2 to 0.4, default 0.25 (doc 07 section 5,
+    "Gamma and brightness slider"): `SettingsApply` raises the active `Environment` ambient to the floor
+    after `WorldLook` sets the phase value (never lowers it), and touches no light. There is no gamma
+    control and no screen pass. At 0.2 the slider equals the default because doc 07 s3 holds the night
+    ambient at 0.25 or more (inference; the CEO or Technical Artist can rule otherwise).
 - **Flow.** Launching with no arguments in a window opens the main menu (`game/ui/main_menu.tscn`):
   Host (port), Join (a raw IP or `IP:port`; D-024: Tailscale, no join codes), Settings, Quit. Host and
   Join turn Phase 1 data on and reload it (a bare exe has no `--phase1`; remove when the full farm lands).
-  Both land in the **lobby** (`game/ui/lobby.tscn`): the barn from `Game.LOBBY_WORLD` (the hook to point
-  at the full farm), a dark environment, one static lantern, the `Players` node, and a roster with each
+  Both land in the **lobby** (`game/ui/lobby.tscn`): the barn from `Game.world_path()` (the full farm with `--full-farm`, Phase 1's
+  scene otherwise), WorldLook at night (no lights built in the lobby), the `Players` node, and a roster with each
   player's voice setting and doc 01's Discord line. The host starts the match with Enter or the pause
   menu: `Game.start_match()` waits for `Game.match_ready()` (P2-03 clip pre-share hook, doc 06 section 12
   step 5), clears each player's movement state (the host drops frames with a stale `seq`), starts the

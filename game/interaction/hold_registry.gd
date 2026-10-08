@@ -4,6 +4,8 @@ extends Node
 ## `hold_completed`. The Farm creates this node on the host only.
 
 const HoldMath := preload("res://game/interaction/hold_math.gd")
+const Interactable := preload("res://game/interaction/interactable.gd")
+const FlagSpot := preload("res://game/traps_player/flag_spot.gd")
 const CANCEL_SLACK_M := 0.5  ## doc 05 section 7 step 4: range_m plus 0.5 (placeholder)
 
 var farm: Node
@@ -18,8 +20,22 @@ func request(peer: int, verb: StringName, id: String) -> void:
 		Log.event(&"hold_refused", {"player": peer, "verb": String(verb), "target": id, "reason": String(reason)})
 		_reply(peer, &"refused", [verb, reason])
 		return
-	holds[peer] = {"verb": verb, "target": farm.targets[id], "progress": 0.0, "hold_s": Data.hold_s(verb),
+	var target := _resolve(id)
+	holds[peer] = {"verb": verb, "target": target, "progress": 0.0, "hold_s": Interactable.hold_seconds(verb),
 			"started": Log.now()}
+	target.on_start(verb, peer)
+
+
+## A scene target by id, or a throwaway FlagSpot for `flag:<x>,<z>` (freed when the hold ends).
+func _resolve(id: String) -> Node:
+	if id.begins_with("flag:"):
+		return farm.get_tree().get_first_node_in_group(&"trap_sweep").flag_spot(id)
+	return farm.targets[id]
+
+
+func _release(h: Dictionary) -> void:
+	if h.target is FlagSpot:
+		h.target.free()
 
 
 func cancel(peer: int, reason: StringName = &"released", notify: bool = true) -> void:
@@ -29,6 +45,7 @@ func cancel(peer: int, reason: StringName = &"released", notify: bool = true) ->
 	holds.erase(peer)
 	Log.event(&"hold_cancelled", {"player": peer, "verb": String(h.verb), "target": h.target.id,
 			"reason": String(reason), "progress": snappedf(h.progress, 0.01)})
+	_release(h)
 	if notify:  # false when the peer has already left
 		_reply(peer, &"hold_cancelled", [h.verb, reason])
 
@@ -43,14 +60,19 @@ func _validate(peer: int, verb: StringName, id: String) -> StringName:
 		return &"pinned"  # doc 03 section 7: a trapped player can only pry
 	if holds.has(peer):
 		return &"busy"
-	if not farm.targets.has(id):
+	if id.begins_with("flag:"):
+		if FlagSpot.from_id(id) == Vector3.INF:
+			return &"no_target"
+	elif not farm.targets.has(id):
 		return &"no_target"
-	var t = farm.targets[id]
+	var t := _resolve(id)
+	var reason := &"no_such_verb"
 	if _flat_dist(st.pos, t.target_pos()) > t.range_m:
-		return &"out_of_range"
-	if not Data.has_table(&"labor") or Data.record(&"labor", verb).is_empty():
-		return &"no_such_verb"
-	return t.can_start(verb, st)
+		reason = &"out_of_range"
+	elif Interactable.INSTANT_S.has(verb) or (Data.has_table(&"labor") and not Data.record(&"labor", verb).is_empty()):
+		reason = t.can_start(verb, st)
+	_release({"target": t})
+	return reason
 
 
 func _physics_process(delta: float) -> void:
@@ -83,12 +105,14 @@ func _mults(peer: int, h: Dictionary) -> Array:
 func _complete(peer: int, h: Dictionary) -> void:
 	holds.erase(peer)
 	var t = h.target
+	var tid: String = t.id  # a flag spot is freed by _release below
 	var elapsed := Log.now() - float(h.started)
 	t.complete(h.verb, peer, farm.pstate(peer))
 	Log.event(&"hold_completed", {"player": peer, "verb": String(h.verb), "target": t.id,
 			"seconds": h.hold_s, "elapsed": snappedf(elapsed, 0.01)})
 	farm.send_carry(peer)
-	_reply(peer, &"hold_done", [h.verb, t.id])
+	_release(h)
+	_reply(peer, &"hold_done", [h.verb, tid])
 
 
 func _reply(peer: int, what: StringName, args: Array) -> void:
