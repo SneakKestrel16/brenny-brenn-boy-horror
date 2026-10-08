@@ -20,14 +20,15 @@ func request(peer: int, verb: StringName, id: String) -> void:
 			"started": Log.now()}
 
 
-func cancel(peer: int, reason: StringName = &"released") -> void:
+func cancel(peer: int, reason: StringName = &"released", notify: bool = true) -> void:
 	if not holds.has(peer):
 		return
 	var h: Dictionary = holds[peer]
 	holds.erase(peer)
 	Log.event(&"hold_cancelled", {"player": peer, "verb": String(h.verb), "target": h.target.id,
 			"reason": String(reason), "progress": snappedf(h.progress, 0.01)})
-	_reply(peer, &"hold_cancelled", [h.verb, reason])
+	if notify:  # false when the peer has already left
+		_reply(peer, &"hold_cancelled", [h.verb, reason])
 
 
 func _validate(peer: int, verb: StringName, id: String) -> StringName:
@@ -36,6 +37,8 @@ func _validate(peer: int, verb: StringName, id: String) -> StringName:
 		return &"ghost"
 	if not st.has("pos"):
 		return &"no_body"
+	if st.get("pinned", false) and verb != &"pry":
+		return &"pinned"  # doc 03 section 7: a trapped player can only pry
 	if holds.has(peer):
 		return &"busy"
 	if not farm.targets.has(id):
@@ -57,13 +60,21 @@ func _physics_process(delta: float) -> void:
 		elif not is_instance_valid(h.target) or _flat_dist(st.pos, h.target.target_pos()) > h.target.range_m + CANCEL_SLACK_M:
 			cancel(peer, &"left_range")
 		else:
-			h.progress = HoldMath.advance(h.progress, delta, HoldMath.rate(_mults(peer, h.verb)), h.hold_s)
+			h.progress = HoldMath.advance(h.progress, delta, HoldMath.rate(_mults(peer, h)), h.hold_s)
 			if h.progress >= 1.0:
 				_complete(peer, h)
 
 
-## Phase 1 has no multipliers (roles, Taint, helpers come with their tasks); the hook is here.
-func _mults(_peer: int, _verb: StringName) -> Array:
+## Phase 1 multipliers: only the pry helper (doc 01 Day deaths, labor.json `helped_mult`): another living
+## player prying the same trap within 3 m shortens the pry. Roles and Taint come with their tasks.
+func _mults(peer: int, h: Dictionary) -> Array:
+	if h.verb != &"pry":
+		return []
+	for p in holds:
+		var o: Dictionary = holds[p]
+		if p != peer and o.verb == &"pry" and o.target == h.target and not Game.is_ghost(p) \
+				and _flat_dist(farm.pstate(p).pos, farm.pstate(peer).pos) <= 3.0:
+			return [float(Data.value(&"labor", &"pry", &"helped_mult"))]
 	return []
 
 

@@ -262,3 +262,33 @@ func apply_creature_state(state: StringName, body: StringName) -> void:
 @rpc("authority", "call_remote", "reliable")
 func apply_lure(lure_id: String, source: String, position: Vector3, target_slot: int, tell: StringName, ghost: bool) -> void:
 	apply_received.emit(&"lure", [lure_id, source, position, target_slot, tell, ghost])
+
+
+# --- Traps, death and ghosts (doc 05 sections 11 and 14, doc 06 section 7); added in P1-09 -------------
+
+## Host to all: a trap changed (`sprung`, `disarmed`). Set traps are never sent: they are hidden (doc 01 "Night Traps").
+@rpc("authority", "call_remote", "reliable")
+func apply_trap_changed(trap_id: String, kind: StringName, state: StringName, position: Vector3) -> void:
+	apply_received.emit(&"trap_changed", [trap_id, kind, state, position])
+
+
+## Host to all: `victim` is pinned in `trap_id` and has `deadline_s` seconds (doc 03 section 7).
+@rpc("authority", "call_remote", "reliable")
+func apply_trap_race(victim: int, trap_id: String, deadline_s: float, start_distance_m: float) -> void:
+	apply_received.emit(&"trap_race", [victim, trap_id, deadline_s, start_distance_m])
+
+
+## Host to the freed player: slow walk for `seconds` (doc 01 "Night Traps": 40% slower for 60 s).
+@rpc("authority", "call_remote", "reliable")
+func apply_shaken(seconds: float) -> void:
+	apply_received.emit(&"shaken", [seconds])
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_death(peer: int, cause: StringName, position: Vector3) -> void:
+	apply_received.emit(&"death", [peer, cause, position])
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_respawn(peer: int, position: Vector3) -> void:
+	apply_received.emit(&"respawn", [peer, position])

@@ -33,5 +33,13 @@ func _ready() -> void:
 	creature.set_script(load("res://game/creature/creature.gd"))
 	creature.name = "Creature"
 	add_child(creature)
+	var death := Node.new()  # P1-09: death, ghosts, respawn (game/ghost/); before TrapRace, which kills through it
+	death.set_script(load("res://game/ghost/death.gd"))
+	death.name = "Death"
+	add_child(death)
+	var traps := Node.new()  # P1-09: trap race, player side (game/traps_player/)
+	traps.set_script(load("res://game/traps_player/trap_race.gd"))
+	traps.name = "TrapRace"
+	add_child(traps)
 	add_child(DebugView.new())  # P1-12: hidden unless --debug-view or F3 (host)
 	Log.event(&"main_ready", {"players": Game.players.keys()})

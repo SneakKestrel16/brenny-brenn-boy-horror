@@ -16,6 +16,8 @@ var _t := 0.0
 var _ring: MeshInstance3D
 var _result := &""  ## last host answer for the autochore: done / refused / cancelled
 var _holding := false
+var _autopry := OS.get_cmdline_user_args().has("--autopry")
+var _pin_t := 0.0
 
 
 func _ready() -> void:
@@ -36,6 +38,22 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if player.ghost:
+		if _holding:
+			cancel()
+		return
+	if _autopry and player.pinned and not _holding:
+		_pin_t += delta
+		if _pin_t > 0.3:  # QA: pry the trap I am pinned in (a bot-less pry for the 2-instance test)
+			var race := get_tree().get_first_node_in_group(&"trap_race")
+			for id in race.victims:
+				if race.victims[id] == player.peer:
+					_scripted = true
+					start(&"pry", get_tree().get_first_node_in_group(&"farm").targets[id])
+					_pin_t = -1000.0  # once per trap
+	elif _autopry and not player.pinned:
+		_pin_t = 0.0
+		_scripted = false
 	if not _holding:
 		var tgt := _look_target()
 		if tgt != null and Input.is_action_pressed(&"interact"):
@@ -84,7 +102,7 @@ func _look_target() -> Node:
 
 
 func _on_apply(what: StringName, args: Array) -> void:
-	if not _holding or what in [&"money_changed", &"plot_changed", &"generator"] or args[0] != _verb:
+	if not _holding or not what in [&"hold_done", &"refused", &"hold_cancelled"] or args[0] != _verb:
 		return
 	match what:
 		&"hold_done": _end(&"done")

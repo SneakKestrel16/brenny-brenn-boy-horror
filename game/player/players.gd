@@ -62,7 +62,7 @@ func _physics_process(delta: float) -> void:
 ## Local player calls this each send tick: the host ingests directly, a client sends to peer 1.
 func submit_local(seq: int, pos: Vector3, yaw: float, pitch: float, crouch: bool, sprint: bool) -> void:
 	if Game.is_host():
-		_ingest(1, Frame.unpack(Frame.pack(seq, pos, yaw, pitch, crouch, sprint), 1))
+		submit(1, Frame.unpack(Frame.pack(seq, pos, yaw, pitch, crouch, sprint), 1))
 	else:
 		Net.send_bytes(1, Frame.pack(seq, pos, yaw, pitch, crouch, sprint))
 
@@ -98,7 +98,7 @@ func _on_bytes(from: int, pkt: PackedByteArray) -> void:
 	if pkt.is_empty():
 		return
 	if pkt[0] == Frame.MOVE and Game.is_host() and pkt.size() >= 1 + Frame.FRAME_BYTES:
-		_ingest(from, Frame.unpack(pkt, 1))
+		submit(from, Frame.unpack(pkt, 1))
 	elif pkt[0] == Frame.MOVES and not Game.is_host() and pkt.size() >= 2:
 		var off := 2
 		for i in pkt[1]:
@@ -113,11 +113,16 @@ func _on_bytes(from: int, pkt: PackedByteArray) -> void:
 
 ## Host only. Validates one frame against the host's own state for the peer, keeps and relays the
 ## (possibly clamped) result, and emits footstep Noise once per stride from the same stream.
-func _ingest(peer: int, f: Dictionary) -> void:
+func submit(peer: int, f: Dictionary) -> void:
 	var st: Dictionary = Game.players.get(peer, {})
 	if not Game.players.has(peer):
 		return
 	var now := Time.get_ticks_msec()
+	if now < int(st.get("freeze_until", 0)):
+		return  # a respawn teleport is in flight: frames from the old spot are dropped
+	if st.get("pinned", false) and st.has("pos"):
+		f.pos = st.pos  # pinned in a trap (doc 03 section 7): the host keeps them put
+	var ghost := Game.is_ghost(peer)
 	var pos: Vector3 = f.pos
 	if st.has("pos"):
 		if f.seq <= st.seq:
@@ -127,14 +132,18 @@ func _ingest(peer: int, f: Dictionary) -> void:
 		var dt := maxf((now - st.t_ms) / 1000.0, (f.seq - st.seq) / SEND_HZ)
 		var mode := &"crouch" if f.crouch else (&"sprint" if f.sprint else &"walk")
 		var max_speed := Data.speed(mode) * float(st.get("speed_mult", 1.0))
+		if ghost:
+			max_speed = 1000.0  # ponytail: ghosts fly free until Phase 3 gives them a ghost speed
 		var r := SpeedCheck.check(st.pos, f.pos, dt, max_speed)
 		if r.violation:
 			Log.event(&"speed_violation", {"peer": peer, "speed": snappedf(st.pos.distance_to(f.pos) / dt, 0.1),
 					"max": snappedf(max_speed, 0.1), "teleport": r.teleport})
-			if r.teleport and peer != 1:
+			if r.teleport and peer > 1:
 				Net.to_peers(&"apply_teleport", [r.pos], [peer])
 		pos = r.pos
 		st.stride = float(st.stride) + Vector2(pos.x - st.pos.x, pos.z - st.pos.z).length()
+		if ghost:
+			st.stride = 0.0  # ghosts make no sound
 		while st.stride >= STRIDE_M:
 			st.stride -= STRIDE_M
 			NoiseBus.emit_kind(_step_kind(f, pos), pos, peer)

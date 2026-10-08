@@ -33,7 +33,7 @@ func _ready() -> void:
 		registry.name = "HoldRegistry"
 		add_child(registry)
 		Clock.day_changed.connect(func(_d: int) -> void: advance_day())
-		Game.player_left.connect(func(p: int) -> void: registry.cancel(p, &"left"))
+		Game.player_left.connect(func(p: int) -> void: registry.cancel(p, &"left", false))
 	else:
 		Net.to_host(&"request_farm_state")
 

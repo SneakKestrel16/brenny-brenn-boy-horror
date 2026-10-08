@@ -107,9 +107,10 @@ func apply_session_state(p_session_id: String, host_t: float, p_phase1: bool, da
 
 func apply_roster(peers: Array) -> void:
 	var old := players.keys()
+	var _old := players.duplicate()
 	players.clear()
 	for p in peers:
-		players[int(p)] = {}
+		players[int(p)] = _old.get(int(p), {})
 	for p in players:
 		if not p in old:
 			player_joined.emit(p)

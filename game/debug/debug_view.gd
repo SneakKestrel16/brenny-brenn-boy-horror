@@ -77,8 +77,18 @@ func _draw_panel() -> void:
 	var font := ThemeDB.fallback_font
 	c.draw_rect(Rect2(Vector2.ZERO, PANEL), Color(0, 0, 0, 0.7))
 	c.draw_rect(Rect2(_px(Vector3(-WORLD_HALF.x, 0, -WORLD_HALF.y)), WORLD_HALF * 2.0 * _scale()), Color(1, 1, 1, 0.25), false)
-	for m in get_tree().get_nodes_in_group(&"trap_spots"):  # state is P1-09; grey = not known to be set
-		c.draw_rect(Rect2(_px(m.global_position) - Vector2(3, 3), Vector2(6, 6)), Color(0.5, 0.5, 0.5))
+	var tr := get_tree().get_first_node_in_group(&"trap_race")
+	var armed: Array = []  # host only: the Creature's own record of the traps it set
+	var cr0 := get_tree().get_first_node_in_group(&"creature")
+	if Game.is_host() and cr0 and cr0.has_method(&"debug_state"):
+		armed = cr0.debug_state().traps.values().filter(func(t: Dictionary) -> bool: return t.armed).map(func(t: Dictionary) -> String: return t.id)
+	for m in get_tree().get_nodes_in_group(&"trap_spots"):  # grey = unknown, orange = set (host), red = sprung, green = disarmed
+		var tc := Color(0.5, 0.5, 0.5)
+		if String(m.name) in armed:
+			tc = Color.ORANGE
+		elif tr and tr.traps.has(String(m.name)):
+			tc = Color.RED if tr.traps[String(m.name)].state == &"sprung" else Color.GREEN
+		c.draw_rect(Rect2(_px(m.global_position) - Vector2(3, 3), Vector2(6, 6)), tc)
 	for m in get_tree().get_nodes_in_group(&"plot_spots"):
 		c.draw_circle(_px(m.global_position), 1.5, Color(0.4, 0.7, 0.3))
 	for n: Dictionary in _noise:
@@ -99,7 +109,7 @@ func _draw_panel() -> void:
 		var p := _px(body.global_position)
 		c.draw_circle(p, 5, col)
 		c.draw_line(p, p + Vector2(-sin(body.yaw), -cos(body.yaw)) * 12, col, 2)
-		c.draw_string(font, p + Vector2(7, -5), "%d%s" % [peer, " (you)" if peer == Game.local_peer() else ""], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, col)
+		c.draw_string(font, p + Vector2(7, -5), "%d%s%s" % [peer, " (you)" if peer == Game.local_peer() else "", " bot" if peer < 0 else ""], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, col)
 	_draw_creature(c, font)
 	var d := _director()
 	var y := PANEL.y - 12.0

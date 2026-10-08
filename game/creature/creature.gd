@@ -18,6 +18,9 @@ extends CharacterBody3D
 ## not players). `-- --log-creature` logs `apply_creature_state` arrivals on clients.
 
 signal state_changed(state: StringName, body: StringName)
+## Host only (P1-09): the creature reached `peer` in a chase / a living player sprang an armed trap.
+signal caught(peer: int)
+signal trap_sprung(trap_id: String, kind: StringName, peer: int, position: Vector3, deep: bool)
 
 const Logic := preload("res://game/creature/creature_logic.gd")
 const STATES: Array[StringName] = [&"lurk", &"lure", &"stalk", &"chase", &"retreat"]
@@ -226,6 +229,7 @@ func _run_script() -> void:
 				_goal = Game.players[target].pos  # scripted: doc 03 section 18 names the player
 				if state == &"chase" and _goal.distance_to(global_position) <= _num[&"reach_m"]:
 					_scripted = false
+					caught.emit(target)
 					_set_state(&"retreat", &"reached", target)
 		&"retreat":
 			_goal_retreat()
@@ -280,6 +284,7 @@ func _hunt(delta: float) -> void:
 			if sensed != Vector3.INF:
 				_goal = sensed
 			if _alive(target) and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
+				caught.emit(target)
 				_end_chase(&"retreat", &"reached")
 			elif _alive(target) and _in_lit_doorway(Game.players[target].pos):
 				_end_chase(&"lit_building", &"lit_building")
@@ -318,6 +323,12 @@ func _sensed_pos(peer: int, heard: Dictionary) -> Vector3:
 	if not best.is_empty():
 		return best.position
 	return Vector3.INF if heard.is_empty() else heard.position
+
+
+## P1-09: the trap race sets the state it needs (chase while pinned, retreat or lurk after).
+func force_state(s: StringName, reason: StringName, p_target: int) -> void:
+	if _ok:
+		_set_state(s, reason, p_target)
 
 
 func _set_state(s: StringName, reason: StringName, p_target: int) -> void:
@@ -457,6 +468,7 @@ func _check_traps() -> void:
 				t.armed = false
 				Log.event(&"trap_sprung", {"trap_id": t.id, "kind": String(t.kind), "player": p, "position": _v(t.position), "deep": t.deep})
 				Log.event(&"trap_changed", {"trap_id": t.id, "state": "sprung", "by": p})
+				trap_sprung.emit(t.id, t.kind, p, t.position, t.deep)
 				break
 
 

@@ -59,8 +59,7 @@ func _physics_process(delta: float) -> void:
 		_send_t -= ticks / players.SEND_HZ
 		_seq += ticks
 		# Same frame bytes a client's `move` packet carries, into the host's ingest.
-		# ponytail: calls Players' private ingest; a public `submit(peer, ...)` if Gameplay adds one.
-		players._ingest(peer, Frame.unpack(Frame.pack(_seq, _pos, _yaw, 0.0, false, false), 1))
+		players.submit(peer, Frame.unpack(Frame.pack(_seq, _pos, _yaw, 0.0, false, false), 1))
 		_pos = Game.players[peer].pos  # the host's kept position wins, as `apply_teleport` does for a client
 
 

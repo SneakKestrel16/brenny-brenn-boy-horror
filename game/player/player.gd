@@ -18,6 +18,11 @@ var yaw := 0.0
 var pitch := 0.0
 var crouching := false
 var stamina := 0.0  ## seconds of sprint left (doc 02 section 2.2)
+var ghost := false  ## dead: flies, no collision, no sound (set by Death on every peer)
+var pinned := false  ## caught in a bear trap: cannot move (TrapRace sets it on every peer)
+var speed_mult := 1.0  ## Shaken (doc 01 "Night Traps"), local only; the host mirrors it in Game.players
+var _shaken_s := 0.0
+var _spec := 0  ## ghost: peer being watched, 0 = free flight
 
 var nav_path: Array = []  ## QA waypoints for `--autochore` (HoldController fills it)
 var _cam: Camera3D
@@ -105,13 +110,77 @@ func _physics_process(delta: float) -> void:
 		_local(delta)
 	else:
 		global_position = global_position.lerp(_target_pos, 1.0 - exp(-PROXY_SMOOTH * delta))
+		_mesh.visible = not ghost or Game.is_ghost(Game.local_peer())  # ghosts are seen only by ghosts
 	rotation.y = yaw
 	_cam.rotation.x = pitch
 	_cam.position.y = lerpf(_cam.position.y, EYE_CROUCH if crouching else EYE_STAND, 1.0 - exp(-12.0 * delta))
 
 
+## Host-told Shaken (TrapRace): all speeds x `mult` for `seconds`.
+func shake(seconds: float, mult: float) -> void:
+	_shaken_s = seconds
+	speed_mult = mult
+
+
+## Dead (doc 05 section 14): no body, no collision. Local: fly with the camera. Others: hidden from the living.
+func become_ghost() -> void:
+	ghost = true
+	pinned = false
+	_spec = 0
+	collision_mask = 0
+
+
+func respawn(pos: Vector3) -> void:
+	ghost = false
+	_spec = 0
+	global_position = pos
+	_target_pos = pos
+	velocity = Vector3.ZERO
+	collision_mask = (1 | 16) if is_local else 0
+
+
+## Ghost: `spectate_next` / `spectate_prev` follow a living player; any move input goes back to free flight.
+func _spectate(dir: Vector2) -> void:
+	var living: Array = players._players.keys().filter(func(p: int) -> bool: return p != peer and not Game.is_ghost(p))
+	living.sort()
+	if dir != Vector2.ZERO:
+		_spec = 0
+	elif living.is_empty():
+		_spec = 0
+	elif Input.is_action_just_pressed(&"spectate_next") or Input.is_action_just_pressed(&"spectate_prev"):
+		var i := living.find(_spec)
+		var step := 1 if Input.is_action_just_pressed(&"spectate_next") else -1
+		_spec = living[(i + step + living.size()) % living.size()] if i >= 0 else living[0]
+	if _spec != 0 and Game.is_ghost(_spec):
+		_spec = 0
+	if _spec != 0:
+		var t: Node3D = players.player(_spec)
+		yaw = t.yaw
+		global_position = t.global_position + t.global_transform.basis.z * 2.0 + Vector3(0, 1.0, 0)
+
+
+func _local_ghost(delta: float) -> void:
+	var dir := Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
+	_spectate(dir)
+	if _spec == 0:
+		var fly := (_cam.global_transform.basis * Vector3(dir.x, 0, dir.y)) * Data.speed(&"sprint")
+		global_position += fly * delta
+	_send_t += delta
+	if _send_t >= 1.0 / players.SEND_HZ:
+		_send_t = 0.0
+		_seq += 1
+		players.submit_local(_seq, global_position, yaw, pitch, false, true)
+
+
 func _local(delta: float) -> void:
+	if ghost:
+		_local_ghost(delta)
+		return
 	_t += delta
+	if _shaken_s > 0.0:
+		_shaken_s -= delta
+		if _shaken_s <= 0.0:
+			speed_mult = 1.0
 	var still := Input.is_action_pressed(&"go_still")  # doc 05 section 6: freezes the body, sends nothing special
 	var dir := Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
 	var want_sprint := Input.is_action_pressed(&"sprint")
@@ -130,7 +199,7 @@ func _local(delta: float) -> void:
 			want_sprint = false  # walking: a stamina-flipping sprint trips the host speed check
 	if not bool(Settings.get_value(&"toggle_crouch")):
 		_set_crouch(Input.is_action_pressed(&"crouch"))
-	if still:
+	if still or pinned:
 		dir = Vector2.ZERO
 	var sprint_rec := Data.record(&"labor", &"sprint")
 	var sprinting := want_sprint and not crouching and dir != Vector2.ZERO and stamina > 0.0
@@ -138,7 +207,7 @@ func _local(delta: float) -> void:
 		stamina = maxf(stamina - delta, 0.0)
 	else:
 		stamina = minf(stamina + float(sprint_rec["max_s"]) / float(sprint_rec["refill_s"]) * delta, float(sprint_rec["max_s"]))
-	var speed := Data.speed(&"crouch" if crouching else (&"sprint" if sprinting else &"walk"))
+	var speed := Data.speed(&"crouch" if crouching else (&"sprint" if sprinting else &"walk")) * speed_mult
 	var wish := (global_transform.basis * Vector3(dir.x, 0, dir.y)).normalized() * speed
 	velocity.x = wish.x
 	velocity.z = wish.z
