@@ -13,6 +13,7 @@ Rules:
   energy_override  doc 07 s4.4 rule 2: only game/render/light_rig.gd and game/ghost/light_flicker.gd.
   light_energy     doc 07 s4.4 rule 3: only under game/render/. A match in a .tscn/.tres is a scene-authored
                    static value, reported as a warning (inference, doc 09 section 9), not a failure; .gd fails.
+                   `ambient_light_energy` is Environment, not a light, and does not match (D-036).
   rpc_outside_net  doc 06 s14, doc 05 s22: `.rpc(` / `.rpc_id(` only inside game/net/.
   voice_files      CONTRACTS s11: no tracked .vclip or .opus anywhere; no tracked .wav/.ogg/.mp3/.flac
                    outside assets/audio/ and tests/ (generated placeholders and fixtures only).
@@ -73,7 +74,7 @@ def check_energy_override(root: Path, files: list[Path]) -> list[str]:
 
 def check_light_energy(root: Path, files: list[Path]) -> tuple[list[str], list[str]]:
     fails, warns = [], []
-    for r, n, l in _grep(files, root, re.compile("light_energy")):
+    for r, n, l in _grep(files, root, re.compile(r"(?<!ambient_)light_energy")):
         if r.startswith("game/render/"):
             continue
         (warns if Path(r).suffix in SCENE_SUFFIXES else fails).append(f"{r}:{n}: {l}")

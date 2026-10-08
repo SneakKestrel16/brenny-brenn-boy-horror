@@ -86,6 +86,8 @@ uv run tools/qa/multi.py -n 4 --headless \
 | `--args "..."` | One instance's Godot command line. Repeat it in instance order: the first is instance 1, which should be the host |
 | `--common "..."` | Given to every instance, before its own `--args` |
 | `--headless` | No windows. Without it, windows are tiled 640x360 in a 2x2 grid (turn this off with `--no-tile`) |
+| `--sound` | Play audio. Without it every instance runs `--audio-driver Dummy`, so test runs stay silent on the developer's headphones |
+| (always) | Every instance gets the game arg `--free-mouse`: the windows never capture the mouse |
 | `--frames N` | Each instance quits after N frames (`--quit-after`) |
 | `--duration S` | Kill the instances still running after S seconds. Being killed this way counts as a normal end |
 | `--timeout S` | Hard limit when there is no `--duration` (default 1800 s). Being killed this way is a failure |

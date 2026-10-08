@@ -51,7 +51,7 @@ def split_args(text: str) -> tuple[list[str], list[str]]:
     return parts, []
 
 
-def build_command(godot: str, index: int, common: str, own: str, headless: bool, frames: int | None, tile: bool) -> list[str]:
+def build_command(godot: str, index: int, common: str, own: str, headless: bool, frames: int | None, tile: bool, sound: bool = False) -> list[str]:
     engine: list[str] = []
     game: list[str] = []
     for text in (common, own):
@@ -59,6 +59,8 @@ def build_command(godot: str, index: int, common: str, own: str, headless: bool,
         engine += e
         game += g
     cmd = [godot, "--path", str(REPO_ROOT)]
+    if not sound:
+        cmd += ["--audio-driver", "Dummy"]  # windowed test runs stay silent on the developer's headphones
     if headless:
         cmd.append("--headless")
     elif tile:
@@ -67,8 +69,8 @@ def build_command(godot: str, index: int, common: str, own: str, headless: bool,
     if frames:
         cmd += ["--quit-after", str(frames)]
     cmd += engine
-    if game:
-        cmd += ["--", *game]
+    game.append("--free-mouse")  # test windows never capture the developer's mouse
+    cmd += ["--", *game]
     return cmd
 
 
@@ -84,6 +86,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--args", action="append", default=[], metavar="ARGS", help="one instance's arguments; repeat in instance order")
     parser.add_argument("--common", default="", metavar="ARGS", help="arguments for every instance")
     parser.add_argument("--headless", action="store_true", help="no windows (bots, automated runs)")
+    parser.add_argument("--sound", action="store_true", help="play audio; default is the Dummy driver, silent")
     parser.add_argument("--no-tile", action="store_true", help="don't arrange windows in a 2x2 grid")
     parser.add_argument("--frames", type=int, help="each instance quits after this many frames (--quit-after)")
     parser.add_argument("--duration", type=float, help="kill instances still running after this many seconds")
@@ -111,7 +114,7 @@ def main(argv: list[str] | None = None) -> int:
     start = time.time()
     for i in range(1, args.instances + 1):
         own = args.args[i - 1] if i <= len(args.args) else ""
-        cmd = build_command(godot, i, args.common, own, args.headless, args.frames, not args.no_tile)
+        cmd = build_command(godot, i, args.common, own, args.headless, args.frames, not args.no_tile, args.sound)
         log_path = out_dir / f"instance_{i}.log"
         handle = log_path.open("wb")
         handles.append(handle)
