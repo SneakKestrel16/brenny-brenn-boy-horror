@@ -16,6 +16,7 @@ var _t := 0.0
 var _ring: MeshInstance3D
 var _result := &""  ## last host answer for the autochore: done / refused / cancelled
 var _holding := false
+var _need_release := false  ## a refused hold waits for `interact` to be released before it retries
 var _autopry := OS.get_cmdline_user_args().has("--autopry")
 var _pin_t := 0.0
 var aimed_verb: StringName = &""  ## HUD: first verb of the aimed target, empty if none (set while not holding)
@@ -62,7 +63,9 @@ func _physics_process(delta: float) -> void:
 		if tgt != null:
 			var vs: Array[StringName] = tgt.verbs_for({})
 			aimed_verb = vs[0] if not vs.is_empty() else &""
-		if tgt != null and Input.is_action_pressed(&"interact"):
+		if not Input.is_action_pressed(&"interact"):
+			_need_release = false
+		if tgt != null and not _need_release and Input.is_action_pressed(&"interact"):
 			var verbs: Array[StringName] = tgt.verbs_for({})
 			if not verbs.is_empty():
 				start(verbs[0], tgt)
@@ -117,7 +120,9 @@ func _on_apply(what: StringName, args: Array) -> void:
 		return
 	match what:
 		&"hold_done": _end(&"done")
-		&"refused": _end(&"refused")
+		&"refused":
+			_need_release = true
+			_end(&"refused")
 		&"hold_cancelled": _end(&"cancelled")
 
 
