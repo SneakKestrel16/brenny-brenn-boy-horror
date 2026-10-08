@@ -22,6 +22,7 @@ const HELP := """Commands (host only unless marked):
   gen damage|repair         break or fix the generator
   creature <state> [peer]   force lurk, stalk, chase or retreat (target defaults to you)
   grow [ripe|growing|empty] set every planted plot to a stage (default ripe)
+  trap [bear|pit]           creature sets a trap at the free trap spot nearest you (default bear)
   kill [peer]               kill a player (default: you)
   respawn [peer]            bring a ghost back (default: you)
   debug                     toggle the debug view (F3)
@@ -211,6 +212,22 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 					farm.plot_changed(t)
 					n += 1
 			return "%d plots set to %s" % [n, stage]
+		"trap":
+			var kind := StringName(a[0]) if not a.is_empty() else &"bear"
+			if not kind in [&"bear", &"pit"]:
+				return "? trap bear|pit"
+			var creature := main.get_node("Creature")
+			var me: Vector3 = Game.players[Game.local_peer()].pos
+			var best: Node3D = null
+			for n: Node3D in get_tree().get_nodes_in_group(&"trap_spots"):
+				if creature._traps.has(String(n.name)) or (kind == &"pit" and n.get_meta("kind", "") == "deep"):
+					continue
+				if best == null or n.global_position.distance_to(me) < best.global_position.distance_to(me):
+					best = n
+			if best == null:
+				return "? no free trap spot"
+			creature._arm(best, kind, {"dev": true})
+			return "%s set at %s, %.0f m away" % [kind, best.name, best.global_position.distance_to(me)]
 		"kill":
 			var p := _peer_arg(a, 0)
 			if p == 0 or Game.is_ghost(p):
