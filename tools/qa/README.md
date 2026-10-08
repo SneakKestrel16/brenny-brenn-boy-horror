@@ -10,6 +10,7 @@ through `--godot`, then `$GODOT`, then the CONTRACTS section 1 path.
 | `uv run tools/qa/multi.py -n 2` | Starts 2 to 4 local instances and collects their console output and section 10 logs into one folder |
 | `uv run tools/qa/check_logs.py <folder>` | Reports the doc 01 measures found in section 10 JSONL logs |
 | `uv run tools/qa/grep_rules.py` | Review greps: flicker (doc 07 s4.4), energy_override, light_energy, rpc outside `game/net/`, voice files in git. Exit 1 on violation |
+| `tools/qa/playtest.sh check\|local [2-4]\|host\|join <code>\|logs` | Playtest shortcuts: pre-flight checks, a local 2 to 4 window session with `--phase1`, a real host or join, then the log measures |
 | `uv run tests/qa/test_harness.py` | Self-test of the three tools on fixtures. Needs no Godot |
 | `uv run tests/qa/test_grep_rules.py` | Self-test of `grep_rules.py` on temp git trees. Needs no Godot |
 
