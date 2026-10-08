@@ -247,7 +247,7 @@ func _replay(r: Dictionary) -> void:
 		var lures: Dictionary = load("res://game/creature/creature.gd").get_script_constant_map().get("SOUND_LURES", {})
 		var s: Array = lures.get(src.trim_prefix("sound:"), [NEUTRAL_CUE, 2, 0.5])
 		for i in mini(int(s[1]), 4):
-			if not _open:
+			if not is_inside_tree() or not _open:
 				return
 			Soundscape.play_2d(s[0])
 			await get_tree().create_timer(maxf(float(s[2]), 0.3)).timeout
