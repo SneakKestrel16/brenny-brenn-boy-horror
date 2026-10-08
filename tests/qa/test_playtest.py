@@ -171,6 +171,74 @@ class Collect(unittest.TestCase):
             self.assertIsNone(playtest._safe_member(bad), bad)
 
 
+def _trials(peer: int) -> list[str]:
+    return [_rec(5, "spatial_audio_trial", {"sound": s, "distance_m": d, "correct": True}, peer=peer)
+            for s in ("voice", "whistle") for d in (10, 30, 60) for _ in range(3)]
+
+
+class Auto(unittest.TestCase):
+    REAL = "20261007_225806_31fe"
+
+    def _setup(self, tmp: Path) -> tuple[Path, Path]:
+        user = tmp / "user_logs"
+        good = _good_session(self.REAL)
+        _write_logs(user, "20261007_190000_aaaa", {"peer_1.jsonl": [_rec(0, "death", {})], "peer_5.jsonl": []})  # QA run
+        joined = [_rec(1, "player_joined", {"player": 422219855}), _rec(1, "player_joined", {"player": -1, "bot": True})]
+        _write_logs(user, self.REAL, {"peer_1.jsonl": good["peer_1.jsonl"] + joined})  # host file only, as on the CEO's PC
+        _write_logs(user, "audiotest_20261007_230500", {"peer_1.jsonl": _trials(1)})  # host's test, same evening
+        _write_logs(user, "audiotest_20261005_120000", {"peer_1.jsonl": _trials(1)})  # days earlier
+        old = time.time() - 7200
+        for f in (user / "20261007_190000_aaaa").iterdir():
+            os.utime(f, (old, old))
+        _write_logs(user, "20261007_225900_dddd", {"peer_1.jsonl": [_rec(0, "player_joined", {"player": -1, "bot": True})]})
+        later = time.time() - 3600  # a bots-only solo start after the game: not a multiplayer game
+        os.utime(user / "20261007_225900_dddd" / "peer_1.jsonl", (later, later))
+        os.utime(user / self.REAL / "peer_1.jsonl", (later - 60, later - 60))
+        z = tmp / "brenny_logs.zip"
+        with zipfile.ZipFile(z, "w") as zf:
+            zf.writestr(f"{self.REAL}/peer_2.jsonl", "".join(x + "\n" for x in good["peer_2.jsonl"]))
+            zf.writestr("audiotest_20261007_231000/peer_1.jsonl", "".join(x + "\n" for x in _trials(1)))
+            zf.writestr("audiotest_20261001_090000/peer_1.jsonl", _trials(1)[0] + "\n")
+            zf.writestr("20261007_215148_93c8/peer_1.jsonl", _rec(0, "death", {}) + "\n")  # friend hosted solo
+        return user, z
+
+    def test_picks_real_session_nearby_audiotests_and_reports(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            user, z = self._setup(tmp)
+            folder, text, lines = playtest.auto(tmp / "qa", user, [z], 1, "different", "A,B,C", "B", "abc1234")
+            got = sorted(p.name for p in (folder / "user_logs").iterdir())
+            self.assertEqual(got, sorted(["audiotest_20261007_230500", "audiotest_20261007_231000", self.REAL]))
+            self.assertEqual(sorted(f.name for f in (folder / "user_logs" / self.REAL).iterdir()), ["peer_1.jsonl", "peer_2.jsonl"])
+            self.assertIn(f"Game session {self.REAL}", lines[0])
+            self.assertIn("| Session 1 counts | PASS |", text)
+            self.assertIn("voice@60m", json.dumps(json.loads((folder / "measures.json").read_text())["spatial_audio"]))
+            self.assertTrue((folder / "report.md").is_file())
+            # Twice is safe: the same folder is updated, not a session 2.
+            again, _, lines2 = playtest.auto(tmp / "qa", user, [z], 1, "different", "A,B,C", "B", "abc1234")
+            self.assertEqual(again, folder)
+            self.assertTrue(any("Updating" in x for x in lines2))
+            self.assertEqual(len(list((tmp / "qa").glob("playtest_p1_s*"))), 1)
+
+    def test_next_game_gets_the_next_session_number(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            user, z = self._setup(tmp)
+            first, _, _ = playtest.auto(tmp / "qa", user, [z], 1, "different", "A,B,C", "", "abc1234")
+            _write_logs(user, "20261009_200000_bbbb", _good_session("20261009_200000_bbbb"))
+            second, text, _ = playtest.auto(tmp / "qa", user, [], 1, "same", "A,B", "", "abc1234")
+            self.assertNotEqual(first, second)
+            self.assertEqual(playtest.load_session(second)["session"], 2)
+            self.assertIn("| At least 2 valid sessions | PASS | 2 valid |", text)
+
+    def test_no_multiplayer_session_is_an_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            _write_logs(tmp / "u", "20261007_100000_cccc", {"peer_1.jsonl": []})
+            with self.assertRaises(SystemExit):
+                playtest.auto(tmp / "qa", tmp / "u", [], 1, "different", "A,B", "", "x")
+
+
 class Report(unittest.TestCase):
     def _sessions(self, tmp: Path, second: dict[str, list[str]] | None = None, networks2: str = "same") -> list[Path]:
         folders = []

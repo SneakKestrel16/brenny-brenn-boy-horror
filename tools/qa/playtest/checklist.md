@@ -49,18 +49,17 @@ Same five questions every session (doc 09 s2). They are printed in `notes.md`.
 ## After
 
 - [ ] Remote tester runs `send_logs.bat` and sends `brenny_logs.zip`.
-- [ ] Collect and check:
+- [ ] Save each friend's `brenny_logs.zip` to Downloads (`brenny_logs (1).zip` and so on is fine), then
+      collect and report in one step:
 
-      uv run tools/qa/playtest.py collect logs/qa/playtest_p1_s1_<timestamp> path/to/brenny_logs.zip
+      uv run tools/qa/playtest.py auto --testers A,B,C --fresh B
 
+  It finds the game session and the spatial audio tests by itself. Run it again after more zips arrive.
 - [ ] Hand-count five `lure_result` lines against the checker's number the first time
       (doc 09 s4 "check your checker").
 - [ ] Doc 09 s7 host-only grep on the client files in `user_logs/<session_id>/`.
 - [ ] Fill `notes.md`. If the session must not count, set `"valid": false` in `session.json`.
-- [ ] After the last session:
-
-      uv run tools/qa/playtest.py report logs/qa/playtest_p1_s1_<ts> logs/qa/playtest_p1_s2_<ts>
-
+- [ ] `auto` reports every session of the phase so far; `report.md` is in this game's session folder.
 - [ ] Each new problem to `production/OPEN_ISSUES.md`, each bug to `production/QUESTIONS.md`, the
       phase verdict per doc 09 s3 row into the phase review handoff (doc 09 s11).
 - [ ] Delete any recordings once the notes are written. Nothing from the session folder goes into git

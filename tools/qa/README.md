@@ -166,6 +166,7 @@ Step by step: [playtest/checklist.md](playtest/checklist.md). Hand testers
 uv run tools/qa/package_playtest.py                     # builds/playtest_<build id>.zip for a remote tester
 uv run tools/qa/playtest.py new --session 1 --networks different --fresh B --smoke
 uv run tools/qa/playtest.py tally logs/qa/playtest_p1_s1_<ts>              # observer, second terminal
+uv run tools/qa/playtest.py auto --testers A,B,C --fresh B                # after play: does sessions, collect, report
 uv run tools/qa/playtest.py sessions --multi                               # find the game session id
 uv run tools/qa/playtest.py collect logs/qa/playtest_p1_s1_<ts> --session <id> brenny_logs.zip
 uv run tools/qa/playtest.py report logs/qa/playtest_p1_s1_<ts> logs/qa/playtest_p1_s2_<ts>
@@ -176,6 +177,7 @@ uv run tools/qa/playtest.py report logs/qa/playtest_p1_s1_<ts> logs/qa/playtest_
 | `new` | `session.json` (phase, session number, build id, networks, tester labels, fresh testers, smoke result, `valid`) and `notes.md` from `playtest/session_notes.md`. `--networks`: `different`, `same` or `one_machine` |
 | `tally` | `observer.jsonl`: one line per `s` scream, `l` laugh, `b` bored, `n` note. `g` sets game `t` = 0 when the host's session starts, so tally times match the logs. Rerunning resumes |
 | `collect` | `user_logs/<session_id>/peer_<id>.jsonl`: this machine's `user://logs` written since `new`, plus each zip or folder given. A friend's sessions this machine has no log of are skipped (`--keep-all` keeps them). `--session <id>` takes only that game session, however old (use it when `new` was run after play, or when QA runs share the machine). Prints one line per session kept; `--verbose` lists every file. A duplicate file keeps the longer copy. Then `measures.json` and `measures.txt` from `check_logs.py` |
+| `auto` | After play, one step. Picks the newest game session on this machine that another person joined (from `player_joined` in the host file; bots and solo starts don't count), the `audiotest_*` runs within 12 hours of it (here and in the zips), and every `Downloads/brenny_logs*.zip`. Reuses the session folder that already holds that game, else makes the next `playtest_p1_s<N>_*`. Then `collect --session` and `report` over every session folder of the phase. `--session <id>` picks the game by hand; zips can be given as arguments |
 | `sessions` | Nothing: lists this machine's game sessions (`session_id`, peer files, size, last write), newest first. `--multi` hides solo runs. Session ids are local time |
 | `report` | `report.md` in the last folder: per-session table (build, networks, testers, screams, laughs, bored) and the doc 09 s3 rows as `PASS`, `FAIL`, `NO DATA` or `MANUAL` |
 

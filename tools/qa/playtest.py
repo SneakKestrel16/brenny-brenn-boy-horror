@@ -6,6 +6,7 @@
 
     uv run tools/qa/playtest.py new --session 1 --networks different --fresh B
     uv run tools/qa/playtest.py tally <session folder>
+    uv run tools/qa/playtest.py auto --testers A,B,C      # after play: all of the below in one step
     uv run tools/qa/playtest.py sessions --multi          # find the game session id
     uv run tools/qa/playtest.py collect <session folder> --session <id> [friend's logs zip ...]
     uv run tools/qa/playtest.py report <session folder> [<session folder> ...]
@@ -25,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -82,49 +84,58 @@ def cmd_new(a: argparse.Namespace) -> int:
         if smoke.returncode != 0 and not a.force:
             print("Smoke run failed: doc 09 s2 needs a build whose smoke run passed. --force to go on anyway.", file=sys.stderr)
             return 1
-    started = _now()
-    folder = (a.out_root or QA_OUT_ROOT) / f"playtest_p{a.phase}_s{a.session}_{started:%Y%m%d_%H%M%S}"
-    folder.mkdir(parents=True)
-    testers = [t.strip() for t in a.testers.split(",") if t.strip()]
-    fresh = [t.strip() for t in a.fresh.split(",") if t.strip()] if a.fresh else []
-    unknown = [t for t in fresh if t not in testers]
-    if unknown:
-        raise SystemExit(f"--fresh names {unknown}, not in --testers {testers}")
-    meta = {
-        "phase": a.phase,
-        "session": a.session,
-        "created_at": started.isoformat(timespec="seconds"),
-        "created_epoch": started.timestamp(),
-        "build_id": a.build_id or build_id(),
-        "networks": a.networks,
-        "testers": testers,
-        "fresh_testers": fresh,
-        "smoke": "passed" if a.smoke and smoke.returncode == 0 else ("failed" if a.smoke else "not run"),
-        "valid": True,  # set false by hand for a session that does not count (doc 09 s2 stop rule)
-    }
-    (folder / "session.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
-    notes = (TEMPLATES / "session_notes.md").read_text(encoding="utf-8")
-    for key, value in {
-        "PHASE": str(a.phase),
-        "SESSION": str(a.session),
-        "DATE": f"{started:%Y-%m-%d %H:%M} UTC",
-        "BUILD_ID": meta["build_id"],
-        "NETWORKS": a.networks,
-        "TESTERS": ", ".join(testers),
-        "FRESH": ", ".join(fresh) or "none",
-        "SMOKE": meta["smoke"],
-    }.items():
-        notes = notes.replace("{{" + key + "}}", value)
-    (folder / "notes.md").write_text(notes, encoding="utf-8")
+    smoke_state = "passed" if a.smoke and smoke.returncode == 0 else ("failed" if a.smoke else "not run")
+    folder = make_session(a.out_root or QA_OUT_ROOT, a.phase, a.session, a.networks, a.testers, a.fresh,
+                          a.build_id or build_id(), smoke_state)
     print(f"Session folder: {folder}")
     print("Next (doc 09 s2):")
     print("  1. Read tools/qa/playtest/checklist.md and give each tester tools/qa/playtest/tester_brief.md.")
     print(f"  2. Observer: uv run tools/qa/playtest.py tally {folder.relative_to(REPO_ROOT) if folder.is_relative_to(REPO_ROOT) else folder}")
     print("  3. Play. Debrief. Fill notes.md.")
-    print("  4. collect, then report.")
+    print("  4. collect, then report (or `auto` after play, which does both).")
     if a.networks != "different":
         print("Note: only --networks different closes the DD Phase 1 'First' item (doc 09 s2).")
     return 0
+
+
+def make_session(root: Path, phase: int, session: int, networks: str, testers_csv: str, fresh_csv: str,
+                 bid: str, smoke_state: str = "not run") -> Path:
+    """Creates playtest_p<phase>_s<session>_<UTC time>/ with session.json and notes.md."""
+    started = _now()
+    testers = [t.strip() for t in testers_csv.split(",") if t.strip()]
+    fresh = [t.strip() for t in fresh_csv.split(",") if t.strip()] if fresh_csv else []
+    unknown = [t for t in fresh if t not in testers]
+    if unknown:
+        raise SystemExit(f"--fresh names {unknown}, not in --testers {testers}")
+    folder = root / f"playtest_p{phase}_s{session}_{started:%Y%m%d_%H%M%S}"
+    folder.mkdir(parents=True)
+    meta = {
+        "phase": phase,
+        "session": session,
+        "created_at": started.isoformat(timespec="seconds"),
+        "created_epoch": started.timestamp(),
+        "build_id": bid,
+        "networks": networks,
+        "testers": testers,
+        "fresh_testers": fresh,
+        "smoke": smoke_state,
+        "valid": True,  # set false by hand for a session that does not count (doc 09 s2 stop rule)
+    }
+    (folder / "session.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+    notes = (TEMPLATES / "session_notes.md").read_text(encoding="utf-8")
+    for key, value in {
+        "PHASE": str(phase),
+        "SESSION": str(session),
+        "DATE": f"{started:%Y-%m-%d %H:%M} UTC",
+        "BUILD_ID": bid,
+        "NETWORKS": networks,
+        "TESTERS": ", ".join(testers),
+        "FRESH": ", ".join(fresh) or "none",
+        "SMOKE": smoke_state,
+    }.items():
+        notes = notes.replace("{{" + key + "}}", value)
+    (folder / "notes.md").write_text(notes, encoding="utf-8")
+    return folder
 
 
 # --- tally -----------------------------------------------------------------------------------
@@ -257,6 +268,9 @@ def collect(folder: Path, sources: list[Path], user_logs: Path | None, keep_all:
         if wanted and session not in wanted:
             log.append(f"skipped {session}/{fname} from {origin}: not a --session")
             return
+        if wanted:  # named sessions: a friend's audiotest folder is in their zip only, never on this machine
+            _place(dest, session, fname, read(), origin, log)
+            return
         # The host collects: a friend's older sessions are not this playtest (doc 05 s18 session_id).
         if local and session not in local and not keep_all:
             log.append(f"skipped {session}/{fname} from {origin}: not a session on this machine since `new` (--keep-all keeps it)")
@@ -320,18 +334,160 @@ def cmd_sessions(a: argparse.Namespace) -> int:
         root = user_data_dir(find_godot(a.godot)) / "logs"
     rows = []
     for d in root.iterdir() if root.is_dir() else []:
-        files = [f for f in d.glob("peer_*.jsonl") if check_logs._PEER_FILE.match(f.name)]
-        if not files or (a.multi and len(files) < 2):
+        files = _peer_files(d)
+        if not files or (a.multi and not is_multiplayer(d)):
             continue
         last = max(f.stat().st_mtime for f in files)
         kb = sum(f.stat().st_size for f in files) // 1024
-        rows.append((last, d.name, len(files), kb))
+        rows.append((last, d.name, len(files), humans_joined(d), kb))
     rows.sort(reverse=True)
-    print(f"{'session':28} {'peers':>5} {'KB':>6}  last write")
-    for last, name, n, kb in rows[: a.limit]:
-        print(f"{name:28} {n:>5} {kb:>6}  {datetime.fromtimestamp(last):%Y-%m-%d %H:%M}")
+    print(f"{'session':28} {'files':>5} {'joined':>6} {'KB':>6}  last write")
+    for last, name, n, j, kb in rows[: a.limit]:
+        print(f"{name:28} {n:>5} {j:>6} {kb:>6}  {datetime.fromtimestamp(last):%Y-%m-%d %H:%M}")
     if not rows:
         print(f"no sessions under {root}")
+    return 0
+
+
+# --- auto ------------------------------------------------------------------------------------
+
+AUDIOTEST_PREFIX = "audiotest_"  # game/debug/spatial_audio_test.gd: one folder per tester per run
+AUDIOTEST_WINDOW_H = 12.0  # audio tests this close to the game session belong to it (inference: one evening)
+_SID_TIME = re.compile(r"(\d{8}_\d{6})")
+
+
+def _sid_time(sid: str) -> datetime | None:
+    """A session id's start time. Ids are the writer's LOCAL time (Time.get_datetime_string_from_system)."""
+    m = _SID_TIME.search(sid)
+    try:
+        return datetime.strptime(m.group(1), "%Y%m%d_%H%M%S") if m else None
+    except ValueError:
+        return None
+
+
+def _peer_files(d: Path) -> list[Path]:
+    return [f for f in d.glob("peer_*.jsonl") if check_logs._PEER_FILE.match(f.name)]
+
+
+def humans_joined(d: Path) -> int:
+    """Remote players who joined, from the host file's `player_joined` lines (bots excluded). On the host's
+    machine a real game has only peer_1.jsonl: the joiners' files arrive later in their zips."""
+    host = d / f"peer_{check_logs.HOST_PEER}.jsonl"
+    if not host.is_file():
+        return 0
+    joined: set[int] = set()
+    for line in host.read_text(encoding="utf-8", errors="replace").splitlines():
+        if '"player_joined"' not in line:
+            continue
+        try:
+            data = json.loads(line).get("data", {})
+        except (json.JSONDecodeError, AttributeError):
+            continue
+        p = data.get("player")
+        if isinstance(p, int) and p > 1 and not data.get("bot"):
+            joined.add(p)
+    return len(joined)
+
+
+def is_multiplayer(d: Path) -> bool:
+    return len(_peer_files(d)) >= 2 or humans_joined(d) > 0
+
+
+def newest_game_session(user_logs: Path) -> str | None:
+    """The newest session where another person joined: a real game, not a solo start or audio test."""
+    best: tuple[float, str] | None = None
+    for d in user_logs.iterdir() if user_logs.is_dir() else []:
+        if d.name.startswith(AUDIOTEST_PREFIX) or not d.is_dir():
+            continue
+        files = _peer_files(d)
+        if files and is_multiplayer(d):
+            last = max(f.stat().st_mtime for f in files)
+            if best is None or last > best[0]:
+                best = (last, d.name)
+    return best[1] if best else None
+
+
+def _zip_sessions(z: Path) -> set[str]:
+    with zipfile.ZipFile(z) as zf:
+        return {p[0] for p in (_safe_member(i.filename) for i in zf.infolist()) if p}
+
+
+def nearby_audiotests(game_sid: str, user_logs: Path | None, zips: list[Path]) -> list[str]:
+    """audiotest_* ids, local or in the zips, within AUDIOTEST_WINDOW_H of the game session's start."""
+    t0 = _sid_time(game_sid)
+    ids: set[str] = set()
+    if user_logs is not None and user_logs.is_dir():
+        ids |= {d.name for d in user_logs.iterdir() if d.name.startswith(AUDIOTEST_PREFIX) and _peer_files(d)}
+    for z in zips:
+        ids |= {s for s in _zip_sessions(z) if s.startswith(AUDIOTEST_PREFIX)}
+    if t0 is None:
+        return []
+    near = []
+    for sid in ids:
+        t = _sid_time(sid)
+        if t is not None and abs((t - t0).total_seconds()) <= AUDIOTEST_WINDOW_H * 3600:
+            near.append(sid)
+    return sorted(near)
+
+
+def _phase_folders(root: Path, phase: int) -> list[Path]:
+    out = []
+    for f in root.glob(f"playtest_p{phase}_s*_*"):
+        if (f / "session.json").is_file():
+            out.append(f)
+    return sorted(out, key=lambda f: (load_session(f)["session"], f.name))
+
+
+def auto(root: Path, user_logs: Path | None, zips: list[Path], phase: int, networks: str, testers: str,
+         fresh: str, bid: str, game_sid: str | None = None) -> tuple[Path, str, list[str]]:
+    """Finds the game session and its audio tests, collects them into a session folder, reports the phase.
+
+    Reuses the session folder that already holds this game session, so running it twice is safe."""
+    if game_sid is None:
+        if user_logs is None:
+            raise SystemExit("auto needs this machine's user://logs to find the game session, or --session <id>")
+        game_sid = newest_game_session(user_logs)
+        if game_sid is None:
+            raise SystemExit(f"No game session with 2 or more players under {user_logs}")
+    tests = nearby_audiotests(game_sid, user_logs, zips)
+    lines = [f"Game session {game_sid}; spatial audio tests: {', '.join(tests) or 'none found'}"]
+    folders = _phase_folders(root, phase)
+    folder = next((f for f in folders if (f / "user_logs" / game_sid).is_dir()), None)
+    if folder is None:
+        n = max((load_session(f)["session"] for f in folders), default=0) + 1
+        folder = make_session(root, phase, n, networks, testers, fresh, bid)
+        folders.append(folder)
+        lines.append(f"New session folder {folder.name} (session {n})")
+    else:
+        lines.append(f"Updating session folder {folder.name}")
+    log = collect(folder, zips, user_logs, sessions=[game_sid] + tests)
+    dest = folder / "user_logs"
+    for d in sorted(p for p in dest.iterdir() if p.is_dir()) if dest.is_dir() else []:
+        lines.append(f"  {d.name}: {len(_peer_files(d))} peer files")
+    lines += [x for x in log if not (x.startswith("skipped") or " <- " in x or x.startswith(("kept ", "replaced ")))]
+    text = report(folders)
+    (folder / "report.md").write_text(text, encoding="utf-8")
+    return folder, text, lines
+
+
+def cmd_auto(a: argparse.Namespace) -> int:
+    if a.user_logs_dir:
+        user_logs: Path | None = a.user_logs_dir
+    else:
+        from godot_qa import find_godot, user_data_dir
+
+        user_logs = user_data_dir(find_godot(a.godot)) / "logs"
+    zips = a.zips or sorted((Path.home() / "Downloads").glob("brenny_logs*.zip"))
+    for z in zips:
+        if not zipfile.is_zipfile(z):
+            raise SystemExit(f"Not a zip: {z}")
+    folder, text, lines = auto(a.out_root or QA_OUT_ROOT, user_logs, zips, a.phase, a.networks, a.testers,
+                               a.fresh, a.build_id or build_id(), a.session)
+    print("\n".join(lines))
+    print(f"Friends' zips: {', '.join(z.name for z in zips) or 'none (put brenny_logs*.zip in Downloads)'}")
+    print()
+    print(text)
+    print(f"Written to {folder / 'report.md'}. Fill {folder / 'notes.md'} with the debrief.")
     return 0
 
 
@@ -381,7 +537,7 @@ def phase1_rows(facts: list[dict[str, Any]], rep: dict[str, Any]) -> list[tuple[
     rows.append(("A fresh tester (has not read doc 01)", "PASS" if fresh else "FAIL", ", ".join(fresh) or "none recorded"))
     different = [f for f in valid if f["meta"].get("networks") == "different"]
     rows.append(("First: voice on different home networks", "MANUAL" if different else "FAIL",
-                 f"{len(different)} session(s) on different networks; confirm in notes.md that both heard each other by join code" if different else "no valid session with --networks different"))
+                 f"{len(different)} session(s) on different networks; confirm in notes.md that everyone heard each other after joining over Tailscale (D-024)" if different else "no valid session with --networks different"))
     for item in ("Day feels safe", "Night feels tense", "Stalk named by sound alone"):
         rows.append((item, "MANUAL", "debrief and observer notes (notes.md)"))
 
@@ -509,8 +665,21 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("--godot", help="Godot executable (else $GODOT, else CONTRACTS s1)")
     c.set_defaults(func=cmd_collect)
 
+    au = sub.add_parser("auto", help="after play: find the session, audio tests and friends' zips, collect, report")
+    au.add_argument("zips", nargs="*", type=Path, help="friends' brenny_logs zips (default: Downloads/brenny_logs*.zip)")
+    au.add_argument("--networks", choices=NETWORKS, default="different", help="for a new session folder (default: different)")
+    au.add_argument("--testers", default="A,B", help="tester labels for a new session folder; default A,B")
+    au.add_argument("--fresh", default="", help="labels of testers who have not read doc 01")
+    au.add_argument("--phase", type=int, default=1, choices=(1, 2, 3, 4))
+    au.add_argument("--session", metavar="ID", help="the game session id (default: newest with 2+ players)")
+    au.add_argument("--build-id", help="override the git build id")
+    au.add_argument("--user-logs-dir", type=Path, help="read this folder instead of asking Godot for user://logs")
+    au.add_argument("--godot", help="Godot executable (else $GODOT, else CONTRACTS s1)")
+    au.add_argument("--out-root", type=Path, help=argparse.SUPPRESS)
+    au.set_defaults(func=cmd_auto)
+
     ls = sub.add_parser("sessions", help="list this machine's game sessions, newest first")
-    ls.add_argument("--multi", action="store_true", help="only sessions with 2 or more peer files")
+    ls.add_argument("--multi", action="store_true", help="only sessions someone joined (or with 2+ peer files)")
     ls.add_argument("--limit", type=int, default=15)
     ls.add_argument("--user-logs-dir", type=Path, help="read this folder instead of asking Godot for user://logs")
     ls.add_argument("--godot", help="Godot executable (else $GODOT, else CONTRACTS s1)")
