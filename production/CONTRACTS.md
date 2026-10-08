@@ -252,6 +252,17 @@ Added by D-020 (Q-035, Q-037); Gameplay adds them to doc 05 section 18 with the 
 | `lure_fooled` | host, when a recorded-line lure has `lure_result.worked` | `lure_id`, `target`, `line_id` |
 | `perf_sample` | each peer, debug runs only | `avg_ms`, `max_ms`, `draw_calls`, `adapter` |
 
+Added by D-053 (P2-05); the AI Programmer adds them to doc 05 section 18:
+
+| Event | Written by | `data` |
+|---|---|---|
+| `trap_plan` | host, at nightfall | `day`, `players`, `plan` (kinds), `supply` (bear traps available) |
+| `trap_stolen` | host | `trap`, `from` (`board`, `outdoor`, `dark_building`), `lock` |
+| `trap_theft_capped` | host, when the lock stops a theft | `cap` |
+| `trap_skipped` | host, when a planned set is dropped | `kind`, `reason` (for example `no_supply`, `no_spot`) |
+| `trap_moved` | host, at dawn | `trap`, `from_building`, `to_spot` |
+| `trap_changed` (new fields) | host | `region` (`heard`, `nearest`, `random`), `work_m`, `stolen` |
+
 ## 11. Voice and recordings
 
 - No real person's voice recording is ever committed. Test voices are synthetic or CEO-approved

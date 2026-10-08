@@ -670,3 +670,9 @@ P2-03 (handoff `production/handoffs/P2-03.md`).
 
 ## QA to Director: refused peer gets position sends (found in P2-17 review)
 Host logs ~18 `ERROR: Unable to send packet on channel 2, max channels: 0` (`net.gd:170 send_bytes` from `players.gd:71`) in the 0.5 s after `join_refused` (match_in_progress, running match). Skip peers in `Net._refused` in the send loop. Owner: Gameplay (`players.gd`) or Network & Voice (`send_bytes`). Verify: host with `--lobby --lobby-start=1`, then a refused `--join`; expect 0 host ERROR.
+
+### Q-055 · 2026-10-08 · AI Programmer → Director, Game Designer · answered (D-053)
+P2-05 (handoff `production/handoffs/P2-05.md`, doc 03 s9.1).
+1. **Director / Game Designer: pegboard pool.** Doc 01 "Night Traps" ("every empty outline is a trap somewhere on the farm", "pried a board loose") and doc 02 s12 (board holds 5, inferred from the day 6 count) read as a finite pool the creature steals from the board. P2-05's acceptance says only "any bear trap not on the pegboard at nightfall is the creature's", so I built that: only off-board traps are taken, the creature's own supply is unlimited, the board starts full and is never emptied. Result: P2-11's `pegboard_full` refusal stays the normal case in play (`--pegboard-empty` is the only way to hang a disarmed trap). Decide: board start state, and whether the creature takes from the board.
+2. **Game Designer: lit building.** Doc 03 s9 table row "Trap kept in a building" says a trap in a building lit all night turns up in the corn at dawn; the P2-05 acceptance says it stays. I followed the acceptance (it stays). Which one?
+3. **Director: new log events** for CONTRACTS s10 / doc 05 s18: `trap_plan`, `trap_stolen`, `trap_theft_capped`, `trap_skipped`, and new `trap_changed set` fields `region`, `work_m`, `stolen`. Difficulty scaling and full-wipe extras (doc 03 s9) are not applied yet: no difficulty table in the plan path.

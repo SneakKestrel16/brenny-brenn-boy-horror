@@ -416,3 +416,22 @@ creature or fake an honest signal. Built after DD Phase 4. **Why:** CEO; naming 
 CEO overruled D-051's naming: quirks use real disorder names because it is funnier (for example,
 Nyctophobia, ADHD, Paranoia, Narcolepsy, OCD). The mechanics are unchanged. The option stays opt-in
 per group, so a group can leave it off. **Why:** CEO.
+
+### D-053 · 2026-10-08 · Director · Q-055: the pegboard is the creature's only bear-trap supply
+P2-05's acceptance (written by the Director) missed doc 01 "The tool shed"; doc 01 wins.
+1. **Finite pool.** Every bear trap the creature sets comes from the farm's own traps: the
+   pegboard (doc 02 s12 capacity, 5 inferred) plus any off-board trap at nightfall. "Every empty
+   outline is a trap somewhere on the farm." Pits are dug and need no supply. At nightfall the
+   creature takes what the plan needs, off-board traps first, then from the board. Bear sets beyond
+   the supply are skipped (`trap_skipped` reason `no_supply`). Traps taken at nightfall
+   can be set that same night.
+2. **Lock.** Before day 5 the lock caps all theft, board and off-board together, at one trap a
+   night. From day 5 the lock is broken and theft is uncapped.
+3. **Lit building.** A trap kept in a building that stayed lit all night is not stolen. At dawn it
+   turns up unarmed in the corn at a random `trap_spot`, as a pickup (doc 01, doc 03 s9 table).
+   Unarmed is inference from "turns up"; the Game Designer can overrule.
+4. **Logs.** `trap_plan`, `trap_stolen` (`from`: `board`, `outdoor`, `dark_building`),
+   `trap_theft_capped`, `trap_skipped`, `trap_moved` (lit building to corn), and `trap_changed`
+   fields `region`, `work_m`, `stolen` join CONTRACTS s10.
+**Why:** doc 01 is CEO-approved; the acceptance contradicted it. The rule is also more readable:
+players count empty outlines to know how many bear traps are out there.

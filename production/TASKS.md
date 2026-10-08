@@ -307,9 +307,10 @@ Acceptance:
 - Replaces Phase 1 scripted traps on the full farm: counts from P2-12 by day and headcount, spots near
   the region players work, deep spots for bear traps, rules in doc 03 s9 (sanctuary, lit door 6 m,
   one per 8 m circle).
-- Pegboard: any bear trap not on the pegboard at nightfall is the creature's; the lock caps theft at
-  one trap a night; a trap in a lit building stays, in a dark one vanishes. Stolen traps are set next
-  night on the ordinary list.
+- Pegboard (D-053): the board plus off-board traps are the creature's only bear-trap supply; off-board
+  first, then the board; sets beyond supply are skipped. The lock caps all theft at one a night
+  before day 5. A trap in a dark building is stolen; one in a building lit all night turns up unarmed
+  in the corn at dawn. Log events as CONTRACTS s10 (D-053).
 - `--phase1` keeps the scripted traps.
 - The Creature exposes `clear_trap(id)`; `trap_race.gd` stops reaching into `_traps` (P2-11 handoff).
 
