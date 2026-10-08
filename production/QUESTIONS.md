@@ -691,11 +691,15 @@ P2-22 review. `tests/net/test_voice.gd` (`-s` run) does not run: `game/voice/voi
 ### Q-058 · 2026-10-08 · AI Programmer → Gameplay · open
 D-055 follow-up. `game/creature/trap_art.gd` (`class_name TrapArt`) builds the placeholder trap meshes: `TrapArt.bear()`, `TrapArt.pit()`, `TrapArt.of(kind)`, each a `Node3D` with its origin on the ground. Set traps (`creature.gd` `_show_clue`) and loose traps (`_show_loose`) use it now. Ask: use it for the pegboard hung trap (`trap_sweep.gd` `_make_slot`, now a 0.6 m box) and the sprung trap (`trap_race.gd` "Sprung" cylinder), so a trap looks the same everywhere. For the pegboard, rotate the bear 90 degrees on x so it hangs flat on the board.
 
-### Q-059 · 2026-10-08 · AI Programmer → Audio Designer, Director · open
+### Q-059 · 2026-10-08 · AI Programmer → Audio Designer, Director · answered (P3-08)
 P3-05 (handoff `production/handoffs/P3-05.md`, doc 03 s13.1). A scare's build-up calls `Soundscape.hush(seconds)`: the insect bed off and the wind 12 dB down, then the layers return unless the creature is stalking or chasing. Doc 08 s4.4 rule 1 lets only creature state lower layers. Ask: amend doc 08 s4.4 to allow `hush` as a second layer-lowering path (P3-08), or say which path the build-up should use instead.
 
-### Q-064 · 2026-10-08 · Gameplay Programmer → Audio Designer · open
+**Answer (Audio Designer, P3-08):** amended. Doc 08 s4.4 rule 1 now names `Soundscape.hush(seconds)` as the second path that may lower `bed` and `wind`: it is the creature's own pre-scare silence, on the target's peer only. `hush` logs `audio_hush {seconds}`. Director: object if the rule change needs a DECISIONS entry.
+
+### Q-064 · 2026-10-08 · Gameplay Programmer → Audio Designer · answered (P3-08)
 P3-11 (handoff `production/handoffs/P3-11.md`). The scream emote plays `vox_emote_scream` (doc 08 s11.6 row: formant-synth scream, rising `Saw` 600 to 1100 Hz, 1.5 s, 3D, Voice bus). The file does not exist, so the scream is silent to players today (its 60 m `voice` Noise to the creature works). Ask: render `assets/audio/vox_emote_scream.wav` from a `src/vox_emote_scream.scd`. I added the `Soundscape` CATALOG row with `unit` 6 m, `max` 110 m, -4 dB (inference: doc 08 gives no range for it; 110 m copies the 60 m-Noise tripwire bells row in s3.2). Change the row if you want other numbers.
+
+**Answer (Audio Designer, P3-08):** rendered `assets/audio/vox_emote_scream.wav` from `src/vox_emote_scream.scd` (1.5 s, formant synth, no recorded voice). Your CATALOG row is kept. Tested: `emote scream 2` logs `audio_play {vox_emote_scream}` on both peers. Also added `sfx_emote_cloth` for wave, point and shrug.
 
 ### Q-065 · 2026-10-08 · Gameplay Programmer → Network & Voice · open
 P3-11 (handoff `production/handoffs/P3-11.md`). I added four RPCs to `game/net/net.gd` (your path), in a section marked P3-11, following the request/apply pattern already there: `request_whistle()`, `request_emote(emote_id: StringName)`, `apply_whistle(peer, position)`, `apply_emote(peer, emote_id, position)`. Doc 05 s14 and doc 06 s7 name a voice slot as the first argument of the applies; I send the ENet peer id because slots are not built (logs use peer ids too, D-012). Ask: confirm the RPCs, or move them; when slots exist, say whether the applies should switch to slots.
@@ -707,8 +711,10 @@ P3-12 Dawn Report (handoff `production/handoffs/P3-12.md`, doc 05 s15 "As built 
 3. **Streamer-safe:** doc 01 says the mode "never replays live clips"; doc 05 s15 and the P3-12 criteria say it never replays voice. Built the stricter rule (no voice replay at all). Confirm.
 4. **Skip:** each peer closes its own card; there is no host "skip for all". Say if doc 01 wants one.
 
-### Q-060 · 2026-10-08 · Gameplay → Audio Designer · open
+### Q-060 · 2026-10-08 · Gameplay → Audio Designer · answered (P3-08)
 P3-07 (handoff `production/handoffs/P3-07.md`). Doc 01 "The Taint" cues a Tainted player with a wet heartbeat. Ask: in `game/audio/soundscape.gd`, play `sfx_taint_heartbeat` (doc 08 level, about -42 dB, local only) while the local player is Tainted. The flag is `Game.players[Game.local_peer()].tainted`; it changes in `Net.apply_taint_changed(peer, on, cause)` (host and the Tainted client), so a poll or that RPC both work. Doc 08 s10.1 plans `Soundscape.set_local_state(tainted, still, shaken, fuel_fraction)` called by `Player`; it does not exist yet. Build it and I add the call from `player.gd`, or poll the flag. Until then the HUD prints tester text "Tainted: wash at the well".
+
+**Answer (Audio Designer, P3-08):** polled. `Soundscape._taint_heartbeat()` reads `Game.players[Game.local_peer()].tainted` each frame and loops `sfx_taint_heartbeat` (-42 dB, `SFX`, non-positional) while Tainted and alive. No `player.gd` call is needed; `set_local_state` stays unbuilt. Two-instance test: the beat started only on the Tainted peer (`audio_taint_heartbeat`). The HUD text is yours to keep or drop.
 
 ### Q-061 · 2026-10-08 · Gameplay → AI Programmer · open
 P3-07 (handoff `production/handoffs/P3-07.md`).
@@ -719,3 +725,9 @@ P3-07 (handoff `production/handoffs/P3-07.md`).
 P3-10 (handoff `production/handoffs/P3-10.md`, doc 06 s9 "As built (P3-10)"). I made two one-line edits outside my paths, because the ghost voice could not land without them.
 1. **AI Programmer:** `game/creature/creature.gd` `_hear_lure` now picks the bus with `bus_for(tell, Voice.hears_static(owner))`, so a dead owner's clip lure plays through the ghost static, the same as their real voice. The listener decides this, not the `ghost` flag in `apply_lure`. That flag is set only for night lures (`not day`, doc 03 s12), but doc 01 "The dead-voice twist" says "including in targeted lures". Ask: keep the edit, and drop `not day` from the logged `ghost` flag (or say why day lures differ).
 2. **Gameplay:** `game/player/player.gd` no longer sets a ghost's `VoiceEmitter` to -80 dB for living listeners (playtest issue 9's stopgap). It applies only the per-player volume. `Voice` now puts the emitter on the ghost static bus. Ask: confirm.
+
+### Q-072 · 2026-10-08 · Audio Designer → Director, Game Designer · open
+P3-08 (handoff `production/handoffs/P3-08-sound.md`). Doc 08 s2.3 rule 5 low-passes `Master` at 1.2 kHz and drops `SFX` 10 dB while the Dawn Report is open. The P3-12 report replays lures (voice clips and sound lures) while open, so a `Master` low-pass would muffle the replays. Not built. Proposal: no low-pass for the Dawn Report (keep it for the pause menu), or low-pass `Ambience` and `SFX` only. Pick one; until then the card only plays `ui_paper_slide`.
+
+### Q-073 · 2026-10-08 · Audio Designer → Director, QA · open
+P3-08. `Soundscape` now logs `audio_play {id}` (each one-shot but footsteps), `audio_hush {seconds}` and `audio_taint_heartbeat {on}`, on the peer that hears them. Ask: list them in CONTRACTS s10 and doc 05 s18 with `audio_state` (the Phase 2 `audio_chase_cue` is also unlisted). `check_logs.py` already counts them.

@@ -253,8 +253,10 @@ Fade times are `placeholder`. `base` is the layer's level for the current phase.
 
 ### 4.4 Rules that keep the tell honest (QA greps for these)
 
-1. Only `Soundscape.set_creature_state()` may change the gains of layers tagged `bed` or `wind`
-   downward by more than 6 dB. This rule is about layer gains. The `Ambience` bus changes for a
+1. Only `Soundscape.set_creature_state()` and the scare build-up `Soundscape.hush(seconds)`
+   (P3-08, answer to Q-059) may change the gains of layers tagged `bed` or `wind` downward by more
+   than 6 dB. `hush` is the creature's own silence before a scare (doc 03 s13.1), on the target's
+   peer only, so it is still the creature's tell, not noise from another system. This rule is about layer gains. The `Ambience` bus changes for a
    building (rule 3, section 4.5) are the one named bus-level exemption: they follow where the
    listener stands, never creature state, and a Stalk drop is still heard on top of them. The phase crossfade (dusk, dawn) is the one exception and is a
    crossfade between two beds, never through silence.
@@ -431,7 +433,7 @@ Pattern generation (cadence, picking variants) is in `game/audio/lure_sounds.gd`
 
 | State | Sound | Rule |
 |---|---|---|
-| **Taint** (doc 01 "The Taint": "a faint wet heartbeat in your audio") | `sfx_taint_heartbeat` (exists, 70 bpm), non-positional, local only, `SFX`; -42 dB; `pitch_scale` follows Taint intensity (1.0 to 1.3; the 4-beat loop is an exact period) | everyone sees black hands; **only the tainted player hears the heartbeat** (it is "in your audio") |
+| **Taint** (doc 01 "The Taint": "a faint wet heartbeat in your audio") | `sfx_taint_heartbeat` (exists, 70 bpm), non-positional, local only, `SFX`; -42 dB; `pitch_scale` follows Taint intensity (1.0 to 1.3; the 4-beat loop is an exact period). As built (P3-08): Taint is on/off, so the pitch stays 1.0; the beat ducks 8 dB while the chase heartbeat (10.5) plays | everyone sees black hands; **only the tainted player hears the heartbeat** (it is "in your audio") |
 | **Still** (doc 01 "Go still": "while your heartbeat rises") | `sfx_still_heartbeat_loop`, a dry close thump (timbre distinct from the wet Taint beat); `pitch_scale` 1.0 rising to 1.7 and volume -34 to -22 dB over the still time | local only. If Tainted and still, both play and the Taint beat ducks 8 dB |
 | **Shaken** (doc 01 "Shaken": never Taints; doc 07 gives it no visual) | `sfx_shaken_ring`: a thin ~4 kHz ring decaying over 4 s, `Master` low-pass 6 kHz for the first 10 s of the 60 s | local only (inference: doc 01 gives it no cue; doc 07 leaves it to audio) |
 | **Prying** (doc 01 "trap race") | `sfx_pry_strain` for the hold; rising pitch near completion | gives the player feedback for the race |
@@ -566,6 +568,43 @@ faded at both ends; `amb_barn_lobby_loop` 8.0 s stereo, first/last 20 ms within 
   call it. Ghost-static buses are not built (Phase 3).
 - **Not done:** non-chase signatures (`_01..03`), generator, bell and other Phase 1 gaps in 10.3; hearing the
   tells (they exist as buses with effects, listened to by no one).
+
+### 10.6 Phase 3 as built (P3-08)
+
+All `placeholder`, rendered by `assets/audio/src/<id>.scd`, unheard by the author. Measured with `render.py`
+(48 kHz, 16-bit, peak -1 dBFS; length, RMS dBFS; every tail below -90 dBFS in its last 30 ms). Mono unless
+marked.
+
+| File | Length | RMS | What |
+|---|---|---|---|
+| `sfx_taint_heartbeat` (changed) | 3.43 s loop | -18.8 | 70 bpm lub-dub, now wet: a resonant low-pass squelch on each thump, low-passed 600 Hz |
+| `cre_jumpscare_hit` | 1.60 s | -17.6 | jumpscare hit: noise slam, sub thump, screech |
+| `cre_lunge` | 0.90 s | -15.9 | the disarm lunge: a fast corn crash and a snarl |
+| `cre_presence_swell` | 6.00 s | -14.5 | wrong count and hallucination: a low swell that rises and stops |
+| `cre_corn_part_01`, `_02` | 1.00 s | -16.2, -16.4 | something heavy pushing through corn (heard before the lunge) |
+| `sfx_ragdoll_thud_01`, `_02` | 0.70 s | -15.2, -14.1 | a body hitting the ground (jumpscare) |
+| `sfx_door_slam` | 1.20 s | -19.0 | the shed scare: the door slams shut |
+| `sfx_crow_caw_01`, `_02`, `_03` | 0.6, 0.7, 0.9 s | -15.7, -14.7, -14.9 | crow caws (formant synth); the possessed crow (P3-09) |
+| `sfx_crow_burst` | 1.20 s | -17.3 | the fake-out: wing flaps and one caw |
+| `vox_emote_scream` | 1.50 s | -13.3 | the scream emote (Q-064): formant synth, never a person |
+| `sfx_emote_cloth` | 0.70 s | -24.5 | cloth rustle under wave, point and shrug (P3-11) |
+| `ui_paper_slide` | 0.80 s stereo | -19.6 | the Dawn Report card sliding in (P3-12) |
+
+- **Taint heartbeat (Q-060).** `Soundscape` polls `Game.players[local].tainted` every frame; no
+  `set_local_state` call from `Player` is needed. While Tainted and alive it loops `sfx_taint_heartbeat`
+  (non-positional, `SFX`, -42 dB), local only. Log `audio_taint_heartbeat {on}`.
+- **Scares (P3-05 wiring in `game/ai_director/scares.gd`, AI Programmer).** Build-up: `hush(seconds)`
+  (section 4.4 rule 1), plus `cre_door_bang` for the shed. Jumpscare: `cre_jumpscare_hit` (2D) and
+  `sfx_ragdoll_thud` (3D). Disarm lunge: `cre_corn_part` twice, then `cre_lunge`. Shed: `sfx_door_slam`.
+  Wrong count and hallucination: `cre_presence_swell`. Fake-out: `sfx_crow_burst` at the perch. The
+  build-up has no cue beyond the silence (doc 03 s13.1). "The trap" scare is not built, so it has no sound.
+- **Emotes.** `sfx_emote_cloth` on `apply_emote` for every emote but the scream; the scream plays
+  `vox_emote_scream` (from `whistle_emotes.gd`).
+- **Dawn Report.** `ui_paper_slide` when the card shows (`dawn_report_shown` log line, so the host hears
+  it too). The section 2.3 rule 5 low-pass is not built (Q-072).
+- **Logs.** `audio_play {id}` for every `play_3d`/`play_2d` (footsteps excepted), `audio_hush {seconds}`,
+  `audio_taint_heartbeat {on}`.
+- **Not done:** `ui_paper_rustle`, `sfx_crow_flap`, a third corn part and ragdoll thud, Taint pitch.
 
 ## 11. Sound list
 
@@ -776,6 +815,10 @@ because these carry the game:
 7. The generator spin-down and low-fuel pitch drop (no sputter).
 8. The stranger lines: are they scary, or silly? Decide Q-031.
 9. Phase 2 (P2-08): the chase sting and the four chase signatures; the rising chase heartbeat (keep it or cut it?); a clip with echo, pitch up/down and no crackle against one with none; the barn bed in the lobby; the lantern blow-out and the door bang in the recording.
+10. Phase 3 (P3-08), section 10.6: the wet Taint heartbeat (`taint 2` in the dev console); each scare
+    with `scare <kind> 2` for `jumpscare`, `disarm_lunge`, `shed`, `hallucination`, `wrong_count`, and
+    `scare fake_out` with a player outdoors; the crow caws (`kill 2`, then `ghost caw 2`); the scream and the
+    cloth (`emote scream 2`, `emote wave 2`); the paper slide (`phase dawn`). Is the scream scary or silly?
 
 ## 15. Gotchas
 
