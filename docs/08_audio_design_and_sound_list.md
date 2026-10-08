@@ -229,6 +229,10 @@ Fade times are `placeholder`. `base` is the layer's level for the current phase.
 | `chase` | stays off | stays down | off | the **chase sting** (`mus_sting_chase`) fires once on entry, and the body's signature plays loud (section 5.3) | doc 01: "music sting plus the body's signature, loud" |
 | `retreat` | **returns over 4 s** (insects first, frogs 2 s later) | **returns over 6 s** | base | the signature stops within 1 s | doc 01: "the insects and frogs come back" |
 | `lurk` after a chase is lost | returns over 8 s (inference: doc 01 names retreat only; a lost chase also returns to Lurk) | over 10 s | base | | the layers must not stay off in a state that has no tell |
+- **Idea, not decided** (CEO, 2026-10-08): when the creature goes for the kill, a heartbeat sound effect
+  might warn the target. It needs a new sound, because `sfx_taint_heartbeat` and
+  `sfx_still_heartbeat_loop` already mean Taint and Still. Tracks playtest issue 8 in
+  `production/OPEN_ISSUES.md`.
 
 - **Stalk to Chase** keeps the bed off with no extra cue, then the sting lands on a silent
   background, which is the intended contrast (doc 01 "Making them land": "build up first with

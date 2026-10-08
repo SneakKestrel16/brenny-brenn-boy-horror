@@ -66,6 +66,8 @@ is inference until a log or a run settles it. Host log: `logs/qa/stop1_host/` (g
    scripted stalk now holds 18 m and backs off, no kill comes in a chase's first 2 s, and
    `chase_started` logs `reason` and `start_m`, `chase_ended` logs `chase_s`. The other 4 chases were
    fine. Open: no chase sting or signature sound exists (Q-048, Audio Designer).
+   CEO note (2026-10-08): when the creature goes for the kill we might add a heartbeat sound effect as
+   the warning. Not decided; try it after the chase sting exists.
 9. **Dead players still audible.** Ghost voice must not reach the living except through the ghost
    static rules in doc 06.
 10. **Spectate camera tears** whenever the spectated player turns.
