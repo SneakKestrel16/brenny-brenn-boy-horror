@@ -10,10 +10,10 @@ var _status: Label
 var _buttons: Array[Button] = []
 
 const REFUSALS := {
-	"full": "The farm is full.",
-	"match_in_progress": "That match has started. Only the players who were in the barn can come back.",
-	"not_in_season": "That farm's save belongs to other players.",
-	"no_identity": "The host did not hear who you are. Try again.",
+	"full": "That farm is full.",
+	"match_in_progress": "That match has already started.",
+	"not_in_season": "That farm's season belongs to other players.",
+	"no_identity": "The host didn't hear who you are. Try again.",
 }
 
 

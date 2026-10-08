@@ -1,14 +1,14 @@
 extends Node
 ## Doc 06 sections 2, 5 and 7: ENet transport, host and join, the join handshake, roster, and every
 ## RPC (doc 05 section 22: no `rpc()` outside `game/net/`). Session state stays in `Game`; this node
-## sends it. Join is by raw IP[:port] only (D-024: friends join over Tailscale); join codes and UPnP
-## stay in spikes/voice/ until a task asks for them.
+## sends it. Join is by IP[:port] or a join code (`JoinCode`, D-049; friends join over Tailscale,
+## D-024); UPnP stays in spikes/voice/ until a task asks for it.
 ##
 ## Identity (P2-03): `player_uid()` and `request_join`; the host keeps `profiles` (peer -> uid, name)
 ## and sends them with `apply_roster`. Debug user arg `--profile=<name>` keeps the uid and the voice
 ## clips under `user://profiles/<name>/`, so two local copies don't share them.
 ##
-## Not built yet (doc 06): apply_join_accepted / apply_join_refused (build id, full farm), slots,
+## Not built yet (doc 06): apply_join_accepted, the protocol/build version refusal, slots,
 ## peer timeouts, rtt_ms, the --net-sim-* queue. Add each with the task that first needs it.
 
 const DEFAULT_PORT := 45120  ## doc 06 section 2; 45121..45124 if taken locally
@@ -135,8 +135,10 @@ func join(address: String, default_port: int = DEFAULT_PORT) -> Error:
 	_use(peer)
 	_join_target = "%s:%d" % [ip, port]
 	_code = ""
+	# P2-17: only this attempt, still connecting. A refusal, a leave or a host quit (peer gone or replaced) is not an error.
 	get_tree().create_timer(CONNECT_TIMEOUT_S).timeout.connect(func() -> void:
-		if not Game.in_session:
+		if multiplayer.multiplayer_peer == peer and not Game.in_session \
+				and peer.get_connection_status() != MultiplayerPeer.CONNECTION_DISCONNECTED:
 			push_error("Net: no session_state from %s within %d s" % [_join_target, int(CONNECT_TIMEOUT_S)]))
 	return OK
 
@@ -302,8 +304,8 @@ func _on_server_disconnected() -> void:
 
 # --- RPCs (doc 06 section 7); handlers live in the owning autoload -------------------------------
 
-## P2-07 (doc 06 s2): the host refused this join (`full`). No session was opened, so nothing is logged
-## here; a window goes back to the main menu, a headless copy quits.
+## P2-07 (doc 06 s2): the host refused this join (doc 06 s7 lists the reasons). The main menu shows
+## `refusal` as a line of text; a headless copy quits.
 @rpc("authority", "call_remote", "reliable")
 func apply_join_refused(reason: StringName) -> void:
 	print("Net: join refused by the host: %s" % reason)
@@ -313,6 +315,8 @@ func apply_join_refused(reason: StringName) -> void:
 	multiplayer.multiplayer_peer = null
 	if DisplayServer.get_name() == "headless":
 		get_tree().quit()
+	elif Game.in_session:  # P2-17: `not_in_season` comes after the lobby let us in; close that session (it opens the menu)
+		Game.leave_session()
 	else:
 		get_tree().change_scene_to_file.call_deferred(Game.MENU_SCENE)
 

@@ -73,6 +73,7 @@ func _process(delta: float) -> void:
 		return
 	if _dirty and not Game.is_host():
 		_dirty = false
+		# "" means the recording screen is open; no clips is md5("") = d41d8..., never "" (P2-17).
 		Net.to_host(&"request_clips_ready", ["" if recording else digest_for(Game.local_peer())])
 	if _wait_t >= 0.0:
 		# A player still recording holds the start and the 30 s clock (inference: the timeout is for

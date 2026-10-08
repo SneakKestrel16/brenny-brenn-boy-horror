@@ -16,7 +16,7 @@ extends Node
 ##
 ## P2-03 (doc 06 s11): `clips` (VoiceClips) holds the recorded lines and the pre-share; the recording
 ## screen opens on `Game.recording_requested`, and in the lobby for players who haven't chosen Off and
-## have no lines. While `capturing`, no Off player's voice plays here (D-011) and the recording light
+## have no lines (a window only). While `capturing`, no Off player's voice plays here (D-011) and the recording light
 ## shows on this player's character for everyone (`apply_recording_light`).
 ##
 ## Not built yet (doc 06 sections 9 to 12): the shared voice chain buses (echo, pitch, ghost static,
@@ -105,7 +105,9 @@ func _ready() -> void:
 	Game.recording_requested.connect(open_recording)
 	Game.session_started.connect(func() -> void:
 		ensure_capture()
-		if args.has("--record-auto") or (Game.in_lobby and should_offer_recording()):
+		# P2-17: a headless copy never gets the offer. Nobody can press Skip there, so the open screen
+		# (ready report "") held the lobby start for ever.
+		if args.has("--record-auto") or (Game.in_lobby and should_offer_recording() and DisplayServer.get_name() != "headless"):
 			open_recording.call_deferred()
 		if _arg(args, "--voice-off-after").is_valid_float():  # QA: the menu's Off, N seconds in
 			get_tree().create_timer(float(_arg(args, "--voice-off-after"))).timeout.connect(
