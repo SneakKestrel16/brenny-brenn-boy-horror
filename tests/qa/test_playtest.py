@@ -135,6 +135,35 @@ class Collect(unittest.TestCase):
             self.assertEqual(rep["spatial_audio"]["trials"], 36)
             self.assertTrue((folder / "measures.txt").read_text().startswith("Files: 2"))
 
+    def test_session_filter_takes_old_local_logs_and_only_that_session(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            folder = _new(tmp / "qa", 1)
+            user = tmp / "user_logs"
+            _write_logs(user, "s_real", {"peer_1.jsonl": [_rec(0, "death", {})]})
+            _write_logs(user, "s_qa_run", {"peer_1.jsonl": [_rec(0, "death", {})]})
+            old = time.time() - 86400  # played before `new`: kept because it is named
+            os.utime(user / "s_real" / "peer_1.jsonl", (old, old))
+            friend = tmp / "f.zip"
+            with zipfile.ZipFile(friend, "w") as z:
+                z.writestr("s_real/peer_7.jsonl", _rec(0, "voice_stats", {}, peer=7) + "\n")
+                z.writestr("s_friend_solo/peer_1.jsonl", _rec(0, "death", {}) + "\n")
+            log = playtest.collect(folder, [friend], user, sessions=["s_real"])
+            got = sorted(p.relative_to(folder / "user_logs").as_posix() for p in (folder / "user_logs").rglob("*.jsonl"))
+            self.assertEqual(got, ["s_real/peer_1.jsonl", "s_real/peer_7.jsonl"])
+            self.assertTrue(any("s_friend_solo" in x and "not a --session" in x for x in log))
+
+    def test_sessions_lists_newest_multi_peer_first(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            user = Path(tmp)
+            _write_logs(user, "solo", {"peer_1.jsonl": ["{}"]})
+            _write_logs(user, "pair", {"peer_1.jsonl": ["{}"], "peer_2.jsonl": ["{}"]})
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                playtest.main(["sessions", "--multi", "--user-logs-dir", str(user)])
+        self.assertIn("pair", out.getvalue())
+        self.assertNotIn("solo", out.getvalue())
+
     def test_safe_member_rejects_escapes(self) -> None:
         self.assertEqual(playtest._safe_member("logs/s1/peer_2.jsonl"), ("s1", "peer_2.jsonl"))
         self.assertEqual(playtest._safe_member("s1\\peer_2.jsonl"), ("s1", "peer_2.jsonl"))

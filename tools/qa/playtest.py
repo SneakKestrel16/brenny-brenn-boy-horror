@@ -6,7 +6,8 @@
 
     uv run tools/qa/playtest.py new --session 1 --networks different --fresh B
     uv run tools/qa/playtest.py tally <session folder>
-    uv run tools/qa/playtest.py collect <session folder> [friend's logs zip or folder ...]
+    uv run tools/qa/playtest.py sessions --multi          # find the game session id
+    uv run tools/qa/playtest.py collect <session folder> --session <id> [friend's logs zip ...]
     uv run tools/qa/playtest.py report <session folder> [<session folder> ...]
 
 `new` makes logs/qa/playtest_p<phase>_s<n>_<timestamp>/ with session.json (the facts the gate
@@ -232,21 +233,30 @@ def _place(dest_root: Path, session: str, fname: str, data: bytes, origin: str, 
     target.write_bytes(data)
 
 
-def collect(folder: Path, sources: list[Path], user_logs: Path | None, keep_all: bool = False) -> list[str]:
+def collect(folder: Path, sources: list[Path], user_logs: Path | None, keep_all: bool = False,
+            sessions: list[str] | None = None) -> list[str]:
+    """`sessions` names the game sessions to take (session_id folder names); then age does not matter."""
     meta = load_session(folder)
     dest = folder / "user_logs"
     log: list[str] = []
     local: set[str] = set()
+    wanted = set(sessions or [])
     if user_logs is not None:
         if user_logs.is_dir():
-            # Only logs written since `new`: older sessions on this machine are not this playtest.
-            for session, fname, src in _session_files_from_dir(user_logs, meta["created_epoch"] - 60):
+            # Without --session: only logs written since `new`; older sessions here are not this playtest.
+            since = None if wanted else meta["created_epoch"] - 60
+            for session, fname, src in _session_files_from_dir(user_logs, since):
+                if wanted and session not in wanted:
+                    continue
                 _place(dest, session, fname, src.read_bytes(), str(src), log)
                 local.add(session)
         else:
             log.append(f"no user://logs folder at {user_logs}")
 
     def take(session: str, fname: str, read, origin: str) -> None:
+        if wanted and session not in wanted:
+            log.append(f"skipped {session}/{fname} from {origin}: not a --session")
+            return
         # The host collects: a friend's older sessions are not this playtest (doc 05 s18 session_id).
         if local and session not in local and not keep_all:
             log.append(f"skipped {session}/{fname} from {origin}: not a session on this machine since `new` (--keep-all keeps it)")
@@ -282,12 +292,46 @@ def cmd_collect(a: argparse.Namespace) -> int:
         from godot_qa import find_godot, user_data_dir
 
         user_logs = user_data_dir(find_godot(a.godot)) / "logs"
-    for line in collect(a.folder, a.sources, user_logs, a.keep_all):
-        print(line)
-    txt = a.folder / "measures.txt"
-    if txt.is_file():
-        print()
-        print(txt.read_text(encoding="utf-8"))
+    log = collect(a.folder, a.sources, user_logs, a.keep_all, a.session)
+    if a.verbose:
+        print("\n".join(log))
+    else:  # one line per session kept, plus counts: the per-file list can run to hundreds of lines
+        skipped = sum(1 for x in log if x.startswith("skipped"))
+        others = [x for x in log if not (x.startswith("skipped") or " <- " in x or x.startswith(("kept ", "replaced ")))]
+        print("\n".join(others))
+        dest = a.folder / "user_logs"
+        for d in sorted(p for p in dest.iterdir() if p.is_dir()) if dest.is_dir() else []:
+            peers = sorted(f.stem for f in d.glob("peer_*.jsonl"))
+            print(f"{d.name}: {len(peers)} peer files ({', '.join(peers)})")
+        if skipped:
+            print(f"skipped {skipped} files from other sessions (--verbose lists them)")
+    if (a.folder / "measures.txt").is_file():
+        print(f"Measures written to {a.folder / 'measures.txt'}. Next: playtest.py report {a.folder}")
+    return 0
+
+
+def cmd_sessions(a: argparse.Namespace) -> int:
+    """Lists game sessions on this machine, newest first, so the real playtest is easy to pick."""
+    if a.user_logs_dir:
+        root = a.user_logs_dir
+    else:
+        from godot_qa import find_godot, user_data_dir
+
+        root = user_data_dir(find_godot(a.godot)) / "logs"
+    rows = []
+    for d in root.iterdir() if root.is_dir() else []:
+        files = [f for f in d.glob("peer_*.jsonl") if check_logs._PEER_FILE.match(f.name)]
+        if not files or (a.multi and len(files) < 2):
+            continue
+        last = max(f.stat().st_mtime for f in files)
+        kb = sum(f.stat().st_size for f in files) // 1024
+        rows.append((last, d.name, len(files), kb))
+    rows.sort(reverse=True)
+    print(f"{'session':28} {'peers':>5} {'KB':>6}  last write")
+    for last, name, n, kb in rows[: a.limit]:
+        print(f"{name:28} {n:>5} {kb:>6}  {datetime.fromtimestamp(last):%Y-%m-%d %H:%M}")
+    if not rows:
+        print(f"no sessions under {root}")
     return 0
 
 
@@ -459,9 +503,18 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("sources", nargs="*", type=Path, help="other players' logs: a zip from send_logs.bat or a folder")
     c.add_argument("--no-user-logs", action="store_true", help="skip this machine's user://logs")
     c.add_argument("--user-logs-dir", type=Path, help="read this folder instead of asking Godot for user://logs")
+    c.add_argument("--session", action="append", metavar="ID", help="take only this game session (repeatable); see `sessions`")
+    c.add_argument("--verbose", action="store_true", help="list every file copied or skipped")
     c.add_argument("--keep-all", action="store_true", help="keep other players' sessions this machine has no log of")
     c.add_argument("--godot", help="Godot executable (else $GODOT, else CONTRACTS s1)")
     c.set_defaults(func=cmd_collect)
+
+    ls = sub.add_parser("sessions", help="list this machine's game sessions, newest first")
+    ls.add_argument("--multi", action="store_true", help="only sessions with 2 or more peer files")
+    ls.add_argument("--limit", type=int, default=15)
+    ls.add_argument("--user-logs-dir", type=Path, help="read this folder instead of asking Godot for user://logs")
+    ls.add_argument("--godot", help="Godot executable (else $GODOT, else CONTRACTS s1)")
+    ls.set_defaults(func=cmd_sessions)
 
     r = sub.add_parser("report", help="doc 09 s3 pass/fail table over one or more sessions")
     r.add_argument("folders", nargs="+", type=Path)
