@@ -473,3 +473,13 @@ human sessions of DD Phase 3.
 The CEO approved rows P3-01 to P3-13 in `production/TASKS.md` as drafted. Phase 3 also carries the
 sabotage budget (D-034), the Phase 1 30% lure measure and both Phase 2 measures (D-057).
 **Why:** CEO approval; doc 01 "Build Plan > Phase 3" is the source.
+
+### D-059 · 2026-10-08 · Director · Phase 3 scope settled at the P3-01 review
+Waiting for Phase 4: the `harvest_moon` profile and acts (doc 03 s14), `pumpkin_gnaw` (no Prize
+Pumpkin), `broken_fence` (no animals or pen), spliced lure clips (doc 03 s12.1) and walkie-talkies
+(store items). The Phase 3 sabotage pool is `trample`, `stolen_tool`, `dead_crow`, `strange_seeds`,
+`scarecrow_moved`, `generator_kill`. P3-09 defines the doc 09 ghost action events and includes corn
+rustle; P3-05 adds a dev command to set the day.
+**Why:** doc 01 "Build Plan > Phase 3" lists the AI Director, sabotage, scares, Taint, dead voices,
+ghosts, whistle, emotes and the Dawn Report; the waiting items depend on Phase 4 content.
+**How to apply:** acceptance for P3-02 to P3-13 is in `production/TASKS.md`.

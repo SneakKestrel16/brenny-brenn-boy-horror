@@ -91,3 +91,17 @@ session rechecks them (P2-09, D-034).
 4. **Lure counts may stay thin.** Q-046 (4): 4 lures in 1500 s of headless night. The Phase 2 gate
    needs only one fooled tester; the 30% rate is deferred to Phase 3 (CEO, 2026-10-08). Settled by
    `check_logs.py` lure counts in the first Phase 2 session.
+
+## Found at the P3-01 review (Director, 2026-10-08)
+
+1. **No human has seen the Phase 2 fixes.** STOP 3 closed without sessions (D-057). The P2-01 review
+   items above and the P2-24 to P2-28 fixes stay unconfirmed. Settled by the first Phase 3 human
+   session (P3-13).
+2. **Ghost voice is muted to the living**, against doc 06's ghost static design (playtest issue 9's
+   stopgap). Settled by P3-10.
+3. **Doc 09 "DD Phase 3" reads ghost action events that are not defined.** P3-09 defines `ghost_action`
+   (`flicker`, `crow`, `rustle`, `caw`); QA adds it to doc 09 s13 and `check_logs.py`.
+4. **No dev way to reach day 5**, where hallucinations open (doc 03 s13). The dev console has no day
+   command. Settled by P3-05.
+5. **Taint data has two homes.** Doc 05 s10 names `taint.json`; Taint creature numbers sit in
+   `creature.json` today. P3-02 picks one and fixes the other doc.

@@ -385,12 +385,17 @@ hasn't read doc 01, plus log measures (doc 09). **STOP 4** after P3-13.
 
 Carried in: sabotage and the disturbance budget (D-034); the Phase 1 lure walk-toward measure, 30%
 (deferred, CEO 2026-10-08); both Phase 2 measures, unproven (D-057); the P2-08 CEO listen. Flags are
-built (P2-11); Phase 3 only reports them (Dawn Report). Rows below are a scope proposal; P3-01 turns
-them into acceptance.
+built (P2-11); Phase 3 only reports them (Dawn Report).
+
+P3-01 review (D-059): doc 01 lists Phase 3 by feature, but docs 03, 05 and 06 also specify pieces
+that belong to Phase 4, so these wait: the `harvest_moon` profile and acts (doc 03 s14), `pumpkin_gnaw`
+(no Prize Pumpkin yet), `broken_fence` (no animals or pen yet), spliced clips (doc 03 s12.1, "from day
+4"; exact clips only) and walkie-talkies (store items). Ghost rustle stays in: doc 01 "Ghosts" and doc
+03 s13 list it with flicker and crow.
 
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
-| P3-01 | Director | Between-phase review: OPEN_ISSUES, settle what Phase 3 needs, write acceptance for the rows below | in progress | — |
+| P3-01 | Director | Between-phase review: OPEN_ISSUES, settle what Phase 3 needs, write acceptance for the rows below | done (D-059) | — |
 | P3-02 | Game Designer | Phase 3 data (doc 03 s19): Director profiles and tension meter, day arc, scare rules, disturbance budget, Taint and Shaken numbers, Dawn Report templates (doc 03 s8, s10, s11, s13, s17) | todo | P3-01 |
 | P3-03 | AI Programmer | Dead players' voices favored in lure choice (doc 03 s12.1; today `WEIGHT_*` in `creature.gd`) | todo | P3-02 |
 | P3-04 | AI Programmer | AI Director: tension meter, profiles, day arc, region nudges, private events, debug (doc 03 s11); it budgets lures in place of `DAY_LURE_GAP_S` | todo | P3-02 |
@@ -398,11 +403,144 @@ them into acceptance.
 | P3-06 | AI Programmer | Sabotage from the disturbance budget (doc 03 s10, D-034) | todo | P3-04 |
 | P3-07 | Gameplay, AI Programmer | Taint and Shaken: player side and the well (doc 05 s10), creature tracking (doc 03 s3.3, s8); Taint is off since Phase 1 | todo | P3-02 |
 | P3-08 | Technical Artist, Audio Designer | Taint stain and Taint heartbeat; scare and Director sounds (doc 07, doc 08) | todo | P3-05, P3-07 |
-| P3-09 | Gameplay, Technical Artist | Ghosts: lantern flicker and crow possession (doc 01 "Ghosts", doc 05 s14, doc 07) | todo | P3-01 |
-| P3-10 | Network & Voice | Ghost voice: static rules and walkies to the living (doc 06); today ghost voice is muted (OPEN_ISSUES playtest 9) | todo | P3-09 |
+| P3-09 | Gameplay, Technical Artist | Ghosts: lantern flicker, crow possession and corn rustle (doc 01 "Ghosts", doc 05 s14, doc 03 s13, doc 07) | todo | P3-01 |
+| P3-10 | Network & Voice, Audio Designer | Ghost voice: the ghost static chain on dead players' voice to the living and on dead-voice lures (doc 06 s9, D-011); today ghost voice is muted (OPEN_ISSUES playtest 9) | todo | P3-09 |
 | P3-11 | Gameplay | Whistle and emotes (doc 05 s14); recheck whistle placement by ear (OPEN_ISSUES P2-01 review 1) | todo | P3-01 |
 | P3-12 | Gameplay, Technical Artist | Dawn Report screen: headlines, obituaries, hero actions, flags placed (doc 05 s15, doc 03 s17, doc 07 card style) | todo | P3-02 |
 | P3-13 | QA | Review each P3 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 3 gate plus the carried measures | todo | all above |
+
+Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
+s3 "DD Phase 3" reads, and leaves a handoff note. Placeholders cite doc 01 or say `placeholder`.
+Hunting reads `sensed`, presentation reads `true` (doc 03 s20); the review checks it on every AI row.
+
+### P3-02 Phase 3 data
+Owner: Game Designer. Output: `data/ai_director.json`, `sabotage.json`, `dawn_report_templates.json`
+with schemas (doc 03 s19), Taint and Shaken numbers (doc 02 s13), approved in CONTRACTS s6.
+Acceptance:
+- `ai_director.json`: tension meter inputs, range, thresholds and phase timers (doc 03 s11.1);
+  `day` and `night` profiles (s11.2); day arc thirds as fractions of `day_s`, not 180 s fixed
+  (s11.3); scare rules and rarity (s11.4, s13); nudge cooldown (s11.6). No `harvest_moon` values.
+- `sabotage.json`: the pool rows built in Phase 3 (`trample`, `stolen_tool`, `dead_crow`,
+  `strange_seeds`, `scarecrow_moved`, `generator_kill`), each with a `fix`; `Data` test fails a
+  record with no `fix` (doc 03 s10.1).
+- Taint causes, effects and cure, and Shaken length, in one table (doc 05 s10 names `taint.json`;
+  pick it or `creature.json`, and fix the other doc).
+- `dawn_report_templates.json`: doc 03 s17.1 to s17.3 and s17.5 (season awards wait for Phase 4).
+- Hallucination opens on day 5 (doc 03 s13): say how a 2-day test session reaches it.
+
+### P3-03 Dead voices favored
+Owner: AI Programmer. Output: `game/creature/`.
+Acceptance:
+- Lure owner weights 3 : 1 : 0.1 dead : alive : own (doc 03 s12.1) from data; a dead owner's night
+  lure plays as a world sound with `apply_lure.ghost` true.
+- `lure_played` logs `owner_dead`; a headless run with one dead bot shows dead owners chosen more
+  than their share. Off and unchosen players are never voiced (unchanged).
+
+### P3-04 AI Director
+Owner: AI Programmer. Output: `game/ai_director/`, debug view (doc 03 s11.7).
+Acceptance:
+- Host-only tension meter and phases from `ai_director.json`; logs `tension` every 10 s with
+  meter, phase and profile (doc 09).
+- Regions as `Area3D` nodes (Level Designer adds them to `farm.tscn` if missing); a nudge sets the
+  wander region only, one hop, cooldown from data (s11.6).
+- Day arc: the first third places disturbances only, no presence or scare; the creature stays 25 m
+  from the field the group works in (s11.3).
+- Scare budget: at most 1 big scare per player per day, none within 120 s on one player, private
+  events count; unscared players weighted 3 : 1 (s11.4). A daily roll varies distances but never
+  adds a death condition.
+- Lure budget replaces `DAY_LURE_GAP_S`. Sanctuary: no lure, scare or kill within 10 m.
+- Debug view draws true creature, each `sensed` marker, region, meter and phase.
+
+### P3-05 Scares
+Owner: AI Programmer (logic), Audio Designer (build-up and stingers). Output: `game/creature/`,
+`game/ai_director/`, `game/audio/`.
+Acceptance:
+- Jumpscare (Shaken 60 s, never Taint), the whisper, the shed, wrong count, your own voice,
+  hallucination (day 5 on, x2 for Tainted), crow fake-out, scarecrow moved; rules and placement as
+  doc 03 s13. Disarm lunge and "the trap" too if the trap race code allows it; else say so.
+- Private scares go to one peer only (`apply_scare` with target slot, doc 06 s7); public ones to all.
+- Each scare logs `scare` with `kind`, `target`, `big`, `private`; the build-up (insects cut,
+  silence) plays first. No jumpscare in a trap race, sanctuary or lit building.
+- A `day N` dev console command (or flag) reaches day 5 for testing.
+
+### P3-06 Sabotage
+Owner: AI Programmer. Output: `game/creature/` or `game/ai_director/`, with Gameplay for the fixes.
+Acceptance:
+- The Director spends the day's disturbance count (doc 02 s11) from `sabotage.json`; days 1-2
+  only `trample` or `stolen_tool`; pool opens by day (doc 03 s10).
+- Placed by region, never at a player; each leaves its clue and has its fix (replant, bury 4 s,
+  pull 3 s, refuel); a stolen tool lands by an armed trap 60% and Taints on pickup.
+- Trample at dawn per doc 03 s10 (1, 2 if nobody outside 30 s, +1 dead generator, unattended cap +3).
+- Logs `disturbance_placed` and `disturbance_fixed`; `dawn_summary.farm_damage` filled.
+
+### P3-07 Taint and Shaken
+Owner: Gameplay (player side, well), AI Programmer (creature side). Output: `game/player/`,
+`game/interaction/`, `game/creature/`.
+Acceptance:
+- Host-owned Taint flag with a cause; `apply_taint_changed`; sprint x0.6, pry x1.5, steps x1.5
+  (`NoiseBus` already reads `tainted`); `wash` hold 10 s at the well clears it and emits `well_pump`.
+- Causes built this phase: creature leavings, stolen tool, item left in the field at dusk, dead crow,
+  strange seeds (doc 03 s8). A moonflower cause waits if moonflowers are not built; say so.
+- Shaken 60 s after a jumpscare or a survived trap race; stacks with Taint (x0.36). Never Taints.
+- Creature tracks a Tainted player within 60 m and follows a 20 s night trail (doc 03 s3.3).
+- Logs `taint_changed` (peer, on, cause) and `shaken` (peer, seconds).
+
+### P3-08 Taint and scare look and sound
+Owner: Technical Artist, Audio Designer. Output: `game/render/`, `game/audio/`, `assets/audio/`.
+Acceptance:
+- Taint shows as hand smudges and a faint screen fog for the Tainted player, black stains underfoot
+  (doc 05 s10, doc 07); the wet heartbeat plays only for the Tainted player (doc 08).
+- Scare build-up cues and stingers for P3-05 kinds (doc 08). No day music (CEO).
+- Every new sound gets a CEO listen before it ships (D-0xx as P2-08); list them in the handoff.
+
+### P3-09 Ghost powers
+Owner: Gameplay (requests, host rules), Technical Artist (flicker look). Output: `game/ghost/`,
+`game/render/`.
+Acceptance:
+- `request_flicker(light_id)` from ghosts only, host cooldown (placeholder); every peer sees the
+  flicker. A blown-out lantern never flickers (doc 03 s20).
+- `request_possess_crow(crow_id)` at `crow_perches`: once a night, 20 s, caw action, sight of the
+  creature (doc 05 s14, doc 03 s13).
+- Corn rustle from a ghost: a sound only, no creature Noise.
+- Ghosts see the creature as a smeared silhouette within 20 m and never see traps.
+- Logs `ghost_action` with `kind` (`flicker`, `crow`, `rustle`, `caw`) and `peer`; QA adds it to
+  doc 09 s13 and `check_logs.py`.
+
+### P3-10 Ghost voice
+Owner: Network & Voice (routing), Audio Designer (static chain). Output: `game/voice/`,
+`game/audio/voice_chain.gd`.
+Acceptance:
+- The living hear a dead player's real voice from the ghost's position through the ghost static
+  chain (doc 06 s9, doc 05 s14); ghosts hear each other clean. Replaces today's mute (playtest 9).
+- Ghost frames never feed the creature (D-011, unchanged).
+- Dead-voice lures use the same static chain, so static alone cannot tell real from fake; only the
+  flicker settles it (doc 01 "The dead-voice twist").
+- CEO listen of the static before P3-13.
+
+### P3-11 Whistle and emotes
+Owner: Gameplay. Output: `game/player/`, `game/audio/`.
+Acceptance:
+- `request_whistle` with cooldown; `apply_whistle` world sound at its long range (doc 08); emits
+  `whistle` (50 m) to the creature. No minimap marker (doc 05 s14).
+- Emotes `wave`, `point`, `shrug`, `scream` (scream emits `voice` at 255); host rate limit 1 per s.
+- Logs `whistle` and `emote`. One tester places the whistle by ear at 30 and 72 m (OPEN_ISSUES
+  P2-01 review 1); result goes to OPEN_ISSUES.
+
+### P3-12 Dawn Report
+Owner: Gameplay (screen, host build), Technical Artist (card style). Output: `game/ui/`.
+Acceptance:
+- Host builds the report at dawn from the night's events and sends `apply_dawn_report` (lure
+  references, no audio); sections Best Impression, Most Wanted, Cause of Death, Hero of the Night,
+  lure replay, flags placed (doc 05 s15, doc 03 s17).
+- Replays play local clips with their tell and ghost flag; Off players show text plus sound;
+  streamer-safe mode never replays voice.
+- Shown after the dawn order's money steps, skippable; applies nothing. Logs `dawn_report_shown`.
+
+### P3-13 Phase 3 review
+Owner: QA. Acceptance: review each P3 row against the above; 4-instance run with bots and one dead
+bot; `check_logs.py` reports tension, scares per player (gap and count rule), Taint and Shaken,
+ghost actions; doc 09 Phase 3 gate. Carried: Phase 1 lure 30%, Phase 2 recorded-voice and trap sweep
+measures (D-057), OPEN_ISSUES Open Issue 4 (bodies).
 
 ---
 
