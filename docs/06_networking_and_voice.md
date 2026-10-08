@@ -554,7 +554,9 @@ state lagged.
   (PP-02)**, headless, so pessimistic).
 - Attenuation `placeholder`s: inverse distance, unit size 10 m, max distance 120 m (raised from 6 / 80 at the Phase 1 playtest: quiet, short) plus a `voice_gain_db` setting (default +6 dB, no AGC), so a voice is
   still placeable at the 60 m spatial audio test distance (doc 01 "Testing > Spatial audio").
-- Ghost voices play from the ghost's spectating position as the Ghost system reports it (Q-006).
+- Ghost voices play from the ghost's spectating position as the Ghost system reports it (Q-006):
+  the ghost's own Player node, held at the perch while the ghost is in a crow (P3-09), so the voice
+  then comes from the crow.
 - **Risk: TwoVoIP v6.5 playback thread safety.** v6.6's changelog makes "the decoded Opus playback
   ring safe between its single packet-producing thread and Godot's audio mixing thread"; v6.5 lacks
   that fix, which is a plausible cause of the crackling in upstream issues #45 and #80 (inference).
@@ -652,6 +654,38 @@ speech.
   stopped for the `no_crackle` tell. It is part of `VoiceEmitter`, so a spatialiser swap
   (section 8) moves it with the voice.
 - **Who hears ghosts** (D-011): the living hear them through static; ghosts hear each other clean.
+
+### As built (P3-10)
+
+- **One test for real and fake:** `Voice.hears_static(speaker)` is true when the speaker is a ghost
+  (`Game.is_ghost`) and this listener is alive. The live emitter and the clip lure
+  (`creature.gd` `_hear_lure`) both call it, so a dead teammate and the creature in their voice go
+  through the same buses and layers. Only the flicker tells them apart (doc 01 "The tiebreaker").
+- **Buses** (`game/audio/voice_chain.gd`, created on first use): `VoiceGhost` holds a high-pass at
+  400 Hz, a low-pass at 3 kHz and an overdrive (drive 0.45). `VoiceGhostEcho`, `VoiceGhostPitchUp`
+  and `VoiceGhostPitchDown` hold the tell effect and send into `VoiceGhost`. A bus can only send to
+  one created before it, so `VoiceGhost` comes first. `VoiceChain.bus_for(tell, ghost)` picks the bus.
+- **Static layer:** child `GhostStatic` of the emitter or lure player, on the same bus, at -12 dB.
+  The stream is one second of generated noise, white hiss under random pops, built in code with a
+  fixed seed. There is no recorded file. A ghost-bus fake always gets it, `no_crackle` tell or not.
+- **Crackle on real voices:** every `VoiceEmitter` now carries the `Crackle` layer too, so a fake's
+  crackle is no longer a tell against a real voice. Both layers on a live emitter play only while the
+  speaker is in a talk spurt (`VoiceEmitter.talking()`). This stands in for "level follows the
+  voice's envelope" (inference: a talk-state gate is close enough until the CEO listen).
+- **Bus each frame:** `Voice._apply_buses` sets each emitter's bus every frame: `VoiceMuted` while
+  capturing (section 11), else the ghost or base bus. It adds or frees `GhostStatic` when a speaker
+  dies or respawns, or when the listener dies. The old mute in `player.gd` (playtest issue 9's stopgap)
+  is gone; `player.gd` applies only the per-player volume.
+- **Creature hearing:** unchanged. The host skips a ghost's volume byte (D-011). It logs each ghost
+  talk start as `ghost_action` with `kind` `static_voice` (doc 05 section 18).
+- **Levels are placeholders** until the CEO listen (P3-10 acceptance): `GHOST_LOW_HZ`,
+  `GHOST_HIGH_HZ`, `GHOST_DRIVE` and `GHOST_STATIC_DB` in `voice_chain.gd`. They are not yet moved to
+  `mix_levels.gd`.
+- **Day lures:** the creature's `ghost` flag in `apply_lure` is set only for night lures (doc 03
+  section 12). The listener's own test also plays a dead owner's day lure through static, because doc
+  01 says "including in targeted lures" (Q-068).
+- **Check:** `game/voice/check_voice_chain.gd` (`--script`) checks the bus map, the sends, the
+  static stream, and the layers on fakes.
 
 ## 10. Walkie-talkies
 
@@ -976,7 +1010,7 @@ input per copy, simulated latency and packet loss. QA's `tools/qa/multi.py` laun
 | `net_host_left` | `how` (`quit`, `disconnected`) |
 | `net_rtt` | `to` (peer id), `rtt_ms`, `enet_loss`, every 10 s |
 | `net_bandwidth` | `up_kbps`, `down_kbps` (UDP/IP headers included), `up_datagrams_per_s`, every 10 s |
-| `voice_stats` | per speaker every 10 s and when the speaker leaves: `speaker` (peer id), `received`, `lost` (concealed by PLC), `late`, `decoded`, `loss`, `talk_spurts`, `underflow_ms`, `overflow_ms` |
+| `voice_stats` | per speaker every 10 s and when the speaker leaves: `speaker` (peer id), `bus` (the chain this listener hears them through now, e.g. `VoiceBase`, `VoiceGhost`, `VoiceMuted`; P3-10), `static` (the ghost static layer is on), `received`, `lost` (concealed by PLC), `late`, `decoded`, `loss`, `talk_spurts`, `underflow_ms`, `overflow_ms` |
 | `voice_capture` | once when capture starts: `input` (`mic` or `wav`; the WAV's file name is never logged), `mix_rate`, `push_to_talk` |
 | `voice_sent` | this machine's mic every 10 s: `input` (`mic`, `wav`, `off`), `encoded`, `sent`, `bytes`, `talk_spurts`, `push_to_talk`, `relayed` (host only: frames through the relay, its own included). No volume values |
 | `lure_played` | `lure_id`, `owner` (peer id, or null for a `sound_id` lure), `line_id` (or null), `sound_id` (or null), `target` (peer id, or null for a world lure), `position` (`[x, y, z]`), `tell`, `ghost`. No audio, no volume |
@@ -1248,6 +1282,8 @@ from the cited source.
   Lobby-lines player's mic could record an **Off** player's voice from their speakers; D-011 closes
   that by not playing Off players' voices on a capturing machine (section 11). Headphones are
   required for the spatial audio test anyway (doc 01 "Testing").
+- **A bus sends only to a bus before it.** `VoiceGhost` must exist before its tell twins that send
+  into it (inference from Godot's bus model; the P3-10 check reads the sends back and passes).
 - **Fakes must not sound cleaner** (doc 01 "Voice"). Record lines at the live Opus settings, not a
   higher bitrate, and keep any spatialiser change identical for fakes and real voices (section 8).
 - **Steam Audio "does use proprietary libraries"** (its Godot extension's README). Check them before

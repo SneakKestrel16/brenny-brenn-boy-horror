@@ -19,8 +19,12 @@ extends Node
 ## have no lines (a window only). While `capturing`, no Off player's voice plays here (D-011) and the recording light
 ## shows on this player's character for everyone (`apply_recording_light`).
 ##
-## Not built yet (doc 06 sections 9 to 12): the shared voice chain buses (echo, pitch, ghost static,
-## radio), walkies, mic check (NORMAL_DB is a fixed placeholder).
+## P3-10 (doc 06 s9): each emitter plays on a `VoiceChain` bus with the crackle layer; a dead speaker heard by
+## a living listener plays on `VoiceGhost` with the static layer (`hears_static`); ghosts hear each other clean.
+## The layers run only while the speaker talks. The host logs each ghost talk spurt as `ghost_action`
+## `static_voice`; ghost frames still never feed the creature (D-011).
+##
+## Not built yet (doc 06 sections 10 to 12): the radio bus, walkies, mic check (NORMAL_DB is a fixed placeholder).
 
 ## Doc 06 section 7 type bytes. 0x01/0x02 were doc 06's, but movement (game/player/move_frame.gd)
 ## took 1 and 2 on the same `peer_packet` signal; voice moved to 0x10/0x11 (Q-042).
@@ -161,7 +165,7 @@ func set_capturing(on: bool) -> void:
 	if on == capturing:
 		return
 	capturing = on
-	_apply_capture_mute()
+	_apply_buses()
 	if Game.in_session:
 		Net.to_host(&"request_recording_light", [on])
 
@@ -210,7 +214,7 @@ func _process(delta: float) -> void:
 	if not Game.in_session:
 		return
 	_attach_emitters()
-	_apply_capture_mute()
+	_apply_buses()
 	_show_lights()
 	if Game.is_host():
 		_hearing_t += delta
@@ -301,6 +305,8 @@ func _take(from: int, f: PackedByteArray) -> void:
 	var ghost := Game.is_ghost(from)
 	if not ghost:  # D-011: ghosts never feed the creature
 		_loudest[from] = maxi(int(_loudest.get(from, 0)), f[4])
+	elif f[1] & FLAG_TALK_START:  # doc 09 s13: a ghost talk spurt, tallied with the ghost powers
+		Log.event(&"ghost_action", {"kind": "static_voice", "peer": from})
 	# No walkies in DD Phase 1, so the radio bit is never valid yet (doc 06 section 7 check).
 	var flags := (f[1] & ~FLAG_RADIO) | (FLAG_GHOST if ghost else 0)
 	var relay := PackedByteArray([VOICE_RELAY, slot, flags, f[2], f[3]])
@@ -360,6 +366,7 @@ func _attach_emitters() -> void:
 		if body:
 			var e := VoiceEmitter.new(peer, &"VoiceBase")
 			body.add_child(e)
+			VoiceChain.attach_crackle(e, &"none", e.bus)  # doc 06 s9: every proximity voice crackles faintly
 			_emitters[peer] = e
 
 
@@ -372,17 +379,37 @@ func _on_player_left(peer: int) -> void:
 	_lit.erase(peer)
 
 
-# --- Capture mute and the recording light (doc 06 s11, D-011) -----------------------------------
+# --- The voice chain, capture mute and the recording light (doc 06 s9 and s11, D-011) -------------
 
-## While capturing, every speaker who isn't Lobby lines (Off, unchosen, unknown) plays into a muted bus.
-func _apply_capture_mute() -> void:
+## Doc 06 s9 "Who hears ghosts": a dead speaker's voice reaches a living listener only through the ghost
+## static; ghosts hear each other clean. The same test picks the chain for a fake in that voice (doc 01 "The
+## dead-voice twist"), so static alone never tells a real ghost from the creature.
+func hears_static(speaker: int) -> bool:
+	return Game.is_ghost(speaker) and not Game.is_ghost(Game.local_peer())
+
+
+## Each emitter's bus and layers: muted while capturing for every speaker who isn't Lobby lines (Off,
+## unchosen, unknown), else the ghost static chain or the base chain. The layers play only while the speaker talks.
+func _apply_buses() -> void:
 	for peer in _emitters:
 		var e := _emitter(peer)
 		if e == null:
 			continue
-		var want := &"VoiceMuted" if capturing and Game.voice_setting_of(peer) != "lobby_lines" else &"VoiceBase"
+		var ghost := hears_static(peer)
+		var want := VoiceChain.bus_for(&"none", ghost)
+		if capturing and Game.voice_setting_of(peer) != "lobby_lines":
+			want = &"VoiceMuted"
+		var st := e.get_node_or_null(^"GhostStatic")
+		if ghost and st == null:
+			VoiceChain.attach_static(e, want)
+		elif not ghost and st:
+			st.free()
 		if e.bus != want:
 			e.bus = want
+		for layer in e.get_children():
+			if layer is AudioStreamPlayer3D:
+				layer.bus = want
+				layer.stream_paused = not e.talking()
 
 
 ## Names of the players this machine won't hear while it captures (the recording screen lists them).

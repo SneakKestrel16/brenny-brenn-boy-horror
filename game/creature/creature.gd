@@ -695,7 +695,7 @@ func _hear_lure(args: Array) -> void:
 		return
 	var chain: Script = load(VOICE_CHAIN) if ResourceLoader.exists(VOICE_CHAIN) else null
 	var tell: StringName = args[4]
-	var bus: StringName = chain.call(&"bus_for", tell) if chain else &"VoiceBase"
+	var bus: StringName = chain.call(&"bus_for", tell, Voice.hears_static(owner)) if chain else &"VoiceBase"  # P3-10: a dead owner's static
 	var s := AudioStreamOpus.new()
 	s.opus_sample_rate = Voice.OPUS_RATE
 	s.opus_channels = 1

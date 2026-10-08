@@ -294,7 +294,7 @@ def other_measures(recs: list[Record]) -> dict[str, Any]:
         "money_changed_events": sum(1 for r in recs if r.event == "money_changed"),
         "hold_seconds_by_verb": {v: {"n": len(s), "mean": sum(s) / len(s)} for v, s in sorted(holds.items())},
         "inside_at_night_seconds_by_player": dict(sorted(inside.items())),
-        # Doc 09 s13 (P3-09): ghost powers used, by kind (flicker, crow, rustle, caw).
+        # Doc 09 s13 (P3-09, P3-10): ghost powers used, by kind (flicker, crow, rustle, caw, static_voice).
         "ghost_actions_by_kind": dict(sorted(Counter(str(r.data.get("kind")) for r in recs if r.event == "ghost_action").items())),
     }
 

@@ -123,7 +123,7 @@ three doc 01 measures plus tallies.
 | Hold times | `hold_completed` | mean seconds by verb | Done |
 | Time inside at night | `inside_at_night` | seconds by player | Done |
 | Deaths, traps, money | `death`, `trap_sprung`, `money_changed` | counts | Done |
-| Ghost powers used (DD Phase 3 "the dead stay engaged") | `ghost_action` (`kind`: `flicker`, `crow`, `rustle`, `caw`; `peer`) | count by `kind` | Done (P3-09). Refusals are `ghost_action_refused` with a `reason` (doc 05 section 18), counted in the event list only |
+| Ghost powers used (DD Phase 3 "the dead stay engaged") | `ghost_action` (`kind`: `flicker`, `crow`, `rustle`, `caw`, `static_voice`; `peer`) | count by `kind` | Done (P3-09; `static_voice` P3-10: one per ghost talk spurt). Refusals are `ghost_action_refused` with a `reason` (doc 05 section 18), counted in the event list only |
 | Lure success by source (recorded line, generic line, sound) | `lure_played` joined to `lure_result` on `lure_id` | not built | Needed for DD Phase 2 "fooled" (section 13) |
 | Sim comparison | `dawn_summary`, `payment_made` | not built | DD Phase 4 (section 13) |
 | Close calls missed for timeout vs disagreement, per RTT | `close_call` | not built | OPEN_ISSUES "A laggy player is hard to kill"; DD Phase 1 logs settle it |

@@ -140,11 +140,17 @@ func _drain(now: float) -> void:
 		_next_seq = (_next_seq + 1) & 0xFFFF
 
 
-## Doc 06 section 14 `voice_stats` data.
+## A talk spurt is buffering or playing (the chain's crackle and static layers run only then).
+func talking() -> bool:
+	return _state != IDLE
+
+
+## Doc 06 section 14 `voice_stats` data. `bus` is the chain this listener hears the speaker through now.
 func stats() -> Dictionary:
 	var total := decoded + lost
 	return {
-		"speaker": speaker, "received": received, "lost": lost, "late": late, "decoded": decoded,
+		"speaker": speaker, "bus": String(bus), "static": has_node(^"GhostStatic"),
+		"received": received, "lost": lost, "late": late, "decoded": decoded,
 		"loss": snappedf(lost / float(total), 0.0001) if total > 0 else 0.0,
 		"talk_spurts": talk_spurts,
 		"underflow_ms": snappedf(_playback.get_skips(false) / float(OPUS_RATE) * 1000.0, 0.1) if _playback else 0.0,

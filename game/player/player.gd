@@ -197,11 +197,11 @@ func _physics_process(delta: float) -> void:
 		global_position = global_position.lerp(_target_pos, 1.0 - exp(-PROXY_SMOOTH * delta))
 		var ghost_view := Game.is_ghost(Game.local_peer())
 		_mesh.visible = not ghost or ghost_view  # ghosts are seen only by ghosts
-		# Doc 01 "Static voices": the living hear a ghost only through static. The static chain is not built
-		# yet (doc 06 section 9), so until then a ghost voice is silent for the living, never clean.
+		# Doc 01 "Static voices": the living hear a ghost only through static; Voice puts a ghost's emitter
+		# on the ghost static chain (P3-10), so here only the per-player volume applies.
 		var ve := get_node_or_null("VoiceEmitter") as AudioStreamPlayer3D
 		if ve:
-			ve.volume_db = -80.0 if ghost and not ghost_view else _peer_gain_db()
+			ve.volume_db = _peer_gain_db()
 	_held.visible = not ghost
 	rotation.y = yaw
 	_cam.rotation.x = pitch
