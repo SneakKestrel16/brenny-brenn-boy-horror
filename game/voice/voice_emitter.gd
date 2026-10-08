@@ -12,8 +12,8 @@ const OPUS_RATE := 48000
 const JITTER_TARGET_FRAMES := 3  ## doc 06 "Playback": 60 ms target (placeholder)
 const JITTER_TARGET_S := 0.06
 const SPEAKER_SILENT_S := 0.3  ## talk-end frame lost: stop waiting after this much silence
-const UNIT_SIZE := 6.0  ## doc 06 "Playback": inverse distance, unit size 6 m, max 80 m (placeholders)
-const MAX_DISTANCE := 80.0
+const UNIT_SIZE := 10.0  ## doc 06 "Playback": inverse distance, unit size 10 m, max 120 m (placeholders; was 6 / 80, playtest 1 said quiet and short)
+const MAX_DISTANCE := 120.0
 const EYE_HEIGHT := 1.65  ## CONTRACTS section 4
 
 const FLAG_TALK_END := 4
@@ -42,6 +42,7 @@ func _init(p_speaker: int, p_bus: StringName) -> void:
 	attenuation_model = ATTENUATION_INVERSE_DISTANCE
 	unit_size = UNIT_SIZE
 	max_distance = MAX_DISTANCE
+	volume_db = float(Settings.get_value(&"voice_gain_db"))  # plain gain, no AGC (doc 06)
 	position = Vector3(0, EYE_HEIGHT, 0)
 	var s := AudioStreamOpus.new()
 	s.opus_sample_rate = OPUS_RATE

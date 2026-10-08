@@ -531,7 +531,7 @@ state lagged.
   inside speech (**measured (PP-02)**).
 - **Underflow:** at most 216 ms per speaker over about 45 s, mostly at talk starts (**measured
   (PP-02)**, headless, so pessimistic).
-- Attenuation `placeholder`s: inverse distance, unit size 6 m, max distance 80 m, so a voice is
+- Attenuation `placeholder`s: inverse distance, unit size 10 m, max distance 120 m (raised from 6 / 80 at the Phase 1 playtest: quiet, short) plus a `voice_gain_db` setting (default +6 dB, no AGC), so a voice is
   still placeable at the 60 m spatial audio test distance (doc 01 "Testing > Spatial audio").
 - Ghost voices play from the ghost's spectating position as the Ghost system reports it (Q-006).
 - **Risk: TwoVoIP v6.5 playback thread safety.** v6.6's changelog makes "the decoded Opus playback

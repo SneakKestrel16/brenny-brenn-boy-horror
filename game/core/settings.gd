@@ -11,6 +11,7 @@ const DEFAULTS := {
 	"push_to_talk": false,  ## doc 01 "Mic mode": open mic by default; Voice reads it (Q-042, D-027)
 	"vol_master": 1.0, "vol_music": 1.0, "vol_sfx": 1.0, "vol_ambience": 1.0, "vol_voice": 1.0,
 	"vol_ui": 1.0,
+	"voice_gain_db": 6.0,  ## remote voices, plain gain (no AGC, doc 06); placeholder, playtest 1
 	"player_name": "Farmer",
 }
 
