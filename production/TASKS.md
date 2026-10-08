@@ -375,6 +375,37 @@ playtest" 1, 4, 5, 6, 9 to 12).
 
 ---
 
+## DD Phase 3: Ghosts, the AI Director, Taint and the Dawn Report (proposed)
+
+**Draft, awaiting CEO approval (Director, 2026-10-08).** Source: doc 01 "Build Plan > Phase 3": dead
+players' voices favored; the AI Director, day arc and jumpscares; Taint and Shaken; ghosts with flicker
+and crow; whistle, flags and the Dawn Report. **Done when** (doc 01): the dead stay engaged, the living
+argue over a static voice, and someone laughs at the Dawn Report. Checked in 2 sessions, one tester who
+hasn't read doc 01, plus log measures (doc 09). **STOP 4** after P3-13.
+
+Carried in: sabotage and the disturbance budget (D-034); the Phase 1 lure walk-toward measure, 30%
+(deferred, CEO 2026-10-08); both Phase 2 measures, unproven (D-057); the P2-08 CEO listen. Flags are
+built (P2-11); Phase 3 only reports them (Dawn Report). Rows below are a scope proposal; P3-01 turns
+them into acceptance.
+
+| ID | Owner | Task | Status | Depends on |
+|---|---|---|---|---|
+| P3-01 | Director | Between-phase review: OPEN_ISSUES, settle what Phase 3 needs, write acceptance for the rows below | todo | CEO approval |
+| P3-02 | Game Designer | Phase 3 data (doc 03 s19): Director profiles and tension meter, day arc, scare rules, disturbance budget, Taint and Shaken numbers, Dawn Report templates (doc 03 s8, s10, s11, s13, s17) | todo | P3-01 |
+| P3-03 | AI Programmer | Dead players' voices favored in lure choice (doc 03 s12.1; today `WEIGHT_*` in `creature.gd`) | todo | P3-02 |
+| P3-04 | AI Programmer | AI Director: tension meter, profiles, day arc, region nudges, private events, debug (doc 03 s11); it budgets lures in place of `DAY_LURE_GAP_S` | todo | P3-02 |
+| P3-05 | AI Programmer, Audio Designer | Jumpscares, fake-outs, hallucinations (doc 03 s13), spent by the Director | todo | P3-04 |
+| P3-06 | AI Programmer | Sabotage from the disturbance budget (doc 03 s10, D-034) | todo | P3-04 |
+| P3-07 | Gameplay, AI Programmer | Taint and Shaken: player side and the well (doc 05 s10), creature tracking (doc 03 s3.3, s8); Taint is off since Phase 1 | todo | P3-02 |
+| P3-08 | Technical Artist, Audio Designer | Taint stain and Taint heartbeat; scare and Director sounds (doc 07, doc 08) | todo | P3-05, P3-07 |
+| P3-09 | Gameplay, Technical Artist | Ghosts: lantern flicker and crow possession (doc 01 "Ghosts", doc 05 s14, doc 07) | todo | P3-01 |
+| P3-10 | Network & Voice | Ghost voice: static rules and walkies to the living (doc 06); today ghost voice is muted (OPEN_ISSUES playtest 9) | todo | P3-09 |
+| P3-11 | Gameplay | Whistle and emotes (doc 05 s14); recheck whistle placement by ear (OPEN_ISSUES P2-01 review 1) | todo | P3-01 |
+| P3-12 | Gameplay, Technical Artist | Dawn Report screen: headlines, obituaries, hero actions, flags placed (doc 05 s15, doc 03 s17, doc 07 card style) | todo | P3-02 |
+| P3-13 | QA | Review each P3 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 3 gate plus the carried measures | todo | all above |
+
+---
+
 ## Later phases
 
 Written at the end of the previous phase's review. Not started without CEO approval.
