@@ -173,11 +173,11 @@ the CEO playtest.
 | P1-13 | AI Programmer | Bot that walks and does chores | done | P1-05 |
 | P1-14 | QA | Review each P1 task; 2-instance run; `check_logs.py` on a full session; run the doc 09 gate | done (human gate measures run at STOP 2) | all above |
 | P1-16 | Gameplay | STOP 2 readiness (Q-046): fix the stamina flicker at 0 so no `speed_violation` on a human sprint; minimal prompt layer (hold prompt for the aimed target, stamina bar, clock and phase, coins, a one-screen controls hint on first spawn, death and ghost banner); emit `inside_at_night`; Shaken logged on client | done (human gate measures run at STOP 2) | P1-14 |
-| P1-18 | Level Designer | Corn walkable: local player no longer blocks on layer 5 (playtest issue 5) | in review | P1-16 |
-| P1-19 | Gameplay | Playtest fixes: visible watering and fuel cans, hold race, spectate smoothing, ghost voice muted, 12 plots open (issues 4, 9-12) | in review | P1-16 |
-| P1-20 | AI Programmer | Playtest fixes: trap clues on every peer, lures in the scripted lurk, scripted stalk keeps 18 m and no kill in the first 2 s of a chase (issues 6-8) | in review | P1-16 |
-| P1-21 | Audio Designer | Playtest fixes: no day music in docs, voice range 10 m / 120 m, +6 dB default gain (issues 1, 2) | in review | P1-16 |
-| P1-22 | Director | Auto-updater (`update.ps1`, `Update.bat`, `--release`) and install page `docs/10_install_and_updates.md` (issue 3) | in review | P1-16 |
+| P1-18 | Level Designer | Corn walkable: local player no longer blocks on layer 5 (playtest issue 5) | done | P1-16 |
+| P1-19 | Gameplay | Playtest fixes: visible watering and fuel cans, hold race, spectate smoothing, ghost voice muted, 12 plots open (issues 4, 9-12) | done | P1-16 |
+| P1-20 | AI Programmer | Playtest fixes: trap clues on every peer, lures in the scripted lurk, scripted stalk keeps 18 m and no kill in the first 2 s of a chase (issues 6-8) | done | P1-16 |
+| P1-21 | Audio Designer | Playtest fixes: no day music in docs, voice range 10 m / 120 m, +6 dB default gain (issues 1, 2) | done | P1-16 |
+| P1-22 | Director | Auto-updater (`update.ps1`, `Update.bat`, `--release`) and install page `docs/10_install_and_updates.md` (issue 3) | done | P1-16 |
 | P1-17 | QA | Playtest kit: session tool, observer tally, log collection, report, Windows packager with host/join launchers, tester brief | in review (Director) | P1-14 |
 
 Each owner turns their row into acceptance from the cited doc sections when starting; every task
