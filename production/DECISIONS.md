@@ -445,3 +445,11 @@ treats them follow doc 01 and doc 05; where those are silent, the Gameplay Progr
 `placeholder` and the Game Designer settles it in data.
 **Why:** CEO ask ("yes you can pickup, carry and drop them"). Cans that sit where someone left them
 give the farm more to fetch and the creature more to move.
+
+### D-055 · 2026-10-08 · CEO · Set traps get a visible basic mesh
+The CEO, after local play ("traps still aren't visible, can you give them a basic texture"): set bear
+traps and pits get a plainly visible basic mesh and material, seen from normal walking distance.
+Doc 03 s9's clue-only rule (a trap shows only within 4 m) is paused until trap art exists; the clue
+logic and `trap_clue_shown` logs stay.
+**Why:** CEO ask. Testers couldn't find traps by eye, so trap sweeps (the Phase 2 "done when") had
+nothing to sweep.
