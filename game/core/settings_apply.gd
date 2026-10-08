@@ -1,8 +1,8 @@
 class_name SettingsApply
 extends Node
 ## Doc 05 section 16: pushes `Settings` to the engine at boot and on every change: keybinds into the
-## InputMap, the six volume sliders onto their buses, window and graphics options, brightness and
-## gamma (a screen pass above everything, including menus), mic device. Lives on the root so it
+## InputMap, the six volume sliders onto their buses, window and graphics options, the brightness
+## slider (the night ambient floor, 0.2 to 0.4; it touches no light, doc 07 s5), mic device. Lives on the root so it
 ## survives scene changes. Display and graphics keys apply only once the player has set them
 ## (`Settings.is_set`), so launch flags and the QA window tiling keep working.
 ## Debug arg: `--ui-shot=<png>` saves the window after 90 frames and quits (menu screenshots).
@@ -15,31 +15,18 @@ const SHARED := {"spectate_next": "interact", "spectate_prev": "whistle", "inter
 
 static var defaults: Dictionary = {}  ## action -> Array[InputEvent], captured before any rebind
 
-var _tone: ColorRect
+var _env: WorldEnvironment
 var _shot := ""
 var _frames := 0
 
 
 func _ready() -> void:
+	process_priority = 1000
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--ui-shot="):
 			_shot = a.trim_prefix("--ui-shot=")
 	for action in game_actions():
 		defaults[action] = InputMap.action_get_events(action).duplicate()
-	var layer := CanvasLayer.new()
-	layer.layer = 127
-	_tone = ColorRect.new()
-	_tone.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_tone.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var m := ShaderMaterial.new()
-	var sh := Shader.new()
-	sh.code = "shader_type canvas_item;\nuniform sampler2D tex : hint_screen_texture, filter_nearest;\n" \
-			+ "uniform float brightness = 1.0;\nuniform float gamma = 1.0;\n" \
-			+ "void fragment() { vec3 c = textureLod(tex, SCREEN_UV, 0.0).rgb; COLOR = vec4(pow(c * brightness, vec3(1.0 / gamma)), 1.0); }\n"
-	m.shader = sh
-	_tone.material = m
-	layer.add_child(_tone)
-	add_child(layer)
 	Settings.changed.connect(_on_changed)
 	apply_binds()
 	for k in BUSES:
@@ -47,15 +34,29 @@ func _ready() -> void:
 	_graphics()
 	_display()
 	_mic()
-	_tone_pass()
 
 
 func _process(_d: float) -> void:
+	_ambient_floor()
 	if _shot != "":
 		_frames += 1
 		if _frames == 90:
 			get_viewport().get_texture().get_image().save_png(_shot)
 			get_tree().quit()
+
+
+## Raises the ambient to the player's floor after WorldLook set the phase value (process_priority makes
+## this run last). Never lowers it, touches no light (doc 07 s5).
+func _ambient_floor() -> void:
+	if not Settings.is_set(&"brightness"):
+		return
+	if not is_instance_valid(_env):
+		_env = null
+		for n in get_tree().root.find_children("*", "WorldEnvironment", true, false):
+			_env = n
+	if _env and _env.environment:
+		var env := _env.environment
+		env.ambient_light_energy = maxf(env.ambient_light_energy, clampf(float(Settings.get_value(&"brightness")), 0.2, 0.4))
 
 
 ## Every InputMap action the game defines (Godot's own `ui_*` are not game actions).
@@ -77,13 +78,13 @@ static func event_to_dict(ev: InputEvent) -> Dictionary:
 
 
 static func dict_to_event(d: Dictionary) -> InputEvent:
-	if d.get("t") == "k":
+	if d.get("t") == "k" and int(d.get("c", 0)) != 0:
 		var k := InputEventKey.new()
-		k.physical_keycode = int(d.c) as Key
+		k.physical_keycode = int(d.get("c", 0)) as Key
 		return k
-	if d.get("t") == "m":
+	if d.get("t") == "m" and int(d.get("b", 0)) != 0:
 		var m := InputEventMouseButton.new()
-		m.button_index = int(d.b) as MouseButton
+		m.button_index = int(d.get("b", 0)) as MouseButton
 		return m
 	return null
 
@@ -115,8 +116,8 @@ func apply_binds() -> void:
 	for action in game_actions():
 		if saved.has(String(action)):
 			InputMap.action_erase_events(action)
-			for d in saved[String(action)]:
-				var ev := dict_to_event(d)
+			for d in saved[String(action)] if saved[String(action)] is Array else []:
+				var ev := dict_to_event(d) if d is Dictionary else null
 				if ev:
 					InputMap.action_add_event(action, ev)
 		elif defaults.has(action):
@@ -137,9 +138,6 @@ func _on_changed(key: StringName) -> void:
 		_display()
 	elif k == "mic_device":
 		_mic()
-	elif k in ["brightness", "gamma"]:
-		_tone_pass()
-
 
 func _volume(key: String) -> void:
 	var idx := AudioServer.get_bus_index(BUSES[key])
@@ -191,11 +189,3 @@ func _mic() -> void:
 	var dev := str(Settings.get_value(&"mic_device"))
 	if dev in AudioServer.get_input_device_list():
 		AudioServer.input_device = dev
-
-
-func _tone_pass() -> void:
-	var b := float(Settings.get_value(&"brightness"))
-	var g := float(Settings.get_value(&"gamma"))
-	_tone.visible = not (is_equal_approx(b, 1.0) and is_equal_approx(g, 1.0))
-	(_tone.material as ShaderMaterial).set_shader_parameter(&"brightness", b)
-	(_tone.material as ShaderMaterial).set_shader_parameter(&"gamma", g)

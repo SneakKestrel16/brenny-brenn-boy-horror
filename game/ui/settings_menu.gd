@@ -79,7 +79,7 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		ev = event
-	elif event is InputEventMouseButton and event.pressed:
+	elif event is InputEventMouseButton and event.pressed and event.button_index <= MOUSE_BUTTON_XBUTTON2 			and not event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN, MOUSE_BUTTON_WHEEL_LEFT, MOUSE_BUTTON_WHEEL_RIGHT]:
 		ev = event
 	if ev == null:
 		return
@@ -126,7 +126,17 @@ func _row(page: Control, label: String, c: Control) -> void:
 	h.add_child(l)
 	c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(c)
+	if c is HSlider:  # value text beside every slider
+		var v := Label.new()
+		v.custom_minimum_size.x = 56
+		v.text = _fmt(c.value, c.step)
+		c.value_changed.connect(func(x: float) -> void: v.text = _fmt(x, c.step))
+		h.add_child(v)
 	page.add_child(h)
+
+
+func _fmt(v: float, step: float) -> String:
+	return "%d" % v if step >= 1.0 else ("%.2f" % v)
 
 
 func _slider(key: StringName, lo: float, hi: float, step: float) -> HSlider:
@@ -166,6 +176,14 @@ func _keybinds_tab() -> void:
 	_warn = Label.new()
 	_warn.add_theme_color_override(&"font_color", Color(1.0, 0.7, 0.3))
 	p.add_child(_warn)
+	var reset := Button.new()
+	reset.text = "Reset all keys to defaults"
+	reset.pressed.connect(func() -> void:
+		_warn.text = ""
+		_commit(&"keybinds", {})
+		_refresh_binds())
+	p.add_child(reset)
+	p.move_child(reset, 1)
 	for action in SettingsApply.game_actions():
 		var b := Button.new()
 		b.custom_minimum_size.x = 200
@@ -175,13 +193,6 @@ func _keybinds_tab() -> void:
 			_refresh_binds())
 		_bind_buttons[action] = b
 		_row(p, _nice(action), b)
-	var reset := Button.new()
-	reset.text = "Reset all keys to defaults"
-	reset.pressed.connect(func() -> void:
-		_warn.text = ""
-		_commit(&"keybinds", {})
-		_refresh_binds())
-	p.add_child(reset)
 	_refresh_binds()
 
 
@@ -304,5 +315,4 @@ func _display_tab() -> void:
 		screens.append("Monitor %d" % (i + 1))
 	_row(p, "Monitor", _options(screens, int(Settings.get_value(&"monitor")), func(i: int) -> void: _commit(&"monitor", i)))
 	_row(p, "Field of view", _slider(&"fov", 60.0, 110.0, 1.0))
-	_row(p, "Brightness", _slider(&"brightness", 0.5, 1.5, 0.05))
-	_row(p, "Gamma", _slider(&"gamma", 0.5, 2.0, 0.05))
+	_row(p, "Brightness (night ambient floor)", _slider(&"brightness", 0.2, 0.4, 0.01))

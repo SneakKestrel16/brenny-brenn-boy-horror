@@ -1,0 +1,59 @@
+extends Node
+## P2-10 QA: keybind rebind, conflict, reset, save to user:// and reload (doc 05 s16). Scene run (autoloads needed):
+##   "$GODOT" --headless --path . res://tests/ui/test_settings_binds.tscn
+## Writes user://settings.cfg through Settings.save() and deletes it again if it did not exist before.
+
+var _fails := 0
+
+
+func _ready() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var had := FileAccess.file_exists(Settings.PATH)
+	var apply: SettingsApply = get_tree().root.get_node("SettingsApply")
+	_check(apply != null, "SettingsApply lives on the root")
+	var def_interact := InputMap.action_get_events(&"interact").map(SettingsApply.event_text)
+	_check(def_interact == ["E"], "default interact is E, got %s" % [def_interact])
+
+	var ev := InputEventKey.new()
+	ev.physical_keycode = KEY_T
+	var saved: Dictionary = Settings.get_value(&"keybinds").duplicate()
+	saved["interact"] = [SettingsApply.event_to_dict(ev)]
+	Settings.set_value(&"keybinds", saved)
+	Settings.save()
+	_check(InputMap.action_get_events(&"interact").map(SettingsApply.event_text) == ["T"], "rebind applies to InputMap on change")
+
+	var c := SettingsApply.conflicts(&"crouch", ev)
+	_check(c == [&"interact"], "binding T to crouch warns about interact, got %s" % [c])
+	_check(SettingsApply.conflicts(&"interact", ev).is_empty(), "rebinding an action to its own key does not warn")
+	var shared := InputEventKey.new()
+	shared.physical_keycode = KEY_E
+	_check(not SettingsApply.conflicts(&"spectate_next", shared).has(&"interact"), "spectate_next/interact share is not a conflict")
+
+	var cfg := ConfigFile.new()
+	_check(cfg.load(Settings.PATH) == OK, "user://settings.cfg written")
+	var disk: Dictionary = cfg.get_value("settings", "keybinds", {})
+	_check(disk.has("interact") and int(disk["interact"][0].c) == KEY_T, "saved file holds the rebind")
+
+	Settings.set_value(&"keybinds", {})
+	Settings.save()
+	_check(InputMap.action_get_events(&"interact").map(SettingsApply.event_text) == ["E"], "reset restores E")
+
+	var mouse := InputEventMouseButton.new()
+	mouse.button_index = MOUSE_BUTTON_MIDDLE
+	saved = {"crouch": [SettingsApply.event_to_dict(mouse)]}
+	Settings.set_value(&"keybinds", saved)
+	_check(InputMap.action_get_events(&"crouch").map(SettingsApply.event_text) == ["Mouse 3"], "mouse button rebind")
+	Settings.set_value(&"keybinds", {})
+	_check(InputMap.action_get_events(&"crouch").map(SettingsApply.event_text) == ["C"], "reset restores C")
+
+	if not had:
+		DirAccess.remove_absolute(Settings.PATH)
+	print("test_settings_binds: %s" % ("PASS" if _fails == 0 else "%d FAILED" % _fails))
+	get_tree().quit(0 if _fails == 0 else 1)
+
+
+func _check(cond: bool, what: String) -> void:
+	if not cond:
+		_fails += 1
+		printerr("FAIL: ", what)

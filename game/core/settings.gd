@@ -27,8 +27,7 @@ const DEFAULTS := {
 	"window_mode": 0,  ## 0 windowed, 1 borderless, 2 fullscreen
 	"resolution": "1280x720",
 	"monitor": 0,
-	"brightness": 1.0,
-	"gamma": 1.0,
+	"brightness": 0.25,  ## ambient floor 0.2..0.4, doc 07 s5; default is the 0.25 night floor
 }
 
 signal changed(key: StringName)
