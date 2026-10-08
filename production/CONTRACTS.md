@@ -103,7 +103,9 @@ in QUESTIONS.md or a task from the Director.
   6 `trap`, 7 `item`, 8 `trigger`.
 - Level scene groups (D-016, D-023): `trap_spots`, `creature_cover`, `crow_perches`, `scarecrow_spots`,
   `animal_escape_spots`, `spatial_audio_markers`; plus `player_spawns`, `plot_spots`, `sell_box`,
-  `generator`, `fuel_drum`, `well`, `pegboard_spots`, `pen_gates`, `doors`, `lightrig_spots`. DD Phase 1
+  `generator`, `fuel_drum`, `well`, `pegboard_spots`, `pen_gates`, `doors`, `lightrig_spots`; DD Phase 2 adds `store_crate`,
+  `sanctuary`, `farm_gate`, `pumpkin_patch`, `moonflower_bed`, `pegboard_slots`, `recording_spots`,
+  `barn_lantern` (P2-02). DD Phase 1
   scene: `res://game/world/farm_phase1.tscn`; DD Phase 2: `farm.tscn`. Corn blockers sit on layer 5 and
   block players; the creature ignores layer 5 for movement.
 

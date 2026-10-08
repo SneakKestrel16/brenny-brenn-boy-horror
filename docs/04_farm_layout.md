@@ -553,3 +553,18 @@ item 1 (marker group names), 3 (the generator's place) and 5 (the Phase 1 sell b
 item 2 (walk speed, can refills) by doc 02 section 2. Open: item 4, whistle range (Audio Designer,
 doc 08), and item 6, fence placement near the cart route (Gameplay Programmer, doc 05). QA's review
 findings are Q-017.
+
+## 13. Built scenes (P2-02)
+
+`game/world/build_farm.py` writes both scenes from this doc's coordinates: `farm_phase1.tscn` (section 9,
+unchanged) and `farm.tscn` (the full farm). `farm.tscn` adds the farmhouse, strips 1 and 3, the full ring
+(layer 5 boxes, road lane left open), field B, the moonflower bed (4 plots, `field = moonflower`), the
+shipping crate (group `store_crate`), the town stand (group `sell_box`) with a `sanctuary` marker (10 m),
+the farm gate, the Prize Pumpkin marker, `CartRoute` (R0 to R8), all 22 trap spots, 16 cover points, 9 crow
+perches, 7 scarecrow spots, 4 escape spots, 4 audio markers, 4 barn spawns, the pegboard with
+`pegboard_bear_slots` slot markers (5, read from `data/season.json`), and in the barn a `RecordingSpot`
+(0, -15) and `BarnLantern` (-5, -17) (placeholder positions, inference: inside the barn, away from the door).
+`game/world/check_farm.gd` reruns sections 7.1, 7.3, 8.1 and 8.3 to 8.5 on the built scene:
+`"$GODOT" --headless --path . --script res://game/world/check_farm.gd` (all pass; every doc distance
+matches within 0.1 m, corn distances within 0.5 m). `game/world/farm_view.tscn` loads the full farm with the
+corn visuals for render measures. Results are in `production/handoffs/P2-02.md`.
