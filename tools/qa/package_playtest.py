@@ -7,9 +7,11 @@
     uv run tools/qa/package_playtest.py [--out builds/playtest_<build id>.zip] [--allow-dirty]
 
 The tester needs no Godot. The zip holds the exported game (project packed inside the .exe), the
-TwoVoIP DLL Godot copies next to it, the addon's license files, START HERE.txt, the tester brief and
-send_logs.bat, which zips the tester's recent section 10 logs onto their Desktop. It uses the
-"Playtest (Windows)" export preset (D-023), whose main scene is the game's boot.tscn. Needs Godot
+TwoVoIP DLL Godot copies next to it, the console wrapper exe, the addon's license files, START HERE.txt,
+the tester brief, Host.bat and Join.bat (the exe needs `-- --host --phase1` or `-- --join=<ip> --phase1`;
+there is no menu yet, so a bare double-click shows only a solo session), and send_logs.bat, which zips
+the tester's recent section 10 logs and godot.log onto their Desktop. It uses the
+"Playtest (Windows)" export preset (D-029), whose main scene is the game's boot.tscn. Needs Godot
 4.7.2's export templates (Q-009). Same approach as spikes/voice/package_for_friend.py (PP-02).
 
 The build id is `git describe --always --dirty`. A dirty tree is refused: doc 09 s2 matches logs to
@@ -37,15 +39,23 @@ BRIEF = Path(__file__).resolve().parent / "playtest" / "tester_brief.md"
 START_HERE = """Brenny Brenn Boy Horror: playtest build {build_id} (gray box, not the finished game)
 
 1. Wear stereo headphones, left on left. Turn Windows spatial sound off. Close other voice chat.
-2. Double-click "{exe}". If Windows Firewall asks, allow it on Private networks.
+2. Host: double-click Host.bat. It starts the game as host on UDP port {port} and shows
+   this PC's Tailscale address (100.x.y.z) to give to the other player.
+   Joiner: double-click Join.bat and type the host's Tailscale address (D-024).
+   Both machines must run this same zip: a different build refuses the join.
+   Do not double-click the .exe itself: with no options it starts a solo session
+   without the Phase 1 night.
+   If Windows Firewall asks, allow it on Private networks.
    If SmartScreen says "Windows protected your PC", choose More info, then Run anyway
    (the build isn't signed).
-3. Type the join code the host gives you (like SC07-21W2) and press Join.
-   If the code doesn't work, the host gives you an IP address instead (a Tailscale
-   100.x.y.z address works the same way).
+3. Gray screen or a crash: run "Brenny Brenn Boy Horror.console.exe" from Host.bat's
+   folder to see the error, or send the logs (step 4); they include godot.log.
 4. Afterwards, double-click send_logs.bat. It writes brenny_logs.zip to your Desktop.
    Send that file to the host. It holds game events and connection statistics only:
    no audio, no names, no volume values.
+
+Controls: W A S D move, mouse look, Shift sprint, C crouch, hold X stand still, hold E interact,
+left/right mouse use tool, G drop, F lantern, Q whistle, V push to talk, F3 debug (host), Esc pause.
 
 Your voice setting (Off or Lobby lines) is on your machine and you can change it any time.
 Anything the game keeps of your voice stays on your disk; Off deletes it.
@@ -53,13 +63,33 @@ Anything the game keeps of your voice stays on your disk; Off deletes it.
 More: TESTER BRIEF.md. Third-party licenses: licenses/ (TwoVoIP, libopus, RNNoise, SpeexDSP, godot-cpp).
 """
 
-# Zips the section 10 log folders written in the last 12 hours (CONTRACTS s10: user://logs/<session_id>/).
+PORT = 45120  # Net.DEFAULT_PORT (doc 06 section 2); Net tries the next ports if it is taken
+
+# The exe ignores user arguments unless they follow `--`. `--phase1` loads the Phase 1 night
+# (data/phase1.json, D-023); host and joiner must both pass it or the data hash refuses the join.
+HOST_BAT = r"""@echo off
+cd /d "%~dp0"
+echo Hosting on UDP port {port}. Give the other player this PC's Tailscale address:
+tailscale ip -4 2>nul || echo   (tailscale not found: open Tailscale and copy the 100.x.y.z address)
+start "" "{exe}" -- --host --phase1 --port={port}
+pause
+"""
+
+JOIN_BAT = r"""@echo off
+cd /d "%~dp0"
+set /p HOSTIP=Host's Tailscale address (100.x.y.z): 
+if "%HOSTIP%"=="" exit /b 1
+start "" "{exe}" -- --join=%HOSTIP%:{port} --phase1
+"""
+
+# Zips the section 10 log folders written in the last 12 hours (CONTRACTS s10: user://logs/<session_id>/)
+# plus Godot's own godot*.log from the same folder (engine errors, e.g. behind a gray screen).
 # No % signs: cmd.exe would expand them.
 SEND_LOGS = r"""@echo off
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$l = Join-Path $env:APPDATA 'Godot\app_userdata\Brenny Brenn Boy Horror\logs';" ^
   "if (-not (Test-Path -LiteralPath $l)) { Write-Host ('No logs at ' + $l); exit 1 };" ^
-  "$d = Get-ChildItem -LiteralPath $l -Directory | Where-Object { $_.LastWriteTime -gt (Get-Date).AddHours(-12) };" ^
+  "$d = @(Get-ChildItem -LiteralPath $l | Where-Object { $_.LastWriteTime -gt (Get-Date).AddHours(-12) -and ($_.PSIsContainer -or $_.Name -like 'godot*.log') });" ^
   "if (-not $d) { Write-Host 'No logs from the last 12 hours.'; exit 1 };" ^
   "$z = Join-Path ([Environment]::GetFolderPath('Desktop')) 'brenny_logs.zip';" ^
   "Compress-Archive -LiteralPath $d.FullName -DestinationPath $z -Force;" ^
@@ -92,11 +122,13 @@ def write_zip(out: Path, bid: str) -> list[str]:
     out.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         for p in sorted(EXPORT_DIR.iterdir()):
-            if p.suffix in {".exe", ".dll"}:
+            if p.suffix in {".exe", ".dll"}:  # includes the .console.exe wrapper (preset option)
                 z.write(p, f"{TOP}/{p.name}")
         for p in sorted((REPO_ROOT / "addons").glob("*/LICENSE*")):
             z.write(p, f"{TOP}/licenses/{p.name}")
-        z.writestr(f"{TOP}/START HERE.txt", START_HERE.format(build_id=bid, exe=EXE).replace("\n", "\r\n"))
+        z.writestr(f"{TOP}/START HERE.txt", START_HERE.format(build_id=bid, exe=EXE, port=PORT).replace("\n", "\r\n"))
+        z.writestr(f"{TOP}/Host.bat", HOST_BAT.format(exe=EXE, port=PORT).replace("\n", "\r\n"))
+        z.writestr(f"{TOP}/Join.bat", JOIN_BAT.format(exe=EXE, port=PORT).replace("\n", "\r\n"))
         z.writestr(f"{TOP}/TESTER BRIEF.md", BRIEF.read_text(encoding="utf-8").replace("\n", "\r\n"))
         z.writestr(f"{TOP}/send_logs.bat", SEND_LOGS.replace("\n", "\r\n"))
         z.writestr(f"{TOP}/BUILD.txt", bid + "\r\n")

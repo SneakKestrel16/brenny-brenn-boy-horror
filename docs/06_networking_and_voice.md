@@ -467,14 +467,14 @@ Doc 01 "Senses": "Only the volume is sent, one byte per voice frame, and nothing
 - **0 means not transmitting.** A frame is only sent while VAD or push-to-talk is open, so muted,
   push-to-talk released and Discord-only players are silent to the creature.
 - The host reads it from each client frame, and `Voice` calls
-  `Noise.emit_voice(position, volume_byte, source_peer)` (CONTRACTS section 8, doc 05 section 8)
+  `NoiseBus.emit_voice(position, volume_byte, source_peer)` (CONTRACTS section 8, doc 05 section 8)
   at the speaker's position, at most every 100 ms using the loudest frame since the last report
   (`placeholder`). The host's own mic takes the same call. How far a volume carries is doc 03's;
-  `Noise` converts the byte to a radius.
+  `NoiseBus` converts the byte to a radius.
 - **Nothing is stored:** the host never logs volume values or keeps a history. The relay form of the
   frame drops the byte, so clients never see it.
 - **Ghost frames don't feed the creature** (D-011): ghosts aren't in the world. `Voice` never calls
-  `emit_voice` for a ghost speaker; `Noise` rejects ghost sources as a second guard (doc 05
+  `emit_voice` for a ghost speaker; `NoiseBus` rejects ghost sources as a second guard (doc 05
   section 8).
 
 ### Frame format (channel 2, `send_bytes`)
@@ -483,7 +483,7 @@ Client to host, 5 header bytes:
 
 | Byte | Field |
 |---|---|
-| 0 | type `0x01` |
+| 0 | type `0x10` |
 | 1 | flags: bit 0 radio, bit 1 talk start, bit 2 talk end |
 | 2 to 3 | sequence number (u16, wraps) |
 | 4 | volume (0 to 255) |
@@ -493,13 +493,17 @@ Host to client (relay), 5 header bytes:
 
 | Byte | Field |
 |---|---|
-| 0 | type `0x02` |
+| 0 | type `0x11` |
 | 1 | speaker slot (0 to 3) |
 | 2 | flags: bit 0 radio, bit 1 talk start, bit 2 talk end, bit 3 ghost |
 | 3 to 4 | sequence number, copied |
 | 5 onward | Opus packet, copied |
 
-The spike used both formats unchanged (**measured (PP-02)**). The **ghost** bit is set by the host
+The spike used both formats with types `0x01` and `0x02` (**measured (PP-02)**). The game moved
+them to `0x10` and `0x11` in P1-06 because every `send_bytes` packet arrives on one signal and
+movement already uses `0x01` and `0x02` (`game/player/move_frame.gd`, P1-04); Q-042 asks for the
+DECISIONS entry. Until slots exist, the slot byte is the speaker's index in the host's roster order
+(`Game.players`), which clients receive in `apply_roster`. The **ghost** bit is set by the host
 from its own death state, so clients never play a dead player's voice clean because their local
 state lagged.
 
@@ -869,12 +873,18 @@ input per copy, simulated latency and packet loss. QA's `tools/qa/multi.py` laun
 | `net_host_left` | `how` (`quit`, `disconnected`) |
 | `net_rtt` | `to` (peer id), `rtt_ms`, `enet_loss`, every 10 s |
 | `net_bandwidth` | `up_kbps`, `down_kbps` (UDP/IP headers included), `up_datagrams_per_s`, every 10 s |
-| `voice_stats` | per speaker every 10 s: `speaker` (peer id), `received`, `lost` (concealed by PLC), `late`, `decoded`, `loss`, `underflow_ms`, `overflow_ms` |
+| `voice_stats` | per speaker every 10 s and when the speaker leaves: `speaker` (peer id), `received`, `lost` (concealed by PLC), `late`, `decoded`, `loss`, `talk_spurts`, `underflow_ms`, `overflow_ms` |
+| `voice_capture` | once when capture starts: `input` (`mic` or `wav`; the WAV's file name is never logged), `mix_rate`, `push_to_talk` |
+| `voice_sent` | this machine's mic every 10 s: `input` (`mic`, `wav`, `off`), `encoded`, `sent`, `bytes`, `talk_spurts`, `push_to_talk`, `relayed` (host only: frames through the relay, its own included). No volume values |
 | `lure_played` | `lure_id`, `owner` (peer id, or null for a `sound_id` lure), `line_id` (or null), `sound_id` (or null), `target` (peer id, or null for a world lure), `position` (`[x, y, z]`), `tell`, `ghost`. No audio, no volume |
 | `lure_result` | `lure_id` (the same as its `lure_played`), `target`, `moved_m`, `within_s`, `worked` (CONTRACTS section 10; `within_s` is Q-002, doc 05's) |
 
 Measured in PP-02 on loopback: connect 18 to 20 ms by code, 18 to 19 ms by raw IP; RTT 16 to 23 ms;
 reliable loss 0; voice loss 0 in every 2, 3 and 4-player stream without simulated loss.
+
+Measured in P1-06 (`game/voice/`, 2 headless instances on loopback, synthetic WAVs, 30 s): each side
+received 813 to 836 frames with 0 lost and 0 late, underflow 4 to 20 ms, and the host emitted 460
+`voice` noise events; 0 error lines.
 
 ## 15. Opus GDExtension and other addons
 
@@ -1137,5 +1147,5 @@ Current state of the questions this doc raised or depends on ([QUESTIONS.md](../
 | Q-011 Spike findings for this doc, `*.dll binary` | Director | Answered; findings folded in here |
 | Q-012 Readings added in this revision: initial voice setting, volume relative to calibrated level, what "capture is live" means, freeing a leaver's clips, ghosts and walkies, discarding a take when someone switches to Off | Director | Answered: all six accepted (D-013); D-013 also confirms the section 7 verbs |
 | Q-013 PP-02 review bugs (host-quit poll `ERROR`, host-supplied `session_id` path, wrong-length codes) | Director | Answered: items 1 to 3 become DD Phase 1 `game/net/` acceptance criteria (written at PP-12); item 3 is in section 4 |
-| Q-023 Hold messages, `Net.rtt_ms`, `Voice` calls `Noise.emit_voice` | from Gameplay Programmer | Answered: sections 6, 7 and 8 (cart transform rides `moves`) |
+| Q-023 Hold messages, `Net.rtt_ms`, `Voice` calls `NoiseBus.emit_voice` | from Gameplay Programmer | Answered: sections 6, 7 and 8 (cart transform rides `moves`) |
 | Q-033 Runtime voice buses, crackle player | from Audio Designer | Answered: section 9 |

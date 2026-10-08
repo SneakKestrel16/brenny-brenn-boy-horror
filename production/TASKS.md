@@ -148,29 +148,35 @@ task, including voice settings and recording rules.
 
 ## Studio phase 2: DD Phase 1 (prototype)
 
-The Director writes the rest of the `P1-` board (doc 05 section 20 order). The playtest kit came
-first, at the CEO's request, so the STOP has its tooling before the game lands.
+Source: doc 01 "Build Plan > Phase 1", doc 05 section 20 (build order), doc 03 section 18 (fake it
+first), doc 04 section 9 (small layout), doc 09 section 3 (the gate). Voice between two machines
+already passed (STOP 1). **Done when** (doc 01): the day feels safe, the night tense, at least 30% of
+lures make the target walk toward them, and the spatial audio test (10/30/60 m) is run. Checked in 2
+sessions, one tester who hasn't read doc 01, plus log measures (doc 09). **STOP 2** after P1-14 for
+the CEO playtest.
 
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
-| P1-01 | QA | Playtest kit: session tool, observer tally, log collection, report, packager, tester brief | in review (Director) | PP-10 |
+| P1-01 | Game Designer | Data files for Phase 1: `labor`, `crops` (turnip), `creature`, `voice_lines`, timers; Director approves schemas in CONTRACTS 6 | done | — |
+| P1-02 | Gameplay | Core: `Log`, `Data`, `Settings`, `Clock`, `Game`, boot to main; 2 instances join over ENet | done | P1-01 |
+| P1-03 | Level Designer | Gray-box Phase 1 farm (`farm_phase1.tscn`, x -32..46) with all markers | done | — |
+| P1-15 | Network & Voice | Move the ENet host/join, roster, handshake and `apply_clock` rpc from `Game`/`Clock` into `game/net/Net` (doc 06); raw-IP join (Tailscale, D-024); `grep_rules` `rpc_outside_net` clean | done | P1-02 |
+| P1-04 | Gameplay | Player controller, crouch, sprint, remote proxies, host speed check, `NoiseBus.emit_kind` | done | P1-02, P1-03, P1-15 |
+| P1-05 | Gameplay | Hold framework + turnips: plant, water (noisy can), harvest, sell at (40, 20), `hold_completed` | done | P1-04 |
+| P1-06 | Network & Voice | Move the spike voice into `game/`: proximity voice, VAD/PTT, `VoiceEmitter`, voice reports to `Noise` | done (Q-042 push_to_talk setting owed by Gameplay) | P1-04 |
+| P1-07 | Gameplay | Generator, fuel drum, lights, go-still ring, crouch noise | done | P1-05 |
+| P1-08 | AI Programmer | Scripted creature: Lurk/Stalk/Chase/Retreat timers, wander and chase by sound, scripted traps and pits, stranger lines from the corn, lure logging | done | P1-04, P1-06 |
+| P1-09 | Gameplay | Trap race, death, ghost spectate, `apply_creature_state` hooks | done | P1-08 |
+| P1-10 | Audio Designer | Three ambience layers from creature state, trap and step sounds, whistle, stranger-line synthesis | done | P1-08 |
+| P1-11 | Technical Artist | Day, dusk, night lighting, dark buildings, fog, corn render budget | done (corn budget unmeasured, check in P1-14) | P1-03 |
+| P1-12 | Gameplay | Spatial audio test scene with `spatial_audio_trial` logging; debug view | done | P1-06, P1-03 |
+| P1-13 | AI Programmer | Bot that walks and does chores | done | P1-05 |
+| P1-14 | QA | Review each P1 task; 2-instance run; `check_logs.py` on a full session; run the doc 09 gate | done (human gate measures run at STOP 2) | all above |
+| P1-16 | Gameplay | STOP 2 readiness (Q-046): fix the stamina flicker at 0 so no `speed_violation` on a human sprint; minimal prompt layer (hold prompt for the aimed target, stamina bar, clock and phase, coins, a one-screen controls hint on first spawn, death and ghost banner); emit `inside_at_night`; Shaken logged on client | done (human gate measures run at STOP 2) | P1-14 |
+| P1-17 | QA | Playtest kit: session tool, observer tally, log collection, report, Windows packager with host/join launchers, tester brief | in review (Director) | P1-14 |
 
-### P1-01 Playtest kit
-Owner: QA. Output: `tools/qa/playtest.py`, `tools/qa/package_playtest.py`, `tools/qa/playtest/`,
-`tests/qa/test_playtest.py`, "Playtest (Windows)" export preset (D-023).
-Acceptance:
-- One command per doc 09 section 11 step: start a session folder with the build id, networks and
-  fresh testers; a silent observer's scream, laugh and bored tally timed against the logs' `t`;
-  collect every peer's section 10 logs (this machine's and a remote tester's zip) into one folder
-  and run `check_logs.py`; a report over 2 or more sessions with every doc 09 section 3 DD Phase 1
-  row as pass, fail, no data or manual.
-- A packager that exports the game and zips it with a start note, the tester brief, the licenses and
-  a script that zips the tester's logs. Refuses a dirty tree.
-- Tester brief gives controls and setup only (doc 09 section 12: no coaching); consent asked before
-  the session; tester labels only.
-- `check_logs.py` reads `spatial_audio_trial` from client files (doc 05 section 18 says the tester's
-  client writes it) and reports it per tester for doc 09 section 5's 60% floor.
-- Self-test passes with no Godot. Documented in `tools/qa/README.md`.
+Each owner turns their row into acceptance from the cited doc sections when starting; every task
+still needs QA pass plus Director check.
 
 ---
 

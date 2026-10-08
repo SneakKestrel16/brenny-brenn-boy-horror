@@ -165,14 +165,54 @@ undecided (not needed for DD Phase 1); whistle `max_distance` 220 m and `unit_si
 DD Phase 1 spatial test may retune. **Why:** none of these blocks DD Phase 1. Next: Director writes
 the `P1-` tasks in `TASKS.md`.
 
-### D-023 · 2026-10-08 · Director · Playtest kit before DD Phase 1 code (P1-01)
-CEO asked for the playtest set up. Nothing in `game/` is playable yet, so the kit is built against doc
-09 and the section 10 log format, and is checked on synthetic logs only. (1) P1-01, owned by QA, is the
-first `P1-` task. (2) `export_presets.cfg` gets a second preset, "Playtest (Windows)", owned by QA:
-main scene `boot.tscn`, no custom feature, excludes `tests/`, `tools/` and `spikes/`. The voice spike
-preset is unchanged. (3) `check_logs.py` reads `spatial_audio_trial` from every peer's file, not the
-host's only: doc 05 section 18 has the tester's client write it, so the host-only rule dropped every
-client tester's trials. (4) Build id for a session is `git describe --always --dirty` until Gameplay
-says where the game's `build_id` comes from (Q-040). **Why:** the STOP after DD Phase 1 needs every
-step of doc 09 section 11 ready; building it now costs no game work and finds log gaps early.
+### D-023 · 2026-10-07 · Director · P1-01 and P1-03 checked
+Approved: `phase1.json` as its own file (loaded only with `--phase1`); the proposed `creature` and
+`voice_lines` schemas; `none` added to the `unit` enum (strings and booleans). Level scene groups
+beyond D-016 added to CONTRACTS section 4. Phase 1 scene is `farm_phase1.tscn` (renamed from
+`farm.tscn`, per Q-022; Phase 2 keeps `farm.tscn`). Corn on layer 5 blocks players; the creature
+ignores it for movement. Open, inference: doc 03 section 18 stalk 20 s with chase at 15 s; a
+playtest settles it. Retreat is 10 s in Phase 1 (`phase1.json`). **Why:** removes the ambiguities
+P1-04, P1-05 and P1-08 would otherwise hit.
+
+### D-024 · 2026-10-07 · CEO · Joining over Tailscale
+CEO: players join over Tailscale. Joining by raw IP (a Tailscale address works like any VPN IP, doc 06
+manual fallback) is the supported path for DD Phase 1. UPnP and join codes stay as built in the spike
+but get no new work until the CEO asks. **Why:** removes router and UPnP failures from playtests
+(Open Issue 1 in doc 01 stays tracked). **How to apply:** Network & Voice does not prioritise join
+codes; QA tests two-machine sessions over Tailscale.
+
+### D-025 · 2026-10-07 · Director · Noise autoload renamed NoiseBus
+Autoload `Noise` becomes `NoiseBus` (`game/core/noise_bus.gd`) because `Noise` is a native Godot class and the identifier resolves to the class. API unchanged (`emit`, `emit_kind`, `emit_voice`, signal and log event `noise_emitted`). Answers Q-041. **Why:** removes the `get_node("/root/Noise")` workaround. **How to apply:** call `NoiseBus.emit*`; "Noise" stays the name of the concept and the doc 03 kind table.
+
+### D-026 · 2026-10-07 · Director · Hold RPC shape
+Accepted P1-05's single `request_hold(verb, target)` plus `request_hold_cancel` and
+`request_farm_state`, with results `apply_refused`, `apply_hold_cancelled`, `apply_hold_done`,
+`apply_plot_changed`, `apply_money_changed`, in place of doc 06's per-verb `request_<verb>`. Seeds are
+infinite in Phase 1 (no store; inference). **Why:** one validated path for every hold verb, fewer
+messages. **How to apply:** doc 06 section 7 and CONTRACTS 7 get the new names when the Network &
+Voice Programmer next edits them.
+
+### D-027 · 2026-10-07 · Director · Packet type bytes on channel 1/2
+Doc 06's voice type bytes `0x01`/`0x02` collided with movement's MOVE=1 and MOVES=2 (both arrive on
+`Net.bytes_received`). Ranges: `0x01`-`0x0F` movement and gameplay, `0x10`-`0x1F` voice. Voice is now
+`0x10`/`0x11` (doc 06 updated by P1-06). Gameplay adds a `push_to_talk` setting (default `false`) to
+`Settings`. **Why:** the host would read voice as movement. Answers Q-042.
+
+### D-028 · 2026-10-07 · Director · Text HUD allowed in Phase 1
+Doc 05 s3 says "No HUD markers". P1-16 adds a plain text layer (aimed-target verb prompt, stamina bar,
+clock and phase, coins, controls hint, death banner) and no world markers. **Why:** a tester who has not
+read doc 01 cannot play without it (Q-046). Doc 01 "Onboarding" in-world intros stay open; revisit after
+STOP 2 whether the text layer stays. Unverified: the aimed-target prompt has not been seen on screen.
+
+### D-029 · 2026-10-08 · Director · Playtest kit and Windows playtest export (P1-17)
+CEO asked for the STOP 2 playtest set up. (1) P1-17, owned by QA: `tools/qa/playtest.py` (`new`, `tally`,
+`collect`, `report`), `tools/qa/package_playtest.py`, `tools/qa/playtest/` (checklist, tester brief, notes).
+(2) `export_presets.cfg` gets "Playtest (Windows)", owned by QA: main scene `boot.tscn`, `data/*.json`
+included explicitly (Data reads them with `FileAccess`), `tests/`, `tools/`, `spikes/` excluded, console
+wrapper exported in release too. (3) Boot has no menu, so the zip ships `Host.bat` (`-- --host --phase1
+--port=45120`) and `Join.bat` (`-- --join=<tailscale ip>:45120 --phase1`, D-024). (4) `check_logs.py` reads
+`spatial_audio_trial` from every peer's file: the tester's client writes it (doc 05 section 18). (5) Session
+build id is `git describe --always --dirty` until Q-047 settles it. **Why:** the first zip, built before
+`main` had the game, showed a gray screen; a bare exe also starts no Phase 1 session, so the launch
+arguments must ship with the build.
 

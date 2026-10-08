@@ -1,0 +1,234 @@
+{
+  "table": "season",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "start_coins",
+      "value": 60,
+      "unit": "coins",
+      "source": "doc01",
+      "cite": "doc 01 Season and Numbers"
+    },
+    {
+      "id": "season_days",
+      "value": 7,
+      "unit": "count",
+      "source": "doc01",
+      "cite": "doc 01 Season and Numbers"
+    },
+    {
+      "id": "day_s",
+      "value": 540,
+      "unit": "s",
+      "source": "placeholder",
+      "cite": "doc 02 section 3; doc 01 Core Loop gives about 8 to 10 minutes"
+    },
+    {
+      "id": "dusk_s",
+      "value": 60,
+      "unit": "s",
+      "source": "doc01",
+      "cite": "doc 01 Core Loop"
+    },
+    {
+      "id": "night_s",
+      "value": 300,
+      "unit": "s",
+      "source": "doc01",
+      "cite": "doc 01 Nights"
+    },
+    {
+      "id": "harvest_moon_cap_s",
+      "value": 900,
+      "unit": "s",
+      "source": "doc01",
+      "cite": "doc 01 Nights"
+    },
+    {
+      "id": "first_payment_dawn",
+      "value": 4,
+      "unit": "dawn",
+      "source": "doc01",
+      "cite": "doc 01 Debt and payments"
+    },
+    {
+      "id": "final_payment_dawn",
+      "value": 8,
+      "unit": "dawn",
+      "source": "doc01",
+      "cite": "doc 01 Debt and payments"
+    },
+    {
+      "id": "field_plots_start",
+      "value": 16,
+      "unit": "count",
+      "source": "doc01",
+      "cite": "doc 01 Crops"
+    },
+    {
+      "id": "field_plots_max",
+      "value": 24,
+      "unit": "count",
+      "source": "doc01",
+      "cite": "doc 01 Crops"
+    },
+    {
+      "id": "moonflower_plots_per_player",
+      "value": 1,
+      "unit": "count",
+      "source": "doc01",
+      "cite": "doc 01 Crops"
+    },
+    {
+      "id": "end_season_sale_pct",
+      "value": 50,
+      "unit": "pct",
+      "source": "doc01",
+      "cite": "doc 01 Crops"
+    },
+    {
+      "id": "bank_floor",
+      "value": 4,
+      "unit": "coins",
+      "source": "doc01",
+      "cite": "doc 01 Death and Respawning"
+    },
+    {
+      "id": "foreclosure_penalty_pct",
+      "value": 150,
+      "unit": "pct",
+      "source": "doc01",
+      "cite": "doc 01 Debt and payments"
+    },
+    {
+      "id": "foreclosure_penalty_rounding",
+      "value": "ceil",
+      "unit": "count",
+      "source": "placeholder",
+      "cite": "doc 02 A.1"
+    },
+    {
+      "id": "foreclosure_seized_plots",
+      "value": 2,
+      "unit": "count",
+      "source": "doc01",
+      "cite": "doc 01 Debt and payments"
+    },
+    {
+      "id": "foreclosure_seizure_order",
+      "value": [
+        "dearest_upgrade_over_2_plots",
+        "bought_plots",
+        "starting_plots"
+      ],
+      "unit": "count",
+      "source": "placeholder",
+      "cite": "doc 02 A.1"
+    },
+    {
+      "id": "sanctuary_m",
+      "value": 10,
+      "unit": "m",
+      "source": "doc01",
+      "cite": "doc 01 The AI Director"
+    },
+    {
+      "id": "plots_per_player",
+      "value": 6,
+      "unit": "count",
+      "source": "doc01",
+      "cite": "doc 01 Crops"
+    },
+    {
+      "id": "chore_share_pct",
+      "value": 33,
+      "unit": "pct",
+      "source": "doc01",
+      "cite": "doc 01 Season simulator"
+    },
+    {
+      "id": "pegboard_bear_slots",
+      "value": 5,
+      "unit": "count",
+      "source": "placeholder",
+      "cite": "doc 02 A.1"
+    },
+    {
+      "id": "generator_tank_s",
+      "value": 210,
+      "unit": "s",
+      "source": "placeholder",
+      "cite": "doc 02 A.1"
+    },
+    {
+      "id": "generator_dim_pct",
+      "value": 25,
+      "unit": "pct",
+      "source": "placeholder",
+      "cite": "doc 02 A.1"
+    },
+    {
+      "id": "fuel_can_pct",
+      "value": 50,
+      "unit": "pct",
+      "source": "placeholder",
+      "cite": "doc 02 A.1"
+    },
+    {
+      "id": "trample_base",
+      "value": 1,
+      "unit": "count",
+      "source": "doc01",
+      "cite": "doc 01 Daytime Threats"
+    },
+    {
+      "id": "trample_nobody_outside",
+      "value": 2,
+      "unit": "count",
+      "source": "doc01",
+      "cite": "doc 01 Daytime Threats"
+    },
+    {
+      "id": "trample_dead_generator",
+      "value": 1,
+      "unit": "count",
+      "source": "doc01",
+      "cite": "doc 01 Daytime Threats"
+    },
+    {
+      "id": "nobody_outside_s",
+      "value": 30,
+      "unit": "s",
+      "source": "placeholder",
+      "cite": "doc 02 A.1"
+    },
+    {
+      "id": "full_wipe_damage_mult",
+      "value": 2,
+      "unit": "mult",
+      "source": "doc01",
+      "cite": "doc 01 Core Loop"
+    },
+    {
+      "id": "full_wipe_extra_traps",
+      "value": 2,
+      "unit": "count",
+      "source": "placeholder",
+      "cite": "doc 02 A.1"
+    },
+    {
+      "id": "free_scrap_per_dawn",
+      "value": 1,
+      "unit": "count",
+      "source": "doc01",
+      "cite": "doc 01 Nights"
+    },
+    {
+      "id": "free_scrap_stacks",
+      "value": false,
+      "unit": "count",
+      "source": "placeholder",
+      "cite": "doc 02 A.1"
+    }
+  ]
+}

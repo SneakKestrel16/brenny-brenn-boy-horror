@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/player_scaling.schema.json",
+  "title": "Headcount scaling (doc 02 section 4)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["table", "schema_version", "records"],
+  "properties": {
+    "table": {"const": "player_scaling"},
+    "schema_version": {"const": 1},
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {"const": "headcount"},
+          "source": {"$ref": "#/$defs/source"},
+          "cite": {"type": "string"},
+          "sources": {"$ref": "#/$defs/sources"},
+          "pct_by_players": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["2", "3", "4"],
+            "properties": {
+              "2": {"type": "integer", "minimum": 0, "maximum": 1000},
+              "3": {"type": "integer", "minimum": 0, "maximum": 1000},
+              "4": {"type": "integer", "minimum": 0, "maximum": 1000}
+            }
+          },
+          "rounding": {"const": "ceil"},
+          "min_players": {"const": 2},
+          "max_players": {"const": 4}
+        },
+        "required": ["id", "source", "pct_by_players", "rounding", "min_players", "max_players"]
+      },
+      "maxItems": 1
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "source": {"enum": ["doc01", "sim", "placeholder"]},
+    "sources": {"type": "object", "additionalProperties": {"enum": ["doc01", "sim", "placeholder"]}}
+  }
+}

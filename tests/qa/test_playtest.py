@@ -218,9 +218,13 @@ class Package(unittest.TestCase):
             with zipfile.ZipFile(Path(tmp) / "out.zip") as z:
                 start = z.read("brenny_playtest/START HERE.txt").decode()
         top = "brenny_playtest/"
-        for want in (package_playtest.EXE, "send_logs.bat", "START HERE.txt", "TESTER BRIEF.md", "BUILD.txt", "licenses/LICENSE"):
+        for want in (package_playtest.EXE, "Brenny Brenn Boy Horror.console.exe", "Host.bat", "Join.bat", "send_logs.bat", "START HERE.txt", "TESTER BRIEF.md", "BUILD.txt", "licenses/LICENSE"):
             self.assertIn(top + want, names)
         self.assertIn("abc1234", start)
+        host = package_playtest.HOST_BAT.format(exe=package_playtest.EXE, port=package_playtest.PORT)
+        join = package_playtest.JOIN_BAT.format(exe=package_playtest.EXE, port=package_playtest.PORT)
+        self.assertIn('-- --host --phase1 --port=45120', host)
+        self.assertIn('-- --join=%HOSTIP%:45120 --phase1', join)
         self.assertIn("\r\n", start)
 
 

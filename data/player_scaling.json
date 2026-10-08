@@ -1,0 +1,19 @@
+{
+  "table": "player_scaling",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "headcount",
+      "source": "doc01",
+      "cite": "doc 01 Ramp-up (80% at 3 players, 60% at 2, rounded up); doc 02 section 4",
+      "pct_by_players": {
+        "2": 60,
+        "3": 80,
+        "4": 100
+      },
+      "rounding": "ceil",
+      "min_players": 2,
+      "max_players": 4
+    }
+  ]
+}

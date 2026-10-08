@@ -119,7 +119,7 @@ three doc 01 measures plus tallies.
 |---|---|---|---|
 | Lure success | `lure_result` | worked when `moved_m > 10` and `within_s <= 8`; recomputed, mismatches with the logged `worked` listed; gate 30% | Done (PP-03); fields fixed by doc 05 section 18 |
 | Trap race | `trap_race_result` | survival overall and for `solo` and not `tainted` and `pried_at_once`; deaths in that case listed; minimum and mean `seconds_spare` | Done (PP-03) |
-| Spatial audio | `spatial_audio_trial` | correct by `sound` and `distance_m`, overall and per tester; read from every peer's file (the tester's client writes it); untested cells listed | Done (PP-03, per-tester and client files P1-01). `angle_error_deg` is logged but not tallied yet |
+| Spatial audio | `spatial_audio_trial` | correct by `sound` and `distance_m`, overall and per tester; read from every peer's file (the tester's client writes it); untested cells listed | Done (PP-03, per-tester and client files P1-17). `angle_error_deg` is logged but not tallied yet |
 | Hold times | `hold_completed` | mean seconds by verb | Done |
 | Time inside at night | `inside_at_night` | seconds by player | Done |
 | Deaths, traps, money | `death`, `trap_sprung`, `money_changed` | counts | Done |
@@ -440,6 +440,15 @@ instance.
 
 **Open:** no log event carries frame time or the adapter name (section 13), so the first measurement is
 read from the screen and typed into the handoff.
+
+**Tool (P1-14):** `tests/qa/perf_probe.tscn` boots the game like Boot does, waits `--probe-warm` s (default 15),
+samples `--probe-s` s (default 60) and prints one `perf_probe` line: average fps, worst frame ms, frames over
+33 ms, draw calls, primitives, texture and video MB, adapter, size. Windowed only. Example (4 instances):
+`uv run tools/qa/multi.py -n 4 --no-tile --common "res://tests/qa/perf_probe.tscn -- --phase1 --port=50742 --autowalk"
+--args "--resolution 1280x720 --position 0,0 -- --host" --args "--resolution 1280x720 -- --join=127.0.0.1:50742" ...`.
+The engine prints a leaked-resource error at exit when the probe quits, so `multi.py` reports FAIL on it; read the
+`perf_probe` lines in `instance_<i>.log`. The probe samples wherever the player is (autowalk circle), not the worst
+view.
 
 ## 11. After a session
 

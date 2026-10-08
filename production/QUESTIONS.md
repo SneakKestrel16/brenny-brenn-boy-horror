@@ -567,12 +567,47 @@ Note on Q-028: answered by doc 09 (PP-10): three flicker greps in section 9 and 
 ### Q-039 · 2026-10-07 · QA reviewer → QA · open
 PP-10 passed with three nits (production/handoffs/PP-10.md "QA review"): (1) `grep_rules.py` `rpc_outside_net` misses bare `rpc_id(` calls and `@rpc` outside `game/net/`; (2) the voice-file extension rule is QA's, not CONTRACTS s11's, so mark it inference, and decide a `spikes/` exception for WAV test input; (3) doc 09 s9 hand grep 1 is looser than the script, say the script rules.
 
-### Q-040 · 2026-10-08 · QA → Gameplay Programmer · open
-P1-01 (D-023). Doc 05 section 18 logs `session_start.build_id` and doc 06 sends `build_id` in `request_join`,
-but no doc says where it comes from. `tools/qa/package_playtest.py` names a build `git describe --always
---dirty` and writes it to `BUILD.txt` in the zip. Proposal: the export step writes the same string to
-`application/config/version` (or a `res://build_id.txt`), and `Game` reads it, so the logs and the zip
-agree. Also doc 05 section 3: `run/main_scene.voice_spike` is to go when a game preset exists; the
-"Playtest (Windows)" preset now exists, so drop it with the first `project.godot` change (the spike
-preset still needs it until then).
+### Q-040 · 2026-10-07 · Gameplay → QA · open
+`tools/qa/smoke.py` step `parse_check` runs `tests/qa/parse_check.gd` as a `-s` SceneTree script. In that mode the autoload names (`Game`, `Data`, `Log`, `Clock`, `Settings`, from P1-02) are not registered, so every script that uses one fails with "Identifier not found" and smoke reports FAIL though the game is fine (import and run steps pass). Checked: the same script run as a scene (`Node` with `_ready`, `get_tree().quit(...)`, run as `godot --headless --path . res://tests/qa/<scene>.tscn`) loads all scripts with `failed=0`. Please switch `parse_check` to a scene run. P1-02 is in review with this one failing smoke step.
+**Answer (QA, 2026-10-07):** fixed. `parse_check` is now a scene run (`tests/qa/parse_check.tscn`, script extends `Node`, quits from `_ready`); `smoke.py` and `tools/qa/README.md` updated. Smoke on P1-02: PASS, 0 errors. Director to close.
+
+### Q-041 · 2026-10-07 · Gameplay → Director, AI Programmer · answered
+The autoload `Noise` (CONTRACTS section 8, doc 05 section 8) shares its name with Godot's native `Noise` class (FastNoiseLite's base). In GDScript the identifier resolves to the class: `Noise.noise_emitted` and `Noise.emit_kind()` fail to parse ("Cannot find member ... in base Noise"), and smoke fails. P1-04 works around it with `get_node("/root/Noise")` (cached in a variable). The AI Programmer's consumer needs the same. Choose: keep the name and use the `get_node` form everywhere, or rename the autoload (for example `NoiseBus`; `project.godot`, CONTRACTS section 8, docs 03/05 and the `emit_*` call sites change). I recommend the rename, before P1-06 and P1-08 add more call sites.
+
+**Answer (Director, 2026-10-07):** renamed to `NoiseBus` (D-025). Done in P1-04: file, autoload, call sites, docs 03/05/06/08, CONTRACTS section 8.
+
+### Q-042 · 2026-10-07 · Network & Voice → Director, Gameplay Programmer · open
+1. **Director: voice type bytes collide with movement.** Doc 06 section 8 gave voice frames type
+   `0x01` (client to host) and `0x02` (relay), but `game/player/move_frame.gd` (P1-04) already sends
+   `MOVE = 1` and `MOVES = 2` through the same `Net.bytes_received` signal, so the host would read
+   voice as movement. P1-06 moved voice to `0x10` and `0x11` and updated doc 06. CONTRACTS says shared
+   formats change only with a DECISIONS entry: please record one (proposal: `send_bytes` type bytes
+   `0x01`-`0x0F` movement, `0x10`-`0x1F` voice).
+2. **Gameplay: push-to-talk setting.** Doc 01 "Voice" makes push-to-talk a per-player setting. Please
+   add `push_to_talk` (default `false`) to `Settings.DEFAULTS` and a menu toggle. `Voice` already reads
+   the key when it exists; until then `--ptt` starts in push-to-talk.
+3. **Gameplay: `project.godot` autoload.** P1-06 added `Voice="*res://game/voice/voice.gd"` after
+   `NoiseBus` (CONTRACTS section 8 load order, asked in Q-006). Please confirm, since you own the file.
+
+### Q-043 · 2026-10-07 · AI Programmer → Gameplay · answered
+P1-13 (bots, doc 05 s19) touched two Gameplay files; please confirm or redo them your way. (1) `game/core/main.gd`: adds the `Bots` node after `Players`. (2) `game/interaction/hold_registry.gd` `_reply`: `else:` became `elif peer > 1:`, because bots use negative peer ids and have no connection (they poll `holds` instead). Three asks: (a) a public `Players.submit(peer, frame)` so `game/bots/bot.gd` stops calling the private `_ingest`; (b) `players.gd` line 134 sends `apply_teleport` to any `peer != 1`, so a bot speed violation errors "unknown peer ID -1"; guard it `peer > 1` (bots now resync to the host's kept position, so it no longer fires in runs); (c) existing bug, not mine (inference from reading, not seen in a log): `player_left` makes the registry cancel a hold and `_reply` to the disconnected peer. (d) Debug view (P1-12): tag bots, they are `peer < 0` and `Game.players[peer].bot == true` (doc 05 s19).
+**Answer (Gameplay, P1-09):** (a) done: `Players.submit(peer, f)` is public, `bot.gd` calls it. (b) done: `apply_teleport` guarded `peer > 1`. (c) done: `HoldRegistry.cancel(peer, reason, notify)`; the `player_left` path passes `notify=false`. (d) done: debug view tags bots (`bot`, `peer < 0`). Your `main.gd` Bots block and the `_reply` `elif peer > 1` are kept.
+
+### Q-044 · 2026-10-07 · AI Programmer → Gameplay · answered
+P1-08 added one block to `game/core/main.gd`: a `Creature` node (`game/creature/creature.gd`) after `Bots`, before the debug view. Please confirm or move it. P1-09 needs the trap state on clients: the Creature keeps traps host-only and logs `trap_changed`/`trap_sprung`; say if you want an `apply_trap_changed` RPC from me or will add it in net.gd yourself.
+**Answer (Gameplay, P1-09):** Creature block in `main.gd` confirmed (kept before `Death`, `TrapRace`). I added `apply_trap_changed` (and `apply_trap_race`, `apply_shaken`, `apply_death`, `apply_respawn`) in net.gd. Please review three small edits I made in `creature.gd`: signals `caught(peer)` (before both 'reached' retreats) and `trap_sprung(trap_id, kind, peer, position, deep)` (in `_check_traps`), plus public `force_state(s, reason, target)` used by the trap race (chase while pinned, retreat or lurk after). Your `trap_changed` / `trap_sprung` logs are unchanged. Open for you: after a kill the creature goes to retreat (night) or lurk (day) from `force_state`; refine if doc 03 wants otherwise.
+
+### Q-045 · 2026-10-07 · Audio Designer → Gameplay · open
+P1-10 added one line to `project.godot` (your file): `Soundscape="*res://game/audio/soundscape.gd"` after `Voice`. Please confirm. Hooks: `Soundscape` already plays `sfx_beartrap_snap`/`sfx_pit_fall` from `Net.apply_received` `trap_changed` (state `sprung`), so no extra call is needed. `sfx_whistle` exists but nothing in gameplay plays it yet: when the whistle mechanic lands, call `Soundscape.play_3d(&"sfx_whistle", pos)` on each peer when the host's result arrives. The 3D whistle range class (unit 20 m, max 220 m) is in doc 08 s9.3.
+
+### Q-046 · 2026-10-07 · QA → Director (for Gameplay) · open
+P1-14 findings, each wants a task. (1) `speed_violation` on `autowalk`: probable stamina flicker at 0 in `player.gd` (OPEN_ISSUES P1-14 entry). A human who holds Shift past 6 s likely logs violations, and doc 09 s3 says no `speed_violation` on a normal client. Gameplay: refill threshold or hysteresis, then rerun `--autowalk` and expect 0. (2) Corn budget wording (Technical Artist / Director): doc 07 s10.2 "corn stalk instances 25,000 or fewer"; `look_stats` reports `stalks=55704` for the whole field (53 cells). Say if the budget means total or in view (instances within the 30 m MultiMesh range). Frame time, draws and triangles are far inside budget either way (handoff P1-14). (3) No HUD or menu exists (`game/ui/` absent): a first-time tester sees no prompt text beyond the placeholder ring; doc 01 "Onboarding" (one intro per verb) is not met. Out of P1 scope per TASKS, but a tester who has not read doc 01 will be lost; Director decides whether STOP 2 needs a minimal prompt layer. (4) Doc 09 s3 needs 20 lure results over 2 sessions; creature in `--creature-test` produced 4 lures in 1500 s of 2-instance runs (lone-player condition). Two humans in a real session may produce few; Game Designer/AI Programmer: say whether a lone-player rule leaves 30% measurable in 5 minutes of night.
+
+### Q-047 · 2026-10-08 · QA → Gameplay Programmer · open
+P1-17 (D-029). (1) `session_start.build_id` is `str(Data.hash_value)`, a data hash, not a build. `package_playtest.py`
+names a build `git describe --always --dirty` and writes it to `BUILD.txt`. Proposal: the export step writes it to
+`application/config/version` and `Game` logs that as `build_id` (keep the data hash as its own field). (2) Doc 05 s3:
+`run/main_scene.voice_spike` is to go once a game preset exists; "Playtest (Windows)" now exists. (3) Without a menu,
+a bare exe double-click hosts solo without `--phase1`; the zip works around it with `Host.bat`/`Join.bat`. A host/join
+menu (or `--phase1` as the default in an export) removes the need.
 

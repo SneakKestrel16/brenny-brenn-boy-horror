@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/voice_lines.schema.json",
+  "title": "Voice lines (doc 03 section 16, proposed in P1-01)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "table",
+    "schema_version",
+    "records"
+  ],
+  "properties": {
+    "table": {
+      "const": "voice_lines"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/id"
+              },
+              "source": {
+                "$ref": "#/$defs/source"
+              },
+              "cite": {
+                "type": "string"
+              },
+              "sources": {
+                "$ref": "#/$defs/sources"
+              },
+              "kind": {
+                "enum": [
+                  "line",
+                  "stranger"
+                ]
+              },
+              "text": {
+                "type": "string"
+              },
+              "staged_moment": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "phase1": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "source",
+              "kind",
+              "text",
+              "phase1"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/id"
+              },
+              "source": {
+                "$ref": "#/$defs/source"
+              },
+              "cite": {
+                "type": "string"
+              },
+              "sources": {
+                "$ref": "#/$defs/sources"
+              },
+              "kind": {
+                "const": "sound_lure"
+              },
+              "sound_id": {
+                "type": "string"
+              },
+              "phase1": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "source",
+              "kind",
+              "sound_id",
+              "phase1"
+            ]
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "id": {
+                "const": "over_here"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "id": {
+                "const": "help_me"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "id": {
+                "const": "stranger_over_here"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "source": {
+      "enum": [
+        "doc01",
+        "sim",
+        "placeholder"
+      ]
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "doc01",
+          "sim",
+          "placeholder"
+        ]
+      }
+    }
+  }
+}

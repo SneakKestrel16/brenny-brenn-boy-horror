@@ -21,7 +21,7 @@ least one tester who has not read doc 01, and at least one session on **two home
 
       uv run tools/qa/playtest.py new --session 1 --networks different --fresh B --smoke
 
-  `--networks`: `different` (two homes, UPnP and join code), `same` (one home network) or
+  `--networks`: `different` (two homes, over Tailscale, D-024), `same` (one home network) or
   `one_machine`. Only `different` closes the "First" item.
 - [ ] Observer opens the tally in a second terminal and leaves it running:
 
@@ -29,7 +29,8 @@ least one tester who has not read doc 01, and at least one session on **two home
 
 ## Play (observer silent)
 
-- [ ] Host presses Host; tester B joins by **join code** (not IP, for the "First" item).
+- [ ] Host runs `Host.bat` (or `-- --host --phase1` from the editor build); tester B runs `Join.bat`
+      with the host's Tailscale address (D-024). Both must run the same zip or checkout.
 - [ ] Observer types `g` + Enter the moment the host's session starts (lines tally `t` up with the
       logs' `t`).
 - [ ] `s` scream, `l` laugh, `b` bored silence, `n <text>` anything else. Add `A` or `B` for who.

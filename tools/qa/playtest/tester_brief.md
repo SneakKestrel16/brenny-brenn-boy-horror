@@ -53,9 +53,10 @@ keeps stays on your own disk, and Off deletes it.
 
 **If you are joining from home**
 
-1. Unzip the folder we sent you and double-click `Brenny Brenn Boy Horror.exe`. If Windows Firewall
-   asks, allow it on Private networks. If SmartScreen says "Windows protected your PC", choose
-   More info, then Run anyway (the build is not signed).
-2. Type the join code the host gives you (like `SC07-21W2`) and press Join.
+1. Install Tailscale and join the host's tailnet (the host sends you the invite).
+2. Unzip the folder we sent you and double-click `Join.bat` (not the `.exe`). Type the host's
+   Tailscale address (`100.x.y.z`) and press Enter. If Windows Firewall asks, allow it on Private
+   networks. If SmartScreen says "Windows protected your PC", choose More info, then Run anyway (the
+   build is not signed).
 3. Afterwards, double-click `send_logs.bat`. It puts `brenny_logs.zip` on your Desktop. Send us that
    file. It holds game events and connection statistics only: no audio, no names.

@@ -31,7 +31,7 @@ uv run tools/qa/smoke.py -- --some-game-flag   # after --: passed to the game
 | Step | Command |
 |---|---|
 | `import` | `"$GODOT" --headless --editor --quit --path .` (CONTRACTS section 1) |
-| `parse_check` | `"$GODOT" --headless --path . -s res://tests/qa/parse_check.gd` |
+| `parse_check` | `"$GODOT" --headless --path . res://tests/qa/parse_check.tscn` |
 | `run` | `"$GODOT" --headless --path . --quit-after <frames> [scene] [-- args]` (CONTRACTS section 1) |
 
 A step fails on any of these:
@@ -189,10 +189,13 @@ Report rules for DD Phase 1 (doc 09 s2, s3, s5, s6; placeholders there are place
 - Generator: `generator` events present and no `speed_violation`.
 - Feel rows (day safe, night tense, Stalk by sound) and the authority grep are always `MANUAL`.
 
-`package_playtest.py` uses the "Playtest (Windows)" preset (D-023) and refuses a dirty tree, so the
-build id names a commit. The zip holds the game, the TwoVoIP DLL and licenses, `START HERE.txt`,
-`TESTER BRIEF.md`, `BUILD.txt` and `send_logs.bat`, which zips the tester's log folders from the last
-12 hours to `brenny_logs.zip` on their Desktop.
+`package_playtest.py` uses the "Playtest (Windows)" preset (D-029) and refuses a dirty tree, so the
+build id names a commit. The zip holds the game and its console wrapper, the TwoVoIP DLL and
+licenses, `START HERE.txt`, `TESTER BRIEF.md`, `BUILD.txt`, `Host.bat`, `Join.bat` and
+`send_logs.bat`. There is no menu yet, so a bare double-click on the exe starts a solo session without
+`--phase1` content; `Host.bat` runs `-- --host --phase1 --port=45120` and `Join.bat` asks for the host's
+Tailscale address and runs `-- --join=<ip>:45120 --phase1` (D-024). `send_logs.bat` zips the log
+folders and `godot*.log` from the last 12 hours to `brenny_logs.zip` on the Desktop.
 
 **Not yet run on a real session.** Nothing in `game/` writes these events yet (DD Phase 1 builds
 them). The first real session also checks the kit: hand-count five lines (doc 09 s4).
@@ -225,9 +228,10 @@ committed.
 | `tools/qa/smoke.py`, `multi.py`, `check_logs.py` | The three commands |
 | `tools/qa/playtest.py`, `tools/qa/package_playtest.py`, `tools/qa/playtest/`, `tests/qa/test_playtest.py` | Playtest kit and its self-test |
 | `tools/qa/grep_rules.py`, `tests/qa/test_grep_rules.py` | Review greps and their self-test (doc 09 section 9) |
-| `tests/qa/parse_check.gd` | Loads every script so parse errors print |
+| `tests/qa/parse_check.tscn` + `.gd` | Loads every script so parse errors print; a scene run because autoloads are not registered under `-s` (Q-040) |
 | `tests/qa/print_user_dir.gd` | Prints `OS.get_user_data_dir()` |
 | `tests/qa/fake_peer.gd` | ENet fake peer for the launcher self-check |
 | `tests/qa/test_harness.py`, `tests/qa/fixtures/` | Self-test |
+| `tests/qa/perf_probe.tscn` + `.gd` | Windowed frame-time and render-counter probe (doc 09 section 10). Prints one `perf_probe` line; the exit prints a leaked-resource error, so `multi.py` reads FAIL |
 
 Code owners add their own tests under `tests/<area>/` (CONTRACTS section 2).
