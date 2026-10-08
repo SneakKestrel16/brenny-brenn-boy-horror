@@ -931,7 +931,7 @@ func _show_loose(id: String, on: bool) -> void:
 		var st: Dictionary = Game.players[1]
 		st.pos = Vector3(stand.x, st.pos.y, stand.z)  # the speed check would clamp the teleport (as death.gd's respawn)
 		st.freeze_until = Time.get_ticks_msec() + 300
-		hc._sweep_go.call_deferred(&"disarm_bear", t, stand)
+		hc._sweep_go.call_deferred(&"take_trap", t, stand)
 
 
 ## The building `pos` is in (the door's parent), or "" outdoors.

@@ -472,7 +472,7 @@ Traps are host-owned (doc 03 section 8). The player side is:
   requests. `disarm_bear` (5 s) works on a *set* bear trap; the trap leaves the ground, `trap_changed`
   `disarmed` goes out and the player holds a disarmed trap (`apply_hands`, one trap, no stacking: a
   second disarm is refused `hands_full`). `fill_pit` (4 s) works on a set or sprung pit and needs the
-  shovel (refused `need_shovel`); it ends in `trap_changed` `filled`. `Interactable.INSTANT_S` holds the
+  shovel (refused `need_shovel`); it ends in `trap_changed` `filled`. `Interactable.INSTANT_S` (also `take_trap`, 1 s, P2-19: picks up a loose trap, refused `hands_full`) holds the
   verbs with no `labor.json` entry. Both clear the Creature's table entry (`TrapRace.clear_trap`) so it
   can set that kind again. Noises: `disarm_bear` emits `tool_disarm` (8 m) at completion; `fill_pit`
   emits `tool_shovel` (25 m) at start and completion (the section 8 table). `place_flag` and `hang_trap`

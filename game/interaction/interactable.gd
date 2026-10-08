@@ -5,7 +5,7 @@ extends Node
 ## `verbs_for` gets the local replicated view only (it picks the prompt, the host decides).
 
 ## Verbs that are not chores, so labor.json has no entry: taking and returning the shovel (P2-11).
-const INSTANT_S := {&"take_shovel": 0.3, &"return_shovel": 0.3}  ## placeholder
+const INSTANT_S := {&"take_shovel": 0.3, &"return_shovel": 0.3, &"take_trap": 1.0}  ## placeholders; take_trap about 1 s like hanging (doc 02 s2.1, P2-19)
 
 var id := ""
 var range_m := 2.0  ## doc 05 section 7 step 2 (placeholder)

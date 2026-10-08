@@ -8,7 +8,7 @@ const PHASE_TEXT := {&"day": "Daylight", &"dusk": "Dusk", &"night": "NIGHT", &"d
 const VERB_TEXT := {&"plant": "Plant", &"water": "Water", &"harvest": "Harvest", &"sell": "Sell the crop",
 		&"fill_can": "Fill the watering can", &"pry": "Pry free", &"refuel": "Refuel",
 		&"disarm_bear": "Disarm the bear trap", &"fill_pit": "Fill the pit", &"place_flag": "Plant a flag",
-		&"hang_trap": "Hang the trap on the board", &"take_shovel": "Take the shovel", &"return_shovel": "Hang the shovel back"}
+		&"hang_trap": "Hang the trap on the board", &"take_shovel": "Take the shovel", &"return_shovel": "Hang the shovel back", &"take_trap": "Pick up the trap"}
 const REFUSED_TEXT := {&"locked": "Locked", &"need_shovel": "You need the shovel", &"hands_full": "Your hands are full",
 		&"pegboard_full": "No free hook", &"flag_here": "A flag is already here", &"not_armed": "Nothing set here"}
 
