@@ -202,9 +202,9 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
 | P2-01 | Director | Between-phase review: read Phase 1 logs and notes, add new problems to OPEN_ISSUES, settle what Phase 2 needs, turn rows below into acceptance | done | — |
-| P2-12 | Game Designer | Phase 2 data: medical bill, night trap counts, pegboard lock, recording takes; Q-048 (1) numbers | in progress | P2-01 |
-| P2-02 | Level Designer | Full farm: second field, corn between the two fields, 4-player spawns, pegboard and recording-spot markers (doc 04) | in progress | P2-01 |
-| P2-10 | Gameplay | Host/join menu, barn lobby before the match, pause menu with voice setting and push-to-talk (doc 05 s16, Q-042, Q-047) | in progress | P2-01 |
+| P2-12 | Game Designer | Phase 2 data: medical bill, night trap counts, pegboard lock, recording takes; Q-048 (1) numbers | in review | P2-01 |
+| P2-02 | Level Designer | Full farm: second field, corn between the two fields, 4-player spawns, pegboard and recording-spot markers (doc 04) | in review | P2-01 |
+| P2-10 | Gameplay | Host/join menu, barn lobby before the match, pause menu with voice setting and push-to-talk (doc 05 s16, Q-042, Q-047) | in review | P2-01 |
 | P2-03 | Network & Voice | Staged barn recording: lobby lines, chatter and voice settings, clip capture and pre-share to all peers (doc 06 s11-12) | todo | P2-10 |
 | P2-04 | AI Programmer | Replay recorded clips as lures, voice mimicry choice, tells and success logging (doc 03 s12) | todo | P2-03 |
 | P2-11 | Gameplay | Trap sweeps, player side: disarm, fill pit with a shovel, flags, hang traps on the pegboard (doc 05 s11) | todo | P2-02, P2-12 |
