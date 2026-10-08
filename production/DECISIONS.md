@@ -465,6 +465,6 @@ retreat.
 P2-09 is done on its automated part (task reviews, 4-instance run, `check_logs.py`). The two human
 sessions and the "done when" measures (a recorded voice fools someone; trap sweeps feel worth doing)
 were not run. The P2-08 CEO listen is still owed.
-**Why:** CEO call. The CEO's own local plays on 2026-10-08 (P2-24 to P2-28) stand in for STOP 3.
+**Why:** CEO call (no reason recorded; the CEO's local plays on 2026-10-08, P2-24 to P2-28, are the only human play of Phase 2).
 **How to apply:** treat both Phase 2 "done when" measures as unproven. Check them in the first
 human sessions of DD Phase 3.
