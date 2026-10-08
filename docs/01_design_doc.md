@@ -594,7 +594,7 @@ them. The host runs them and every peer sees the result.
 - **Shrink:** every player shrinks to a quarter size for 60 seconds, with squeaky voices.
 - **Disco:** a mirror ball drops over the farm, music plays, and players and the creature dance until
   it ends. The creature is fully visible while it dances.
-- **Nuke:** a white flash, a mushroom cloud over the corn, and every player and the creature ragdoll
+- **Nuke:** a slow warm glow (never a white flash), a mushroom cloud over the corn, and every player and the creature ragdoll
   outward. Nobody dies and nothing is destroyed.
 - **Low gravity:** jumps float for 60 seconds.
 - **Big heads:** everyone's head, the creature's included, grows to three times size.
@@ -662,6 +662,25 @@ Every player gets at least one award, such as:
 | Nightmare | Less fuel. Day deaths more likely only through wider distance bends. No voice tells, but the whistle stays honest and the wrong-place tell always remains. |
 
 Group options: the "no live clips" toggle and streamer-safe mode.
+
+### Photosensitivity safety
+
+A player in the CEO's group is prone to seizures, so these rules hold in every mode, dev toys included.
+They follow WCAG 2.3.1 (no more than 3 flashes per second) and the Harding broadcast test rules.
+- **Never more than 3 flashes in any second,** anywhere on screen.
+- **No full-screen white or red flash.** No saturated red flashing at all.
+- **No strobe, lightning, or fast-moving high-contrast stripes or checks.**
+- **The ghost flicker is slowed to stay safe:** 2 dips per second, dimming to 30% rather than off, in
+  cold blue. Doc 07 section 4.3 holds the numbers.
+- **First launch shows a photosensitivity warning** and offers safe mode before the main menu.
+
+**Safe mode** (setting `photosensitive_safe`, per player, off by default, stored on each player's own
+PC like the other settings). It changes only that player's screen:
+- the ghost flicker becomes one slow cold-blue dim and return over 1 second, with no steps; cold blue
+  still marks it as a ghost, so it stays an honest signal;
+- the cut to black on a lunge fades over 0.5 seconds instead of cutting;
+- the whistle fallback flash becomes a steady 1-second glow;
+- dev toys show no disco lights and no nuke glow.
 
 ---
 

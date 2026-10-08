@@ -181,9 +181,12 @@ therefore absolute.
 - **The effect.** On `apply_flicker(light_id)` (doc 05 s12), `LightFlicker.flicker(light_id,
   caller_peer)` in `game/ghost/light_flicker.gd` runs a fixed pattern on that light's `LightRig`
   through `energy_override`:
-  four hard square steps, off, on, off, on, 0.12 s each, 0.48 s total, with the light colour shifted
+  four square steps, dim, on, dim, on, 0.25 s each, 1.0 s total (2 dips per second, D-046: never
+  above 3 flashes per second), each dip to 30% energy rather than off, with the light colour shifted
   to cold white-blue `#BFD8FF` for the duration, then back to the previous colour and energy over
-  0.1 s (`placeholder`, tune by feel). Hard steps and the cold colour are what separate it from
+  0.1 s (`placeholder`, tune by feel within D-046). With `photosensitive_safe` on (doc 01
+  "Photosensitivity safety"), that player sees one smooth cold-blue dim to 50% and back over 1.0 s
+  instead. Square steps and the cold colour are what separate it from
   dimming (smooth, warm, slow) and from a blow-out (single instant off, warm puff, stays off).
   Lanterns, bulbs, porch lights, moonflower glow and cart lanterns can all be flickered; the pattern
   is the same for all. A ghost has a short per-ghost cooldown (doc 01 "Ghosts"; value in doc 02).

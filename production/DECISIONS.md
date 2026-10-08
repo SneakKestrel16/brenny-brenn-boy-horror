@@ -362,3 +362,15 @@ dances, fully visible), nuke (ragdoll, no deaths), low gravity, big heads, confe
 chicken. Toys never touch save, coins, debt or deaths; sessions that used one log `dev_toy` so doc 09
 measures skip them; disco never flickers lights (the ghost flicker stays unique, doc 01 "Ghosts").
 Built after DD Phase 4. **Why:** CEO.
+
+### D-046 · 2026-10-08 · CEO · Photosensitivity safety and safe mode
+A player in the CEO's group is prone to seizures. Doc 01 "Photosensitivity safety" sets rules for every
+mode: at most 3 flashes per second (WCAG 2.3.1), no full-screen white or red flash, no strobe,
+lightning or fast high-contrast patterns. The ghost flicker (doc 07 s4.3) changes from 4 hard
+off/on steps at 0.12 s (about 4 per second, unsafe) to dips to 30% at 0.25 s (2 per second). The
+nuke toy (D-045) glows instead of flashing. New per-player setting `photosensitive_safe` (doc 05 s16),
+offered by a first-launch warning: one smooth cold-blue dim for the flicker, a 0.5 s fade for the
+lunge cut, a steady glow for the whistle fallback, no disco lights or nuke glow. Nothing built yet
+flashes (`LightRig` is slew-limited to 0.2 s, the ghost flicker is Phase 3); the setting and warning
+ship with the ghost flicker. QA adds a doc 09 check when the flicker lands: log light transitions and
+fail any light passing 3 per second. **Why:** CEO; player safety outranks the flicker's punch.

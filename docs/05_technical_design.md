@@ -652,7 +652,9 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   (0 to 1, each sets its bus, muted at 0; Q-032, doc 08 section 10), `voice_setting` (`unchosen` /
   `off` / `lobby_lines`) and `lines_recorded` (P2-03 sets it), `keybinds`, `mic_device`,
   `quality_preset`, `render_scale`, `shadow_quality`, `vsync`, `fps_cap`, `window_mode`, `resolution`,
-  `monitor`, `brightness`. Streamer-safe and denoise are not built. There are no voice
+  `monitor`, `brightness`, `photosensitive_safe` (default false; asked on first launch; doc 01
+  "Photosensitivity safety", D-046; read live by `LightFlicker`, the lunge cut and the dev toys).
+  Streamer-safe and denoise are not built. There are no voice
   subtitles (D-019).
 - **Settings screen** (`game/ui/settings_menu.gd`, shared by the main menu and the pause menu), four tabs:
   - **Keybinds:** every non-`ui_*` InputMap action. Click an action, press the new key or mouse button;
@@ -1023,7 +1025,7 @@ Raised in `production/QUESTIONS.md` (Q-019 onward):
 
 - **Cap.** `Game.max_players()` reads `player_scaling.json` `max_players` (6). `Game.BASE_PLAYERS` (4) is the
   size the game is built around. `Net.host` opens `max_players` connections (one more than the clients allowed).
-- **"Farm is full" (doc 06 s2).** When a peer connects and `Game.players.size() >= max_players()` (bots count),
+- **"Farm is full" (doc 06 s2).** When a peer connects and `Game.humans() >= max_players()` (bots do not count: a joining human drops a bot, below),
   the host logs `join_refused` (`peer`, `reason` `full`, `players`), sends `apply_join_refused(&"full")` to that
   peer only, and drops it 0.5 s later (an immediate drop beat the RPC). While it waits, `Net.to_peers` and
   `send_bytes` skip it (`_refused`) and its disconnect is not a `player_left`. The joiner prints the refusal,
@@ -1034,7 +1036,7 @@ Raised in `production/QUESTIONS.md` (Q-019 onward):
 - **Headcount scaling** has one reader: `Data.scaled(v, kind, players = 0)` reads `pct_by_players` for
   `Game.player_count()` (roster size incl. bots and ghosts; a count with no entry reads 100%). Bills use it
   (`death.gd`); the trap setter and disturbance budget call the same function (doc 02 s11).
-- **`--bots=N`** adds `min(N, BASE_PLAYERS - roster size)` bots when `Main` loads (`bots.gd`): never past 4.
+- **`--bots=N`** adds `min(N, BASE_PLAYERS - roster size)` bots when `Main` loads (`bots.gd`): never past 4. A human joining while the roster (bots included) is past 4 makes `bots.gd` drop the newest bot (erase from `Game.players`, free its node, resend the roster, `player_left` with `bot:true, reason:"human_joined"`), so bots never push a match past the base count and never block a human.
   Bots joined later by real players are not counted. On `--full-farm` a bot spawns, streams and stands
   (`bot_route.gd` is Phase 1 only; `bot.gd` skips `_run`).
 - **`net_bandwidth`** (`Net._process`, every 10 s, every peer): ENet host counters plus 28 B of UDP/IPv4
