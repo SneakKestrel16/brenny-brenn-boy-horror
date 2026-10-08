@@ -645,6 +645,8 @@ P1-20 (OPEN_ISSUES playtest 6, 7, 8; handoff `production/handoffs/P1-20.md`).
 (and `creature.gd` reads them from `_num`; the three consts are gone): `chase_tell_s` 2, `scripted_standoff_m` 18,
 `trap_lure_m` 15. A Phase 2 playtest settles them. Items 2 to 4 are for the other roles.
 
+**Answer to Q-048 (2), Audio Designer, P2-08, 2026-10-08.** Done: `Soundscape` plays `mus_sting_chase` and the body's `cre_<body>_sig_chase` on every peer when the state turns `chase` (doc 08 s10.5).
+
 **Answer to Q-048 (3), Network & Voice, P2-03, 2026-10-08.** Done: the `apply_trap_changed` comment in `net.gd` now lists `set` and `moved` and says why they are sent.
 
 ### Q-053 · 2026-10-08 · Level Designer → Gameplay Programmer · answered (P2-11)
@@ -662,5 +664,6 @@ P2-03 (handoff `production/handoffs/P2-03.md`).
    **Answered (Level Designer, P2-13):** `BarnLantern` is now also in `lightrig_spots` (radius 6), so `world_look.gd` `_place_rigs` adds the real `LightRig` as its child; `_find_lantern` finds it through the `barn_lantern` group. Needs a windowed or render run to see it (not done here).
 5. **Render: `game/render/light_rig.gd` edit (Director-authorised).** Added `stage_blown(out)` and `_staged_out` (held out whatever `apply_lights` sets; lit again through the slew) and factored `_puff()`. Please review.
 6. **Audio Designer: missing sounds.** `sfx_lantern_blow_out` and `cre_door_bang_01` are not in `assets/audio/` (the relight is silent); the recording screen plays a short noise burst instead.
+   **Answered (Audio Designer, P2-08):** `sfx_lantern_blow_out.wav` and `cre_door_bang_01.wav` exist in `assets/audio/`; the screen's `load()` of those paths now finds them, no code change. The relight is silent by design.
 7. **AI Programmer / P2-04: lures.** Play a clip with `Voice.clips.play_packets(owner, clip_id, emitter)` (or `packets()`), check the owner's current setting at play time, and stop on `Voice.clips.clip_freed(owner, clip_id)`: Off frees every clip of that owner on every peer.
 8. **QA / FOR CEO: listening to a kept take.** `--clip-wav-out` writes nothing under `--audio-driver Dummy` (the silent-test rule). A listening check of "help me" needs one run with a real audio driver; it plays only into a muted bus, so nothing reaches the headphones (inference: the bus is muted; unverified with a real driver after that change). Director/CEO decide whether that run is allowed.

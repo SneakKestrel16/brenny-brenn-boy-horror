@@ -20,13 +20,28 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 	&"vox_stranger_come": {"n": 0, "bus": &"Voice", "unit": 6.0, "max": 80.0, "db": -8.0},
 	&"vox_stranger_lost": {"n": 0, "bus": &"Voice", "unit": 6.0, "max": 80.0, "db": -8.0},
 	&"vox_stranger_hello": {"n": 0, "bus": &"Voice", "unit": 6.0, "max": 80.0, "db": -8.0},
+	&"cre_door_bang": {"n": 1, "bus": &"Creature", "unit": 8.0, "max": 90.0, "db": -4.0},
+	&"sfx_lantern_blow_out": {"n": 0, "bus": &"SFX", "unit": 4.0, "max": 40.0, "db": -6.0},
+	&"mus_sting_chase": {"n": 0, "bus": &"Music", "db": -6.0},
 }
+## Chase signature loops, one per body (doc 08 sections 5.3, 6): positional on the creature, loud (placeholder).
+const SIG_UNIT := 8.0
+const SIG_MAX := 90.0
+const SIG_DB := -6.0
+## Kill-warning heartbeat (OPEN_ISSUES playtest 8, P2-08 trial): local, rises over the chase. Placeholder numbers.
+const CHASE_HEARTBEAT := true
+const HEART_DB := [-34.0, -22.0]  ## doc 08 section 8 "Still" range
+const HEART_PITCH := [1.0, 1.5]
+const HEART_RAMP_S := 8.0
+const BARN_DB := -34.0  ## barn lobby bed (the file is normalised loud: a brown-noise room tone); placeholder
+const BARN_FADE_S := 2.0
 const STRANGER_LINES: Array[StringName] = [&"vox_stranger_over_here", &"vox_stranger_help",
 		&"vox_stranger_anyone", &"vox_stranger_come", &"vox_stranger_lost", &"vox_stranger_hello"]
 ## Layer levels in dB: [day, night] (doc 08 section 4.1, placeholder). No day insect bed: day is wind only.
 const LAYERS := {
 	&"wind": {"file": "amb_wind_loop", "day": -26.0, "night": -20.0},
 	&"insect_night": {"file": "amb_insect_bed_night", "day": -80.0, "night": -28.0},
+	&"barn": {"file": "amb_barn_lobby_loop", "day": BARN_DB, "night": BARN_DB},  # gain by _barn, not the phase
 }
 const WIND_DROP_DB := 18.0  ## doc 08 section 4.3 stalk
 const BED_OFF_DB := 60.0
@@ -42,6 +57,10 @@ var recent: Array[StringName] = []  ## last 8 sound ids (doc 08 section 10.4)
 var _players: Dictionary = {}  ## layer -> AudioStreamPlayer
 var _night := 0.0  ## 0 day bed, 1 night bed; equal-power crossfade
 var _night_target := 0.0
+var _barn := 0.0  ## 1 while in the lobby or recording (the barn bed)
+var _sig: AudioStreamPlayer3D  ## chase signature, a child of the creature node
+var _heart: AudioStreamPlayer
+var _chase_t := 0.0
 var _tell_db := {&"bed": 0.0, &"wind": 0.0}  ## offset below base, set only through _tell_target
 var _tell_target := {&"bed": 0.0, &"wind": 0.0}
 var _tell_rate := {&"bed": 60.0, &"wind": 9.0}  ## dB per second
@@ -75,6 +94,7 @@ func _ready() -> void:
 
 ## Free players and drop cached streams so no AudioStreamWAV / playback outlives the tree ("resources still in use at exit").
 func _exit_tree() -> void:
+	_stop_chase_sound()
 	for p in _players.values():
 		p.stop()
 		p.stream = null
@@ -128,6 +148,13 @@ func set_creature_state(state: StringName, body: StringName, snap: bool = false)
 	creature_state = state
 	creature_body = body
 	_dropped_t = 0.0
+	if state == &"chase":
+		if was != &"chase" and not snap:
+			play_2d(&"mus_sting_chase")  # doc 08 section 5.3: once on entry, every peer (Q-048 (2))
+			Log.event(&"audio_chase_cue", {"body": String(body)})
+		_start_chase_sound()
+	else:
+		_stop_chase_sound()
 	match state:
 		&"stalk", &"chase":
 			_tell_target.bed = BED_OFF_DB
@@ -145,6 +172,43 @@ func set_creature_state(state: StringName, body: StringName, snap: bool = false)
 	_log_state()
 
 
+## Signature loop on the creature node (moves with it), plus the local kill-warning heartbeat.
+func _start_chase_sound() -> void:
+	_stop_chase_sound()
+	_chase_t = 0.0
+	var c := get_tree().get_first_node_in_group(&"creature") as Node3D
+	var sig_id := "cre_%s_sig_chase" % String(creature_body).trim_prefix("body_")  # creature_body is "body_gaunt" etc.
+	var s := _stream(sig_id, true)
+	Log.event(&"audio_chase_sig", {"id": sig_id, "stream": s != null, "creature": c != null})
+	if c and s:
+		_sig = SoundEmitter.new()
+		_sig.stream = s
+		_sig.bus = &"Creature"
+		_sig.unit_size = SIG_UNIT
+		_sig.max_distance = SIG_MAX
+		_sig.volume_db = SIG_DB
+		c.add_child(_sig)
+		_sig.play()
+	var h := _stream("sfx_still_heartbeat_loop", true)
+	if CHASE_HEARTBEAT and h and not Game.is_ghost(Game.local_peer()):
+		_heart = AudioStreamPlayer.new()
+		_heart.stream = h
+		_heart.bus = &"SFX"
+		_heart.volume_db = HEART_DB[0]
+		add_child(_heart)
+		_heart.play()
+
+
+func _stop_chase_sound() -> void:
+	for n in [_sig, _heart]:
+		if is_instance_valid(n):
+			n.stop()
+			n.stream = null  # no playback may outlive the tree ("resources still in use at exit")
+			n.queue_free()
+	_sig = null
+	_heart = null
+
+
 func _return_layers(bed_s: float, wind_s: float) -> void:
 	_tell_target.bed = 0.0
 	_tell_target.wind = 0.0
@@ -160,12 +224,19 @@ func set_phase(phase: StringName, snap: bool = false) -> void:
 
 
 func _process(delta: float) -> void:
+	_barn = move_toward(_barn, 1.0 if _in_barn() else 0.0, delta / BARN_FADE_S)
+	if is_instance_valid(_heart):
+		_chase_t += delta
+		var k := clampf(_chase_t / HEART_RAMP_S, 0.0, 1.0)
+		_heart.volume_db = lerpf(HEART_DB[0], HEART_DB[1], k)
+		_heart.pitch_scale = lerpf(HEART_PITCH[0], HEART_PITCH[1], k)
 	_night = move_toward(_night, _night_target, delta / PHASE_FADE_S)
 	if creature_state in [&"stalk", &"chase"]:
 		_dropped_t += delta
 		# Failsafe (doc 08 section 4.3): a lost state message must not leave the farm silent.
 		if _dropped_t > (30.0 if creature_state == &"stalk" else 45.0):
 			_return_layers(8.0, 10.0)
+			_stop_chase_sound()
 	for k in _tell_db:
 		_tell_db[k] = move_toward(_tell_db[k], _tell_target[k], _tell_rate[k] * delta)
 	_apply_gains()
@@ -175,12 +246,24 @@ func _process(delta: float) -> void:
 		_log_state()
 
 
+## The barn bed plays in the lobby and while the recording screen is open (anywhere).
+func _in_barn() -> bool:
+	if Game.in_lobby:
+		return true
+	for c in Voice.get_children():
+		if c is RecordingScreen:
+			return true
+	return false
+
+
 func _apply_gains() -> void:
 	var g_night := sin(_night * PI * 0.5)
 	for id in _players:
 		var cfg: Dictionary = LAYERS[id]
 		var db := SILENT_DB
-		if id == &"wind":
+		if id == &"barn":
+			db = cfg.night + linear_to_db(_barn) if _barn > 0.001 else SILENT_DB
+		elif id == &"wind":
 			db = lerpf(cfg.day, cfg.night, _night) - _tell_db.wind
 		else:
 			var share := g_night

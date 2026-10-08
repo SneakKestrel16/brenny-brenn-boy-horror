@@ -206,14 +206,14 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | P2-02 | Level Designer | Full farm: second field, corn between the two fields, 4-player spawns, pegboard and recording-spot markers (doc 04) | done | P2-01 |
 | P2-10 | Gameplay | Host/join menu, barn lobby before the match, pause menu with voice setting and push-to-talk (doc 05 s16, Q-042, Q-047) | done | P2-01 |
 | P2-03 | Network & Voice | Staged barn recording: lobby lines, chatter and voice settings, clip capture and pre-share to all peers (doc 06 s11-12) | done | P2-10 |
-| P2-04 | AI Programmer | Replay recorded clips as lures, voice mimicry choice, tells and success logging (doc 03 s12) | todo | P2-03 |
+| P2-04 | AI Programmer | Replay recorded clips as lures, voice mimicry choice, tells and success logging (doc 03 s12) | in progress | P2-03 |
 | P2-11 | Gameplay | Trap sweeps, player side: disarm, fill pit with a shovel, flags, hang traps on the pegboard (doc 05 s11) | in progress (QA-P2-11 crash fix) | P2-02, P2-12 |
 | P2-05 | AI Programmer | Night traps on the full farm from doc 02 s11 counts; pegboard theft and lock (doc 03 s9) | todo | P2-02, P2-11, P2-12 |
 | P2-06 | Gameplay | Dawn respawn and medical bills, day deaths billed at next dawn (doc 02 s8) | done | P2-12 |
 | P2-07 | Gameplay | Up to 4 players, 5 and 6 scaled (D-038): roster, spawn, player cap from data, bots fill to 4 (doc 05, `player_scaling.json`) | done | P2-02 |
 | P2-13 | Game Designer, Level Designer | 5 and 6 players (D-038): scaling data to 6, 6 barn spawns | done (spawn scene committed with P2-14) | P2-12, P2-02 |
 | P2-14 | Level Designer, Gameplay | Field plots scale above 4 players (D-039): 32 plot sites, locked by headcount | in progress | P2-13 |
-| P2-08 | Audio Designer | Clip playback tells, chase sting (Q-048), barn ambience for the recording spot | todo | P2-03 |
+| P2-08 | Audio Designer | Clip playback tells, chase sting (Q-048), barn ambience for the recording spot | done (CEO listen owed) | P2-03 |
 | P2-09 | QA | Review each P2 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 2 gate | in progress | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09

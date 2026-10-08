@@ -533,6 +533,40 @@ state and body last received, the gain in dB of each `bed`/`wind` layer, and the
 played. A tester reports "the bed didn't drop" by quoting the client's `peer_<id>.jsonl`. The event
 needs a line in doc 05's event list (Q-035). The F3 overlay shows the same numbers on the host.
 
+### 10.5 Phase 2 as built (P2-08)
+
+All `placeholder`, rendered by `assets/audio/src/<id>.scd`, unheard by the author. Measured with `render.py`
+(peak -1 dBFS for all; RMS dBFS in brackets): `mus_sting_chase` 3.2 s stereo (-17.7), `cre_gaunt_sig_chase`
+(-28.0), `cre_scarecrow_sig_chase` (-21.7), `cre_boar_sig_chase` (-18.3), `cre_husk_sig_chase` (-19.3), each
+4.0 s mono loop whose tail is dark before the seam (husk: continuous pulses, envelope peak at 18 Hz,
+checked by FFT of the 400 Hz envelope); `sfx_still_heartbeat_loop` 3.0 s (-21.2); `vox_crackle_loop` 4.0 s,
+faded at both ends; `amb_barn_lobby_loop` 8.0 s stereo, first/last 20 ms within 1 dB; `sfx_lantern_blow_out`
+0.8 s; `cre_door_bang_01` 1.0 s.
+
+- **Chase (Q-048 (2)).** `Soundscape.set_creature_state(chase)` on every peer: `mus_sting_chase` once
+  (`Music`, non-positional, -6 dB; not on a late-join snap), `cre_<body>_sig_chase` as a looping
+  `SoundEmitter` child of the creature node (`Creature` bus, -6 dB, unit 8 m, max 90 m), both stopped
+  when the state leaves `chase` (and by the 45 s failsafe). The bed and wind drop is unchanged (4.3). Log
+  event `audio_chase_cue {body}` on entry. Levels are by ear later (CEO).
+- **Kill-warning heartbeat (trial, OPEN_ISSUES playtest 8).** While in `chase`, local only: `sfx_still_heartbeat_loop`
+  on `SFX`, -34 to -22 dB and pitch 1.0 to 1.5 over 8 s. `CHASE_HEARTBEAT` in `soundscape.gd` switches it off.
+  Inference: it warns a player who has not yet seen the creature; a playtest settles whether it helps or spoils.
+- **Barn bed.** `amb_barn_lobby_loop` fades in over 2 s (-34 dB) while `Game.in_lobby` or the recording screen
+  is open, over the wind. No day music, no score (CEO, Phase 1 playtest).
+- **Recording staging.** `recording_screen.gd` already loads `assets/audio/sfx_lantern_blow_out.wav` and
+  `cre_door_bang_01.wav`; it now finds them (it fell back to a noise burst). Both are also in the `Soundscape`
+  catalog for `play_3d`. The relight stays silent.
+- **Clip tells (`game/audio/voice_chain.gd`, `VoiceChain`).** `bus_for(tell)` creates (idempotently, under
+  `Voice`) `VoiceBase`, `VoiceEcho` (`AudioEffectDelay` 180 ms, -18 dB, one tap, no feedback),
+  `VoicePitchUp` / `VoicePitchDown` (`AudioEffectPitchShift` 1.06 / 0.94) and returns the bus for `none`,
+  `echo`, `pitch_up`, `pitch_down`, `no_crackle`. `attach_crackle(player, tell, bus)` adds `vox_crackle_loop`
+  at -40 dB (fixed level, a stand-in for -34 dB under the voice envelope) as a child, 3D if the player is
+  3D, and adds nothing for `no_crackle`. `play_clip(owner, clip_id, tell)` wraps `Voice.clips.play`. The
+  levels live in the script constants (doc 06 s9 wanted `mix_levels.gd`; this file is it). Real voices never
+  call it. Ghost-static buses are not built (Phase 3).
+- **Not done:** non-chase signatures (`_01..03`), generator, bell and other Phase 1 gaps in 10.3; hearing the
+  tells (they exist as buses with effects, listened to by no one).
+
 ## 11. Sound list
 
 **Key.** `P` = DD Phase when needed (1 to 4, doc 01 "Build Plan"). `Bus`: Mu Music, S SFX, A
@@ -741,6 +775,7 @@ because these carry the game:
 6. The whistle at 10, 30, 60 m and the church bell at the barn.
 7. The generator spin-down and low-fuel pitch drop (no sputter).
 8. The stranger lines: are they scary, or silly? Decide Q-031.
+9. Phase 2 (P2-08): the chase sting and the four chase signatures; the rising chase heartbeat (keep it or cut it?); a clip with echo, pitch up/down and no crackle against one with none; the barn bed in the lobby; the lantern blow-out and the door bang in the recording.
 
 ## 15. Gotchas
 
