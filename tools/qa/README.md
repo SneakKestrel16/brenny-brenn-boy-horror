@@ -165,6 +165,7 @@ Step by step: [playtest/checklist.md](playtest/checklist.md). Hand testers
 
 ```bash
 uv run tools/qa/package_playtest.py                     # builds/playtest_<build id>.zip for a remote tester
+uv run tools/qa/package_playtest.py --release           # clean tree, HEAD on origin/main: publishes GitHub release; installed kits self-update (docs/10_install_and_updates.md)
 uv run tools/qa/playtest.py new --session 1 --networks different --fresh B --smoke
 uv run tools/qa/playtest.py tally logs/qa/playtest_p1_s1_<ts>              # observer, second terminal
 uv run tools/qa/playtest.py auto --testers A,B,C --fresh B                # after play: does sessions, collect, report

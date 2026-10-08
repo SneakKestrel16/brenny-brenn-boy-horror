@@ -35,6 +35,9 @@ TOP = "brenny_playtest"
 EXPORT_DIR = REPO_ROOT / "builds" / "playtest"
 EXE = "Brenny Brenn Boy Horror.exe"
 BRIEF = Path(__file__).resolve().parent / "playtest" / "tester_brief.md"
+UPDATER = Path(__file__).resolve().parent / "playtest" / "update.ps1"
+REPO = "SneakKestrel16/brenny-brenn-boy-horror"
+ASSET = "brenny_playtest.zip"  # update.ps1 looks for this asset name on the latest release
 
 START_HERE = """Brenny Brenn Boy Horror: playtest build {build_id} (gray box, not the finished game)
 
@@ -42,7 +45,8 @@ START_HERE = """Brenny Brenn Boy Horror: playtest build {build_id} (gray box, no
 2. Host: double-click Host.bat. It starts the game as host on UDP port {port} and shows
    this PC's Tailscale address (100.x.y.z) to give to the other player.
    Joiner: double-click Join.bat and type the host's Tailscale address (D-024).
-   Both machines must run this same zip: a different build refuses the join.
+   Both machines must run the same build: a different build refuses the join. Host.bat and
+   Join.bat update the game from GitHub first; Update.bat does only that.
    Do not double-click the .exe itself: with no options it starts a solo session
    without the Phase 1 night.
    If Windows Firewall asks, allow it on Private networks.
@@ -74,6 +78,7 @@ PORT = 45120  # Net.DEFAULT_PORT (doc 06 section 2); Net tries the next ports if
 
 HOST_BAT = r"""@echo off
 cd /d "%~dp0"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0update.ps1"
 echo Hosting on UDP port {port}.
 echo Dev console: press the backquote key (`), then type help.
 echo Give the other player this PC's Tailscale address:
@@ -82,8 +87,14 @@ start "" "{exe}" -- --host --phase1 --dev --port={port}
 pause
 """
 
+UPDATE_BAT = r"""@echo off
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0update.ps1"
+pause
+"""
+
 JOIN_BAT = r"""@echo off
 cd /d "%~dp0"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0update.ps1"
 set /p HOSTIP=Host's Tailscale address (100.x.y.z): 
 if "%HOSTIP%"=="" exit /b 1
 start "" "{exe}" -- --join=%HOSTIP%:{port} --phase1
@@ -150,6 +161,8 @@ def write_zip(out: Path, bid: str) -> list[str]:
         z.writestr(f"{TOP}/SpatialTest.bat", SPATIAL_BAT.format(exe=EXE).replace("\n", "\r\n"))
         z.writestr(f"{TOP}/TESTER BRIEF.md", BRIEF.read_text(encoding="utf-8").replace("\n", "\r\n"))
         z.writestr(f"{TOP}/send_logs.bat", SEND_LOGS.replace("\n", "\r\n"))
+        z.writestr(f"{TOP}/update.ps1", UPDATER.read_text(encoding="utf-8").replace("\n", "\r\n"))
+        z.writestr(f"{TOP}/Update.bat", UPDATE_BAT.replace("\n", "\r\n"))
         z.writestr(f"{TOP}/BUILD.txt", bid + "\r\n")
         return z.namelist()
 
@@ -159,12 +172,21 @@ def main() -> int:
     ap.add_argument("--out", type=Path, help="default: builds/playtest_<build id>.zip")
     ap.add_argument("--godot", help="Godot console executable (else $GODOT, else CONTRACTS s1)")
     ap.add_argument("--allow-dirty", action="store_true", help="package uncommitted changes (the build id ends -dirty)")
+    ap.add_argument("--release", action="store_true", help=f"publish the zip as GitHub release <build id> with asset {ASSET} (needs a clean tree whose commit is on origin/main); players' Update.bat then fetches it")
     a = ap.parse_args()
     bid = build_id()
     if bid.endswith("-dirty") and not a.allow_dirty:
         print(f"Working tree has uncommitted changes ({bid}). Commit first, or --allow-dirty.", file=sys.stderr)
         return 2
-    out = (a.out or REPO_ROOT / "builds" / f"playtest_{bid}.zip").resolve()
+    if a.release:
+        if bid.endswith("-dirty"):
+            print("--release needs a clean tree.", file=sys.stderr)
+            return 2
+        subprocess.run(["git", "-C", str(REPO_ROOT), "fetch", "-q", "origin", "main"], check=True)
+        if subprocess.run(["git", "-C", str(REPO_ROOT), "merge-base", "--is-ancestor", "HEAD", "origin/main"]).returncode != 0:
+            print("--release needs HEAD pushed to origin/main (players download what the release says it is).", file=sys.stderr)
+            return 2
+    out = (a.out or REPO_ROOT / "builds" / ("release" if a.release else ".") / (ASSET if a.release else f"playtest_{bid}.zip")).resolve()
     if (out == REPO_ROOT or REPO_ROOT in out.parents) and (REPO_ROOT / "builds") not in out.parents:
         print("Write the zip under builds/ (gitignored) or outside the repo.", file=sys.stderr)
         return 2
@@ -173,6 +195,14 @@ def main() -> int:
     print(f"wrote {out} ({out.stat().st_size / 1e6:.1f} MB, {len(names)} files)")
     for n in names:
         print("  " + n)
+    if a.release:
+        if out.name != ASSET:
+            print(f"--release needs the zip named {ASSET} (update.ps1 looks for it).", file=sys.stderr)
+            return 2
+        head = subprocess.run(["git", "-C", str(REPO_ROOT), "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+        subprocess.run(["gh", "release", "create", bid, str(out), "-R", REPO, "--target", head, "--title", f"Build {bid}",
+                        "--notes", f"Playtest build {bid}. Players: run Update.bat or Host.bat / Join.bat. See docs/install.md."], check=True)
+        print(f"Released {bid}: https://github.com/{REPO}/releases/tag/{bid}")
     print(f"Build id {bid}: pass it to `playtest.py new --build-id {bid}` if the session runs from this zip.")
     return 0
 

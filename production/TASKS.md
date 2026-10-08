@@ -177,6 +177,7 @@ the CEO playtest.
 | P1-19 | Gameplay | Playtest fixes: visible watering and fuel cans, hold race, spectate smoothing, ghost voice muted, 12 plots open (issues 4, 9-12) | in review | P1-16 |
 | P1-20 | AI Programmer | Playtest fixes: trap clues on every peer, lures in the scripted lurk, scripted stalk keeps 18 m and no kill in the first 2 s of a chase (issues 6-8) | in review | P1-16 |
 | P1-21 | Audio Designer | Playtest fixes: no day music in docs, voice range 10 m / 120 m, +6 dB default gain (issues 1, 2) | in review | P1-16 |
+| P1-22 | Director | Auto-updater (`update.ps1`, `Update.bat`, `--release`) and install page `docs/10_install_and_updates.md` (issue 3) | in review | P1-16 |
 | P1-17 | QA | Playtest kit: session tool, observer tally, log collection, report, Windows packager with host/join launchers, tester brief | in review (Director) | P1-14 |
 
 Each owner turns their row into acceptance from the cited doc sections when starting; every task

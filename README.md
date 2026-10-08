@@ -4,6 +4,10 @@ A 2 to 4 player online co-op farming horror game: farm by day, survive the creat
 night. Built in Godot 4. The design doc, [docs/01_design_doc.md](docs/01_design_doc.md), is the
 source of truth.
 
+## Play
+
+Download and install: [docs/10_install_and_updates.md](docs/10_install_and_updates.md). The game updates itself from GitHub releases when you start it with `Host.bat` or `Join.bat`.
+
 ## Open the project
 
 1. Install **Godot 4.7.2** (standard build, not .NET). On this machine it came from winget:

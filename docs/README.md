@@ -15,6 +15,7 @@ Director, not resolved in the lower doc.
 | [07](07_art_direction_and_asset_list.md) | Art Direction & Asset List | Technical Artist | In review (PP-08) |
 | [08](08_audio_design_and_sound_list.md) | Audio Design & Sound List | Audio Designer | In review (PP-09) |
 | [09](09_playtest_plan.md) | Playtest Plan | QA / Reviewer | In review (PP-10) |
+| [10](10_install_and_updates.md) | Install and updates | Director | Done (P1-22) |
 
 File names follow `NN_snake_case_title.md`, for example `06_networking_and_voice.md`. Each doc
 gets a `gotchas` section (or a sibling `NN_gotchas.md` page once it grows) for traps that cost time.
