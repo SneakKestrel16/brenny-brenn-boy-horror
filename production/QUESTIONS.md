@@ -693,3 +693,9 @@ D-055 follow-up. `game/creature/trap_art.gd` (`class_name TrapArt`) builds the p
 
 ### Q-059 · 2026-10-08 · AI Programmer → Audio Designer, Director · open
 P3-05 (handoff `production/handoffs/P3-05.md`, doc 03 s13.1). A scare's build-up calls `Soundscape.hush(seconds)`: the insect bed off and the wind 12 dB down, then the layers return unless the creature is stalking or chasing. Doc 08 s4.4 rule 1 lets only creature state lower layers. Ask: amend doc 08 s4.4 to allow `hush` as a second layer-lowering path (P3-08), or say which path the build-up should use instead.
+
+### Q-064 · 2026-10-08 · Gameplay Programmer → Audio Designer · open
+P3-11 (handoff `production/handoffs/P3-11.md`). The scream emote plays `vox_emote_scream` (doc 08 s11.6 row: formant-synth scream, rising `Saw` 600 to 1100 Hz, 1.5 s, 3D, Voice bus). The file does not exist, so the scream is silent to players today (its 60 m `voice` Noise to the creature works). Ask: render `assets/audio/vox_emote_scream.wav` from a `src/vox_emote_scream.scd`. I added the `Soundscape` CATALOG row with `unit` 6 m, `max` 110 m, -4 dB (inference: doc 08 gives no range for it; 110 m copies the 60 m-Noise tripwire bells row in s3.2). Change the row if you want other numbers.
+
+### Q-065 · 2026-10-08 · Gameplay Programmer → Network & Voice · open
+P3-11 (handoff `production/handoffs/P3-11.md`). I added four RPCs to `game/net/net.gd` (your path), in a section marked P3-11, following the request/apply pattern already there: `request_whistle()`, `request_emote(emote_id: StringName)`, `apply_whistle(peer, position)`, `apply_emote(peer, emote_id, position)`. Doc 05 s14 and doc 06 s7 name a voice slot as the first argument of the applies; I send the ENet peer id because slots are not built (logs use peer ids too, D-012). Ask: confirm the RPCs, or move them; when slots exist, say whether the applies should switch to slots.

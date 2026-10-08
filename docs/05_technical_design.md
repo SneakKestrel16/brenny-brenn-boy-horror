@@ -627,6 +627,25 @@ Harvest Moon only (doc 01 "The Harvest Moon", doc 02 section 9). Host-owned `Car
   AI Programmer confirms, Q-019). `request_emote(emote_id)`; the host rate-limits (1 per 1 s,
   `placeholder`) and broadcasts `apply_emote`; clients play the animation on the sender's body.
   Pointing is a visible arm direction only (no marker).
+- **Whistle and emotes as built (P3-11, `game/player/whistle_emotes.gd`, node `WhistleEmotes`).** `whistle`
+  (Q) sends `request_whistle`; hold `emote_wheel` (Z) opens a four-word wheel (`game/ui/emote_wheel.gd`:
+  mouse up `wave`, right `point`, down `shrug`, left `scream`; release fires, under 25 px of mouse travel
+  picks nothing) and sends `request_emote(emote_id)`. Both keys are ignored while the dev console is open
+  and for a ghost (a ghost's Q is `spectate_prev`). The host checks, in order: the sender has a body
+  (`no_player`), is alive (`ghost`), and the whistle cooldown of **5 s** (`cooldown`; `placeholder`,
+  doc 01 "Whistle" says only "short cooldown") or the emote gap of 1 s (`rate_limit`); an unknown emote
+  id is `unknown_emote`. A refusal logs `hold_refused` (`verb` `whistle` or `emote`, `target` "") and
+  sends `apply_refused` to the sender. Accepted: the host stamps the position from its own
+  `Game.players` state, emits the Noise (`whistle` 50 m; `scream` as `voice` at byte 255, 60 m), logs
+  `whistle` or `emote` (section 18) and sends `apply_whistle(peer, position)` /
+  `apply_emote(peer, emote_id, position)` to everyone. The RPCs carry the **peer id**, not a voice slot,
+  because slots are not built (Q-065). Every peer plays `sfx_whistle` (doc 08 section 3.2: `unit_size`
+  20 m, `max_distance` 220 m) or `vox_emote_scream` (no file yet, silent) at that position and the emote
+  on the sender's body (`Player.play_emote`: a placeholder box arm that waves or points along the
+  sender's pitch, a shrug bob, a scream swell; the owner sees nothing in first person). No marker of any
+  kind. QA: `-- --autowhistle` makes a peer send two whistles and two emotes every 3 s through the real
+  request path; dev console `whistle [peer]` and `emote <kind> [peer]` go through the same host checks.
+  The by-ear placement test at 30 m and 72 m is pending a tester (OPEN_ISSUES).
 
 ## 15. Dawn Report and Season Awards screens
 
@@ -898,6 +917,8 @@ the QA changes.
 | `ghost_action` | host | `player`, `action` (`crow`, `rustle`, `static_voice`), `target` (id or null) | Same (Q-037) |
 | `lure_fooled` | host, when a recorded-line lure has `lure_result.worked` | `lure_id`, `target`, `line_id` | Doc 01 Phase 2 voice lure check (Q-037) |
 | `perf_sample` | each peer, debug runs only (`--debug-view` or `--bots`) | `avg_ms`, `max_ms`, `draw_calls`, `adapter` (`RenderingServer.get_video_adapter_name()`) | Doc 07 section 10.3 four-instance corn profile (Q-037) |
+| `whistle` | host, on an accepted whistle | `player`, `position` (`[x, z]`), `cooldown_s` | Doc 01 "Whistle"; P3-11 cooldown check |
+| `emote` | host, on an accepted emote | `player`, `emote` (`wave`, `point`, `shrug`, `scream`), `position` (`[x, z]`) | Doc 01 "Emotes"; P3-11 rate-limit check. Refusals of both are `hold_refused` with `verb` `whistle` or `emote` and `reason` `cooldown`, `rate_limit`, `unknown_emote`, `ghost` or `no_player` |
 
 The event names and fields in the first table are final; the second table is a proposal
 (`placeholder`) and adding an event never needs the Director (CONTRACTS section 10 asks only that

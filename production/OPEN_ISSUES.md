@@ -105,3 +105,25 @@ session rechecks them (P2-09, D-034).
    command. Settled by P3-05.
 5. **Taint data has two homes.** Settled in P3-02: player effects and causes in `taint.json` (doc 02 A.13),
    creature-side tracking in `creature.json` (doc 03 s19). Different values, one home each; no doc change needed.
+
+## Found in P3-11 (Gameplay, 2026-10-08)
+
+1. **The in-game whistle has not been placed by ear (pending a tester).** P3-11 built the whistle; no
+   human has heard it in play. P2-01 issue 1 (whistle 30 m 4/6, 72 m 3/6 in the standalone test) stays
+   open until this runs. Needs two people on two machines with headphones (one machine plays both
+   peers' audio, so it cannot test placement). Steps:
+   1. Host (the whistler) runs the game with `-- --dev --debug-view`; the listener joins. Stay in daylight
+      (the creature sleeps), or use the dev console `phase day`.
+   2. Both walk into the open field. On the host's F3 view, the whistler moves to stand 30 m from the
+      listener (F3 shows both dots and each facing line) at a bearing the listener does not know. Vary
+      the bearing each trial; never say it aloud.
+   3. The listener faces a fixed landmark (the barn), then looks away from the screen or closes their
+      eyes. The whistler presses Q once (the cooldown is 5 s).
+   4. The listener turns with the mouse to face where the whistle came from, without looking, then says
+      "here". The whistler reads the listener's facing line on F3: correct when it points within 45
+      degrees of the whistler's dot (inference: the 45 degree bar is not in any doc; doc 09 section 5
+      scores by marker pick).
+   5. Six trials at 30 m, then six at 72 m. Record correct out of 6 per distance in this entry and in
+      P2-01 issue 1; compare with 4/6 and 3/6. If either is below 4/6, raise it with the Audio Designer
+      (the 20 m `unit_size`, doc 08 section 9.3) and the Director (doc 08's fallback is a lantern or hat
+      flash, never a HUD marker).

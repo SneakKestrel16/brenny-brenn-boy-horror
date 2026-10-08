@@ -27,6 +27,8 @@ const HELP := """Commands (host only unless marked):
   scare <kind> [peer]       play a scare now, past the AI Director: jumpscare, shed, whisper, own_voice,
                             wrong_count, hallucination, disarm_lunge, fake_out (target defaults to you)
   trap [bear|pit]           creature sets a trap at the free trap spot nearest you (default bear)
+  whistle [peer]            whistle as a player, through the host checks (default: you)
+  emote <kind> [peer]       wave, point, shrug or scream as a player (default: you)
   kill [peer]               kill a player (default: you)
   respawn [peer]            bring a ghost back (default: you)
   debug                     toggle the debug view (F3)
@@ -258,6 +260,18 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? scare %s on %d: %s" % [a[0], target, why]
 			scares.fire(StringName(a[0]), target, {}, true)
 			return "scare %s on %d%s" % [a[0], target, " (forced past: %s)" % why if why else ""]
+		"whistle":
+			var p := _peer_arg(a, 0)
+			if p == 0:
+				return "? no such peer"
+			var why: StringName = main.get_node("WhistleEmotes").whistle(p)
+			return "%d whistled" % p if why == &"" else "refused: %s" % why
+		"emote":
+			var p := _peer_arg(a, 1)
+			if a.is_empty() or p == 0:
+				return "? emote wave|point|shrug|scream [peer]"
+			var why: StringName = main.get_node("WhistleEmotes").emote(p, StringName(a[0]))
+			return "%d: %s" % [p, a[0]] if why == &"" else "refused: %s" % why
 		"kill":
 			var p := _peer_arg(a, 0)
 			if p == 0 or Game.is_ghost(p):

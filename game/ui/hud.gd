@@ -49,8 +49,9 @@ func _ready() -> void:
 	_hint.offset_top = -150
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint.text = "CONTROLS\n%s  move\n%s  sprint (runs out, and it is loud)\n%s  crouch (quiet)\n%s  stand still (silent)\nHold %s  work the thing you look at (cans: pick up)
-%s  put a can down\nHold %s  plant a flag where you look\n%s  free the mouse" % [
-			_move_keys(), _key(&"sprint"), _key(&"crouch"), _key(&"go_still"), _key(&"interact"), _key(&"drop"), _key(&"alt_use"), _key(&"pause")]
+%s  put a can down\nHold %s  plant a flag where you look\n%s  whistle (carries far)\nHold %s  emote (move the mouse, let go)\n%s  free the mouse" % [
+			_move_keys(), _key(&"sprint"), _key(&"crouch"), _key(&"go_still"), _key(&"interact"), _key(&"drop"), _key(&"alt_use"),
+			_key(&"whistle"), _key(&"emote_wheel"), _key(&"pause")]
 	_bar = ProgressBar.new()
 	_bar.show_percentage = false
 	_bar.custom_minimum_size = Vector2(220, 14)

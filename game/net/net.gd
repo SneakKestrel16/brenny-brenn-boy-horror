@@ -610,3 +610,26 @@ func apply_hands(peer: int, shovel: bool, trap: bool) -> void:
 @rpc("authority", "call_remote", "reliable")
 func apply_cans(data: Array) -> void:
 	apply_received.emit(&"cans", [data])
+
+
+# --- Whistle and emotes (doc 05 section 14); added in P3-11 ---------------------------------------
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_whistle() -> void:
+	request_received.emit(&"whistle", _sender(), [])
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func request_emote(emote_id: StringName) -> void:
+	request_received.emit(&"emote", _sender(), [emote_id])
+
+
+## Host to all: `peer` whistled at the host-stamped `position` (doc 06 names a slot; slots are not built).
+@rpc("authority", "call_remote", "reliable")
+func apply_whistle(peer: int, position: Vector3) -> void:
+	apply_received.emit(&"whistle", [peer, position])
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_emote(peer: int, emote_id: StringName, position: Vector3) -> void:
+	apply_received.emit(&"emote", [peer, emote_id, position])

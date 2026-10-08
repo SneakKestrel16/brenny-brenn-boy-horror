@@ -50,6 +50,10 @@ func _ready() -> void:
 	sweep.set_script(load("res://game/traps_player/trap_sweep.gd"))
 	sweep.name = "TrapSweep"
 	add_child(sweep)
+	var whistle := Node.new()  # P3-11: whistle and emotes (game/player/), after Players, whose bodies it animates
+	whistle.set_script(load("res://game/player/whistle_emotes.gd"))
+	whistle.name = "WhistleEmotes"
+	add_child(whistle)
 	add_child(PauseMenu.new())  # P2-10
 	add_child(DebugView.new())  # P1-12: hidden unless --debug-view or F3 (host)
 	if DevConsole.enabled():  # D-031: ` opens it in debug runs or with --dev

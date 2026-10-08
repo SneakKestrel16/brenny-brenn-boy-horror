@@ -32,6 +32,9 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 	&"sfx_ragdoll_thud": {"n": 2, "bus": &"SFX", "unit": 4.0, "max": 40.0, "db": -4.0},
 	&"sfx_door_slam": {"n": 0, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": -2.0},
 	&"sfx_crow_burst": {"n": 0, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": -4.0},
+	# P3-11 emote scream (doc 08 section 11.6). No file yet, silent until the Audio Designer renders it.
+	# unit/max are inference: a 60 m Noise, like the tripwire bells row in section 3.2.
+	&"vox_emote_scream": {"n": 0, "bus": &"Voice", "unit": 6.0, "max": 110.0, "db": -4.0},
 }
 ## Scare build-up (doc 03 section 13 "insects cut", "silence"), through `hush()`. Placeholder depth.
 const HUSH_WIND_DB := 12.0

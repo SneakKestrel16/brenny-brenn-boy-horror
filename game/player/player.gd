@@ -35,6 +35,8 @@ var _shovel: MeshInstance3D  ## P2-11 placeholder props
 var _trap_prop: MeshInstance3D
 var _shape: CollisionShape3D
 var _mesh: MeshInstance3D
+var _arm: Node3D  ## P3-11 emote arm, made on first use
+var _emote_tw: Tween
 var _seq := 0
 var _send_t := 0.0
 var _sprint_any := false  ## sprinted at any point since the last packet (the host judges the whole interval's speed)
@@ -237,6 +239,45 @@ func _peer_gain_db() -> float:
 func shake(seconds: float, mult: float) -> void:
 	_shaken_s = seconds
 	speed_mult = mult
+
+
+## P3-11 (doc 05 s14): an emote on this body, every peer. Placeholder motion, no art or animation yet:
+## an arm (child of the body mesh, so seen exactly where the body is) waves or points, a shrug bobs the
+## body, a scream swells it. The owner sees nothing on itself (first person, its mesh is hidden).
+func play_emote(kind: StringName) -> void:
+	if _emote_tw:
+		_emote_tw.kill()
+	if not _arm:
+		_arm = Node3D.new()
+		_arm.position = Vector3(RADIUS, 0.4, 0.0)  # shoulder, in body-mesh space (placeholder)
+		var a := MeshInstance3D.new()
+		var b := BoxMesh.new()
+		b.size = Vector3(0.1, 0.6, 0.1)
+		a.mesh = b
+		a.position.y = -0.3  # hangs from the shoulder pivot
+		_arm.add_child(a)
+		_mesh.add_child(_arm)
+	_arm.rotation = Vector3.ZERO
+	_mesh.scale = Vector3.ONE
+	_arm.visible = kind == &"wave" or kind == &"point"
+	_emote_tw = create_tween()
+	match kind:
+		&"wave":
+			_arm.rotation.x = PI
+			for i in 3:
+				_emote_tw.tween_property(_arm, "rotation:z", 0.4, 0.2)
+				_emote_tw.tween_property(_arm, "rotation:z", -0.4, 0.2)
+		&"point":
+			_arm.rotation.x = PI / 2.0 + pitch  # along the look direction
+			_emote_tw.tween_interval(1.5)
+		&"shrug":
+			_emote_tw.tween_property(_mesh, "scale:y", 1.08, 0.2)
+			_emote_tw.tween_property(_mesh, "scale:y", 1.0, 0.3)
+		&"scream":
+			_emote_tw.tween_property(_mesh, "scale", Vector3(1.2, 1.05, 1.2), 0.15)
+			_emote_tw.tween_interval(0.8)
+			_emote_tw.tween_property(_mesh, "scale", Vector3.ONE, 0.3)
+	_emote_tw.tween_callback(func() -> void: _arm.visible = false)
 
 
 ## Dead (doc 05 section 14): no body, no collision. Local: fly with the camera. Others: hidden from the living.

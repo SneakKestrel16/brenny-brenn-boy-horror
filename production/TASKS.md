@@ -405,7 +405,7 @@ that belong to Phase 4, so these wait: the `harvest_moon` profile and acts (doc 
 | P3-08 | Technical Artist, Audio Designer | Taint stain and Taint heartbeat; scare and Director sounds (doc 07, doc 08) | todo | P3-05, P3-07 |
 | P3-09 | Gameplay, Technical Artist | Ghosts: lantern flicker, crow possession and corn rustle (doc 01 "Ghosts", doc 05 s14, doc 03 s13, doc 07) | todo | P3-01 |
 | P3-10 | Network & Voice, Audio Designer | Ghost voice: the ghost static chain on dead players' voice to the living and on dead-voice lures (doc 06 s9, D-011); today ghost voice is muted (OPEN_ISSUES playtest 9) | todo | P3-09 |
-| P3-11 | Gameplay | Whistle and emotes (doc 05 s14); recheck whistle placement by ear (OPEN_ISSUES P2-01 review 1) | todo | P3-01 |
+| P3-11 | Gameplay | Whistle and emotes (doc 05 s14); recheck whistle placement by ear (OPEN_ISSUES P2-01 review 1) | done (by-ear test pending a tester, OPEN_ISSUES) | P3-01 |
 | P3-12 | Gameplay, Technical Artist | Dawn Report screen: headlines, obituaries, hero actions, flags placed (doc 05 s15, doc 03 s17, doc 07 card style) | todo | P3-02 |
 | P3-13 | QA | Review each P3 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 3 gate plus the carried measures | todo | all above |
 
