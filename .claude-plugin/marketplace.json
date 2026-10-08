@@ -1,0 +1,5 @@
+{
+  "name": "brenny-mods",
+  "owner": { "name": "sneakkestrel16" },
+  "plugins": [{ "name": "free-delegate", "source": "./tools/claude-mods/free-delegate" }]
+}
