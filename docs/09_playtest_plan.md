@@ -190,6 +190,11 @@ flash on the whistler's lantern or hat. Record the failing cell and what was cha
 **Logs.** Written by the tester's client. `check_logs.py` lists the cells not yet tested, so a run that
 skips one shows it.
 
+**Result (2026-10-08, D-033).** One tester, 48 trials, four-bearing layout. Voice 10/30/60/72 m: 5/6,
+6/6, 5/6, 6/6. Whistle: 6/6, 4/6, 5/6, 3/6. Whistle at 30 m (67%) is below 80% but above the 60%
+floor. The CEO closed the gate on this run, with no second tester and no retune. The whistle misses
+are OPEN_ISSUES "Found at the P2-01 review" 1.
+
 ## 6. Trap race check
 
 Doc 01 "Testing": "log whether a solo, untainted player who pries at once survives." Doc 01 "Day

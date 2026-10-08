@@ -192,19 +192,146 @@ Approved by the CEO 2026-10-08. Source: doc 01 "Build Plan > Phase 2", doc 06 se
 section 8 (medical bill), doc 04 (full layout). **Done when** (doc 01): a friend's recorded voice
 fools someone, and trap sweeps feel worth doing. Checked in 2 sessions, one tester who hasn't read doc
 01, plus log measures (doc 09). The Phase 1 lure walk-toward measure (30%) is deferred to Phase 3 (CEO, 2026-10-08). The 10/30/60 m spatial
-test is still owed from STOP 2; run it in the first Phase 2 session. **STOP 3** after P2-09.
+test is closed (CEO, D-033). **STOP 3** after P2-09.
+
+P2-01 review (D-034): sabotage from the disturbance budget moves to DD Phase 3, because doc 01 lists
+only pegboard theft for Phase 2 and the AI Director spends the budget (doc 03 s10). Three rows are
+added for what the Phase 2 rows need and nothing builds yet: a menu and lobby (P2-10), the player side
+of trap sweeps (P2-11), and Phase 2 data (P2-12).
 
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
-| P2-01 | Director | Between-phase review: read Phase 1 logs and notes, add new problems to OPEN_ISSUES, settle what Phase 2 needs, turn rows below into acceptance | todo | — |
+| P2-01 | Director | Between-phase review: read Phase 1 logs and notes, add new problems to OPEN_ISSUES, settle what Phase 2 needs, turn rows below into acceptance | done | — |
+| P2-12 | Game Designer | Phase 2 data: medical bill, night trap counts, pegboard lock, recording takes; Q-048 (1) numbers | todo | P2-01 |
 | P2-02 | Level Designer | Full farm: second field, corn between the two fields, 4-player spawns, pegboard and recording-spot markers (doc 04) | todo | P2-01 |
-| P2-03 | Network & Voice | Staged barn recording: lobby lines, chatter and voice settings, clip capture and pre-share to all peers (doc 06 s11-12) | todo | P2-01 |
+| P2-10 | Gameplay | Host/join menu, barn lobby before the match, pause menu with voice setting and push-to-talk (doc 05 s16, Q-042, Q-047) | todo | P2-01 |
+| P2-03 | Network & Voice | Staged barn recording: lobby lines, chatter and voice settings, clip capture and pre-share to all peers (doc 06 s11-12) | todo | P2-10 |
 | P2-04 | AI Programmer | Replay recorded clips as lures, voice mimicry choice, tells and success logging (doc 03 s12) | todo | P2-03 |
-| P2-05 | AI Programmer | Pegboard theft and sabotage from the disturbance budget (doc 03 s10) | todo | P2-02 |
-| P2-06 | Gameplay | Dawn respawn and medical bills, day deaths billed at next dawn (doc 02 s8) | todo | P2-01 |
+| P2-11 | Gameplay | Trap sweeps, player side: disarm, fill pit with a shovel, flags, hang traps on the pegboard (doc 05 s11) | todo | P2-02, P2-12 |
+| P2-05 | AI Programmer | Night traps on the full farm from doc 02 s11 counts; pegboard theft and lock (doc 03 s9) | todo | P2-02, P2-11, P2-12 |
+| P2-06 | Gameplay | Dawn respawn and medical bills, day deaths billed at next dawn (doc 02 s8) | todo | P2-12 |
 | P2-07 | Gameplay | Up to 4 players: roster, spawn, player scaling data, bots fill (doc 05, `player_scaling.json`) | todo | P2-02 |
 | P2-08 | Audio Designer | Clip playback tells, chase sting (Q-048), barn ambience for the recording spot | todo | P2-03 |
 | P2-09 | QA | Review each P2 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 2 gate | todo | all above |
+
+Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
+s3 "DD Phase 2" reads, and leaves a handoff note. Placeholders cite doc 01 or say `placeholder`.
+
+### P2-12 Phase 2 data
+Owner: Game Designer. Output: `data/*.json` with schemas, doc 02 or 03 updated where a number moves.
+Acceptance:
+- `medical_bill.json` from doc 02 s8 (first, later, cap per headcount; 4-coin floor; overflow to the
+  final payment). `Data` loads it (`medical_bill` is already in `Data.TABLES`).
+- Night trap counts per day and headcount from doc 02 s11 (bear / pit / bells). Bells are not built in
+  Phase 2; say how days 4 to 6 read without them (Director proposal: bells count as nothing).
+- Pegboard lock price (doc 02 s10: 40) and theft cap (one trap a night with the lock).
+- Recording take weights (loudness, pitch spread; doc 06 s11 `placeholder`s) and the seven fixed
+  lines in `voice_lines.json` with their staging cue (lantern out, door bang).
+- Answer Q-048 (1): confirm or set `CHASE_TELL_S`, `SCRIPTED_STANDOFF_M`, `TRAP_LURE_M`, and move the
+  ones that stay into `creature.json`.
+
+### P2-02 Full farm
+Owner: Level Designer. Output: `game/world/farm.tscn` (full doc 04 layout), `build_farm.py` updated.
+Acceptance:
+- Both fields, the corn between them, the corn ring and strips, barn, shed, farmhouse, well, generator
+  as doc 04 s3 to s5. The Phase 1 scene stays loadable for `--phase1`.
+- Markers: 22 `trap_spots` with `edge`/`row`/`deep` kinds (doc 04 s7.1), cover points, 4 player
+  spawns inside the barn (doc 04 s4 "Respawn and lobby"), pegboard at (-15, 30.5) with
+  `pegboard_bear_slots` slots, a recording spot and lantern marker in the barn.
+- Doc 04 s8 distance checks rerun on the built scene (15 m lure rule, 72 m far field).
+- Corn walkable for players (P1-18) on the new corn. Doc 07 s10 corn budget measured with 4
+  instances (Q-046 (2): say total or in view).
+
+### P2-10 Menu, lobby, pause menu
+Owner: Gameplay. Output: `game/ui/`, `game/core/` changes.
+Acceptance:
+- Main menu: Host, Join (code or raw IP, D-024), Settings, Quit. A bare exe needs no `.bat` (Q-047 (3)).
+- Lobby: after joining, players stand in the dark barn (doc 04 s4). The host starts the match; start
+  waits for clip pre-share (doc 06 s12 step 5, hook for P2-03).
+- Pause and settings menus: voice setting `off` / `lobby_lines` (doc 06 s11 "Voice settings", sends
+  `request_voice_setting`), `push_to_talk` in `Settings.DEFAULTS` with a toggle (Q-042 (2)), the six
+  volume sliders (doc 05 s16). Menu lines follow doc 06 s11 copy rules.
+- Recording entry: "Record lines" for unchosen and Lobby-lines players, "Re-record" and "Skip" later
+  (doc 06 s11). The recording screen itself is P2-03's.
+- `build_id` logged from the export version (Q-047 (1)).
+
+### P2-03 Staged barn recording and pre-share
+Owner: Network & Voice. Output: `game/voice/`, doc 06 updated.
+Acceptance:
+- Doc 06 s11 "Recording" in full: 7 fixed lines plus one per teammate name, 2 to 3 takes, best take
+  kept by P2-12's weights, others deleted; 20 to 40 s barn chatter for Lobby-lines players.
+- Staging: the barn lantern blows out (never flickers) before "help me", a door bang before "over
+  here". The recording light is steady on the recorder's screen and on their character
+  (`apply_recording_light`).
+- No Off player's voice plays on a capturing machine (D-011); the screen names who is muted.
+- `.vclip` format and storage as doc 06 s11; peers keep clips in memory only. Off deletes the files
+  and frees every peer's copy; a playing lure of that player stops.
+- Pre-share as doc 06 s12 (manifest, 16 KB chunks on channel 3, host caps, late joiner, 30 s timeout).
+  Review: play back and delete each clip before the match.
+- Tested with `--voice-wav` loopback on 2 instances; QA hears one real recorded line.
+
+### P2-04 Recorded lures
+Owner: AI Programmer. Output: `game/creature/`.
+Acceptance:
+- Doc 03 s12.1 choice: clip, sound or stranger lure; never voices an Off or unchosen player; weights
+  dead 3 : alive 1 : own 0.1; exact clips only (splicing is day 4, read the clock day).
+- Day lures go to the target only and keep the 15 m rule; night lures are world sounds.
+- One tell or none (about a third none), source at a place the teammate could not be (doc 03 s12.2).
+- `lure_played` names `line_id`, owner and `tell`; `lure_result` as Phase 1. `check_logs.py` reports
+  recorded against generic lure rates (doc 09 s3, read not gated).
+
+### P2-11 Trap sweeps, player side
+Owner: Gameplay. Output: `game/traps_player/`, `game/interaction/`.
+Acceptance:
+- Holds from `labor.json`: `disarm_bear` 5 s, `fill_pit` 4 s (needs a shovel from the shed),
+  `place_flag` 1 s, `hang_trap` 1 s (doc 05 s11). Each makes its Noise (doc 05 s8).
+- A disarmed bear trap is a carried item; hung on the pegboard it shows on a slot
+  (`apply_pegboard_changed`). Flags are world objects for everyone (`apply_flags`).
+- `trap_changed` logs `disarmed` and `filled`; doc 09 s3 "trap sweeps" reads them.
+- Clues as P1-20 (4 m, facing). QA looks at one of each in a window.
+
+### P2-05 Night traps and pegboard theft
+Owner: AI Programmer. Output: `game/creature/`.
+Acceptance:
+- Replaces Phase 1 scripted traps on the full farm: counts from P2-12 by day and headcount, spots near
+  the region players work, deep spots for bear traps, rules in doc 03 s9 (sanctuary, lit door 6 m,
+  one per 8 m circle).
+- Pegboard: any bear trap not on the pegboard at nightfall is the creature's; the lock caps theft at
+  one trap a night; a trap in a lit building stays, in a dark one vanishes. Stolen traps are set next
+  night on the ordinary list.
+- `--phase1` keeps the scripted traps.
+
+### P2-06 Dawn respawn and medical bills
+Owner: Gameplay. Output: `game/ghost/`, `game/core/`.
+Acceptance:
+- Dawn in doc 02 s9 order for steps 1 and 3 (cash-in, medical bill); later steps stubbed.
+- Bill from P2-12 for the headcount at the billing dawn; day deaths count toward the next dawn; bank
+  floor 4 coins, the rest added to the final payment. `money_changed` with `reason` `medical_bill`.
+- The dead respawn at a barn spawn at dawn. The dead lose what they carried.
+- `dawn_summary` logged (doc 05 s18).
+
+### P2-07 Up to 4 players
+Owner: Gameplay. Output: `game/player/`, `game/net/` as needed.
+Acceptance:
+- 4 instances join, spawn at P2-02's barn spawns, and play a day and a night with no desync (doc 09 s7).
+- Headcount scaling through `player_scaling.json` (doc 02 s4) for bills and trap counts.
+- `--bots=N` fills empty slots up to 4.
+- `net_bandwidth` logged; compared with doc 06 s13's 4-talker estimate.
+
+### P2-08 Audio for Phase 2
+Owner: Audio Designer. Output: `game/audio/`, `assets/audio/`, doc 08.
+Acceptance:
+- Chase sting and creature signature on every peer when the state turns `chase` (Q-048 (2)). Try the
+  kill-warning heartbeat after the sting exists (OPEN_ISSUES playtest 8 note). No day music (memory
+  rule, CEO).
+- Clip tells through the shared chain (doc 06 s9): echo, pitch up/down, no crackle.
+- Barn lobby ambience, lantern blow-out and door bang for P2-03's staging.
+
+### P2-09 Phase 2 review and gate
+Owner: QA. Acceptance: each P2 task reviewed against its block; 4-instance run; `check_logs.py` on a
+full session; doc 09 s3 "DD Phase 2" rows run in 2 sessions with one fresh tester. The first session
+also rechecks the Phase 1 playtest fixes no human has seen (OPEN_ISSUES "Found at the Phase 1
+playtest" 1, 4, 5, 6, 9 to 12).
 
 ---
 

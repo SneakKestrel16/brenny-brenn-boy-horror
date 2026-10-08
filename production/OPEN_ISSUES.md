@@ -74,3 +74,20 @@ is inference until a log or a run settles it. Host log: `logs/qa/stop1_host/` (g
 11. **One crop row cannot be planted.**
 12. **After a plant or fill completes, the same action cannot be done again** (`hold_completed`
     plant 9, fill_fuel 3 in the logs; the per-target state after completion is a suspect).
+
+## Found at the P2-01 review (Director, 2026-10-08)
+
+Issues 1, 4, 5, 6 and 9 to 12 above are fixed in code but not yet seen by a human; the first Phase 2
+session rechecks them (P2-09, D-034).
+
+1. **Whistle is harder to place than voice at 30 and 72 m.** Spatial test, one tester (D-033): whistle
+   30 m 4/6, 72 m 3/6; voice 6/6 at both. The CEO closed the test, so this is not a gate. Inference: the
+   20 m unit size leaves little level difference between 30 and 60 m. Settled by a second tester's
+   run, or by ear once the whistle mechanic exists (DD Phase 3).
+2. **The spatial test's voice source is a synthetic buzz, not `VoiceEmitter`** (P1-12, P1-14). The real
+   emitter path was never tested by ear. Settled by hearing a recorded line as a lure (P2-04, P2-09).
+3. **Stranger lines' intelligibility is unheard.** Q-031 (1) keeps formant synthesis until testers
+   cannot understand it; no tester has been asked. Settled by Phase 2 debrief question 2.
+4. **Lure counts may stay thin.** Q-046 (4): 4 lures in 1500 s of headless night. The Phase 2 gate
+   needs only one fooled tester; the 30% rate is deferred to Phase 3 (CEO, 2026-10-08). Settled by
+   `check_logs.py` lure counts in the first Phase 2 session.

@@ -241,3 +241,24 @@ sessions run the game's own lengths (day 540, dusk 60, night 300 s). The host sk
 the dev console (D-031: `skip`, `phase`, `length`), which logs each use. The `Clock` overrides stay for
 scripted runs. **Why:** CEO prefers normal pacing now that the dev console exists.
 
+### D-033 · 2026-10-08 · CEO · Spatial audio test closed (DD Phase 1 gate)
+One tester, 48 trials, four bearings 90 degrees apart (session `audiotest_20261008_015727`, local logs,
+not committed): voice 10/30/60/72 m 5/6, 6/6, 5/6, 6/6; whistle 6/6, 4/6, 5/6, 3/6. Every gated cell
+is at or above 80% except whistle at 30 m (67%, above the 60% floor); 72 m is reported only. The CEO
+closed the test on this run: no second tester, no emitter retune, Steam Audio contingency (doc 06 s15)
+not needed. Voice 10 m / 120 m and whistle 20 m / 220 m stay. **Why:** distance and direction are
+placeable by ear; the whistle's 30 and 72 m misses are noted in OPEN_ISSUES for a later listen. Doc 09
+s5's 80% / 60% thresholds stay as written for any rerun.
+
+### D-034 · 2026-10-08 · Director · DD Phase 2 review (P2-01)
+(1) Sabotage from the disturbance budget moves from P2-05 to DD Phase 3: doc 01 "Build Plan > Phase 2"
+lists only pegboard theft, and the AI Director that spends the budget (doc 03 s10) is Phase 3. (2) New
+rows: P2-10 (Gameplay: menu, barn lobby, pause menu with the voice setting and push-to-talk; the
+recording flow and the setting have no screen to live on), P2-11 (Gameplay: disarm, fill pit, flags,
+pegboard hang; "trap sweeps feel worth doing" needs them, `trap_race.gd` builds none), P2-12 (Game
+Designer: `medical_bill.json`, night trap counts, lock, take weights, Q-048 (1)). (3) P2-05 now
+replaces the Phase 1 scripted traps on the full farm with doc 03 s9 trap setting; `--phase1` keeps the
+scripted ones. Tripwire bells are not built in Phase 2 (proposal for P2-12: they count as nothing).
+(4) Phase 1 playtest fixes no human has checked (OPEN_ISSUES playtest 1, 4, 5, 6, 9 to 12) are
+rechecked in the first Phase 2 session (P2-09). Acceptance for every row is in TASKS.md. **Why:**
+doc 01 "Between phases" step 3: settle what the next phase depends on before it starts.
