@@ -526,19 +526,23 @@ func _show_clue(id: String, kind: StringName, on: bool) -> void:
 		var mesh := MeshInstance3D.new()
 		mesh.name = "Clue"
 		var c := CylinderMesh.new()
-		c.top_radius = 0.35 if kind == &"bear" else 0.8
+		c.top_radius = 0.5 if kind == &"bear" else 0.9
 		c.bottom_radius = c.top_radius
-		c.height = 0.04
+		c.height = 0.06
 		mesh.mesh = c
 		var mat := StandardMaterial3D.new()
 		if kind == &"bear":  # glinting metal
-			mat.albedo_color = Color(0.55, 0.55, 0.5)
+			mat.albedo_color = Color(0.8, 0.8, 0.75)
 			mat.metallic = 1.0
 			mat.roughness = 0.25
 			mat.emission_enabled = true
-			mat.emission = Color(0.25, 0.25, 0.2)
+			mat.emission = Color(0.9, 0.9, 0.75)
+			mat.emission_energy_multiplier = 2.0
 		else:  # fresh dirt
-			mat.albedo_color = Color(0.22, 0.14, 0.08)
+			mat.albedo_color = Color(0.45, 0.28, 0.14)
+			mat.emission_enabled = true
+			mat.emission = Color(0.6, 0.35, 0.15)
+			mat.emission_energy_multiplier = 1.0
 		mesh.material_override = mat
 		mesh.visibility_range_end = CLUE_M
 		mesh.visibility_range_end_margin = 1.0
