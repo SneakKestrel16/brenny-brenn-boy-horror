@@ -93,6 +93,7 @@ func _make_held() -> void:
 	_held.position = Vector3(0.35, -0.35, -0.6)
 	_cam.add_child(_held)
 	_water_can = _prop(Vector3(0.22, 0.22, 0.3), Color(0.5, 0.58, 0.64))
+	_water_can.visible = false
 	_fuel_can = _prop(Vector3(0.2, 0.3, 0.14), Color(0.85, 0.15, 0.1))
 	_fuel_can.visible = false
 	_shovel = _prop(Vector3(0.08, 0.08, 1.1), Color(0.45, 0.32, 0.18))  # long wooden handle
@@ -125,11 +126,24 @@ func _on_carry(what: StringName, args: Array) -> void:
 		_shovel.visible = bool(args[1])
 		_trap_prop.visible = bool(args[2])
 		return
+	if what == &"cans_applied" and farm_has_carry():
+		var c: Dictionary = get_tree().get_first_node_in_group(&"farm").carry[peer]
+		what = &"carry"
+		args = [peer, c.can, c.bag, c.fuel_can]
 	if what != &"carry" or args[0] != peer:
 		return
-	_fuel_can.visible = bool(args[3])
-	_water_can.visible = not bool(args[3])
+	# D-054: a can shows in hand only while this player carries one (kind and fullness from the carry state)
+	var farm := get_tree().get_first_node_in_group(&"farm")
+	var kind: StringName = farm.carry.get(peer, {}).get("held_kind", &"") if farm else &""
+	_fuel_can.visible = kind == &"fuel"
+	_water_can.visible = kind == &"water"
+	(_fuel_can.material_override as StandardMaterial3D).albedo_color = Color(0.85, 0.15, 0.1) if bool(args[3]) else Color(0.4, 0.15, 0.12)
 	(_water_can.material_override as StandardMaterial3D).albedo_color = Color(0.15, 0.4, 0.95) if int(args[1]) > 0 else Color(0.5, 0.58, 0.64)  # galvanized gray-blue when empty
+
+
+func farm_has_carry() -> bool:
+	var farm := get_tree().get_first_node_in_group(&"farm")
+	return farm != null and farm.carry.has(peer)
 
 
 func _apply_height(crouch: bool) -> void:

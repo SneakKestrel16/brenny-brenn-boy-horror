@@ -436,6 +436,23 @@ dawn (section 17) from `crops.json` (doc 02 section 5).
   AI Programmer's sabotage can find it.
 - **Shed pegboard**: tools hang on a pegboard in the shed, and `request_hang_trap` is the trap
   version (section 11). Missing tools show as empty pegs: that is the diegetic information.
+- **Physical cans (D-054, P2-27)**: the watering can and the fuel can are world objects
+  (`game/items/cans.gd`, a child of the farm). Host table `id -> {kind, home, pos, holder, charge}`;
+  ids `can_<n>` are interactables with verbs `take_can` (0.5 s) and `drop_can` (0.3 s, key G). One can
+  at a time (`placeholder`). Counts are `placeholder` constants: 2 water cans at the well, 1 fuel can at
+  the drum (doc 02 settles no count; the Game Designer should move them into data). A water can starts
+  full; the fuel can starts empty. The host mirrors the held can into the carrier's `pstate`
+  (`held_can`, `held_kind`, `can`, `fuel_can`), so `water`/`fill_can` need a held water can (`no_can`)
+  and `fill_fuel` a held fuel can (`no_fuel_can`, `has_fuel_can`). Refusals: `can_taken`, `hands_full`,
+  `not_holding`. Every change sends the whole table by rpc `apply_cans(data)` (host to all, or one late
+  joiner); a dropped can lands where its carrier stood and shows there on every peer. Death and leaving
+  drop the can. At nightfall `creature_move_cans()` (host, called from `creature.gd`) sends a can lying
+  more than 4 m from home back home (`placeholder` for the creature moving it). Log events:
+  `can_taken`, `can_dropped`, `can_stolen` (host), `can_seen` (clients, what they see). Bots fetch the
+  right can first (`bot.gd` `_fetch`); `--autochore` takes a can, waters, refills and drops it.
+  Art need (doc 07): `prop_watering_can.glb`, `prop_fuel_can.glb`; placeholder boxes until then.
+- **Dev/launch**: Phase 1 data is the default (`--no-phase1` opts out); dev command `grow
+  [ripe|growing|empty]` sets planted plots to a stage (host only).
 - Prize Pumpkin (doc 02 section 6): a single special plot with its own growth rule from
   `pumpkin.json`; `water_prize_pumpkin` is a hold; the 20 m protection radius is checked by the
   host against live player positions (doc 01 "Prize Pumpkin"; the check is part of the AI

@@ -149,9 +149,16 @@ func _ready() -> void:
 	add_child(shape)
 	_test = OS.get_cmdline_user_args().has("--creature-test")
 	_log = OS.get_cmdline_user_args().has("--log-creature")
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--clue-shot="):
+			_clue_shot = a.trim_prefix("--clue-shot=")
 	Net.apply_received.connect(_on_apply)
 	Net.bytes_received.connect(_on_bytes)
 	Voice.clips.clip_freed.connect(_on_clip_freed)
+	# Every peer starts it in its day cover (P2-26): left at the origin it stood at the barn door whenever the
+	# host had it idle, and on a client until the first `creature` packet.
+	global_position = _marker(&"creature_cover", DAY_COVER)
+	_target_pos = global_position
 	if (_test or OS.get_cmdline_user_args().has("--creature-walk")) and not OS.get_cmdline_user_args().has("--autowalk"):  # --autowalk: players circle instead
 		_test_walk.call_deferred()
 	if not Game.is_host():
@@ -180,7 +187,6 @@ func _ready() -> void:
 				first = false
 		_rects.append(r)
 		_rect_names.append(String(door.get_parent().name))
-	global_position = _marker(&"creature_cover", DAY_COVER)
 	NoiseBus.noise_emitted.connect(_on_noise)
 	Clock.phase_changed.connect(func(p: StringName) -> void:
 		if p == &"night" and not _test:
@@ -250,6 +256,7 @@ func _start_night() -> void:
 	if _full:
 		_stolen_night = 0
 		_capped_logged = false
+		get_tree().call_group(&"cans", &"creature_move_cans")  # P2-27 (Gameplay): cans left away from home are moved at nightfall (items/cans.gd)
 		if OS.get_cmdline_user_args().has("--give-trap"):  # QA: every living player holds a bear trap at nightfall
 			for p in Game.players.keys().filter(_alive):
 				get_parent().get_node(^"Farm").set_hands(p, bool(Game.players[p].get("shovel", false)), true)
@@ -992,7 +999,30 @@ func _show_clue(id: String, kind: StringName, on: bool) -> void:
 		mesh.visibility_range_end_margin = 1.0
 		mesh.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 		m.add_child(mesh)
+		if _log:  # QA (P2-26): proves the clue exists on this peer, where, and that it can render
+			Log.event(&"trap_clue_shown", {"trap_id": id, "kind": String(kind), "position": _v(mesh.global_position),
+				"visible": mesh.is_visible_in_tree(), "layers": mesh.layers, "range_m": mesh.visibility_range_end})
+		if _clue_shot != "" and not _shot_kinds.has(kind):
+			_shot_kinds.append(kind)
+			_shoot_clue(mesh.global_position, "%s/clue_%s_%s.png" % [_clue_shot, kind, "host" if Game.is_host() else "client"])
 		return
+
+
+## QA `-- --clue-shot=<dir>` (any peer, windowed): a player-eye view of each kind's first clue from 3 m.
+var _clue_shot := ""
+var _shot_kinds: Array[StringName] = []
+
+
+func _shoot_clue(at: Vector3, path: String) -> void:
+	var cam := Camera3D.new()
+	get_parent().add_child(cam)
+	cam.global_position = at + Vector3(0, EYE_M, 3.0)
+	cam.look_at(at)
+	cam.make_current()
+	await get_tree().create_timer(1.5).timeout
+	get_viewport().get_texture().get_image().save_png(path)
+	Log.event(&"clue_shot", {"path": path, "night": _night_t >= 0.0 or Clock.phase == &"night"})
+	cam.queue_free()
 
 
 # --- movement ------------------------------------------------------------------------------------

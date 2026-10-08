@@ -85,6 +85,9 @@ func _physics_process(delta: float) -> void:
 				_flag = spot
 				start(&"place_flag", spot, &"alt_use")
 				return
+		if Input.is_action_just_pressed(&"drop") and not Game.console_open and not _need_release and held_can_id() >= 0:
+			start(&"drop_can", target_farm.targets["can_%d" % held_can_id()])  # P2-27: G puts the carried can down
+			return
 		if tgt != null and not _need_release and Input.is_action_pressed(&"interact") and not Game.console_open:
 			var verbs: Array[StringName] = tgt.verbs_for(mine)
 			if not verbs.is_empty():
@@ -113,6 +116,12 @@ var _armed := false  ## toggle_holds: the starting press has been released, the 
 ## HUD: the verb being held and its progress 0..1, or an empty verb.
 func hold_state() -> Array:
 	return [_verb, clampf(_t / maxf(_hold_s, 0.01), 0.0, 1.0)] if _holding else [&"", 0.0]
+
+
+## The id of the can this player carries, or -1.
+func held_can_id() -> int:
+	var f := target_farm if target_farm else get_tree().get_first_node_in_group(&"farm")
+	return int(f.carry.get(player.peer, {}).get("held_can", -1)) if f else -1
 
 
 ## HUD: the refusal reason while it is fresh, else empty.
@@ -220,6 +229,7 @@ func _autochore() -> void:
 	var out_of_barn := [Vector3(0, 0, -4), Vector3(0, 0, 4), Vector3(22, 0, 4)]  # door at (0, 0), corn strip 2 at x 12..18
 	var front := Vector3(0, 0, 1.5)
 	await _do(&"plant", mine, front, out_of_barn)
+	await _do(&"take_can", "can_0" if host else "can_1", Vector3(0, 0, 1.2))  # D-054: nobody starts with a can
 	await _do(&"water", mine, front)
 	if host:
 		var other: Node = farm.targets["Plot02"]
@@ -234,6 +244,7 @@ func _autochore() -> void:
 	await _do(&"harvest", mine, front)
 	await _do(&"sell", "sell_box", Vector3(-1.6, 0, 0))
 	await _do(&"fill_can", "well", Vector3(1.6, 0, 0))
+	await _do(&"drop_can", "can_%d" % held_can_id(), Vector3.ZERO)  # D-054: put it down where we stand
 	Log.event(&"autochore_done", {"coins": farm.coins})
 
 

@@ -25,7 +25,7 @@ const SOURCES := ["doc01", "sim", "placeholder"]
 var ok := false
 var errors: Array[String] = []
 var hash_value := 0  ## of all loaded file text; the host sends it so a client can spot other numbers
-var phase1 := false
+var phase1 := not OS.get_cmdline_user_args().has("--no-phase1")  ## P2-24: Phase 1 night data loads by default; `--no-phase1` opts out (`--phase1` still accepted)
 var _tables: Dictionary = {}  ## table -> {id: record}
 var _order: Dictionary = {}  ## table -> Array[Dictionary] in file order
 

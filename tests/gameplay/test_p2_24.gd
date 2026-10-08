@@ -1,0 +1,17 @@
+extends Node
+## P2-24 checks: typed verb lists (the well prompt), the locked-plot refusal.
+##   "$GODOT" --headless --audio-driver Dummy --path . res://tests/gameplay/test_p2_24.tscn
+## Exits 0 on pass, 1 on any failure.
+
+func _ready() -> void:
+	var fails := 0
+	var s: Node = preload("res://game/farming/station.gd").new()
+	s.kind = &"well"
+	fails += int(s.verbs_for({}) != [&"fill_can"])
+	s.kind = &"sell"
+	fails += int(s.verbs_for({}) != [&"sell"])
+	var p: Node = preload("res://game/farming/plot.gd").new()
+	p.locked = true
+	fails += int(p.verbs_for({}).is_empty() or p.can_start(&"plant", {}) != &"locked")
+	print("test_p2_24 ", "FAIL %d" % fails if fails else "PASS")
+	get_tree().quit(1 if fails else 0)

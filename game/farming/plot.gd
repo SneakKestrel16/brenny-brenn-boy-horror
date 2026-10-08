@@ -18,7 +18,8 @@ func _ready() -> void:
 
 func verbs_for(_st: Dictionary) -> Array[StringName]:
 	if locked:
-		return []
+		var refuse: Array[StringName] = [&"plant"]  # P2-24: offer a verb so the hold is refused with "locked"
+		return refuse
 	match state:
 		&"empty": return [&"plant"]
 		&"growing":
@@ -37,6 +38,8 @@ func can_start(verb: StringName, st: Dictionary) -> StringName:
 		&"plant":
 			return &"" if state == &"empty" else &"not_empty"
 		&"water":
+			if st.get("held_kind", &"") != &"water":
+				return &"no_can"
 			if state != &"growing":
 				return &"not_growing"
 			if watered:

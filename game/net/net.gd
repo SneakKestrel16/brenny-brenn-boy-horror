@@ -597,3 +597,9 @@ func apply_pegboard_changed(filled: Array) -> void:
 @rpc("authority", "call_remote", "reliable")
 func apply_hands(peer: int, shovel: bool, trap: bool) -> void:
 	apply_received.emit(&"hands", [peer, shovel, trap])
+
+
+## Host to all (P2-27, D-054): the table of physical cans, `[id, holder, x, z, charge]` each (game/items/cans.gd).
+@rpc("authority", "call_remote", "reliable")
+func apply_cans(data: Array) -> void:
+	apply_received.emit(&"cans", [data])

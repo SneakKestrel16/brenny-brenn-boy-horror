@@ -1,5 +1,8 @@
 [gd_scene format=3]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_house"]
+albedo_color = Color(0.82, 0.78, 0.66, 1)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0"]
 albedo_color = Color(0.30, 0.34, 0.22, 1)
 
@@ -445,7 +448,7 @@ collision_mask = 0
 
 [node name="Mesh" type="MeshInstance3D" parent="Buildings/Farmhouse/WallN"]
 mesh = SubResource("BoxMesh_32")
-material_override = SubResource("StandardMaterial3D_2")
+material_override = SubResource("StandardMaterial3D_house")
 
 [node name="Shape" type="CollisionShape3D" parent="Buildings/Farmhouse/WallN"]
 shape = SubResource("BoxShape3D_33")
@@ -457,7 +460,7 @@ collision_mask = 0
 
 [node name="Mesh" type="MeshInstance3D" parent="Buildings/Farmhouse/SWallL"]
 mesh = SubResource("BoxMesh_34")
-material_override = SubResource("StandardMaterial3D_2")
+material_override = SubResource("StandardMaterial3D_house")
 
 [node name="Shape" type="CollisionShape3D" parent="Buildings/Farmhouse/SWallL"]
 shape = SubResource("BoxShape3D_35")
@@ -469,7 +472,7 @@ collision_mask = 0
 
 [node name="Mesh" type="MeshInstance3D" parent="Buildings/Farmhouse/SWallR"]
 mesh = SubResource("BoxMesh_34")
-material_override = SubResource("StandardMaterial3D_2")
+material_override = SubResource("StandardMaterial3D_house")
 
 [node name="Shape" type="CollisionShape3D" parent="Buildings/Farmhouse/SWallR"]
 shape = SubResource("BoxShape3D_35")
@@ -481,7 +484,7 @@ collision_mask = 0
 
 [node name="Mesh" type="MeshInstance3D" parent="Buildings/Farmhouse/WallW"]
 mesh = SubResource("BoxMesh_36")
-material_override = SubResource("StandardMaterial3D_2")
+material_override = SubResource("StandardMaterial3D_house")
 
 [node name="Shape" type="CollisionShape3D" parent="Buildings/Farmhouse/WallW"]
 shape = SubResource("BoxShape3D_37")
@@ -493,7 +496,7 @@ collision_mask = 0
 
 [node name="Mesh" type="MeshInstance3D" parent="Buildings/Farmhouse/WallE"]
 mesh = SubResource("BoxMesh_36")
-material_override = SubResource("StandardMaterial3D_2")
+material_override = SubResource("StandardMaterial3D_house")
 
 [node name="Shape" type="CollisionShape3D" parent="Buildings/Farmhouse/WallE"]
 shape = SubResource("BoxShape3D_37")

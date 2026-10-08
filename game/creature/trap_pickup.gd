@@ -8,7 +8,8 @@ var creature: Node  ## the Creature (host: `pick_up_loose`)
 
 
 func verbs_for(_st: Dictionary) -> Array[StringName]:
-	return [&"take_trap"]
+	var out: Array[StringName] = [&"take_trap"]
+	return out
 
 
 func can_start(verb: StringName, st: Dictionary) -> StringName:

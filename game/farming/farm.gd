@@ -7,12 +7,14 @@ extends Node
 const Plot := preload("res://game/farming/plot.gd")
 const Station := preload("res://game/farming/station.gd")
 const Registry := preload("res://game/interaction/hold_registry.gd")
+const Cans := preload("res://game/items/cans.gd")
 
 var targets: Dictionary = {}  ## id -> Interactable
 var carry: Dictionary = {}  ## every peer: peer -> {can, bag, fuel_can}, replicated by `apply_carry`
 var coins := 0 ## authoritative on the host; mirrored elsewhere
 var final_extra := 0  ## host: medical bill the bank floor could not cover, added to the final payment (doc 02 s8)
 var registry: Node
+var cans: Cans  ## D-054: the physical watering and fuel cans
 var _log_farm := OS.get_cmdline_user_args().has("--log-farm")
 var headcount := 0  ## players at match start: fixes which `extra` plots are open (P2-14, D-039); host decides, clients are told
 var _headcount_arg := _int_arg("--headcount=")  ## QA: host-only override for a no-lobby run (joiners arrive after the farm loads)
@@ -31,6 +33,9 @@ func _ready() -> void:
 			var s := Station.new()
 			s.kind = g[1]
 			_attach(n, s, g[2], Vector3(2.0, 1.0, 2.0))
+	cans = Cans.new()
+	cans.farm = self
+	add_child(cans)
 	Net.request_received.connect(_on_request)
 	Net.apply_received.connect(_on_apply)
 	if Game.is_host():
@@ -83,7 +88,9 @@ func _attach(world_node: Node, it: Node, id: String, pick: Vector3) -> void:
 func pstate(peer: int) -> Dictionary:
 	var st: Dictionary = Game.players.get(peer, {})
 	if not st.has("can"):
-		st.can = int(Data.value(&"labor", &"can", &"capacity"))  # starts full (Phase 1)
+		st.can = 0  # D-054: nobody starts with a can; they pick one up (cans.gd)
+		st.held_can = -1
+		st.held_kind = &""
 		st.bag = 0
 		Game.players[peer] = st
 	return st
@@ -111,6 +118,7 @@ func set_hands(peer: int, shovel: bool, trap: bool) -> void:
 
 ## Host: tell every peer what `peer` now carries.
 func send_carry(peer: int) -> void:
+	cans.store(peer)
 	var st := pstate(peer)
 	_broadcast(&"carry", [peer, int(st.can), int(st.bag), bool(st.get("fuel_can", false))])
 
@@ -133,6 +141,7 @@ func _on_request(what: StringName, peer: int, args: Array) -> void:
 		&"farm_state":
 			Net.to_peers(&"apply_money_changed", [coins], [peer])
 			Net.to_peers(&"apply_headcount", [headcount], [peer])
+			cans.snapshot_to(peer)
 			for p in Game.players:
 				var cs := pstate(p)
 				Net.to_peers(&"apply_carry", [p, int(cs.can), int(cs.bag), bool(cs.get("fuel_can", false))], [peer])
@@ -151,13 +160,17 @@ func _on_apply(what: StringName, args: Array) -> void:
 		&"carry":
 			var old: Dictionary = carry.get(args[0], {})
 			carry[args[0]] = {"can": args[1], "bag": args[2], "fuel_can": args[3],
-					"shovel": old.get("shovel", false), "trap": old.get("trap", false)}
+					"shovel": old.get("shovel", false), "trap": old.get("trap", false),
+					"held_can": old.get("held_can", -1), "held_kind": old.get("held_kind", &"")}
 		&"hands":
 			var c: Dictionary = carry.get(args[0], {"can": 0, "bag": 0, "fuel_can": false})
 			c.shovel = args[1]
 			c.trap = args[2]
 			carry[args[0]] = c
+		&"cans": cans.apply(args[0])
 		&"death":
+			if Game.is_host():
+				cans.drop.call_deferred(args[0])  # the dead put the can down where they fell (D-054)
 			if Game.is_host() and Game.players.has(args[0]):  # the dead drop the shovel and trap (placeholder: they vanish)
 				var ds := pstate(args[0])
 				if ds.get("shovel", false) or ds.get("trap", false):

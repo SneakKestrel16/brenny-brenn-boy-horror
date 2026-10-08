@@ -8,9 +8,11 @@ const PHASE_TEXT := {&"day": "Daylight", &"dusk": "Dusk", &"night": "NIGHT", &"d
 const VERB_TEXT := {&"plant": "Plant", &"water": "Water", &"harvest": "Harvest", &"sell": "Sell the crop",
 		&"fill_can": "Fill the watering can", &"pry": "Pry free", &"refuel": "Refuel",
 		&"disarm_bear": "Disarm the bear trap", &"fill_pit": "Fill the pit", &"place_flag": "Plant a flag",
-		&"hang_trap": "Hang the trap on the board", &"take_shovel": "Take the shovel", &"return_shovel": "Hang the shovel back", &"take_trap": "Pick up the trap"}
-const REFUSED_TEXT := {&"locked": "Locked", &"need_shovel": "You need the shovel", &"hands_full": "Your hands are full",
-		&"pegboard_full": "No free hook", &"flag_here": "A flag is already here", &"not_armed": "Nothing set here"}
+		&"hang_trap": "Hang the trap on the board", &"take_shovel": "Take the shovel", &"return_shovel": "Hang the shovel back", &"take_trap": "Pick up the trap",
+		&"take_can": "Pick up the can", &"drop_can": "Put the can down"}
+const REFUSED_TEXT := {&"locked": "Locked: needs more players, or buy it at the store", &"need_shovel": "You need the shovel", &"hands_full": "Your hands are full",
+		&"pegboard_full": "No free hook", &"flag_here": "A flag is already here", &"not_armed": "Nothing set here",
+		&"no_can": "You need a watering can", &"no_fuel_can": "You need the fuel can", &"can_taken": "Someone has it", &"has_fuel_can": "The can is full"}
 
 var player: CharacterBody3D
 var hold: Node  ## the player's HoldController
@@ -46,8 +48,9 @@ func _ready() -> void:
 	_hint.offset_right = 260
 	_hint.offset_top = -150
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hint.text = "CONTROLS\n%s  move\n%s  sprint (runs out, and it is loud)\n%s  crouch (quiet)\n%s  stand still (silent)\nHold %s  work the thing you look at\nHold %s  plant a flag where you look\n%s  free the mouse" % [
-			_move_keys(), _key(&"sprint"), _key(&"crouch"), _key(&"go_still"), _key(&"interact"), _key(&"alt_use"), _key(&"pause")]
+	_hint.text = "CONTROLS\n%s  move\n%s  sprint (runs out, and it is loud)\n%s  crouch (quiet)\n%s  stand still (silent)\nHold %s  work the thing you look at (cans: pick up)
+%s  put a can down\nHold %s  plant a flag where you look\n%s  free the mouse" % [
+			_move_keys(), _key(&"sprint"), _key(&"crouch"), _key(&"go_still"), _key(&"interact"), _key(&"drop"), _key(&"alt_use"), _key(&"pause")]
 	_bar = ProgressBar.new()
 	_bar.show_percentage = false
 	_bar.custom_minimum_size = Vector2(220, 14)
@@ -114,6 +117,8 @@ func _process(delta: float) -> void:
 		prompt = "%s... %d%%" % [_verb_text(hs[0]), int(hs[1] * 100.0)]
 	elif hold.aimed_verb != &"":
 		prompt = "Hold %s: %s" % [_key(&"interact"), _verb_text(hold.aimed_verb)]
+	elif hold.held_can_id() >= 0:
+		prompt = "Hold %s: put the can down" % _key(&"drop")
 	var why: StringName = hold.fresh_refusal()
 	if why != &"" and hs[0] == &"":
 		prompt = REFUSED_TEXT.get(why, String(why).capitalize().replace("_", " "))

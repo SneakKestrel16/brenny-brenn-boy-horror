@@ -88,6 +88,8 @@ func next_job() -> Array:
 		if gen.damaged:
 			return [&"repair_generator", "generator"]
 		if gen.fuel_s < gen.tank_s * REFUEL_BELOW:
+			if st.get("held_kind", &"") != &"fuel":
+				return _fetch(st, &"fuel")
 			return [&"refuel", "generator"] if bool(st.get("fuel_can", false)) else [&"fill_fuel", "fuel_drum"]
 	var ripe := _plots(func(p: Node) -> bool: return p.state == &"ripe")
 	var bag := int(st.get("bag", 0))
@@ -100,8 +102,23 @@ func next_job() -> Array:
 		return [&"plant", empty[0].id]
 	var dry := _plots(func(p: Node) -> bool: return p.state == &"growing" and not p.watered)
 	if not dry.is_empty():
+		if st.get("held_kind", &"") != &"water":
+			return _fetch(st, &"water")
 		return [&"water", dry[0].id] if int(st.get("can", 0)) > 0 else [&"fill_can", "well"]
 	return []
+
+
+## P2-27: the job that gets a can of `kind` into the hands: put down the wrong one, else pick up the nearest free one.
+func _fetch(st: Dictionary, kind: StringName) -> Array:
+	var held := int(st.get("held_can", -1))
+	if held >= 0:
+		return [&"drop_can", "can_%d" % held]
+	var best := -1
+	for id in farm.cans.cans:
+		var c: Dictionary = farm.cans.cans[id]
+		if c.kind == kind and c.holder == 0 and _free("can_%d" % id) and (best < 0 or _pos.distance_squared_to(c.pos) < _pos.distance_squared_to(farm.cans.cans[best].pos)):
+			best = id
+	return [&"take_can", "can_%d" % best] if best >= 0 else []
 
 
 ## Unlocked plots no other bot has claimed that match `pick`, nearest first.

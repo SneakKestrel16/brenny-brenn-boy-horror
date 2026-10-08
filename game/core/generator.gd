@@ -30,7 +30,7 @@ class Point extends "res://game/interaction/interactable.gd":
 		var has_can := bool(st.get("fuel_can", false))
 		var out: Array[StringName] = []
 		if drum:
-			if not has_can:
+			if not has_can:  # has_can: the carried fuel can is already full
 				out.append(&"fill_fuel")
 		elif gen.damaged:
 			out.append(&"repair_generator")
@@ -40,7 +40,10 @@ class Point extends "res://game/interaction/interactable.gd":
 
 	func can_start(verb: StringName, st: Dictionary) -> StringName:
 		match verb:
-			&"fill_fuel": return &"" if drum and not bool(st.get("fuel_can", false)) else &"has_fuel_can"
+			&"fill_fuel":
+				if not drum: return &"no_such_verb"
+				if st.get("held_kind", &"") != &"fuel": return &"no_fuel_can"
+				return &"has_fuel_can" if bool(st.get("fuel_can", false)) else &""
 			&"refuel":
 				if drum: return &"no_such_verb"
 				if gen.damaged: return &"generator_damaged"
@@ -174,7 +177,8 @@ func _autogen() -> void:
 		return
 	var hc: Node = get_tree().current_scene.get_node("Players").player(Game.local_peer()).get_node("HoldController")
 	await get_tree().create_timer(2.0).timeout
-	await hc._do(&"fill_fuel", "fuel_drum", Vector3(-1.5, 0, 0), [Vector3(0, 0, -4), Vector3(0, 0, 4), Vector3(-14, 0, 4), Vector3(-14, 0, 24)])
+	await hc._do(&"take_can", "can_2", Vector3(0, 0, 1.2), [Vector3(0, 0, -4), Vector3(0, 0, 4), Vector3(-14, 0, 4), Vector3(-14, 0, 24)])  # D-054: fetch the fuel can first
+	await hc._do(&"fill_fuel", "fuel_drum", Vector3(-1.5, 0, 0))
 	await hc._do(&"refuel", "generator", Vector3(-1.5, 0, 0), [Vector3(-14, 0, 24), Vector3(-14, 0, 4), Vector3(-14, 0, -6)])
 	var t := get_tree().create_timer(60.0)
 	while t.time_left > 0.0 and not damaged:

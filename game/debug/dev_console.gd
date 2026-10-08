@@ -21,6 +21,7 @@ const HELP := """Commands (host only unless marked):
   fuel [s]                  add s seconds of fuel (default: fill the tank)
   gen damage|repair         break or fix the generator
   creature <state> [peer]   force lurk, stalk, chase or retreat (target defaults to you)
+  grow [ripe|growing|empty] set every planted plot to a stage (default ripe)
   kill [peer]               kill a player (default: you)
   respawn [peer]            bring a ghost back (default: you)
   debug                     toggle the debug view (F3)
@@ -196,6 +197,20 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? no such peer"
 			main.get_node("Creature").force_state(StringName(a[0]), &"dev", target)
 			return "creature %s, target %d" % [a[0], target]
+		"grow":
+			var stage := StringName(a[0]) if not a.is_empty() else &"ripe"
+			if not stage in [&"ripe", &"growing", &"empty"]:
+				return "? grow ripe|growing|empty"
+			var farm := main.get_node_or_null("Farm")
+			var n := 0
+			for t in farm.targets.values():
+				if t.has_method(&"advance_day") and t.state != &"empty" and t.state != stage:
+					t.state = stage
+					t.watered = false
+					t.age = 0 if stage != &"ripe" else int(Data.value(&"crops", &"turnip", &"grow_days"))
+					farm.plot_changed(t)
+					n += 1
+			return "%d plots set to %s" % [n, stage]
 		"kill":
 			var p := _peer_arg(a, 0)
 			if p == 0 or Game.is_ghost(p):

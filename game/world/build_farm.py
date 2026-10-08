@@ -67,7 +67,7 @@ def box(parent, name, cx, cz, sx, sz, h, m, layer=L_WORLD, y0=0.0, groups=()):
     node("Shape", "CollisionShape3D", body, f'shape = SubResource("{bs}")\n')
 
 
-def building(name, door_x, door_z, x0, x1, z0, z1, door_side, h, parent="Buildings"):
+def building(name, door_x, door_z, x0, x1, z0, z1, door_side, h, parent="Buildings", m="bldg"):
     """Walls as local boxes; node origin = door threshold (CONTRACTS section 4). 3 m door gap."""
     b = node(name, "Node3D", parent, f"transform = {tf(door_x, 0, door_z)}\n")
     t = 0.3
@@ -75,11 +75,11 @@ def building(name, door_x, door_z, x0, x1, z0, z1, door_side, h, parent="Buildin
     for side, z in (("N", lz0), ("S", lz1)):
         if side == door_side:
             for nm, a, c in (("WallL", lx0, -1.5), ("WallR", 1.5, lx1)):
-                box(b, f"{side}{nm}", (a + c) / 2, z, c - a, t, h, "bldg")
+                box(b, f"{side}{nm}", (a + c) / 2, z, c - a, t, h, m)
         else:
-            box(b, f"Wall{side}", (lx0 + lx1) / 2, z, lx1 - lx0, t, h, "bldg")
-    box(b, "WallW", lx0, (lz0 + lz1) / 2, t, lz1 - lz0, h, "bldg")
-    box(b, "WallE", lx1, (lz0 + lz1) / 2, t, lz1 - lz0, h, "bldg")
+            box(b, f"Wall{side}", (lx0 + lx1) / 2, z, lx1 - lx0, t, h, m)
+    box(b, "WallW", lx0, (lz0 + lz1) / 2, t, lz1 - lz0, h, m)
+    box(b, "WallE", lx1, (lz0 + lz1) / 2, t, lz1 - lz0, h, m)
     node("Door", "Marker3D", b, "", ["doors"], {"building": name.lower()})
     # LightRig scene is the Technical Artist's (game/render); spot only, Q-026. 6 m = lit doorway radius.
     inward = -0.5 if door_side == "S" else 0.5
@@ -143,7 +143,7 @@ def generate(full: bool) -> str:
     MATS = {
         "ground": mat("0.30, 0.34, 0.22, 1"), "corn": mat("0.35, 0.55, 0.15, 1"),
         "bldg": mat("0.45, 0.30, 0.22, 1"), "prop": mat("0.55, 0.55, 0.58, 1"),
-        "plot": mat("0.35, 0.24, 0.14, 1"), "fence": mat("0.55, 0.45, 0.30, 1"),
+        "house": mat("0.82, 0.78, 0.66, 1"), "plot": mat("0.35, 0.24, 0.14, 1"), "fence": mat("0.55, 0.45, 0.30, 1"),
     }
     node("Farm", "Node3D", None)
     for c in ("Ground", "CornBlockers", "Buildings", "Props", "Fields", "Pen", "Markers", "Bounds"):
@@ -177,7 +177,7 @@ def generate(full: bool) -> str:
     # Buildings (doc 04 s4); origin = door threshold
     building("Barn", 0, 0, -8, 8, -20, 0, "S", 5)
     if full:
-        building("Farmhouse", -45, 0, -51, -39, -10, 0, "S", 4)
+        building("Farmhouse", -45, 0, -51, -39, -10, 0, "S", 4, m="house")  # P2-25: cream, not barn brown
     building("ToolShed", -15, 26, -18, -12, 26, 31, "N", 3)
     node("Pegboard", "Marker3D", "Buildings/ToolShed", f"transform = {tf(0, 1.5, 4.5)}\n", ["pegboard_spots"])
     if full:  # one slot marker per bear the board holds (season.json pegboard_bear_slots), 0.8 m apart on the back wall
