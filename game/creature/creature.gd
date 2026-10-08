@@ -895,7 +895,7 @@ func pick_up_loose(id: String, peer: int, st: Dictionary) -> void:
 	Net.apply_received.emit(&"trap_changed", [id, &"bear", &"picked_up", t.position])
 
 
-## Every peer: the loose trap's pickup at its spot (placeholder art: a dark iron slab on the ground).
+## Every peer: the loose trap's pickup at its spot (placeholder art: TrapArt's bear trap).
 func _show_loose(id: String, on: bool) -> void:
 	var farm := get_parent().get_node_or_null(^"Farm")
 	if farm == null:
@@ -921,14 +921,7 @@ func _show_loose(id: String, on: bool) -> void:
 	m.add_child(t)
 	t.add_pick_body(Vector3(1.2, 0.5, 1.2))
 	t.set_meta(&"pick", m.get_child(m.get_child_count() - 1))
-	var mesh := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(0.6, 0.12, 0.4)
-	mesh.mesh = box
-	mesh.position.y = 0.06
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.12, 0.12, 0.14)
-	mesh.material_override = mat
+	var mesh := TrapArt.bear()
 	m.add_child(mesh)
 	t.set_meta(&"art", mesh)
 	farm.targets[id] = t
@@ -962,8 +955,8 @@ func _check_traps() -> void:
 				break
 
 
-## Every peer: an armed trap's clue at its spot, seen within CLUE_M (doc 01 "Night Traps": glinting metal,
-## fresh dirt; doc 03 section 9). Placeholder art until the Technical Artist's models. TrapRace shows a
+## Every peer: an armed trap at its spot (doc 01 "Night Traps": glinting metal, fresh dirt). TrapArt's
+## placeholder mesh, seen at any range per D-055 (doc 03 section 9's CLUE_M rule paused). TrapRace shows a
 ## sprung trap, so any state but `set` removes the clue.
 func _show_clue(id: String, kind: StringName, on: bool) -> void:
 	for m in get_tree().get_nodes_in_group(&"trap_spots"):
@@ -974,41 +967,20 @@ func _show_clue(id: String, kind: StringName, on: bool) -> void:
 			old.free()
 		if not on:
 			return
-		var mesh := MeshInstance3D.new()
+		var mesh := TrapArt.of(kind)  # D-055: seen at any range until art; the 4 m clue rule is paused
 		mesh.name = "Clue"
-		var c := CylinderMesh.new()
-		c.top_radius = 0.5 if kind == &"bear" else 0.9
-		c.bottom_radius = c.top_radius
-		c.height = 0.06
-		mesh.mesh = c
-		var mat := StandardMaterial3D.new()
-		if kind == &"bear":  # glinting metal
-			mat.albedo_color = Color(0.8, 0.8, 0.75)
-			mat.metallic = 1.0
-			mat.roughness = 0.25
-			mat.emission_enabled = true
-			mat.emission = Color(0.9, 0.9, 0.75)
-			mat.emission_energy_multiplier = 2.0
-		else:  # fresh dirt
-			mat.albedo_color = Color(0.45, 0.28, 0.14)
-			mat.emission_enabled = true
-			mat.emission = Color(0.6, 0.35, 0.15)
-			mat.emission_energy_multiplier = 1.0
-		mesh.material_override = mat
-		mesh.visibility_range_end = CLUE_M
-		mesh.visibility_range_end_margin = 1.0
-		mesh.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 		m.add_child(mesh)
 		if _log:  # QA (P2-26): proves the clue exists on this peer, where, and that it can render
 			Log.event(&"trap_clue_shown", {"trap_id": id, "kind": String(kind), "position": _v(mesh.global_position),
-				"visible": mesh.is_visible_in_tree(), "layers": mesh.layers, "range_m": mesh.visibility_range_end})
+				"visible": mesh.is_visible_in_tree()})
 		if _clue_shot != "" and not _shot_kinds.has(kind):
 			_shot_kinds.append(kind)
 			_shoot_clue(mesh.global_position, "%s/clue_%s_%s.png" % [_clue_shot, kind, "host" if Game.is_host() else "client"])
 		return
 
 
-## QA `-- --clue-shot=<dir>` (any peer, windowed): a player-eye view of each kind's first clue from 3 m.
+## QA `-- --clue-shot=<dir>` (any peer, windowed): a player-eye view of each kind's first clue from 10 m
+## (D-055: plainly visible at walking distance).
 var _clue_shot := ""
 var _shot_kinds: Array[StringName] = []
 
@@ -1016,7 +988,7 @@ var _shot_kinds: Array[StringName] = []
 func _shoot_clue(at: Vector3, path: String) -> void:
 	var cam := Camera3D.new()
 	get_parent().add_child(cam)
-	cam.global_position = at + Vector3(0, EYE_M, 3.0)
+	cam.global_position = at + Vector3(0, EYE_M, 10.0)
 	cam.look_at(at)
 	cam.make_current()
 	await get_tree().create_timer(1.5).timeout

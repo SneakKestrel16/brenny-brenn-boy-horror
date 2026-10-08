@@ -118,7 +118,7 @@ func _process(delta: float) -> void:
 	elif hold.aimed_verb != &"":
 		prompt = "Hold %s: %s" % [_key(&"interact"), _verb_text(hold.aimed_verb)]
 	elif hold.held_can_id() >= 0:
-		prompt = "Hold %s: put the can down" % _key(&"drop")
+		prompt = "Tap %s: put the can down" % _key(&"drop")
 	var why: StringName = hold.fresh_refusal()
 	if why != &"" and hs[0] == &"":
 		prompt = REFUSED_TEXT.get(why, String(why).capitalize().replace("_", " "))

@@ -46,6 +46,8 @@ func _ready() -> void:
 	add_child(_ring)
 	if OS.get_cmdline_user_args().has("--autochore"):
 		_autochore.call_deferred()
+	if OS.get_cmdline_user_args().has("--autotap"):
+		_autotap.call_deferred()
 	if OS.get_cmdline_user_args().has("--autosweep"):
 		_autosweep.call_deferred()
 
@@ -85,7 +87,7 @@ func _physics_process(delta: float) -> void:
 				_flag = spot
 				start(&"place_flag", spot, &"alt_use")
 				return
-		if Input.is_action_just_pressed(&"drop") and not Game.console_open and not _need_release and held_can_id() >= 0:
+		if Input.is_action_just_pressed(&"drop") and not Game.console_open and not _need_release and held_can_id() >= 0 and target_farm.targets.has("can_%d" % held_can_id()):
 			start(&"drop_can", target_farm.targets["can_%d" % held_can_id()])  # P2-27: G puts the carried can down
 			return
 		if tgt != null and not _need_release and Input.is_action_pressed(&"interact") and not Game.console_open:
@@ -97,7 +99,7 @@ func _physics_process(delta: float) -> void:
 	_ring.scale = Vector3.ONE * clampf(_t / _hold_s, 0.01, 1.0)
 	if is_instance_valid(_target):  # freed mid-hold (trap filled or disarmed by this hold): ring stays put
 		_ring.global_position = _target.target_pos() + Vector3(0, 1.4, 0)
-	if _scripted:
+	if _scripted or _verb == &"drop_can":  # drop_can: one tap, the host times it (releasing G must not cancel)
 		return
 	if bool(Settings.get_value(&"toggle_holds")):  # D-047: press starts, press again stops; hold time is unchanged
 		if not Input.is_action_pressed(_action):
@@ -244,7 +246,8 @@ func _autochore() -> void:
 	await _do(&"harvest", mine, front)
 	await _do(&"sell", "sell_box", Vector3(-1.6, 0, 0))
 	await _do(&"fill_can", "well", Vector3(1.6, 0, 0))
-	await _do(&"drop_can", "can_%d" % held_can_id(), Vector3.ZERO)  # D-054: put it down where we stand
+	if held_can_id() >= 0:
+		await _do(&"drop_can", "can_%d" % held_can_id(), Vector3.ZERO)  # D-054: put it down where we stand
 	Log.event(&"autochore_done", {"coins": farm.coins})
 
 
@@ -317,3 +320,24 @@ func _wait_farm() -> Node:
 		await get_tree().create_timer(0.5).timeout
 		farm = get_tree().get_first_node_in_group(&"farm")
 	return farm
+
+
+## QA (`-- --autotap`): take a can, then drop it with a real 60 ms G tap through the input system.
+func _autotap() -> void:
+	var farm: Node = await _wait_farm()
+	await get_tree().create_timer(2.0).timeout
+	await _do(&"take_can", "can_0" if Game.is_host() else "can_1", Vector3(0, 0, 1.2), [Vector3(0, 0, -4), Vector3(0, 0, 4), Vector3(22, 0, 4)])  # same way out of the barn as autochore
+	for i in 5:
+		await get_tree().physics_frame
+	Log.event(&"autotap_pre", {"held": held_can_id(), "need_release": _need_release, "holding": _holding})
+	var ev := InputEventAction.new()
+	ev.action = &"drop"
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	await get_tree().create_timer(0.06).timeout
+	ev = InputEventAction.new()
+	ev.action = &"drop"
+	ev.pressed = false
+	Input.parse_input_event(ev)
+	await get_tree().create_timer(1.0).timeout
+	Log.event(&"autotap_result", {"dropped": held_can_id() < 0})
