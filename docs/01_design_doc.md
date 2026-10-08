@@ -566,7 +566,26 @@ Bought by the shipping crate. "sim" means the price is set with the simulator be
 
 There are more roles than players, so each player picks one they want and no team has every role. Roles
 never let anyone harm the creature or see it clearly ("Glimpsed, never seen"). No role sides with the
-creature: honest signals must stay honest, so the only liar on the farm is the creature. Placeholder perks are
+creature in the normal game: honest signals must stay honest, so the only liar on the farm is the
+creature. The one exception is the opt-in Imposter mode below.
+
+### Imposter mode (opt-in, placeholder, after DD Phase 4)
+
+A lobby toggle, off by default, for groups who want betrayal on top of the creature.
+- **The toggle means "maybe", not "yes".** With it on, each season has a placeholder 50% chance of
+  one imposter and 50% of none. Nobody knows which, so the toggle alone proves nothing.
+- **The imposter keeps a real role.** Everyone picks roles in the lobby first; the host's game then
+  secretly picks the imposter at match start. The imposter's role and perks work as normal, so the
+  role list gives nothing away.
+- **The imposter wins if the farm forecloses.** Everyone else wins as normal.
+- **The imposter lies, never kills.** They can raise false signals (flags, whistle, pegboard marks)
+  and leave gates or doors open. Deaths still come from the creature. Exact kit is set by the Game
+  Designer.
+- The Dawn Report reveals the imposter, or that there was none, at the end of the season.
+
+This mode bends two pillars on purpose: "Honest signals cost something" (the imposter's signals lie)
+and the creature as the only liar. The normal game stays as written.
+ Placeholder perks are
 set before roles are built.
 
 **Picking a role:** each player picks a role in the barn lobby before the match starts.

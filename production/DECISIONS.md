@@ -337,3 +337,13 @@ An imposter role siding with the creature is rejected: it breaks "Honest signals
 betrayal ("Deaths come from player choices"), and turns "is that the creature?" into "is that the
 imposter?", which weakens voice mimicry. A separate opt-in mode may be considered after DD Phase 4,
 not before. **Why:** CEO asked; Director recommendation.
+
+### D-043 · 2026-10-08 · CEO · Opt-in Imposter mode
+Reverses D-042's "not before DD Phase 4" only as far as the design: doc 01 "Imposter mode" is added
+as an opt-in lobby toggle, off by default, built after DD Phase 4. To keep the toggle and the role
+list from exposing the imposter: the toggle means a placeholder 50% chance of one imposter or none;
+roles are picked publicly first, then the imposter is chosen secretly at match start and keeps their
+role and perks. The imposter wins on foreclosure, lies through signals and open doors, never kills;
+the Dawn Report reveals them at season end. The normal game keeps D-042's no-imposter rule.
+**Why:** CEO; the mode signalling "there is an imposter" and obvious roles giving them away were the
+CEO's concerns.
