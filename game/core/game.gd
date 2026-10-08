@@ -59,6 +59,15 @@ func player_count() -> int:
 	return maxi(players.size(), 1)
 
 
+## D-038: the game is built around 4; bots never fill past it. Real players may go up to `max_players()`.
+const BASE_PLAYERS := 4
+
+
+## The player cap, `player_scaling.json` `max_players` (D-038: 6; the roster, spawns and Net's refusal read it).
+func max_players() -> int:
+	return int(Data.record(&"player_scaling", &"headcount").get("max_players", BASE_PLAYERS))
+
+
 ## Command line (doc 05 section 3), called by Boot. Accepts `--key=value` and `--key value`.
 func parse_args(args: PackedStringArray) -> Dictionary:
 	var out := {}

@@ -193,11 +193,13 @@ Phase IDs are CONTRACTS section 8's: `day`, `dusk`, `night`, `dawn`, `harvest_mo
 ## 4. Player-count scaling
 
 **Rule** (`01 Ramp-up`): payments, medical bills, trap counts and the disturbance budget scale to
-80% at 3 players and 60% at 2, rounded up. `01 Joining and leaving` adds the moonflower bed (1 plot
+80% at 3 players and 60% at 2, rounded up; above 4 they scale up the same way, **120% at 5 and
+140% at 6** (`01 Ramp-up`; D-038; `placeholder` until the season simulator sets them, flagged
+`player_scaling.json` `sources`). `01 Joining and leaving` adds the moonflower bed (1 plot
 per player, `01 Crops`) and the Prize Pumpkin payout table is scaled the same way.
 
 ```
-scaled(v, headcount) = ceil(v * pct / 100)      pct = 100, 80, 60 for 4, 3, 2 players
+scaled(v, headcount) = ceil(v * pct / 100)      pct = 140, 120, 100, 80, 60 for 6, 5, 4, 3, 2 players
 ```
 
 Computed in integers (`(v * pct + 99) // 100`), never with `0.8` or `0.6` as floats. Checked:
@@ -209,7 +211,23 @@ this is a precaution, not a known bug.
 
 **Headcount** is the number of players with a body at that dawn: a late joiner counts from the
 dawn they get a body, a leaver stops counting from the next dawn (`01 Joining and leaving`). One
-player left pauses the season (`01 Joining and leaving`), so headcount is always 2 to 4.
+player left pauses the season (`01 Joining and leaving`), so headcount is always 2 to 6 (`max_players` 6; the game is built around 4, D-038).
+
+**Above 4 (D-038).** Every table that reads headcount goes through `scaled()` and so has a value at 5
+and 6 with no other data change, all `placeholder` until the simulator sets the percentages: payments
+(7.1), medical bill (8), traps and disturbances (11), the Prize Pumpkin payout (6). **Per-player
+values need no scaling:** the moonflower bed (1 plot per player), `plots_per_player` (the median
+team's 4) and every `store.json` `per_player` row grow with the head count by definition. The
+**field grows with the head count above 4** (CEO follow-up to D-038, `placeholder`): 4 plots per
+player, so the starting field is 16 at 2 to 4 players, 20 at 5p and 24 at 6p, and the bought-plot
+ceiling is the start plus 8 (the 8 of doc 01's 16 to 24): 24 at 2 to 4 players, 28 at 5p, 32 at 6p.
+Below 4 nothing changes (the ceiling stays 24). Data: `player_scaling.json`
+`field_plots_start_by_players` and `field_plots_max_by_players`; `season.json` `field_plots_start`
+and `field_plots_max` stay doc 01's 4-player values. Without this the field was 16 plots at 5p and
+6p, planting 20 and 24 plots' worth of labor into 16 (section 17.2 finding). `plot_pair` stays 40
+coins for 2 plots, and the number of pairs the store sells is `(max - start) / 2` (4 at 2 to 4p,
+4 at 5p and 6p); the 5p and 6p plots simply start open, so 5p and 6p have 4 pairs to buy, the same as 4p. Roles (section 15) are optional and have no headcount
+rule; 5 and 6 players just have more of them in play. Nothing else reads headcount.
 
 Every scaled doc 01 table already lands on whole numbers (sections 7, 8 and 6); the rounding only
 matters for trap and disturbance counts (section 11).
@@ -228,7 +246,8 @@ matters for trap and disturbance counts (section 11).
   payment was made, and stay locked for the season after a missed one (D-017). This is a data
   switch, `crops.json` `unlock_rule`: `first_payment_made` (the default) or `day` (unlock at dawn
   4 regardless). The simulator runs both (section 18.2).
-- **Plots:** 16 field plots at the start, up to 24 with bought plots, in two fields (`01 Crops`).
+- **Plots:** 16 field plots at the start, up to 24 with bought plots, in two fields (`01 Crops`). Above 4
+  players the start is 20 (5p) and 24 (6p) and the ceiling 28 and 32 (section 4, `placeholder`).
   The moonflower bed is separate: 1 plot per player (`01 Crops`).
 - **Seed pack:** one seed per plot; doc 01 "Medical bill" calls 4 coins "a turnip seed pack".
 - **Watering rule** (placeholder; inference from `01 The Prize Pumpkin` and "Labor"): a crop
@@ -254,6 +273,7 @@ matters for trap and disturbance counts (section 11).
 | `medium` | watered 3 to 4 days | 75 | 60 | 45 | 01 Prize Pumpkin payout |
 | `sad` | watered 0 to 2 days | 20 | 16 | 12 | 01 Prize Pumpkin payout |
 
+Above 4 (D-038, `placeholder`): giant 300 / 350, large 180 / 210, medium 90 / 105, sad 24 / 28 at 5p / 6p.
 Doc 01's 3p and 2p columns equal `scaled()` of the 4p column exactly (250 × 80 / 100 = 200,
 250 × 60 / 100 = 150, and so on), so the data stores the 4p column only.
 
@@ -281,13 +301,16 @@ Doc 01's 3p and 2p columns equal `scaled()` of the 4p column exactly (250 × 80 
 | 4 | 1,300 | 255 | 1,045 | 01 Debt and payments |
 | 3 | 1,040 | 204 | 836 | 01 Debt and payments |
 | 2 | 780 | 153 | 627 | 01 Debt and payments |
+| 5 | 1,560 | 306 | 1,254 | `placeholder`, D-038 (120%: 1,300 and 255 scaled) |
+| 6 | 1,820 | 357 | 1,463 | `placeholder`, D-038 (140%: 1,300 and 255 scaled) |
 
-The data stores only 1,300 and 255; the formula below produces the whole table.
+The data stores only 1,300 and 255; the formula below produces the whole table. Its `pct_d` values
+are 100, 80, 60 and, above 4, 120 and 140 (all exact: 1,300 and 255 divide by 5 and 10).
 
 ### 7.2 The formula
 
 From `01 Joining and leaving`, in integer form. `pct_d` is the headcount percentage fixed when
-dawn `d` begins (100, 80, 60), for d = 1 to 7. Past days use the recorded value, future days the
+dawn `d` begins (140, 120, 100, 80, 60), for d = 1 to 7. Past days use the recorded value, future days the
 current headcount.
 
 ```
@@ -356,16 +379,18 @@ final = 1077 - 211 = 866
 | 4 | 25 | 50 | 120 | 01 Death and Respawning |
 | 3 | 20 | 40 | 96 | 01 Death and Respawning (= scaled 4p values) |
 | 2 | 15 | 30 | 72 | 01 Death and Respawning (= scaled 4p values) |
+| 5 | 30 | 60 | 144 | `placeholder`, D-038 (scaled 4p values) |
+| 6 | 35 | 70 | 168 | `placeholder`, D-038 (scaled 4p values) |
 
 - "A night" is a day-night cycle: day deaths count (`01 Day deaths`), billed at the next dawn.
 - **Floor:** the bill never takes the bank below 4 coins; what it can't cover is added to the final
   payment (`01 Death and Respawning`).
 - **Headcount** is the one at the dawn that bills (inference).
-- **The cap only bites with 3+ deaths:** 4p 25 + 50 + 50 = 125 → 120; 3p 20 + 40 + 40 = 100 → 96.
+- **The cap only bites with 3+ deaths:** 4p 25 + 50 + 50 = 125 → 120; 3p 20 + 40 + 40 = 100 → 96; 5p 30 + 60 + 60 = 150 → 144; 6p 35 + 70 + 70 = 175 → 168.
   At 2p the most is 15 + 30 = 45, so the 72 cap is never reached (each player dies at most once a
   cycle, since the dead are out until dawn).
 - **Data (P2-12):** `data/medical_bill.json`, one record `bill` (`first_4p` 25, `later_4p` 50, `cap_4p` 120,
-  `doc01`); 3p and 2p come from `player_scaling.json` (ceil) and reproduce the table above.
+  `doc01`); 3p, 2p, 5p and 6p come from `player_scaling.json` (ceil) and reproduce the table above.
 
 ## 9. Dawn, in order
 
@@ -398,7 +423,7 @@ stand and at the dawn cash-in (D-017). `sim` prices are the simulator's starting
 | `walkie_battery` | 10 | sim | 180 s of transmitting (placeholder) |
 | `brighter_lantern` | 25 | sim | light radius in doc 03 |
 | `scarecrow` | 20 | sim | effect in doc 03 |
-| `plot_pair` | 40 | sim | 2 field plots, 16 to 24 |
+| `plot_pair` | 40 | sim | 2 field plots, start to ceiling: 16 to 24 (2 to 4p), 20 to 28 (5p), 24 to 32 (6p) (section 4) |
 | `flare_gun` | 50 | sim | one shot, refilled each dawn; scares the creature off for 30 s (`01 Store`) |
 
 - **Pegboard lock (P2-12):** `data/store.json` `shed_lock`, price 40 (`doc01`), effect
@@ -425,6 +450,22 @@ night" sets no trap count.
 | 5 | 3 | 3 | 2 | 4 / 3 / 1 | 4 / 3 / 1 | 3 / 2 / 1 |
 | 6 | 3 | 3 | 2 | 5 / 3 / 2 | 4 / 3 / 2 | 3 / 2 / 2 |
 | 7 | 4 | 4 | 3 | hunts all night | | |
+
+Above 4 (D-038, `placeholder`, ceil of 120% and 140%):
+
+| Day | Disturbances 5p | 6p | Traps 5p | 6p |
+|---|---|---|---|---|
+| 1 | 2 | 2 | 3 / 2 / 0 | 3 / 2 / 0 |
+| 2 | 2 | 2 | 3 / 3 / 0 | 3 / 3 / 0 |
+| 3 | 3 | 3 | 4 / 3 / 0 | 5 / 3 / 0 |
+| 4 | 3 | 3 | 4 / 3 / 2 | 5 / 3 / 2 |
+| 5 | 4 | 5 | 5 / 4 / 2 | 6 / 5 / 2 |
+| 6 | 4 | 5 | 6 / 4 / 3 | 7 / 5 / 3 |
+| 7 | 5 | 6 | hunts all night | |
+
+With bells disabled (next paragraph) nights 4 to 6 read bear / pit 5p 4 / 3, 5 / 4, 6 / 4 and 6p
+5 / 3, 6 / 5, 7 / 5. 5p and 6p never get fewer than 4p's count (ceil), and day 1 already differs
+from 4p (2 disturbances against 1).
 
 Worked: 3p bear day 5 = ceil(4 × 0.8) = ceil(3.2) = 4; 2p bells day 6 = ceil(2 × 0.6) = ceil(1.2)
 = 2; 2p disturbances day 5 = ceil(3 × 0.6) = ceil(1.8) = 2.
@@ -558,7 +599,7 @@ tools/sim/projection.py`), which copies doc 01's numbers because `data/` doesn't
 rules, in order each day and dawn:
 
 - **Day d (1 to 7):** harvest and sell every ripe field crop at the town stand. From day 3, buy and
-  plant 1 moonflower per player first. Then fill free field plots (4 per player, at most 16): a
+  plant 1 moonflower per player first. Then fill free field plots (4 per player: 8, 12, 16, 20, 24 at 2 to 6 players): a
   pumpkin on days 4 and 5 if pumpkins are unlocked, otherwise a turnip; a plot the team can't
   afford a pumpkin for gets a turnip; planting stops when the team can't afford a turnip.
 - **Dawn d + 1, in order:** cash-in of that night's moonflowers; at dawn 8, every crop in the
@@ -573,6 +614,8 @@ rules, in order each day and dawn:
 
 | Players | Final owed | Perfect: coins at dawn 8 | margin | Rough median: coins | owed | margin |
 |---|---|---|---|---|---|---|
+| 6 | 1,463 | 1,881 | +418 | 1,428 | 1,463 | −35 |
+| 5 | 1,254 | 1,603 | +349 | 1,207 | 1,254 | −47 |
 | 4 | 1,045 | 1,319 | +274 | 938 | 1,045 | −107 |
 | 3 | 836 | 1,005 | +169 | 633 | 836 | −203 |
 | 2 | 627 | 685 | +58 | 334 | 627 | −293 |
@@ -587,6 +630,19 @@ median ends at 986, 705 and 406 (margins −59, −131, −221). In the perfect 
 to 78 coins (locked: 1,241, 945, 643); in the rough median, where the trample takes a pumpkin
 whenever one is growing, they cost 48 to 72. So the first-payment reward is only worth having if
 the team can protect it, which the simulator should report.
+
+**5 and 6 players (P2-13, D-038, `placeholder` 120% and 140%; field plots, CEO follow-up):**
+`projection.py` takes 5 and 6 (`PCT`) and a `FIELD` table of plots tended (8, 12, 16, 20, 24). With the
+field held at 16 the rough median ended 213 short at 5p (17% of the final) and 375 short at 6p (26%)
+against 10% at 4p, because income stopped growing at 4 players while debt kept scaling. **Rule
+chosen:** the field grows 4 plots per extra player above 4 (start 20 / 24, ceiling 28 / 32, section
+4). Rough median now ends 47 short at 5p (3.7%) and 35 short at 6p (2.4%); perfect play +349 and
++418. 4p and below are unchanged (-107, 10%). 5p and 6p land easier than 4p, not equal: the
+projection is only a plots-limited sanity check, so the real simulator sets the final fit, and the
+lever left for it is the `placeholder` 120% and 140% (for example 125% and 150% would add about
+53 and 105 to the final), not more plots. Alternatives tried on paper and dropped: ceiling-only
+growth (28 / 32 with the start at 16) changes nothing for a median team that plants 4 plots per
+player, since an extra plot never gets planted (see the P = 6 finding below).
 
 Findings, inference until the simulator runs:
 - **2 players are structurally poorer.** Income scales with headcount (4 plots and 1 moonflower per
@@ -1246,16 +1302,42 @@ Section 4.
           "pct_by_players": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["2", "3", "4"],
+            "required": ["2", "3", "4", "5", "6"],
             "properties": {
               "2": {"type": "integer", "minimum": 0, "maximum": 1000},
               "3": {"type": "integer", "minimum": 0, "maximum": 1000},
-              "4": {"type": "integer", "minimum": 0, "maximum": 1000}
+              "4": {"type": "integer", "minimum": 0, "maximum": 1000},
+              "5": {"type": "integer", "minimum": 0, "maximum": 1000},
+              "6": {"type": "integer", "minimum": 0, "maximum": 1000}
+            }
+          },
+          "field_plots_start_by_players": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["2", "3", "4", "5", "6"],
+            "properties": {
+              "2": {"type": "integer", "minimum": 1, "maximum": 64},
+              "3": {"type": "integer", "minimum": 1, "maximum": 64},
+              "4": {"type": "integer", "minimum": 1, "maximum": 64},
+              "5": {"type": "integer", "minimum": 1, "maximum": 64},
+              "6": {"type": "integer", "minimum": 1, "maximum": 64}
+            }
+          },
+          "field_plots_max_by_players": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["2", "3", "4", "5", "6"],
+            "properties": {
+              "2": {"type": "integer", "minimum": 1, "maximum": 64},
+              "3": {"type": "integer", "minimum": 1, "maximum": 64},
+              "4": {"type": "integer", "minimum": 1, "maximum": 64},
+              "5": {"type": "integer", "minimum": 1, "maximum": 64},
+              "6": {"type": "integer", "minimum": 1, "maximum": 64}
             }
           },
           "rounding": {"const": "ceil"},
           "min_players": {"const": 2},
-          "max_players": {"const": 4}
+          "max_players": {"const": 6}
         },
         "required": ["id", "source", "pct_by_players", "rounding", "min_players", "max_players"]
       },

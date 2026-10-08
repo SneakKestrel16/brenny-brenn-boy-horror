@@ -11,6 +11,7 @@ const Registry := preload("res://game/interaction/hold_registry.gd")
 var targets: Dictionary = {}  ## id -> Interactable
 var carry: Dictionary = {}  ## every peer: peer -> {can, bag, fuel_can}, replicated by `apply_carry`
 var coins := 0 ## authoritative on the host; mirrored elsewhere
+var final_extra := 0  ## host: medical bill the bank floor could not cover, added to the final payment (doc 02 s8)
 var registry: Node
 var _log_farm := OS.get_cmdline_user_args().has("--log-farm")
 
@@ -65,9 +66,9 @@ func advance_day() -> void:
 			t.advance_day()
 
 
-func add_coins(n: int, reason: StringName, peer: int) -> void:
+func add_coins(n: int, reason: StringName, peer: int) -> void:  # peer 0: the team (bill), logged as null
 	coins += n
-	Log.event(&"money_changed", {"coins": coins, "delta": n, "reason": String(reason), "player": peer})
+	Log.event(&"money_changed", {"coins": coins, "balance": coins, "delta": n, "reason": String(reason), "player": peer if peer > 0 else null})
 	_broadcast(&"money_changed", [coins])
 
 

@@ -5,7 +5,8 @@ Numbers are copied from doc 01 here because data/ doesn't exist yet; the simulat
 Rules are listed in doc 02 section 17.2.
 """
 
-PCT = {4: 100, 3: 80, 2: 60}
+PCT = {6: 140, 5: 120, 4: 100, 3: 80, 2: 60}  # 5 and 6: D-038 placeholder
+FIELD = {2: 8, 3: 12, 4: 16, 5: 20, 6: 24}  # plots tended; 5p, 6p: D-039 placeholder (4 per player)
 GROW = {"turnip": 1, "pumpkin": 2}
 SEED = {"turnip": 4, "pumpkin": 10, "moonflower": 25}
 SELL = {"turnip": 10, "pumpkin": 28, "moonflower": 60}
@@ -18,7 +19,7 @@ def scaled(value: int, players: int) -> int:
 def run(players: int, median: bool, pumpkins: bool = True) -> dict:
     """Days 1..7, each followed by its dawn (2..8). `pumpkins=False` keeps them locked (D-017)."""
     coins = 60
-    field = min(16, 4 * players)
+    field = FIELD[players]
     moon = players
     plots: list[tuple[str, int]] = []
     deaths = {2, 4, 6} if median else set()
@@ -73,7 +74,7 @@ def run(players: int, median: bool, pumpkins: bool = True) -> dict:
 
 
 if __name__ == "__main__":
-    for players in (4, 3, 2):
+    for players in (6, 5, 4, 3, 2):
         for median in (False, True):
             r = run(players, median)
             name = "rough median" if median else "perfect"

@@ -11,6 +11,7 @@ var _creature: Node
 var _dead: Dictionary = {}  ## every peer: peer -> {cause, position, body}
 var _test := OS.get_cmdline_user_args().has("--creature-test")
 var _respawn_at: Dictionary = {}  ## host: peer -> msec
+var _bill_deaths := 0  ## host: deaths since the last dawn bill
 
 
 func _ready() -> void:
@@ -25,8 +26,7 @@ func _ready() -> void:
 			die(p, &"night_chase"))
 	Clock.phase_changed.connect(func(ph: StringName) -> void:
 		if ph == &"dawn":
-			for p in _dead.keys():
-				respawn(p))
+			dawn())
 	Net.request_received.connect(func(what: StringName, peer: int, _a: Array) -> void:
 		if what == &"farm_state":  # a late joiner learns who is already dead
 			for p in _dead:
@@ -39,6 +39,7 @@ func die(peer: int, cause: StringName) -> void:
 	if st.is_empty() or Game.is_ghost(peer):
 		return
 	st.pinned = false
+	_bill_deaths += 1  # day deaths count toward the next dawn (doc 02 s8)
 	var pos: Vector3 = st.get("pos", Vector3.ZERO)
 	get_parent().get_node("Farm").registry.cancel(peer, &"dead")
 	Log.event(&"death", {"player": peer, "cause": String(cause), "position": [snappedf(pos.x, 0.1), snappedf(pos.z, 0.1)],
@@ -58,12 +59,60 @@ func _physics_process(_delta: float) -> void:
 			respawn(p)
 
 
-## Host only: the ghost walks again at the spawn point.
+## Doc 02 s8: `first_4p` for the first death, `later_4p` for each other, capped at `cap_4p`; all three scaled
+## to the headcount at the billing dawn (ceil, `player_scaling`).
+func bill_for(deaths: int) -> int:
+	if deaths <= 0:
+		return 0
+	var first := Data.scaled(int(Data.value(&"medical_bill", &"bill", &"first_4p")), &"bill")
+	var later := Data.scaled(int(Data.value(&"medical_bill", &"bill", &"later_4p")), &"bill")
+	var cap := Data.scaled(int(Data.value(&"medical_bill", &"bill", &"cap_4p")), &"bill")
+	return mini(first + later * (deaths - 1), cap)
+
+
+## Host only, doc 02 s9 in order. Step 1 cash-in: the living sell what they carry, the dead lose it. Step 3
+## medical bill. Steps 2 (final dawn sale), 4 (payment), 5 (farm damage), 6 (save), 7 (free scrap) are stubs
+## until their tasks. Respawn at the barn follows, then `dawn_summary`.
+func dawn() -> void:
+	var farm: Node = get_parent().get_node("Farm")
+	for p in Game.players.keys():
+		var st: Dictionary = farm.pstate(p)
+		var bag := int(st.bag)
+		st.bag = 0
+		if Game.is_ghost(p):
+			if bag > 0 or st.get("fuel_can", false):
+				Log.event(&"carried_lost", {"player": p, "bag": bag})
+			st.fuel_can = false
+		elif bag > 0:
+			farm.add_coins(bag * int(Data.value(&"crops", &"turnip", &"sell")), &"dawn_cash_in", p)
+		farm.send_carry(p)
+	var deaths := _bill_deaths
+	_bill_deaths = 0
+	var bill := bill_for(deaths)
+	var paid := clampi(farm.coins - int(Data.value(&"season", &"bank_floor")), 0, bill)  # the bank never drops below the floor
+	if paid > 0:
+		farm.add_coins(-paid, &"medical_bill", 0)
+	farm.final_extra += bill - paid
+	if bill > 0:
+		Log.event(&"medical_bill", {"deaths": deaths, "bill": bill, "paid": paid, "to_final": bill - paid, "players": Game.player_count()})
+	for p in _dead.keys():
+		respawn(p)
+	var ripe := 0
+	for t in farm.targets.values():
+		if t.get("state") == &"ripe":
+			ripe += 1
+	Log.event(&"dawn_summary", {"day": Clock.day, "coins": farm.coins, "debt": 0, "plots_ripe": ripe,  # debt, wilting, damage: later tasks
+			"plots_wilted": 0, "farm_damage": 0, "deaths": deaths, "medical_bill": bill, "final_extra": farm.final_extra})
+
+
+## Host only: the ghost walks again at its barn spawn (the same slot as at the start).
 func respawn(peer: int) -> void:
 	if not _dead.has(peer) or not Game.players.has(peer):
 		return
 	var spawns := get_tree().get_nodes_in_group(&"player_spawns")
-	var pos: Vector3 = (spawns[0] as Node3D).global_position if not spawns.is_empty() else Vector3.ZERO
+	var pos := Vector3.ZERO
+	if not spawns.is_empty():
+		pos = (spawns[maxi(Game.players.keys().find(peer), 0) % spawns.size()] as Node3D).global_position
 	var st: Dictionary = Game.players[peer]
 	st.freeze_until = Time.get_ticks_msec() + 300  # frames from before the teleport are dropped
 	st.pos = pos

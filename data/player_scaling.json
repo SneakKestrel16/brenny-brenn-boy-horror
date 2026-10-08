@@ -5,15 +5,39 @@
     {
       "id": "headcount",
       "source": "doc01",
-      "cite": "doc 01 Ramp-up (80% at 3 players, 60% at 2, rounded up); doc 02 section 4",
+      "cite": "doc 01 Ramp-up (80% at 3 players, 60% at 2, rounded up; 120% at 5 and 140% at 6, D-038); doc 02 section 4; field plots 20/24 start and 28/32 ceiling at 5p/6p, D-038 follow-up placeholder, doc 02 section 4",
+      "sources": {
+        "2": "doc01",
+        "3": "doc01",
+        "4": "doc01",
+        "5": "placeholder",
+        "6": "placeholder",
+        "field_plots": "placeholder"
+      },
       "pct_by_players": {
         "2": 60,
         "3": 80,
-        "4": 100
+        "4": 100,
+        "5": 120,
+        "6": 140
       },
       "rounding": "ceil",
       "min_players": 2,
-      "max_players": 4
+      "max_players": 6,
+      "field_plots_start_by_players": {
+        "2": 16,
+        "3": 16,
+        "4": 16,
+        "5": 20,
+        "6": 24
+      },
+      "field_plots_max_by_players": {
+        "2": 24,
+        "3": 24,
+        "4": 24,
+        "5": 28,
+        "6": 32
+      }
     }
   ]
 }

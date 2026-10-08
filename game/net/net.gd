@@ -13,7 +13,6 @@ extends Node
 
 const DEFAULT_PORT := 45120  ## doc 06 section 2; 45121..45124 if taken locally
 const PORT_TRIES := 4
-const MAX_CLIENTS := 4  ## one more than allowed, to say "the farm is full" (doc 06 section 2)
 const CHANNELS := 4  ## CONTRACTS section 7
 const CONNECT_TIMEOUT_S := 10.0  ## placeholder
 
@@ -23,12 +22,15 @@ signal bytes_received(from_peer: int, packet: PackedByteArray)
 signal teleport_received(position: Vector3)
 
 const PROTOCOL_VERSION := 1  ## doc 06 section 5 `request_join`; refusing a mismatch is not built yet
+const BANDWIDTH_S := 10.0  ## doc 06 s14: `net_bandwidth` interval
 const NAME_MAX := 24  ## display name characters kept (placeholder)
 
 var port := 0  ## the port actually opened (host) or dialled (client)
 var profiles := {}  ## peer id -> {"uid": 32 hex, "name": display name}; the host's copy is the truth
 var _join_target := ""
 var _uid := ""
+var _bw_t := 0.0
+var _refused := {}  ## host: peers sent away because the farm was full; their disconnect is not a player leaving
 
 
 func _ready() -> void:
@@ -41,16 +43,39 @@ func _ready() -> void:
 		bytes_received.emit(id, packet))
 
 
+## Doc 06 s14 `net_bandwidth` every 10 s (P2-07, Gameplay edit): ENet's host counters plus 28 B of UDP/IPv4
+## header per datagram, the PP-02 spike's method, so doc 06 s13's table applies.
+func _process(delta: float) -> void:
+	_bw_t += delta
+	if _bw_t < BANDWIDTH_S:
+		return
+	var s := _bw_t
+	_bw_t = 0.0
+	var e := multiplayer.multiplayer_peer as ENetMultiplayerPeer
+	if e == null or e.host == null:
+		return
+	var sent := e.host.pop_statistic(ENetConnection.HOST_TOTAL_SENT_DATA)
+	var recv := e.host.pop_statistic(ENetConnection.HOST_TOTAL_RECEIVED_DATA)
+	var sent_p := e.host.pop_statistic(ENetConnection.HOST_TOTAL_SENT_PACKETS)
+	var recv_p := e.host.pop_statistic(ENetConnection.HOST_TOTAL_RECEIVED_PACKETS)
+	Log.event(&"net_bandwidth", {"seconds": snappedf(s, 0.01), "players": Game.players.size(),
+			"up_kbps": snappedf((sent + 28 * sent_p) * 8.0 / s / 1000.0, 0.1),
+			"down_kbps": snappedf((recv + 28 * recv_p) * 8.0 / s / 1000.0, 0.1),
+			"up_datagrams_per_s": snappedf(sent_p / s, 0.1)})
+
+
 ## Host only. Opens the ENet server, trying the next ports if one is taken (doc 06 section 2).
 func host(p_port: int = DEFAULT_PORT) -> Error:
 	var peer := ENetMultiplayerPeer.new()
 	# max_channels stays 0: Godot 4.7.2 create_server shifts its arguments (doc 06 section 2, PP-02).
-	var err := peer.create_server(p_port, MAX_CLIENTS)
+	# P2-07: connections = the player cap (D-038), one more than the clients allowed, so a peer past the cap
+	# connects long enough to be told "the farm is full" (doc 06 section 2).
+	var err := peer.create_server(p_port, Game.max_players())
 	var tries := 0
 	while err != OK and tries < PORT_TRIES:
 		tries += 1
 		p_port += 1
-		err = peer.create_server(p_port, MAX_CLIENTS)
+		err = peer.create_server(p_port, Game.max_players())
 	if err != OK:
 		push_error("Net: could not open UDP port %d: %s" % [p_port, error_string(err)])
 		return err
@@ -117,11 +142,14 @@ func join(address: String, default_port: int = DEFAULT_PORT) -> Error:
 func to_peers(method: StringName, args: Array = [], targets: Array = []) -> void:
 	if not multiplayer.has_multiplayer_peer() or multiplayer.get_peers().is_empty():
 		return
-	if targets.is_empty():
+	if targets.is_empty() and _refused.is_empty():
 		callv(&"rpc", [method] + args)
 		return
+	if targets.is_empty():  # P2-07: a refused peer waiting to be dropped gets nothing but its refusal
+		targets = multiplayer.get_peers()
 	for id in targets:
-		callv(&"rpc_id", [id, method] + args)
+		if not _refused.has(id) or method == &"apply_join_refused":
+			callv(&"rpc_id", [id, method] + args)
 
 
 ## Raw packet on `channel` (doc 06 section 2: movement 1 unreliable ordered, voice 2 unreliable).
@@ -130,7 +158,7 @@ func to_peers(method: StringName, args: Array = [], targets: Array = []) -> void
 func send_bytes(peer: int, packet: PackedByteArray, channel: int = 1) -> void:
 	if not multiplayer.has_multiplayer_peer() or multiplayer.get_peers().is_empty():
 		return
-	if peer != 0 and not _connected(peer):
+	if peer != 0 and (_refused.has(peer) or not _connected(peer)):
 		return
 	var mode := MultiplayerPeer.TRANSFER_MODE_UNRELIABLE if channel == 2 else MultiplayerPeer.TRANSFER_MODE_UNRELIABLE_ORDERED
 	(multiplayer as SceneMultiplayer).send_bytes(packet, peer, mode, channel)
@@ -163,6 +191,16 @@ func _on_peer_connected(id: int) -> void:
 	_pin_throttle(id)
 	if not Game.is_host():
 		return
+	if Game.players.size() >= Game.max_players():  # P2-07, doc 06 s2: the farm is full (bots count as players)
+		_refused[id] = true
+		Log.event(&"join_refused", {"peer": id, "reason": "full", "players": Game.players.size()})
+		to_peers(&"apply_join_refused", [&"full"], [id])
+		# Disconnected 0.5 s later: an immediate disconnect reached the joiner before the RPC (tested).
+		get_tree().create_timer(0.5).timeout.connect(func() -> void:
+			var e := multiplayer.multiplayer_peer as ENetMultiplayerPeer
+			if e and id in multiplayer.get_peers():
+				e.disconnect_peer(id))
+		return
 	Game.players[id] = {}
 	to_peers(&"apply_session_state", [Game.session_id, Log.now(), Data.phase1, Data.hash_value, Game.difficulty, Game.in_lobby], [id])
 	to_peers(&"apply_roster", [Game.players.keys(), profiles])
@@ -175,7 +213,7 @@ func _on_peer_connected(id: int) -> void:
 
 
 func _on_peer_disconnected(id: int) -> void:
-	if not Game.is_host():
+	if not Game.is_host() or _refused.erase(id):
 		return
 	Game.players.erase(id)
 	profiles.erase(id)
@@ -205,6 +243,18 @@ func _on_server_disconnected() -> void:
 
 
 # --- RPCs (doc 06 section 7); handlers live in the owning autoload -------------------------------
+
+## P2-07 (doc 06 s2): the host refused this join (`full`). No session was opened, so nothing is logged
+## here; a window goes back to the main menu, a headless copy quits.
+@rpc("authority", "call_remote", "reliable")
+func apply_join_refused(reason: StringName) -> void:
+	print("Net: join refused by the host: %s" % reason)
+	multiplayer.multiplayer_peer = null
+	if DisplayServer.get_name() == "headless":
+		get_tree().quit()
+	else:
+		get_tree().change_scene_to_file.call_deferred(Game.MENU_SCENE)
+
 
 @rpc("authority", "call_remote", "reliable")
 func apply_session_state(p_session_id: String, host_t: float, p_phase1: bool, data_hash: int, p_difficulty: StringName, p_lobby: bool = false) -> void:

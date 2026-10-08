@@ -2,7 +2,7 @@
 # requires-python = ">=3.13"
 # dependencies = []
 # ///
-"""Start N (2 to 4) local Godot instances with per-instance arguments and collect their logs.
+"""Start N (2 to 6) local Godot instances with per-instance arguments and collect their logs.
 
     uv run tools/qa/multi.py -n 2 --args "-- --host" --args "-- --join=127.0.0.1"
     uv run tools/qa/multi.py -n 4 --headless --frames 3600 --common "-- --bot"
@@ -82,7 +82,7 @@ def snapshot(logs_root: Path) -> dict[Path, tuple[float, int]]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("-n", "--instances", type=int, default=2, choices=(2, 3, 4), help="number of instances (2 to 4)")
+    parser.add_argument("-n", "--instances", type=int, default=2, choices=(2, 3, 4, 5, 6), help="number of instances (2 to 6)")
     parser.add_argument("--args", action="append", default=[], metavar="ARGS", help="one instance's arguments; repeat in instance order")
     parser.add_argument("--common", default="", metavar="ARGS", help="arguments for every instance")
     parser.add_argument("--headless", action="store_true", help="no windows (bots, automated runs)")

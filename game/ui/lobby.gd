@@ -49,7 +49,9 @@ func _refresh() -> void:
 	for p in Game.players:
 		var me := " (you)" if p == Game.local_peer() else ""
 		var host := " [host]" if p == 1 else ""
-		t += "  Player %d%s%s: voice %s\n" % [p, me, host, VOICE_NAMES.get(Game.voice_setting_of(p), "Off")]
+		var who: String = Net.profiles.get(p, {}).get("name", "Player %d" % p)  # one source: Net.profiles (Q-054 item 3)
+		var rec := ", recording" if Voice._lit.has(p) else ""  # Voice has no public accessor yet; reads its tally-lamp set
+		t += "  %s%s%s: voice %s%s\n" % [who, me, host, VOICE_NAMES.get(Game.voice_setting_of(p), "Off"), rec]
 	t += "\n" + DISCORD_LINE + "\n"
 	t += "Enter: start the match   Esc: menu" if Game.is_host() else "Waiting for the host to start. Esc: menu"
 	_roster.text = t
@@ -61,8 +63,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	if Engine.get_process_frames() % 30 == 0:
+		_refresh()  # the recording marks change without a signal
 	if Game.is_host() and Game.lobby_autostart > 0 and Game.players.size() >= Game.lobby_autostart:
 		_autostart_t += delta
 		if _autostart_t > 1.5:
-			Game.lobby_autostart = 0
-			Game.start_match()
+			Game.start_match()  # P2-07: retried every frame until `match_ready()` (clip pre-share) lets it go
+			if not Game.in_lobby:
+				Game.lobby_autostart = 0

@@ -14,7 +14,8 @@ func _ready() -> void:
 		return
 	var players: Node = get_parent().get_node("Players")
 	var farm: Node = get_tree().get_first_node_in_group(&"farm")
-	for i in Game.bots:
+	# P2-07, D-038: `--bots=N` fills empty slots up to the base count (4), never past it.
+	for i in mini(Game.bots, maxi(Game.BASE_PLAYERS - Game.players.size(), 0)):
 		var id := -(i + 1)
 		Game.players[id] = {"bot": true}
 		Log.event(&"player_joined", {"player": id, "bot": true})

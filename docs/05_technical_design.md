@@ -567,6 +567,15 @@ Harvest Moon only (doc 01 "The Harvest Moon", doc 02 section 9). Host-owned `Car
   `night_trap`, `harvest_moon`. The host sends `apply_death(peer, cause, position)`, drops the body
   (a prop, `Items`), spawns a `Ghost` for that peer, and logs `death`. The body can be carried by
   teammates (`request_carry_player`); doc 03 section 15 decides what bodies do to the creature.
+- **Dawn, respawn and the medical bill (P2-06, `game/ghost/death.gd` `dawn()`).** Host only, on
+  `phase_changed(dawn)`, doc 02 section 9 order: (1) cash-in: each living player's bag sells at the turnip
+  price (`money_changed` reason `dawn_cash_in`); the dead lose bag and fuel can (`carried_lost`); (3) bill:
+  `_bill_deaths` (every death since the last dawn, day deaths included) gives `min(first + later * (n-1), cap)`
+  from `medical_bill.json`, each scaled by `Data.scaled` to the headcount at that dawn (doc 02 section 8). The
+  bank pays down to `season.bank_floor` (4); the rest goes to `Farm.final_extra` (the final payment adds it
+  when payments are built). `money_changed` reason `medical_bill`, `player` null. Steps 2, 4 to 7 are stubs.
+  Then every ghost respawns at its own barn spawn slot (`player_spawns[index in Game.players]`), then
+  `dawn_summary` (`debt`, `plots_wilted`, `farm_damage` are 0 until their tasks).
 - **Ghosts** (doc 01 "Ghosts"): a spectator camera that flies, passes through everything but cannot
   interact with the world, see `Ghost` in section 3. The ghost's position is its own camera
   position (client-owned like all movement). Ghosts see the world as it is (including a dim glow on
@@ -817,7 +826,7 @@ the QA changes.
 | `trap_changed` | host | `trap_id`, `state` (`set`, `sprung`, `disarmed`, `filled`, `cut`), `by` | Trap use |
 | `flag_placed` / `flag_removed` | host | `player`, `position`, `trap_id` (or null) | Flags |
 | `payment_made` | host | `amount`, `balance`, `due`, `late` | Debt |
-| `dawn_summary` | host | `day`, `coins`, `debt`, `plots_ripe`, `plots_wilted`, `farm_damage`, `deaths` | Simulator `compare` (reads `money_changed` by dawn too) |
+| `dawn_summary` | host | `day`, `coins`, `debt`, `plots_ripe`, `plots_wilted`, `farm_damage`, `deaths` (+ `medical_bill`, `final_extra`; P2-06) | Simulator `compare` (reads `money_changed` by dawn too) |
 | `generator` | host | `state` (`fuelled`, `dead`, `repaired`), `fuel_s` | Generator run |
 | `door` | host | `door_id`, `open`, `by` | Light rule |
 | `creature_state` | host | `from`, `to`, `reason`, `position`, `target` (peer id or null) | Pacing; mirrors `apply_creature_state` (AI Programmer writes it) |
@@ -1009,3 +1018,27 @@ Raised in `production/QUESTIONS.md` (Q-019 onward):
 4. **Level Designer:** a `cart_route` `Path3D` and `Marker3D` groups in the level scene (doc 04
    section 6.1), the Phase 1 gray box scene name.
 5. **Network & Voice:** nothing new for the transport; the cart transform cadence and `Net.rtt_ms()`.
+
+## Up to 6 players (P2-07, D-038)
+
+- **Cap.** `Game.max_players()` reads `player_scaling.json` `max_players` (6). `Game.BASE_PLAYERS` (4) is the
+  size the game is built around. `Net.host` opens `max_players` connections (one more than the clients allowed).
+- **"Farm is full" (doc 06 s2).** When a peer connects and `Game.players.size() >= max_players()` (bots count),
+  the host logs `join_refused` (`peer`, `reason` `full`, `players`), sends `apply_join_refused(&"full")` to that
+  peer only, and drops it 0.5 s later (an immediate drop beat the RPC). While it waits, `Net.to_peers` and
+  `send_bytes` skip it (`_refused`) and its disconnect is not a `player_left`. The joiner prints the refusal,
+  clears its peer, and goes to the main menu (headless: quits).
+- **Spawn.** `Players._free_slot`: the lowest-use `player_spawns` index, so two players share a spot only when
+  more players than spawns exist. Six barn spawns (doc 04 s13): x -3, -1, 1, 3 at z -8 and (-2, -11), (2, -11).
+  Logged as `player_spawn_at` (`peer`, `slot`, `pos`).
+- **Headcount scaling** has one reader: `Data.scaled(v, kind, players = 0)` reads `pct_by_players` for
+  `Game.player_count()` (roster size incl. bots and ghosts; a count with no entry reads 100%). Bills use it
+  (`death.gd`); the trap setter and disturbance budget call the same function (doc 02 s11).
+- **`--bots=N`** adds `min(N, BASE_PLAYERS - roster size)` bots when `Main` loads (`bots.gd`): never past 4.
+  Bots joined later by real players are not counted. On `--full-farm` a bot spawns, streams and stands
+  (`bot_route.gd` is Phase 1 only; `bot.gd` skips `_run`).
+- **`net_bandwidth`** (`Net._process`, every 10 s, every peer): ENet host counters plus 28 B of UDP/IPv4
+  header per datagram (PP-02 method). Headless, no microphone (no voice sent): 4 players host up 79 to 85
+  kbps, down 32 to 36; client up 11.5, down 26 to 28. 6 players host up 163 to 178, down 49 to 58; client up
+  11.5, down 36. Doc 06 s13's 4-talker figures (327 to 342 up) include voice; not exercised.
+- **Lobby autostart** (`--lobby-start=n`) retries until `match_ready()`; before, a first refusal ended it.

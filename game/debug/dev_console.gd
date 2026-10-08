@@ -66,6 +66,9 @@ func _ready() -> void:
 func _exec_later(lines: String) -> void:
 	await get_tree().create_timer(0.5).timeout  # after Main's siblings finish _ready and the clock starts
 	for line in lines.split(";", false):
+		if line.strip_edges().begins_with("wait "):  # `wait <s>`: let joiners connect before the next command
+			await get_tree().create_timer(line.strip_edges().substr(5).to_float()).timeout
+			continue
 		var reply := run(line.strip_edges())
 		_print("> %s\n%s" % [line.strip_edges(), reply])
 		print("[dev] %s -> %s" % [line.strip_edges(), reply.replace("\n", " | ")])
@@ -221,6 +224,8 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 ## Peer id from args[i], or the local peer when absent. 0 when not a player in the session.
 func _peer_arg(a: PackedStringArray, i: int) -> int:
 	var p := Game.local_peer() if a.size() <= i else (a[i].to_int() if a[i].is_valid_int() else 0)
+	if not Game.players.has(p) and p >= 1 and p <= Game.players.size():
+		p = Game.players.keys()[p - 1]  # joiners get random peer ids: a small number means the nth player (1 = host)
 	return p if Game.players.has(p) else 0
 
 

@@ -204,13 +204,15 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | P2-01 | Director | Between-phase review: read Phase 1 logs and notes, add new problems to OPEN_ISSUES, settle what Phase 2 needs, turn rows below into acceptance | done | — |
 | P2-12 | Game Designer | Phase 2 data: medical bill, night trap counts, pegboard lock, recording takes; Q-048 (1) numbers | done | P2-01 |
 | P2-02 | Level Designer | Full farm: second field, corn between the two fields, 4-player spawns, pegboard and recording-spot markers (doc 04) | done | P2-01 |
-| P2-10 | Gameplay | Host/join menu, barn lobby before the match, pause menu with voice setting and push-to-talk (doc 05 s16, Q-042, Q-047) | in review | P2-01 |
-| P2-03 | Network & Voice | Staged barn recording: lobby lines, chatter and voice settings, clip capture and pre-share to all peers (doc 06 s11-12) | in review | P2-10 |
+| P2-10 | Gameplay | Host/join menu, barn lobby before the match, pause menu with voice setting and push-to-talk (doc 05 s16, Q-042, Q-047) | done | P2-01 |
+| P2-03 | Network & Voice | Staged barn recording: lobby lines, chatter and voice settings, clip capture and pre-share to all peers (doc 06 s11-12) | done | P2-10 |
 | P2-04 | AI Programmer | Replay recorded clips as lures, voice mimicry choice, tells and success logging (doc 03 s12) | todo | P2-03 |
-| P2-11 | Gameplay | Trap sweeps, player side: disarm, fill pit with a shovel, flags, hang traps on the pegboard (doc 05 s11) | in review | P2-02, P2-12 |
+| P2-11 | Gameplay | Trap sweeps, player side: disarm, fill pit with a shovel, flags, hang traps on the pegboard (doc 05 s11) | in progress (QA-P2-11 crash fix) | P2-02, P2-12 |
 | P2-05 | AI Programmer | Night traps on the full farm from doc 02 s11 counts; pegboard theft and lock (doc 03 s9) | todo | P2-02, P2-11, P2-12 |
-| P2-06 | Gameplay | Dawn respawn and medical bills, day deaths billed at next dawn (doc 02 s8) | todo | P2-12 |
-| P2-07 | Gameplay | Up to 4 players: roster, spawn, player scaling data, bots fill (doc 05, `player_scaling.json`) | todo | P2-02 |
+| P2-06 | Gameplay | Dawn respawn and medical bills, day deaths billed at next dawn (doc 02 s8) | done | P2-12 |
+| P2-07 | Gameplay | Up to 4 players, 5 and 6 scaled (D-038): roster, spawn, player cap from data, bots fill to 4 (doc 05, `player_scaling.json`) | done | P2-02 |
+| P2-13 | Game Designer, Level Designer | 5 and 6 players (D-038): scaling data to 6, 6 barn spawns | done (spawn scene committed with P2-14) | P2-12, P2-02 |
+| P2-14 | Level Designer, Gameplay | Field plots scale above 4 players (D-039): 32 plot sites, locked by headcount | in progress | P2-13 |
 | P2-08 | Audio Designer | Clip playback tells, chase sting (Q-048), barn ambience for the recording spot | todo | P2-03 |
 | P2-09 | QA | Review each P2 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 2 gate | in progress | all above |
 
@@ -323,6 +325,23 @@ Acceptance:
 - Headcount scaling through `player_scaling.json` (doc 02 s4) for bills and trap counts.
 - `--bots=N` fills empty slots up to 4.
 - `net_bandwidth` logged; compared with doc 06 s13's 4-talker estimate.
+
+### P2-13 5 and 6 players (D-038)
+Owner: Game Designer (data), Level Designer (spawns). Output: `data/*.json`, doc 02, `game/world/farm.tscn`.
+Acceptance:
+- `player_scaling.json` covers 2 to 6 (`max_players` 6; 120% at 5, 140% at 6, `placeholder`); schema
+  updated. Every table that reads headcount (medical bill caps, night trap counts, ramp-up, roles,
+  plots per player) gives a value at 5 and 6, cited or `placeholder`. Doc 02 s4 updated.
+- Six barn spawns in `farm.tscn` (doc 04 s4 updated); doc 04 s8 checks still pass.
+
+### P2-14 Field plots by headcount (D-039)
+Owner: Level Designer (sites), then Gameplay (unlock). Output: `game/world/farm.tscn`, doc 04, `game/farming/`.
+Acceptance:
+- 32 field plot sites across both fields (doc 04 s8 walk and space checks rerun); each extra site
+  names the headcount that opens it. Moonflower bed unchanged.
+- Gameplay opens `field_plots_start_by_players` plots at match start and lets the store sell up to
+  `field_plots_max_by_players` (`player_scaling.json`), not `season.json`. 2 instances and 6 instances
+  over ENet agree on which plots are open.
 
 ### P2-08 Audio for Phase 2
 Owner: Audio Designer. Output: `game/audio/`, `assets/audio/`, doc 08.

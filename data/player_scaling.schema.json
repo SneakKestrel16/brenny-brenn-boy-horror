@@ -22,16 +22,42 @@
           "pct_by_players": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["2", "3", "4"],
+            "required": ["2", "3", "4", "5", "6"],
             "properties": {
               "2": {"type": "integer", "minimum": 0, "maximum": 1000},
               "3": {"type": "integer", "minimum": 0, "maximum": 1000},
-              "4": {"type": "integer", "minimum": 0, "maximum": 1000}
+              "4": {"type": "integer", "minimum": 0, "maximum": 1000},
+              "5": {"type": "integer", "minimum": 0, "maximum": 1000},
+              "6": {"type": "integer", "minimum": 0, "maximum": 1000}
+            }
+          },
+          "field_plots_start_by_players": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["2", "3", "4", "5", "6"],
+            "properties": {
+              "2": {"type": "integer", "minimum": 1, "maximum": 64},
+              "3": {"type": "integer", "minimum": 1, "maximum": 64},
+              "4": {"type": "integer", "minimum": 1, "maximum": 64},
+              "5": {"type": "integer", "minimum": 1, "maximum": 64},
+              "6": {"type": "integer", "minimum": 1, "maximum": 64}
+            }
+          },
+          "field_plots_max_by_players": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["2", "3", "4", "5", "6"],
+            "properties": {
+              "2": {"type": "integer", "minimum": 1, "maximum": 64},
+              "3": {"type": "integer", "minimum": 1, "maximum": 64},
+              "4": {"type": "integer", "minimum": 1, "maximum": 64},
+              "5": {"type": "integer", "minimum": 1, "maximum": 64},
+              "6": {"type": "integer", "minimum": 1, "maximum": 64}
             }
           },
           "rounding": {"const": "ceil"},
           "min_players": {"const": 2},
-          "max_players": {"const": 4}
+          "max_players": {"const": 6}
         },
         "required": ["id", "source", "pct_by_players", "rounding", "min_players", "max_players"]
       },

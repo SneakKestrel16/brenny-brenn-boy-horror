@@ -288,3 +288,31 @@ Creature so `trap_race.gd` stops writing the Creature's private `_traps`. (3) CO
 (`--sound` turns audio on) and the game arg `--free-mouse` (`Game.free_mouse`, never captures the mouse).
 **Why:** (1) doc 02 is the source and a theft-free pegboard is not testable before P2-05; (5) CEO request,
 test windows played audio and took the mouse while the CEO worked.
+
+### D-038 · 2026-10-08 · CEO · 2 to 6 players, built around 4
+The game is built and balanced for 4 players; 5 and 6 are supported and scaled. Doc 01 "Format", "Ramp-up"
+and "Build Plan > Phase 2" now say so. Scaling above 4 mirrors the steps below it: 120% at 5 and 140% at
+6, rounded up (`placeholder` until the season simulator sets them). (1) Game Designer (P2-13): extend
+`player_scaling.json` (`max_players` 6), medical bill caps, night trap counts, roles and plots per
+player to 5 and 6. (2) Level Designer (P2-13): 6 barn spawns. (3) Gameplay (P2-07): the player cap
+comes from `player_scaling.json`; a peer past the cap is refused; `--bots=N` fills up to 4 only (bots
+never push a match past the base count). (4) Network & Voice: doc 06 s13 adds a 6-talker bandwidth row.
+Doc 07 s10 corn budget stays measured at 4; a 6-instance frame check joins P2-09. **Why:** CEO request.
+
+### D-039 · 2026-10-08 · CEO · Field plots scale above 4 players
+Above 4 players the field grows by 4 plots per extra player, start and ceiling both: start 16/16/16/20/24
+and bought-plot ceiling 24/24/24/28/32 at 2/3/4/5/6 players (`placeholder`, `player_scaling.json`
+`field_plots_start_by_players`, `field_plots_max_by_players`). Below 4 nothing changes. Doc 01 "Crops"
+and "Store" updated. Projection (`tools/sim/projection.py`): median shortfall 3.7% at 5p and 2.4% at 6p
+against 10% at 4p, so 5p and 6p run slightly easy; the real simulator may raise the 120% / 140%
+placeholders. Level Designer authors 32 plot sites (extra ones locked below their headcount); Gameplay
+reads the per-count tables, not `season.json`. **Why:** CEO; with a fixed 16-plot field, extra players
+had no work and debt outgrew income (P2-13 data handoff).
+
+### D-040 · 2026-10-08 · Director · P2 QA round 2
+P2-10 (re-review), P2-03, P2-06, P2-07 and P2-13 pass QA and are done. P2-11 fails (QA-P2-11.md): a client
+can crash when `trap_changed` frees a trap target before `apply_hold_done` arrives; back to Gameplay. Also
+to Gameplay: a human joining past 4 when bots fill the match drops one bot (D-038 (3)). QA's `multi.py`
+takes `-n 2` to 6. P2-13's spawn scene changes ship with P2-14, which edits the same files. Network &
+Voice owes a review of P2-07's `net.gd` changes (cap, `apply_join_refused`, `net_bandwidth`) and decides
+whether `clips.gd` needs a fast path when nobody recorded. **Why:** QA reviews in `production/handoffs/QA-*.md`.

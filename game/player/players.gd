@@ -12,6 +12,7 @@ const SEND_HZ := 20.0  ## doc 06 section 6 (placeholder)
 const STRIDE_M := 1.6  ## doc 05 section 6 `step_stride_m` (placeholder)
 
 var _send_t := 0.0
+var _slots: Dictionary = {}  ## peer -> barn spawn index in use
 var _players: Dictionary = {}  ## peer -> Player
 var _log_moves := false
 var _inside_s: Dictionary = {}  ## host: peer -> seconds spent in a building this night
@@ -105,11 +106,29 @@ func _spawn(peer: int) -> void:
 	var spawns := get_tree().get_nodes_in_group(&"player_spawns")
 	add_child(pl)
 	if not spawns.is_empty():
-		pl.global_position = (spawns[maxi(Game.players.keys().find(peer), 0) % spawns.size()] as Node3D).global_position
+		var slot := _free_slot(spawns.size())
+		_slots[peer] = slot
+		pl.global_position = (spawns[slot] as Node3D).global_position
+		var p: Vector3 = pl.global_position
+		Log.event(&"player_spawn_at", {"peer": peer, "slot": slot, "pos": [snappedf(p.x, 0.01), snappedf(p.y, 0.01), snappedf(p.z, 0.01)]})
 	_players[peer] = pl
 
 
+## Lowest unused spawn; when all are used (more players than spawns) the least used one, so two players
+## share a spot only when no free one exists.
+func _free_slot(count: int) -> int:
+	var uses := {}
+	for s in _slots.values():
+		uses[s] = int(uses.get(s, 0)) + 1
+	var best := 0
+	for i in count:
+		if int(uses.get(i, 0)) < int(uses.get(best, 0)):
+			best = i
+	return best
+
+
 func _despawn(peer: int) -> void:
+	_slots.erase(peer)
 	if _players.has(peer):
 		_players[peer].queue_free()
 		_players.erase(peer)

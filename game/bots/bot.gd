@@ -35,7 +35,8 @@ var _send_t := 0.0
 
 func _ready() -> void:
 	_pos = players.player(peer).global_position  # the spawn marker Players picked
-	_run.call_deferred()
+	if not Game.full_farm:  # P2-07: bot_route.gd is Phase 1 only; on the full farm a bot spawns and stands
+		_run.call_deferred()
 
 
 func _physics_process(delta: float) -> void:

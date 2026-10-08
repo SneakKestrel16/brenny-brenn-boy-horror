@@ -4,7 +4,7 @@ Friends grow crops on a farm while something in the corn hunts them. Farming cre
 
 **Pitch:** a farm under siege. Traps, crops and the day/night economy are the hook. Voice mimicry supports it rather than leading it.
 
-**Format:** 2 to 4 player online co-op against an AI creature. The creature, the debt and the costs scale with player count.
+**Format:** 2 to 6 player online co-op against an AI creature, built and balanced around 4. The creature, the debt and the costs scale with player count.
 
 **Status:** Nothing is built yet. All numbers are starting values, tuned with the season simulator and playtest logs.
 
@@ -401,7 +401,7 @@ The creature has a daily disturbance budget, rising over the season. Day 1 might
 | Pumpkins | 2 days | 10 | 28 | 18 | Unlock at dawn 4, as the first-payment reward |
 | Moonflowers | same night | 25 | 60 | 35 | Unlock day 3. Planted by day, harvested that night, wilted by dawn. They glow. |
 
-- **Plots:** 16 field plots at the start, up to 24 with upgrades, split into two distant fields (one by the barn, one by the shipping crate) with corn between them.
+- **Plots:** 16 field plots at the start, up to 24 with upgrades at 4 players; above 4 players the field grows by 4 plots per extra player (20 at 5 players, 24 at 6; up to 28 and 32 with upgrades), split into two distant fields (one by the barn, one by the shipping crate) with corn between them.
 - **Labor:** planting, watering and harvesting are each a hold of a few seconds, plus walking. Labor is measured in seconds, and plots per player are derived from that (starting estimate about 6).
 - **Moonflower bed:** 1 plot per player.
   - The best crop per plot and a big share of income, by design, to push people outside at night.
@@ -480,7 +480,7 @@ Phase 4 is gated on the simulator. It runs 2p, 3p and 4p with every rule here, i
 
 ### Ramp-up (4 players)
 
-Payments, medical bills, trap counts and the disturbance budget scale to 80% at 3 players and 60% at 2, rounded up.
+Payments, medical bills, trap counts and the disturbance budget scale to 80% at 3 players and 60% at 2, rounded up. Above 4 they scale up the same way, 120% at 5 and 140% at 6 (placeholder until the season simulator sets them).
 
 | Day | Disturbances | Traps that night | Voice | New |
 |---|---|---|---|---|
@@ -535,7 +535,7 @@ Bought by the shipping crate. "sim" means the price is set with the simulator be
 | Walkie-talkies, batteries | sim | |
 | Brighter lanterns | sim | |
 | More scarecrows | sim | |
-| New plots (to 24) | sim | |
+| New plots (to 24; to 28 at 5 players, 32 at 6) | sim | |
 | Flare gun | sim | One shot, refilled each dawn; scares the creature off for 30 s; anyone can carry it |
 | Cosmetic hats, overalls | sim | Phase 5, bought once the debt is paid |
 
@@ -636,7 +636,7 @@ Only move on when the current phase is fun. Each "done when" is checked in at le
 - pegboard theft;
 - death, dawn respawn and medical bills;
 - two fields with corn between them;
-- up to 4 players.
+- up to 4 players, with 5 and 6 supported and scaled.
 - **Done when:** a friend's recorded voice fools someone, and trap sweeps feel worth doing.
 
 **Phase 3:**

@@ -71,7 +71,7 @@ class LogCheckerFixture(unittest.TestCase):
             sp["by_sound_distance"],
             {"voice@10m": {"correct": 1, "trials": 2}, "whistle@30m": {"correct": 1, "trials": 1}, "whistle@60m": {"correct": 1, "trials": 1}},
         )
-        self.assertEqual(sorted(sp["untested_doc01_cells"]), ["voice@30m", "voice@60m", "whistle@10m"])
+        self.assertEqual(sorted(sp["untested_doc01_cells"]), ["voice@30m", "voice@60m", "voice@72m", "whistle@10m", "whistle@72m"])
         self.assertEqual(sp["by_tester"]["fixture_session/peer_2"], {"whistle@30m": {"correct": 1, "trials": 1}})
         self.assertEqual(sp["by_tester"]["fixture_session/peer_1"]["voice@10m"], {"correct": 1, "trials": 2})
 
@@ -148,13 +148,13 @@ class MultiArgs(unittest.TestCase):
         cmd = multi.build_command("godot", 2, "-s res://x.gd -- --qa-port=1", "--verbose -- --qa-role=client", True, 300, True)
         self.assertEqual(
             cmd,
-            ["godot", "--path", str(godot_qa.REPO_ROOT), "--headless", "--quit-after", "300", "-s", "res://x.gd", "--verbose", "--", "--qa-port=1", "--qa-role=client"],
+            ["godot", "--path", str(godot_qa.REPO_ROOT), "--audio-driver", "Dummy", "--headless", "--quit-after", "300", "-s", "res://x.gd", "--verbose", "--", "--qa-port=1", "--qa-role=client", "--free-mouse"],
         )
 
     def test_windows_tile_in_a_grid(self) -> None:
         cmd = multi.build_command("godot", 4, "", "", False, None, True)
-        self.assertEqual(cmd[3:], ["--windowed", "--resolution", "640x360", "--position", "640,360"])
-        self.assertNotIn("--", cmd)
+        self.assertEqual(cmd[5:-2], ["--windowed", "--resolution", "640x360", "--position", "640,360"])
+        self.assertEqual(cmd[-2:], ["--", "--free-mouse"])
 
 
 if __name__ == "__main__":

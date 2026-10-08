@@ -229,6 +229,20 @@ func _audio_tab() -> void:
 	o.set_item_disabled(0, true)
 	o.item_selected.connect(func(i: int) -> void:
 		var s: String = ["unchosen", "off", "lobby_lines"][i]
+		if s == "off" and bool(Settings.get_value(&"lines_recorded")):  # doc 01 "Voice settings > Off" deletes the lines
+			o.selected = ["unchosen", "off", "lobby_lines"].find(str(Settings.get_value(&"voice_setting")))
+			var dlg := ConfirmationDialog.new()
+			dlg.dialog_text = "This deletes your recorded lines"
+			dlg.ok_button_text = "Delete and turn Off"
+			dlg.confirmed.connect(func() -> void:
+				o.selected = i
+				Game.set_voice_setting(s)
+				_refresh_voice()
+				dlg.queue_free())
+			dlg.canceled.connect(dlg.queue_free)
+			add_child(dlg)
+			dlg.popup_centered()
+			return
 		Game.set_voice_setting(s)
 		_refresh_voice())
 	_row(p, "Voice setting", o)

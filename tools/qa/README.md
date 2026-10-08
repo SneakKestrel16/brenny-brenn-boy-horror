@@ -7,7 +7,7 @@ through `--godot`, then `$GODOT`, then the CONTRACTS section 1 path.
 | Command | What it does |
 |---|---|
 | `uv run tools/qa/smoke.py` | Headless import, parse check and timed run. Fails on any `ERROR` / `SCRIPT ERROR` line |
-| `uv run tools/qa/multi.py -n 2` | Starts 2 to 4 local instances and collects their console output and section 10 logs into one folder |
+| `uv run tools/qa/multi.py -n 2` | Starts 2 to 6 local instances and collects their console output and section 10 logs into one folder |
 | `uv run tools/qa/check_logs.py <folder>` | Reports the doc 01 measures found in section 10 JSONL logs |
 | `uv run tools/qa/playtest.py new\|tally\|collect\|report` | Runs a DD phase playtest session (doc 09 s2, s3, s11): session folder, observer tally, log collection, pass/fail report |
 | `uv run tools/qa/package_playtest.py` | Exports the game and zips it for a remote playtester |
