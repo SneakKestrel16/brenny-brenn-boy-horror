@@ -84,17 +84,17 @@ func _draw_panel() -> void:
 		for t: Dictionary in cr0.debug_state().traps.values():
 			if t.armed:
 				armed[t.id] = t.kind
-	for m in get_tree().get_nodes_in_group(&"trap_spots"):  # grey = unknown, orange = set (host), red = sprung, green = disarmed
-		var tc := Color(0.5, 0.5, 0.5)
-		var label := "trap spot"
+	for m in get_tree().get_nodes_in_group(&"trap_spots"):  # only traps on the ground: orange = set (host), red = sprung
+		var tc := Color.ORANGE
+		var label: String
 		var id := String(m.name)
 		if armed.has(id):
-			tc = Color.ORANGE
 			label = "%s SET (creature)" % armed[id]
-		elif tr and tr.traps.has(id):
-			var t: Dictionary = tr.traps[id]
-			tc = Color.RED if t.state == &"sprung" else Color.GREEN
-			label = "%s %s" % [t.kind, t.state]
+		elif tr and tr.traps.has(id) and tr.traps[id].state in [&"set", &"sprung"]:
+			tc = Color.RED if tr.traps[id].state == &"sprung" else tc
+			label = "%s %s" % [tr.traps[id].kind, tr.traps[id].state]
+		else:
+			continue  # empty spot, or a disarmed trap that is gone
 		c.draw_rect(Rect2(_px(m.global_position) - Vector2(3, 3), Vector2(6, 6)), tc)
 		c.draw_string(font, _px(m.global_position) + Vector2(5, -3), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, tc)
 	# Fixed props: the well is the only watering-can fill point; the drum fills the fuel can.
