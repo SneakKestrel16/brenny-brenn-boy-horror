@@ -172,6 +172,7 @@ the CEO playtest.
 | P1-12 | Gameplay | Spatial audio test scene with `spatial_audio_trial` logging; debug view | done | P1-06, P1-03 |
 | P1-13 | AI Programmer | Bot that walks and does chores | done | P1-05 |
 | P1-14 | QA | Review each P1 task; 2-instance run; `check_logs.py` on a full session; run the doc 09 gate | in review | all above |
+| P1-16 | Gameplay | STOP 2 readiness (Q-046): fix the stamina flicker at 0 so no `speed_violation` on a human sprint; minimal prompt layer (hold prompt for the aimed target, stamina bar, clock and phase, coins, a one-screen controls hint on first spawn, death and ghost banner); emit `inside_at_night`; Shaken logged on client | todo | P1-14 |
 
 Each owner turns their row into acceptance from the cited doc sections when starting; every task
 still needs QA pass plus Director check.
