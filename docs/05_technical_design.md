@@ -850,7 +850,12 @@ the QA changes.
 | `close_call` | host | `call_id`, `victim`, `kind` (`lunge`, `kill`, `doorway`), `result` (`hit`, `miss_disagree`, `miss_lit`, `miss_timeout`), `rtt_ms`, `answer_ms` | OPEN_ISSUES 1: a laggy player must be killable. `miss_timeout` vs `miss_disagree` per player RTT is the number that settles it |
 | `taint_changed` | host | `player`, `on`, `cause` | Taint rules |
 | `shaken` | host | `player`, `seconds` | Trap race outcome |
-| `trap_changed` | host | `trap_id`, `state` (`set`, `sprung`, `disarmed`, `filled`, `cut`), `by` | Trap use |
+| `trap_changed` | host | `trap_id`, `state` (`set`, `sprung`, `disarmed`, `filled`, `cut`, `loose`, `picked_up`), `by` | Trap use |
+| `trap_plan` | host | `day`, `players`, `plan` (kinds), `supply` (stolen bear traps in hand after nightfall theft), `armed` | Night trap count and bear supply (D-053) |
+| `trap_stolen` | host | `trap` (`held:<peer>` or `board:<slot>`), `from` (`board`, `outdoor`, `dark_building`), `lock`, `day`, `supply`, `player` (hands only) | Pegboard theft (D-053) |
+| `trap_theft_capped` | host | `cap`, `day` | Shed lock (D-053) |
+| `trap_skipped` | host | `kind`, `reason` (`no_supply`, `no_spot`) | Bear supply ran out (D-053) |
+| `trap_moved` | host | `trap`, `from_building`, `to_spot`, `player` | Lit-building trap to the corn at dawn (D-053) |
 | `flag_placed` / `flag_removed` | host | `player`, `position`, `trap_id` (or null) | Flags |
 | `payment_made` | host | `amount`, `balance`, `due`, `late` | Debt |
 | `dawn_summary` | host | `day`, `coins`, `debt`, `plots_ripe`, `plots_wilted`, `farm_damage`, `deaths` (+ `medical_bill`, `final_extra`; P2-06) | Simulator `compare` (reads `money_changed` by dawn too) |

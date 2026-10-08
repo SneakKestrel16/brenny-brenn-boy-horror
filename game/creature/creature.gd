@@ -5,8 +5,10 @@ extends CharacterBody3D
 ##
 ## Night: scripted lurk 60 s, stalk the first outdoor player, chase, retreat (doc 03 section 18);
 ## then it wanders and hunts by sound: it homes on what it heard or saw (sections 3.1, 3.2), never on
-## a true position, and loses a chase by section 5. It sets one bear trap and one pit at the four
-## scripted times (section 18), shown to every peer as a close-range clue (section 9), and plays lures
+## a true position, and loses a chase by section 5. On the Phase 1 farm it sets one bear trap and one pit
+## at the four scripted times (section 18); on the full farm (`--full-farm`, P2-05) it tops up the night's
+## counts from `ramp_up.json` on spots near where it heard players work; its bear traps are the farm's own,
+## taken at nightfall from hands, then the pegboard (D-053, section 9, "9.1 As built"). Traps show to every peer as a close-range clue, and it plays lures
 ## (section 12, P2-04: recorded clips, sound lures, stranger lines) from crow corn edges and cover points
 ## as world sounds, in the scripted lurk too. Taint and the AI Director are off in Phase 1. Day: it waits
 ## in far cover and, from the day's second third, sends a targeted lure now and then from a trap spot.
@@ -18,7 +20,10 @@ extends CharacterBody3D
 ## QA flags: `-- --creature-test` starts a night at once, repeats it every `night_s`, walks the local
 ## player round the yard and turns it toward half the lures it hears (synthetic, measures plumbing,
 ## not players). `-- --creature-walk` walks and turns the same way but keeps the real clock (day lures).
-## `-- --log-creature` logs `apply_creature_state` arrivals on clients.
+## `-- --log-creature` logs `apply_creature_state` and `apply_trap_changed` arrivals on clients.
+## `-- --shed-lock` gives the team the pegboard lock (the store does not sell it yet). `-- --give-trap` puts a
+## bear trap in every living player's hands at nightfall (full farm), so theft runs under `multi.py`.
+## `-- --take-loose` (host) walks the host player to a loose trap that turned up at dawn and picks it up.
 
 signal state_changed(state: StringName, body: StringName)
 ## Host only (P1-09): the creature reached `peer` in a chase / a living player sprang an armed trap.
@@ -26,6 +31,7 @@ signal caught(peer: int)
 signal trap_sprung(trap_id: String, kind: StringName, peer: int, position: Vector3, deep: bool)
 
 const Logic := preload("res://game/creature/creature_logic.gd")
+const TrapPickup := preload("res://game/creature/trap_pickup.gd")
 const STATES: Array[StringName] = [&"lurk", &"lure", &"stalk", &"chase", &"retreat"]
 const PKT := 0x03  ## doc 06 section 7 `creature` packet type (movement is 1 and 2, voice 0x10/0x11)
 const PKT_BYTES := 18  ## type u8, state u8, position 3 x f32, yaw f32
@@ -65,6 +71,13 @@ const DAY_RULE_M := 15.0  ## doc 03 section 12.1 "the 15 m rule": a day source t
 const COULD_NOT_BE_M := 25.0  ## doc 03 section 12.2: the source this far from the living teammate it voices
 const DAY_LURE_GAP_S := 90.0  ## placeholder: one day lure attempt per gap until the AI Director (DD Phase 3) budgets them
 const VOICE_CHAIN := "res://game/audio/voice_chain.gd"  ## Audio Designer's tell buses (P2-08); VoiceBase without it
+# P2-05 full-farm traps (doc 03 section 9).
+const TRAP_GAP_M := 8.0  ## doc 03 section 9: at most one trap in any 8 m circle (placeholder)
+const SANCTUARY_M := 10.0  ## doc 01 "Sanctuary"; the marker's `radius_m` wins
+const WORK_MAX := 64  ## placeholder: heard player noises kept as "where they work" for spot choice
+const TRAP_SET_FROM := 0.1  ## placeholder: the night's sets spread from 10% to 75% of the night
+const TRAP_SET_SPAN := 0.65
+const TRAP_KINDS := {&"bear": [&"bear_trap", "bear_4p"], &"pit": [&"pit", "pit_4p"]}  ## traps.json id, ramp_up field; bells wait (enabled false)
 
 var state: StringName = &"lurk"
 var body: StringName = BODY
@@ -87,10 +100,20 @@ var _search_until := -1.0
 var _lure: Dictionary = {}
 var _lure_n := 0
 var _last_lure_t := -INF
-var _traps: Dictionary = {}  ## kind -> {id, kind, position, deep, armed}
+var _traps: Dictionary = {}  ## trap id (spot name) -> {id, kind, position, deep, armed}
 var _trap_i := 0
+var _full := Game.full_farm  ## P2-05 traps and theft; the Phase 1 farm keeps the scripted traps
+var shed_lock := OS.get_cmdline_user_args().has("--shed-lock")  ## the team owns the pegboard lock (store hook)
+var _plan: Array = []  ## tonight's sets still to come: {t, kind}, sorted by t
+var _work: Array = []  ## heard player noise positions, oldest first: the region players work in
+var _stash := 0  ## bear traps taken and not yet set: the creature's whole bear supply (D-053)
+var _stolen_night := 0
+var _capped_logged := false
+var _kept: Dictionary = {}  ## peer -> building: held a bear trap in a lit building at nightfall (moved at dawn, D-053 (3))
+var _theft_t := 0.0
 var _nights := 0
 var _rects: Array[Rect2] = []  ## building floors (x, z), for "outdoor"
+var _rect_names: Array[String] = []  ## the building of each rect (the door's parent)
 var _send_t := 0.0
 var _log_t := 0.0
 var _log := false
@@ -156,13 +179,16 @@ func _ready() -> void:
 				r = Rect2(p, Vector2.ZERO) if first else r.expand(p)
 				first = false
 		_rects.append(r)
+		_rect_names.append(String(door.get_parent().name))
 	global_position = _marker(&"creature_cover", DAY_COVER)
 	NoiseBus.noise_emitted.connect(_on_noise)
 	Clock.phase_changed.connect(func(p: StringName) -> void:
 		if p == &"night" and not _test:
 			_start_night()
 		elif p == &"dawn" and not _test:
-			_night_t = -1.0)
+			_night_t = -1.0
+			if _full:
+				_dawn_traps())
 	Net.request_received.connect(func(what: StringName, peer: int, _a: Array) -> void:
 		if what == &"farm_state":  # a late joiner gets the current state and the armed traps
 			Net.to_peers(&"apply_creature_state", [state, body], [peer])
@@ -170,7 +196,7 @@ func _ready() -> void:
 				if t.armed:
 					Net.to_peers(&"apply_trap_changed", [t.id, t.kind, &"set", t.position], [peer]))
 	if _test or Clock.phase == &"night":
-		_start_night()
+		_start_night.call_deferred()  # after the TrapSweep sibling is ready: theft reads the pegboard
 
 
 func _physics_process(delta: float) -> void:
@@ -211,6 +237,8 @@ func _physics_process(delta: float) -> void:
 # --- night ---------------------------------------------------------------------------------------
 
 func _start_night() -> void:
+	if _full and _test and _nights > 0:  # --creature-test has no dawn: the last night ends here
+		_dawn_traps()
 	_night_t = 0.0
 	_nights += 1
 	_stalk_at = -1.0
@@ -219,16 +247,31 @@ func _start_night() -> void:
 	_memory.clear()
 	_set_state(&"lurk", &"night", 0)
 	_goal = Vector3.INF
+	if _full:
+		_stolen_night = 0
+		_capped_logged = false
+		if OS.get_cmdline_user_args().has("--give-trap"):  # QA: every living player holds a bear trap at nightfall
+			for p in Game.players.keys().filter(_alive):
+				get_parent().get_node(^"Farm").set_hands(p, bool(Game.players[p].get("shovel", false)), true)
+		_plan_traps()
 
 
 func _night(delta: float) -> void:
 	if _test and _night_t >= _num[&"night_s"]:
 		_start_night()
 		return
-	var times: Array = Data.value(&"phase1", &"trap_set_at_s", &"seconds_list")
-	if _trap_i < times.size() and _night_t >= float(times[_trap_i]):
-		_set_trap(_trap_i)
-		_trap_i += 1
+	if _full:
+		while not _plan.is_empty() and _night_t >= float(_plan[0].t) and state == &"lurk":  # section 9: sets while in lurk
+			_place_trap(_plan.pop_front().kind)
+		_theft_t += delta
+		if _theft_t >= 1.0:
+			_theft_t = 0.0
+			_steal_traps(false)
+	else:
+		var times: Array = Data.value(&"phase1", &"trap_set_at_s", &"seconds_list")
+		if _trap_i < times.size() and _night_t >= float(times[_trap_i]):
+			_set_trap(_trap_i)
+			_trap_i += 1
 	_sense()
 	if _scripted:
 		_run_script()
@@ -398,13 +441,19 @@ func _set_state(s: StringName, reason: StringName, p_target: int) -> void:
 # --- senses (doc 03 section 3) -------------------------------------------------------------------
 
 func _on_noise(position: Vector3, radius_m: float, kind: StringName, source_peer: int) -> void:
-	if _night_t < 0.0:
+	if _night_t < 0.0 and not _full:
 		return
 	var r := radius_m
 	if kind != &"step_sprint_corn" and _blocked(global_position + Vector3.UP, position + Vector3.UP, 16):
 		r *= _num[&"corn_damp_mult"]
 	var d := global_position.distance_to(position)
 	if d > r:
+		return
+	if source_peer != 0:  # P2-05: where it heard players work, day and night, picks the trap region
+		_work.append(position)
+		if _work.size() > WORK_MAX:
+			_work.pop_front()
+	if _night_t < 0.0:
 		return
 	_memory.append({"position": position, "margin": r - d, "t": _now, "peer": source_peer, "kind": kind})
 	_last_heard = position
@@ -644,24 +693,253 @@ func _track_lure() -> void:
 ## armed trap's clue (`_show_clue`); a moved trap is sent as `moved` so its old clue goes.
 func _set_trap(i: int) -> void:
 	var kind := &"bear" if i % 2 == 0 else &"pit"
-	if _traps.has(kind) and not _traps[kind].armed:
+	var old: Dictionary = {}
+	for t in _traps.values():
+		if t.kind == kind:
+			old = t
+	if not old.is_empty() and not old.armed:
 		return  # a sprung trap stays where it is (the trap race is P1-09)
 	var ids: Array = Data.value(&"phase1", &"scripted_trap_spots", &"ids")
 	var spots := get_tree().get_nodes_in_group(&"trap_spots").filter(func(n: Node) -> bool:
-		return ids.has(String(n.name)) and (kind == &"bear" or n.get_meta("kind", "") != "deep"))
-	var used: Array = _traps.values().map(func(t: Dictionary) -> String: return t.id)
-	spots = spots.filter(func(n: Node) -> bool: return not used.has(String(n.name)))
+		return ids.has(String(n.name)) and not _traps.has(String(n.name)) and (kind == &"bear" or n.get_meta("kind", "") != "deep"))
 	var n: Node3D = spots[(_nights * 4 + i) % spots.size()]
-	if _traps.has(kind):
-		var old: Dictionary = _traps[kind]
+	if not old.is_empty():
 		Net.to_peers(&"apply_trap_changed", [old.id, kind, &"moved", old.position])
 		_show_clue(old.id, kind, false)
-	_traps[kind] = {"id": String(n.name), "kind": kind, "position": n.global_position, "deep": n.get_meta("kind", "") == "deep", "armed": true}
-	Log.event(&"trap_changed", {"trap_id": String(n.name), "state": "set", "by": "creature", "kind": String(kind)})
-	Net.to_peers(&"apply_trap_changed", [String(n.name), kind, &"set", n.global_position])
-	_show_clue(String(n.name), kind, true)
+		_traps.erase(old.id)
+	_arm(n, kind, {})
+
+
+## Arms `kind` at spot `n` and shows its clue to every peer; `extra` goes into the `trap_changed` line.
+func _arm(n: Node3D, kind: StringName, extra: Dictionary) -> void:
+	var id := String(n.name)
+	_traps[id] = {"id": id, "kind": kind, "position": n.global_position, "deep": n.get_meta("kind", "") == "deep", "armed": true}
+	Log.event(&"trap_changed", {"trap_id": id, "state": "set", "by": "creature", "kind": String(kind)}.merged(extra))
+	Net.to_peers(&"apply_trap_changed", [id, kind, &"set", n.global_position])
+	_show_clue(id, kind, true)
 	if _test and _walker:  # QA: the host's walker steps on it, so trap_sprung fires
 		_walker.nav_path = [n.global_position]
+
+
+## P2-05 (D-037 (2)): TrapRace ends a trap (disarmed, filled); its spot is free for later sets.
+func clear_trap(id: String) -> void:
+	_traps.erase(id)
+
+
+## Full farm, at nightfall: doc 02 section 11 counts for today (`ramp_up.json`, scaled by headcount, 2p
+## floor) less what is still armed out there (traps stay armed by day, section 9), spread over the night.
+## Disabled kinds (bells, `traps.json` `enabled` false) are skipped. Difficulty and the full-wipe extras wait.
+## The bear sets take their traps now (D-053): `supply` is what the creature holds after the theft.
+func _plan_traps() -> void:
+	_plan.clear()
+	var day := clampi(_nights if _test else Clock.day, 1, 7)
+	var row: Dictionary = Data.record(&"ramp_up", StringName("day_%d" % day)) if Data.has_table(&"ramp_up") else {}
+	var heads := clampi(Game.player_count(), 2, Game.max_players())
+	var kinds: Array = []
+	for kind: StringName in TRAP_KINDS:
+		if not bool(Data.record(&"traps", TRAP_KINDS[kind][0]).get("enabled", true)):
+			continue
+		var v: Variant = row.get(TRAP_KINDS[kind][1])  # day 7 is null: it hunts all night instead
+		var want := Data.scaled(int(v), &"traps", heads) if v != null else 0
+		var have := _traps.values().filter(func(t: Dictionary) -> bool: return t.kind == kind and t.armed).size()
+		for i in maxi(want - have, 0):
+			kinds.insert(_rng.randi_range(0, kinds.size()), kind)
+	var night: float = _num[&"night_s"] if _test else Clock.length_of(&"night")
+	for i in kinds.size():
+		_plan.append({"t": night * (TRAP_SET_FROM + TRAP_SET_SPAN * (i + 0.5) / kinds.size()), "kind": kinds[i]})
+	_steal_traps(true, kinds.count(&"bear") - _stash)
+	Log.event(&"trap_plan", {"day": day, "players": heads, "plan": kinds.map(func(k: StringName) -> String: return String(k)),
+		"supply": _stash, "armed": _traps.values().filter(func(t: Dictionary) -> bool: return t.armed).size()})
+
+
+## Doc 03 section 9 spot choice, then arms it. A bear set needs a taken trap (D-053): none left, it is skipped.
+func _place_trap(kind: StringName) -> void:
+	if kind == &"bear" and _stash <= 0:
+		Log.event(&"trap_skipped", {"kind": String(kind), "reason": "no_supply"})
+		return
+	var pick := _pick_spot(kind)
+	if pick.is_empty():
+		Log.event(&"trap_skipped", {"kind": String(kind), "reason": "no_spot"})
+		return
+	if kind == &"bear":
+		_stash -= 1
+	_arm(pick.node, kind, {"stolen": kind == &"bear", "region": pick.region, "work_m": pick.work_m})
+
+
+## A free `trap_spots` marker for `kind`: no deep spot for a pit, none in sanctuary or within LIT_DOOR_M of
+## a lit doorway, none within TRAP_GAP_M of another trap, none within CLUE_M of a living player (it is
+## not set under someone's feet; true positions here only avoid players). Region: a spot within REGION_M
+## of a random heard work point, else the nearest to it; nothing heard yet: any free spot.
+func _pick_spot(kind: StringName) -> Dictionary:
+	var free: Array = []
+	for n: Node3D in get_tree().get_nodes_in_group(&"trap_spots"):
+		var m := n.global_position
+		if _traps.has(String(n.name)) or (kind != &"bear" and n.get_meta("kind", "") == "deep") or _in_sanctuary(m) or _in_lit_doorway(m):
+			continue
+		if _traps.values().any(func(t: Dictionary) -> bool: return t.position.distance_to(m) < TRAP_GAP_M):
+			continue
+		if Game.players.keys().any(func(p: int) -> bool: return _alive(p) and Game.players[p].pos.distance_to(m) < CLUE_M):
+			continue
+		free.append(n)
+	if free.is_empty():
+		return {}
+	if _work.is_empty():
+		return {"node": free[_rng.randi() % free.size()], "region": "none", "work_m": null}
+	var w: Vector3 = _work[_rng.randi() % _work.size()]
+	var near := free.filter(func(n: Node3D) -> bool: return n.global_position.distance_to(w) <= REGION_M)
+	var n: Node3D = near[_rng.randi() % near.size()] if not near.is_empty() else null
+	if n == null:
+		for f: Node3D in free:
+			if n == null or f.global_position.distance_to(w) < n.global_position.distance_to(w):
+				n = f
+	return {"node": n, "region": "heard" if not near.is_empty() else "nearest", "work_m": snappedf(n.global_position.distance_to(w), 0.1)}
+
+
+func _in_sanctuary(pos: Vector3) -> bool:
+	for s: Node3D in get_tree().get_nodes_in_group(&"sanctuary"):
+		if s.global_position.distance_to(pos) <= float(s.get_meta("radius_m", SANCTUARY_M)):
+			return true
+	return false
+
+
+## Full farm, doc 01 "The tool shed", D-053: the farm's bear traps are the creature's only supply. At
+## nightfall it takes up to `need`: traps in living players' hands first (outdoors, or in a dark building),
+## then traps off the pegboard. One in a lit building is kept (and moved at dawn, `_dawn_traps`). During
+## the night a trap in a building that goes dark is taken too. Before `broken_from_day` the lock caps every
+## theft together at `theft_cap_per_night` (store.json `shed_lock`).
+func _steal_traps(nightfall: bool, need: int = 0) -> void:
+	var farm := get_parent().get_node_or_null(^"Farm")
+	var gen := get_parent().get_node_or_null(^"Generator")
+	if farm == null:
+		return
+	var lit: bool = gen != null and gen.powered()
+	var lock: Dictionary = Data.record(&"store", &"shed_lock").get("effect", {}) if Data.has_table(&"store") else {}
+	var locked := shed_lock and Clock.day < int(lock.get("broken_from_day", 5))
+	var cap := int(lock.get("theft_cap_per_night", 1)) if locked else 1 << 30
+	var capped := false
+	for p in Game.players.keys():
+		if not _alive(p) or not bool(Game.players[p].get("trap", false)):
+			continue
+		var b := _building(Game.players[p].pos)
+		if b != "" and lit:
+			if nightfall:
+				_kept[p] = b
+			continue
+		if b != "":
+			_kept.erase(p)  # the building went dark: it did not stay lit all night
+		if (nightfall and need <= 0) or (not nightfall and b == ""):
+			continue
+		if _stolen_night >= cap:
+			capped = true
+			continue
+		need -= 1
+		farm.set_hands(p, bool(Game.players[p].get("shovel", false)), false)
+		_took("held:%d" % p, "dark_building" if b != "" else "outdoor", locked, {"player": p})
+	var sweep := get_tree().get_first_node_in_group(&"trap_sweep")
+	while nightfall and need > 0 and sweep != null and sweep.filled.has(true):
+		if _stolen_night >= cap:
+			capped = true
+			break
+		var slot: int = sweep.filled.find(true)
+		sweep.take_trap()
+		need -= 1
+		_took("board:%d" % slot, "board", locked, {})
+	if capped and not _capped_logged:
+		_capped_logged = true
+		Log.event(&"trap_theft_capped", {"cap": cap, "day": Clock.day})
+
+
+func _took(trap: String, from: String, locked: bool, extra: Dictionary) -> void:
+	_stolen_night += 1
+	_stash += 1
+	Log.event(&"trap_stolen", {"trap": trap, "from": from, "lock": locked, "day": Clock.day, "supply": _stash}.merged(extra))
+
+
+## Dawn, D-053 (3): a bear trap kept all night in a building that stayed lit leaves the hands and turns up
+## unarmed in the corn at a random free `trap_spot`, as a pickup (`trap_changed` `loose`, `TrapPickup`).
+func _dawn_traps() -> void:
+	var farm := get_parent().get_node_or_null(^"Farm")
+	for p in _kept:
+		if farm == null or not _alive(p) or not bool(Game.players[p].get("trap", false)) or _building(Game.players[p].pos) == "":
+			continue
+		var free := get_tree().get_nodes_in_group(&"trap_spots").filter(func(n: Node3D) -> bool:
+			return not _traps.has(String(n.name)) and not _in_sanctuary(n.global_position))
+		if free.is_empty():
+			continue
+		var n: Node3D = free[_rng.randi() % free.size()]
+		var id := String(n.name)
+		farm.set_hands(p, bool(Game.players[p].get("shovel", false)), false)
+		_traps[id] = {"id": id, "kind": &"bear", "position": n.global_position, "deep": n.get_meta("kind", "") == "deep", "armed": false, "loose": true}
+		Log.event(&"trap_moved", {"trap": "held:%d" % p, "from_building": _kept[p], "to_spot": id, "player": p})
+		Net.to_peers(&"apply_trap_changed", [id, &"bear", &"loose", n.global_position])
+		Net.apply_received.emit(&"trap_changed", [id, &"bear", &"loose", n.global_position])
+	_kept.clear()
+
+
+## Host, from `TrapPickup`: the loose trap goes into `peer`'s hands and its spot is free again.
+func pick_up_loose(id: String, peer: int, st: Dictionary) -> void:
+	var t: Dictionary = _traps.get(id, {})
+	if not t.get("loose", false):
+		return
+	_traps.erase(id)
+	get_parent().get_node(^"Farm").set_hands(peer, bool(st.get("shovel", false)), true)
+	Log.event(&"trap_changed", {"trap_id": id, "state": "picked_up", "by": peer, "kind": "bear"})
+	Net.to_peers(&"apply_trap_changed", [id, &"bear", &"picked_up", t.position])
+	Net.apply_received.emit(&"trap_changed", [id, &"bear", &"picked_up", t.position])
+
+
+## Every peer: the loose trap's pickup at its spot (placeholder art: a dark iron slab on the ground).
+func _show_loose(id: String, on: bool) -> void:
+	var farm := get_parent().get_node_or_null(^"Farm")
+	if farm == null:
+		return
+	if not on:
+		if farm.targets.get(id) is TrapPickup:
+			var old: Node = farm.targets[id]
+			farm.targets.erase(id)
+			old.get_meta(&"art").queue_free()
+			old.get_meta(&"pick").queue_free()
+			old.queue_free()  # deferred: a hold finishing this frame still reads it
+		return
+	var m: Node3D = null
+	for s: Node3D in get_tree().get_nodes_in_group(&"trap_spots"):
+		if String(s.name) == id:
+			m = s
+	if m == null or farm.targets.has(id):
+		return
+	var t := TrapPickup.new()
+	t.creature = self
+	t.id = id
+	t.farm = farm
+	m.add_child(t)
+	t.add_pick_body(Vector3(1.2, 0.5, 1.2))
+	t.set_meta(&"pick", m.get_child(m.get_child_count() - 1))
+	var mesh := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.6, 0.12, 0.4)
+	mesh.mesh = box
+	mesh.position.y = 0.06
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.12, 0.12, 0.14)
+	mesh.material_override = mat
+	m.add_child(mesh)
+	t.set_meta(&"art", mesh)
+	farm.targets[id] = t
+	if Game.is_host() and OS.get_cmdline_user_args().has("--take-loose") and _alive(1):  # QA: the host player picks it up
+		var hc: Node = get_tree().current_scene.get_node("Players").player(1).get_node("HoldController")
+		var stand := m.global_position + Vector3(1.0, 0, 0)
+		var st: Dictionary = Game.players[1]
+		st.pos = Vector3(stand.x, st.pos.y, stand.z)  # the speed check would clamp the teleport (as death.gd's respawn)
+		st.freeze_until = Time.get_ticks_msec() + 300
+		hc._sweep_go.call_deferred(&"disarm_bear", t, stand)
+
+
+## The building `pos` is in (the door's parent), or "" outdoors.
+func _building(pos: Vector3) -> String:
+	for i in _rects.size():
+		if _rects[i].has_point(Vector2(pos.x, pos.z)):
+			return _rect_names[i]
+	return ""
 
 
 func _check_traps() -> void:
@@ -788,7 +1066,7 @@ func _lone(p: int) -> bool:
 
 func _in_lit_doorway(pos: Vector3) -> bool:
 	var gen := get_parent().get_node_or_null(^"Generator")
-	if gen == null or gen.damaged or gen.fuel_s <= 0.0:
+	if gen == null or not gen.powered():  # doors are lit only while the generator runs (doc 03 section 6)
 		return false
 	for d in get_tree().get_nodes_in_group(&"doors"):
 		if (d as Node3D).global_position.distance_to(pos) <= LIT_DOOR_M:
@@ -832,6 +1110,11 @@ func _on_apply(what: StringName, args: Array) -> void:
 				_test_lure_heard(args[2])
 		&"trap_changed":  # every peer: the Creature sends `set`, TrapRace the later states
 			_show_clue(args[0], args[1], args[2] == &"set")
+			_show_loose(args[0], args[2] == &"loose")
+			if _log and not Game.is_host():
+				Log.event(&"trap_changed_applied", {"trap_id": args[0], "kind": String(args[1]), "state": String(args[2])})
+			if Game.is_host() and args[2] == &"disarmed":  # a pried-free bear trap too (on_pry_done)
+				clear_trap(args[0])
 
 
 # --- debug (doc 05 section 19) -------------------------------------------------------------------
@@ -848,7 +1131,8 @@ func debug_sensed() -> Array:
 func debug_state() -> Dictionary:
 	return {"state": state, "body": body, "target": target, "position": global_position, "goal": _goal,
 		"scripted": _scripted, "night_t": _night_t, "timers": {"state_s": _t_state, "chase_s": _chase_t, "quiet_s": _lose_t},
-		"noise_memory": _memory.size(), "lure": _lure.duplicate(), "traps": _traps.duplicate(true)}
+		"noise_memory": _memory.size(), "lure": _lure.duplicate(), "traps": _traps.duplicate(true),
+		"trap_plan": _plan.duplicate(true), "stash": _stash, "work_heard": _work.size()}
 
 
 # --- QA walker (`-- --creature-test`) ------------------------------------------------------------

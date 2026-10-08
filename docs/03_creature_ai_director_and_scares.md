@@ -15,7 +15,7 @@ Builds on [doc 02](02_systems_and_economy.md) (numbers), [doc 04](04_farm_layout
 6. Light rules
 7. Day deaths and the trap race
 8. Taint and Shaken, creature side
-9. Night traps
+9. Night traps (9.1 As built, P2-05)
 10. Sabotage and the disturbance budget
 11. The AI Director
 12. Voice mimicry
@@ -367,8 +367,8 @@ Doc 01 "Night Traps". The creature sets traps while in `lurk` at night, counts f
 | Tripwire bells | from day 4; loud (60 m); tell the creature where the player is; cut with 1 s | doc 01 "Night Traps"; doc 02 section 12 |
 | Clues | fresh dirt, bent stalks, glinting metal; seen only by a player looking closely (within 4 m and facing, placeholder); trackers 1.5x that (doc 02 section 15, placeholder) | doc 01 "Night Traps" |
 | Flags | free for the players; from day 5 the creature moves one flag a night | doc 01 "Night Traps", "Ramp-up" |
-| Pegboard | bear traps hang on outlines; the lock caps theft at one trap a night; the creature breaks the lock from day 5; any bear trap not on the pegboard at nightfall is the creature's to take | doc 01 "Night Traps"; lock price 40, doc 02 section 10 |
-| Trap kept in a building | vanishes only if the building went dark; if lit all night it turns up in the corn at dawn, at a random `trap_spot` | doc 01 "Night Traps" |
+| Pegboard | bear traps hang on outlines; the farm's traps (board plus any off the board) are the creature's only bear supply, taken at nightfall as the plan needs, off-board traps first, then the board; the lock caps all theft at one trap a night; the creature breaks the lock from day 5 | doc 01 "Night Traps", "The tool shed"; D-053; lock price 40, doc 02 section 10 |
+| Trap kept in a building | vanishes only if the building went dark; if lit all night it is not stolen, and at dawn it turns up unarmed in the corn at a random `trap_spot`, as a pickup | doc 01 "Night Traps"; D-053 (unarmed is inference) |
 | Day-time traps | traps stay armed by day; day traps are the source of trap races | doc 01 "Day Deaths" |
 
 - **A trap is never placed in sanctuary** (10 m of the town stand, doc 04) or within 6 m of a lit
@@ -380,6 +380,52 @@ Doc 01 "Night Traps". The creature sets traps while in `lurk` at night, counts f
   night on the ordinary list; no special rule.
 - **Unarmed debris.** When disarmed, a bear trap becomes an item the player can hang on the
   pegboard in 1 s (doc 02 section 2.1).
+
+### 9.1 As built (P2-05)
+
+`game/creature/creature.gd`, host only, on the full farm (`--full-farm`). The Phase 1 world
+(`--phase1` without `--full-farm`) keeps the scripted spots and timers of section 18.
+
+- **Count.** At nightfall `trap_plan` reads `ramp_up` `bear_4p` / `pit_4p` for the day (1 to 7),
+  scales it with `Data.scaled` by headcount (2 to `max_players`), and tops up: kinds already armed
+  are subtracted. Bells wait (`traps.json` `enabled: false`). Difficulty and the full-wipe extras are
+  not applied yet.
+- **Timing.** The night's sets are spread at random over 10% to 75% of the night (placeholder) and
+  happen only while the creature is in `lurk`; a set missed in another state waits for the next
+  `lurk`.
+- **Region.** The host keeps up to 64 positions of player noises the creature heard (day and night,
+  within hearing radius; never true positions). A set picks one at random and uses free spots within
+  25 m of it (`region: heard`), else the nearest free spot (`nearest`); nothing heard yet gives a
+  random spot (`none`). `trap_changed set` logs `region` and `work_m`.
+- **Spot rules.** Not used by another trap; deep spots bear only; not within the sanctuary marker's
+  `radius_m` (default 10 m); not within 6 m of a lit doorway (generator powered); not within 8 m of
+  another trap; not within 4 m of a living player (placeholder, so nobody watches it appear). No
+  spot: `trap_skipped` `reason: no_spot`.
+- **Supply (D-053).** Every bear set uses a stolen trap (`trap_changed` `stolen: true`); pits need
+  none. At nightfall the creature steals what the plan's bears need beyond its stash: first traps
+  in living players' hands outdoors (`from: outdoor`) or in a dark building (`dark_building`), then
+  the pegboard, lowest slot first (`board`). A trap taken at nightfall is set that same night. A
+  bear set with an empty stash logs `trap_skipped` `reason: no_supply`; no free spot logs
+  `reason: no_spot`. `trap_plan` logs `supply` (the stash after nightfall theft) and `armed`.
+  Unused stolen traps stay in the stash for later nights.
+- **Dark building.** Through the night (checked every second) a trap held in a building while the
+  generator is not powered (`fuel_s > 0` and not damaged) is stolen, whatever the plan needs.
+- **Lock.** With the shed lock and before day 5 (`store.json` `shed_lock` `broken_from_day`), all
+  theft, hands and board together, stops at `theft_cap_per_night` (1); the first refused theft logs
+  `trap_theft_capped` (`cap`, `day`) once a night. Logs: `trap_stolen` (`trap`: `held:<peer>` or
+  `board:<slot>`, `from`, `lock`, `day`, `supply`, and `player` for hands).
+- **Lit building.** A trap held at nightfall in a building with the generator powered is not
+  stolen. If the player still holds it in a building at dawn, and the building never went dark, it
+  leaves their hands and turns up unarmed at a random free `trap_spot` outside sanctuary
+  (`trap_moved`: `trap`, `from_building`, `to_spot`, `player`; `trap_changed` state `loose` to every
+  peer). The pickup (`game/creature/trap_pickup.gd`) uses the `disarm_bear` hold until a pick-up verb
+  exists (Q-056); it refuses `hands_full` and logs `trap_changed` `picked_up`.
+- **Clearing.** `clear_trap(id)` drops a trap from the creature's list; the trap race and the host's
+  own `disarmed` / `filled` handling call it, so the spot can be reused.
+- **QA flags.** `--give-trap` puts a bear trap in every living player's hands at nightfall;
+  `--shed-lock` sets the lock (the store does not sell it yet); `--take-loose` (host) moves the host
+  player to a loose trap and picks it up; `--log-creature` also logs `trap_changed_applied` on
+  clients. `--pegboard-empty` now means no bear supply, so bears are skipped.
 
 ## 10. Sabotage and the disturbance budget
 

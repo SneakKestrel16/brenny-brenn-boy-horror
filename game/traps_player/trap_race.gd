@@ -134,11 +134,7 @@ func sync_set() -> void:
 func clear_trap(id: String, state: StringName, peer: int) -> void:
 	var t: Dictionary = traps[id]
 	Log.event(&"trap_changed", {"trap_id": id, "state": String(state), "by": peer, "kind": String(t.kind)})
-	# The Creature's table is private and `debug_state()` is a copy. Without this it never sets that kind
-	# again (`_set_trap` keeps a not-armed entry). Inference: needs a `clear_trap` on the Creature (AI Programmer).
-	var table: Dictionary = _creature.get("_traps")
-	if table.has(t.kind) and table[t.kind].id == id:
-		table.erase(t.kind)
+	_creature.clear_trap(id)  # D-037 (2): the spot is free for the Creature's next set
 	_bcast(&"trap_changed", [id, t.kind, state, t.position])
 	var sweep := get_tree().get_first_node_in_group(&"trap_sweep")
 	if sweep:

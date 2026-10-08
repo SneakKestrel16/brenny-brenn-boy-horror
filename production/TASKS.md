@@ -208,7 +208,7 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | P2-03 | Network & Voice | Staged barn recording: lobby lines, chatter and voice settings, clip capture and pre-share to all peers (doc 06 s11-12) | done | P2-10 |
 | P2-04 | AI Programmer | Replay recorded clips as lures, voice mimicry choice, tells and success logging (doc 03 s12) | done | P2-03 |
 | P2-11 | Gameplay | Trap sweeps, player side: disarm, fill pit with a shovel, flags, hang traps on the pegboard (doc 05 s11) | done | P2-02, P2-12 |
-| P2-05 | AI Programmer | Night traps on the full farm from doc 02 s11 counts; pegboard theft and lock (doc 03 s9) | in progress | P2-02, P2-11, P2-12 |
+| P2-05 | AI Programmer | Night traps on the full farm from doc 02 s11 counts; pegboard theft and lock (doc 03 s9) | done (spacing rules coded, no map spot near enough to test) | P2-02, P2-11, P2-12 |
 | P2-06 | Gameplay | Dawn respawn and medical bills, day deaths billed at next dawn (doc 02 s8) | done | P2-12 |
 | P2-07 | Gameplay | Up to 4 players, 5 and 6 scaled (D-038): roster, spawn, player cap from data, bots fill to 4 (doc 05, `player_scaling.json`) | done | P2-02 |
 | P2-13 | Game Designer, Level Designer | 5 and 6 players (D-038): scaling data to 6, 6 barn spawns | done (spawn scene committed with P2-14) | P2-12, P2-02 |
@@ -218,6 +218,7 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | P2-16 | Gameplay, Network & Voice | Lobby-only joins, reconnect by `player_uid` (D-048): refuse new players after match start and non-season players on a loaded save; reconnecting roster player returns as a ghost with slot and role kept; rejoin prompt from `user://last_session.cfg`, join code in lobby and pause menu and on the Join screen, rejoin mockery line from a per-player shuffle bag, no repeats until all 50 are seen (D-049, D-050) | done (windowed check of rejoin box, toast and pause-menu code owed; match-end clear waits for season end) | P2-07 |
 | P2-17 | Network & Voice | P2-16 follow-ups: a client with no clips sends digest `""`, which `clips.gd` reads as recording and holds the lobby start; align doc 06 refusal table with code (`full`, `match_in_progress`, `not_in_season`, `no_identity`); `net.gd` join timer logs "no session_state" as ERROR when the host quits after a leave; "farm is full" menu message | done | P2-16 |
 | P2-18 | Network & Voice | Join hardening: refuse a joiner whose game version differs from the host's (`version_mismatch`, doc 06; today the host only logs `net_join_version`); stop host sends to a refused peer before it disconnects (18 `Unable to send packet on channel 2` from `players.gd:71` via `net.gd` `send_bytes`, QUESTIONS P2-17 note); menu message for each | done (voice relay through the send filter not run live) | P2-17 |
+| P2-19 | Gameplay | Q-056: instant `take_trap` verb and HUD label for a loose trap (today it borrows the 5 s `disarm_bear` hold) | todo | P2-05 |
 | P2-09 | QA | Review each P2 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 2 gate | in progress | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
