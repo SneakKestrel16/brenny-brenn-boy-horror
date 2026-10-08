@@ -32,3 +32,30 @@ reviews and are proposed to the CEO for doc 01 when they change it.
 - P1-08 QA: `speed_violation` logs fire for autowalk players headless (4.3 m/s vs max 3.0), with or without `--creature-test`. Gameplay owns the check; settle by reading frame dt or autowalk speed. Not blocking P1-08.
 - P1-14 QA: `speed_violation` stamina flip: **RESOLVED** (P1-16, QA pass 2026-10-07). `exhausted` hysteresis plus interval sprint flag; 0 violations in 2-instance `--autowalk --autosprint` 5400 frames. The original entry text is in `production/handoffs/P1-14.md` section 2.
 - P1-16 QA: `ERROR: N resources still in use at exit` after long multi-instance runs (2 headless instances, 5400 frames; `--verbose` shows `ObjectDB instances were leaked` on shorter runs too). Bisect: `--voice-off` removes `AudioStreamMicrophone` and `AudioStreamPlaybackMicrophone` (owner `game/voice/voice.gd`, Voice autoload; 12 leaked objects down to 10). The rest is 4 `AudioStreamWAV` plus 4 `AudioStreamPlaybackWAV` (matches the 4 `LAYERS` in `game/audio/soundscape.gd`: `_cache` holds the looped duplicates and the players are never freed at exit; Soundscape autoload, owner Audio Designer; inference, settle by freeing players and clearing `_cache` in `_exit_tree`) and 2 unnamed objects. Exit-only, but it makes `multi.py` report MULTI FAIL on long runs. Not caused by P1-16. **PARTLY FIXED** (Audio Designer P1-10): Soundscape `_exit_tree` frees the players and clears `_cache`; 2-instance `--phase1 --creature-test --voice-off` 3600 frames now leaves 1 resource (was 10). Remaining: the microphone pair (`game/voice/voice.gd`, Network & Voice, run without `--voice-off`) and the last leaked object, unnamed, not Soundscape. **Microphone part FIXED** (Network & Voice P1-06): root cause is the AudioServer, which releases a stopped playback only on its next mix step, and at quit none comes; `stop()` plus nulled refs in `_exit_tree` still leaked (measured). `Voice._exit_tree` now stops and frees the player, removes the `Mic` capture effect, and waits (5 ms polls, cap 200 ms) until a weakref to the playback clears. 2-instance `--phase1 --bot` 3600 frames `--verbose`, both mic and `--voice-wav` loopback: 0 leaked instances (was 12 per instance before either fix), MULTI PASS; voice 754 and 761 frames received, 0 lost. If Soundscape leaks return under `--voice-off`, the same stop-then-wait applies there.
+
+## Found at the Phase 1 playtest (CEO and friends, 2026-10-07, build 7d470fc)
+
+Reported by the CEO after one session with friends. Each is a report, not a diagnosis; the cause column
+is inference until a log or a run settles it. Host log: `logs/qa/stop1_host/` (gitignored).
+
+1. **Voice chat quiet; range too short.** Reopens Found-by-the-studio 2. Raise the voice range a bit
+   and the lobby mic-check gain target.
+2. **Day music is unacceptable.** CEO: "atrocious", never to be used again in any project. Remove it
+   from the game and do not regenerate it; replacement needs a CEO listen first.
+3. **No auto-updater.** Friends must not redownload each build. Needs a GitHub release feed plus an
+   in-game or launcher updater, and an install page on GitHub with step-by-step instructions.
+4. **No watering can or fuel can.** The fuel drum could be interacted with but nothing followed. The
+   log shows `fill_fuel` completing 3 times and then `has_fuel_can` refusing every retry (285), so the
+   can was granted in state but never shown or usable. Hold-retry spam fixed in P1-17; the missing
+   can model/pickup and the refuel step are open.
+5. **Corn is a solid wall.** Players cannot walk in, so nobody can be lured into it.
+6. **No traps visible.** `trap_changed` logged 4 times; none rendered.
+7. **No lures.** `lure_played` is 0 in the logs; the scripted corn lines never fired.
+8. **Random death.** The creature stayed near for a long time, then killed without warning. One
+   `death` in the logs; the 5 chases need reading against it.
+9. **Dead players still audible.** Ghost voice must not reach the living except through the ghost
+   static rules in doc 06.
+10. **Spectate camera tears** whenever the spectated player turns.
+11. **One crop row cannot be planted.**
+12. **After a plant or fill completes, the same action cannot be done again** (`hold_completed`
+    plant 9, fill_fuel 3 in the logs; the per-target state after completion is a suspect).
