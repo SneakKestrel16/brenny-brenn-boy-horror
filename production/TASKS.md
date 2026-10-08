@@ -202,9 +202,9 @@ of trap sweeps (P2-11), and Phase 2 data (P2-12).
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
 | P2-01 | Director | Between-phase review: read Phase 1 logs and notes, add new problems to OPEN_ISSUES, settle what Phase 2 needs, turn rows below into acceptance | done | — |
-| P2-12 | Game Designer | Phase 2 data: medical bill, night trap counts, pegboard lock, recording takes; Q-048 (1) numbers | todo | P2-01 |
-| P2-02 | Level Designer | Full farm: second field, corn between the two fields, 4-player spawns, pegboard and recording-spot markers (doc 04) | todo | P2-01 |
-| P2-10 | Gameplay | Host/join menu, barn lobby before the match, pause menu with voice setting and push-to-talk (doc 05 s16, Q-042, Q-047) | todo | P2-01 |
+| P2-12 | Game Designer | Phase 2 data: medical bill, night trap counts, pegboard lock, recording takes; Q-048 (1) numbers | in progress | P2-01 |
+| P2-02 | Level Designer | Full farm: second field, corn between the two fields, 4-player spawns, pegboard and recording-spot markers (doc 04) | in progress | P2-01 |
+| P2-10 | Gameplay | Host/join menu, barn lobby before the match, pause menu with voice setting and push-to-talk (doc 05 s16, Q-042, Q-047) | in progress | P2-01 |
 | P2-03 | Network & Voice | Staged barn recording: lobby lines, chatter and voice settings, clip capture and pre-share to all peers (doc 06 s11-12) | todo | P2-10 |
 | P2-04 | AI Programmer | Replay recorded clips as lures, voice mimicry choice, tells and success logging (doc 03 s12) | todo | P2-03 |
 | P2-11 | Gameplay | Trap sweeps, player side: disarm, fill pit with a shovel, flags, hang traps on the pegboard (doc 05 s11) | todo | P2-02, P2-12 |
@@ -251,6 +251,11 @@ Acceptance:
 - Pause and settings menus: voice setting `off` / `lobby_lines` (doc 06 s11 "Voice settings", sends
   `request_voice_setting`), `push_to_talk` in `Settings.DEFAULTS` with a toggle (Q-042 (2)), the six
   volume sliders (doc 05 s16). Menu lines follow doc 06 s11 copy rules.
+- Settings menu (from main and pause menu, D-035) with four tabs, all saved through `Settings` and
+  applied at boot. Keybinds: rebind every InputMap action, reset to defaults, conflict warning. Audio:
+  the six sliders, voice setting, push-to-talk, mic device and gain if Voice exposes them. Graphics:
+  quality preset, shadows, render scale, VSync, FPS cap; no knob that breaks doc 07 s10 or the light
+  rules. Display: window mode, resolution, monitor, FOV, brightness. A screenshot of each tab.
 - Recording entry: "Record lines" for unchosen and Lobby-lines players, "Re-record" and "Skip" later
   (doc 06 s11). The recording screen itself is P2-03's.
 - `build_id` logged from the export version (Q-047 (1)).

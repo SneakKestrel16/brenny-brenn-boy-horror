@@ -262,3 +262,10 @@ scripted ones. Tripwire bells are not built in Phase 2 (proposal for P2-12: they
 (4) Phase 1 playtest fixes no human has checked (OPEN_ISSUES playtest 1, 4, 5, 6, 9 to 12) are
 rechecked in the first Phase 2 session (P2-09). Acceptance for every row is in TASKS.md. **Why:**
 doc 01 "Between phases" step 3: settle what the next phase depends on before it starts.
+
+### D-035 · 2026-10-08 · CEO · Full settings menu in P2-10
+P2-10's settings menu grows to four tabs: Keybinds (rebind every action, reset, conflict warning),
+Audio (six volume sliders, voice setting, push-to-talk, mic device and gain), Graphics (quality preset,
+shadows, render scale, VSync, FPS cap) and Display (window mode, resolution, monitor, FOV, brightness).
+All are saved through `Settings` and applied at boot. Graphics knobs must not break the doc 07 s10 corn
+budget or the light rules. **Why:** CEO request; players expect to set these before a session.
