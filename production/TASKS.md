@@ -609,6 +609,7 @@ no economy number and can start now.
 | P4-29 | AI Programmer, Gameplay | CEO: a sprung bear trap stays where it sprang; players pick it up and hang it back on the pegboard | in progress | — |
 | P4-30 | Game Designer, Gameplay | CEO: sell bonus by player count so 2p makes its payments; sim targets still pass | in progress | P4-28 |
 | P4-31 | AI Programmer | CEO: players in the town stand sanctuary do not count as outside at night (D-089); bots drop the sentinel job; re-run bot seasons | in progress | P4-21 |
+| P4-32 | Gameplay | CEO: the Harvest Moon push bar shows the distance left to the gate, not a stuck 0% | in progress | — |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
@@ -867,6 +868,14 @@ and an Opus QA review passes.
 - Bots drop the sentinel job (`bot.gd`); at 2p the freed bot works instead. Re-run the 2p to 4p bot
   seasons and report payments, trample counts and night deaths against P4-21. Logged; same done-when
   line as P4-22 to P4-28.
+
+### P4-32 Harvest Moon push progress
+- While a player holds `push_cart`, the hold bar shows route progress (`cart.offset` of `cart.length`) and
+  the metres left to the gate, on every peer, instead of a hold that sits at 0%. Same done-when line as
+  P4-22 to P4-28.
+- Added to running tasks from the same CEO report: dirt path along the cart route and cart grounded
+  while pushed (P4-27); the creature attacks when nobody pushes, so start-stop pushing no longer stops
+  attacks (P4-25).
 
 ### P4-19 Creature bodies, final art
 Owner: 3D Artist. Output: `assets/models/creature_*.glb`, `assets/blender/`, `tools/blender/`;

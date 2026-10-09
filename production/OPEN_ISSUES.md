@@ -197,6 +197,12 @@ Source: the CEO's own play test at STOP 5 (host and one client on one PC). Route
     (doc 02 s3, placeholder). P4-28 runs the simulator on it.
 11. **The creature killed a player inside the lit barn** after the player whistled. Doc 01 "Nights" and
     doc 03 s211/s247 say the creature never enters a lit building. Bug; added to P4-25.
+12. **Harvest Moon: no visible cart path.** The cart should follow a dirt path to the gate. Added to P4-27.
+13. **Harvest Moon: push progress stays at 0%.** The push hold never completes, so its bar never moves; it
+    should show the distance left to push. P4-32.
+14. **Harvest Moon: start-stop pushing stops all attacks.** The creature only attacks active pushers, so
+    players stop and restart and it just stands there. Added to P4-25.
+15. **The cart hovers while pushed** on the Harvest Moon, as well as in the barn. Added to P4-27.
 
 ## Found at the P4-21 review (QA, 2026-10-09)
 
