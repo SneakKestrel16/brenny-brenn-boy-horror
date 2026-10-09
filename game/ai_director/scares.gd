@@ -309,9 +309,8 @@ func _present(kind: StringName, slot: int, pos: Vector3, extra: String) -> void:
 				Soundscape.play_3d(&"cre_door_bang", _door_of("ToolShed") + Vector3(0.0, 0.0, -3.0))  # a bang outside
 			return
 		&"jumpscare":
-			Soundscape.play_2d(&"cre_jumpscare_hit")
+			Soundscape.play_2d(&"cre_jumpscare_hit")  # the file carries the body thud and the running away (CEO, P3-08)
 			if me:
-				Soundscape.play_3d(&"sfx_ragdoll_thud", me.global_position)
 				me.knockdown_camera(KNOCKDOWN_S)
 				_apparition(me.global_position - me.global_transform.basis.z * 1.5, true, 0.4)
 		&"disarm_lunge":

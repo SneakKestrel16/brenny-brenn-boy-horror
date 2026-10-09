@@ -152,3 +152,16 @@ two breaths peak within 2 dB and nearly all energy is under 200 Hz, so it is a h
 will carry little of it. `ui_paper_slide` is 0.48 s, RMS -20.8, peak -1.0. Orphans removed: 233111, 46631. The
 jumpscare is not picked: its sources and the current WAV stay.
 
+
+### cre_jumpscare_hit options redone (2026-10-08, pending CEO pick, not installed)
+Action-based (instant close onset, strike on player, fast vanish; no body thud, `sfx_ragdoll_thud` covers it). Options in `builds/sound_options/cre_jumpscare_hit_A/B/C.wav` (git-ignored), 1.5 s, RMS -9.4, peak -1.0. A: hawk cry 774252 + 0.55x copy, whip 72190, cloth punch 641234, leaves 489940 + scurry 415203. B: bear growl 763026 + tiger 263115 0.7x, dark whoosh 431976, belt snap 596477, corn 613567. C: cow huff 233137 (0.8x), towel whip 263454, cloth punch 641234, scurry 415203. All plus a synth leaf burst; all CC0 (641234 credit optional). Installed WAV unchanged.
+
+### cre_jumpscare_hit options v3 (2026-10-08, pending CEO pick, not installed)
+Replaces the A/B/C set. Ten options `builds/sound_options/cre_jumpscare_hit_01..10.wav` (git-ignored), 3.1-3.5 s, RMS -9.4, peak -1.0. Structure: 0.3 s silence head, scare (0.3-0.95 s, loudest), body thud (~0.85 s, so `sfx_ragdoll_thud` must not play separately for the jumpscare at install), rapid light steps fading out (lowpass closes with distance). Each has a different scare, thud and step set; all sources CC0 (page-checked, remix_group false, no human voice, no craigsmith). Build: tmp scripts `opt/jump10.py` (SoX stems + SuperCollider NRT), not in repo; on a pick the recipe must go into `tools/audio/process_downloads.py`.
+
+### cre_jumpscare_hit: option 03 installed (2026-10-08)
+`assets/audio/cre_jumpscare_hit.wav` is CEO option 03 (kea/bat scare, soft fall, grass running), 3.15 s, RMS -9.4, peak -1.0, 0.3 s head silence. Running steps are approved; **scare and thud are placeholders, redo with the creature model**. The thud is inside the file: the lead drops the separate `sfx_ragdoll_thud` call at the jumpscare.
+- **Rebuilt, not copied.** The approved option was built with SoX + SuperCollider NRT, which is not deterministic (two runs gave different md5). To get a WAV a repo recipe reproduces byte for byte, `jumpscare()` in `tools/audio/process_downloads.py` re-makes it in numpy: same sources, cut points, grain picks, step timing and gains; the leaf burst is seeded numpy noise. The 0.1 s envelope matches option 03 (silence to 0.3 s, scare about -4 dB to 0.95 s, thud, 13 steps fading) but the tail ends 0.2 s earlier (3.15 s vs 3.36 s). **CEO listen again** since it is not the exact file approved.
+- `process_downloads.py` keeps the head silence for this sound only.
+- Added to `assets/audio/src/dl/` (+ LICENSE.txt, all CC0): 456802, 667579, 346694, 635052. Removed orphans 562189, 553886, 115917. 673424 stays (`cre_lunge`).
+- Doc 08 updated (sections 5.4 table, 10.6, 11.4, 13, 13.1).

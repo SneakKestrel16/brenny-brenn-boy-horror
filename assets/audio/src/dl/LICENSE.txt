@@ -8,9 +8,6 @@ freesound_673545.mp3  https://freesound.org/people/deadrobotmusic/sounds/673545/
 freesound_556221.mp3  https://freesound.org/people/Walking.With.Microphones/sounds/556221/  Walking.With.Microphones  "Rook (Corvus frugilegus)"  CC0
 freesound_536732.mp3  https://freesound.org/people/egomassive/sounds/536732/  egomassive  "Caw.ogg"  CC0
 freesound_850699.mp3  https://freesound.org/people/IENBA/sounds/850699/  IENBA  "Female Scream"  CC0 (kept by D-067)
-freesound_562189.mp3  https://freesound.org/people/gristi/sounds/562189/  gristi  "snd_box_smash.wav"  CC0
-freesound_553886.mp3  https://freesound.org/people/sukondi/sounds/553886/  sukondi  "Smash Sound Effect | Smash/knock wood"  CC0
-freesound_115917.mp3  https://freesound.org/people/issalcake/sounds/115917/  issalcake  "Weak table crash, break.wav"  CC0
 freesound_673424.mp3  https://freesound.org/people/courtneyeck/sounds/673424/  courtneyeck  "Falling body hits the floor"  CC0
 freesound_529396.mp3  https://freesound.org/people/bouncyballblue/sounds/529396/  bouncyballblue  "thump_thud_slam_fist_heavy.wav"  CC0
 freesound_452609.mp3  https://freesound.org/people/kyles/sounds/452609/  kyles  "door wood old heavy kick open good impact 1 with rattle 1 without.wav"  CC0
@@ -19,3 +16,7 @@ freesound_623701.mp3  https://freesound.org/people/mediatheksuche/sounds/623701/
 freesound_613567.mp3  https://freesound.org/people/zazz.sound.design/sounds/613567/  zazz.sound.design  "VEGEMisc_Walking Through Corn Field_FC_KOKORIN_8040.ORTF.wav"  CC0
 freesound_461839.mp3  https://freesound.org/people/15GPanskaCepelak_Adam/sounds/461839/  15GPanskaCepelak_Adam  "2-1 dog breathing- sleeping.wav"  CC0
 freesound_451411.mp3  https://freesound.org/people/kyles/sounds/451411/  kyles  "foley paper sheet of white paper slide around on wood variations.wav" (page title truncated in the fetch; no remix chain)  CC0
+freesound_456802.mp3  https://freesound.org/people/Breviceps/sounds/456802/  Breviceps  "Kea screaming"  CC0
+freesound_667579.mp3  https://freesound.org/people/Yoyodaman234/sounds/667579/  Yoyodaman234  "Bat Screech"  CC0
+freesound_346694.mp3  https://freesound.org/people/deleted_user_2104797/sounds/346694/  deleted_user_2104797  "Body fall_02.wav"  CC0
+freesound_635052.mp3  https://freesound.org/people/sillygrizzlies/sounds/635052/  sillygrizzlies  "Panicked Running Footsteps on Grass"  CC0

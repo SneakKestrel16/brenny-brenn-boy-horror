@@ -54,6 +54,33 @@ def dog():  # sleeping dog (15GPanskaCepelak_Adam): three slow breaths, played a
     return even(slow(a, 0.85))
 def paper():  # sheet of paper scritching across wood (kyles), one clean pull
     return filt(seg(load(451411), 2.3, 2.85), hp=600, lp=10000)
+def pk(a, db): return a*(10**(db/20)/abs(a).max())
+def clip(i, t0, t1, hp, rate=None, cap=0.65, fo=0.12):  # trim the lead-in silence, high-pass, peak -3 dB, optional pitch-down, cap with a fade
+    a = seg(load(i), t0, t1); a = a[int(np.argmax(abs(a) > 0.01*abs(a).max())):]
+    a = pk(filt(a, hp=hp), -3)
+    if rate: a = slow(a, rate)
+    return fade(a[:int(cap*R)], 0.001, fo)
+def grains(i, n, glen, hp, t1=None, gap=0.3):  # the n strongest onsets (energy rise over 2.5x the 25 ms before) as short footfall grains
+    x = load(i); h = 120; m = len(x)//h; e = np.sqrt((x[:m*h].reshape(m, h)**2).mean(1)) + 1e-6
+    sc = [(e[k:k+8].max(), k*h/R) for k in range(12, min(m-12, int(t1*R/h)-4)) if e[k] > 2.5*e[k-12:k-2].mean()]
+    picks = []
+    for _, t in sorted(sc, reverse=True):
+        if all(abs(t-u) > gap for u in picks): picks.append(t)
+        if len(picks) == n: break
+    return [fade(pk(filt(seg(x, t-0.008, t+glen), hp=hp), -6), 0, 0.06) for t in picks]
+def jumpscare():  # option 03: kea + bat scare, soft body fall, 13 running steps on grass fading away (scare + thud are placeholders)
+    import random
+    rng = random.Random(3); pool = grains(635052, 12, 0.14, 600, t1=40); rn = np.random.default_rng(3)
+    thud = fade(pk(filt(seg(load(346694), 0.435, 1.35), hp=30), -4), 0, 0.3)*0.9*2.4
+    n = int(0.2*R); leaf = filt(rn.standard_normal(n), hp=2500, lp=9000)*np.exp(-np.arange(n)/(0.05*R)); leaf = pk(leaf, 0)*0.45
+    parts = [(leaf, 0.3, 1.0), (clip(456802, 1.1, 1.78, 300), 0.3, 1.0), (clip(456802, 3.4, 3.98, 150, 0.7), 0.6, 0.7),
+             (clip(667579, 3.45, 4.25, 500, 0.8), 0.35, 0.7), (thud, 0.92, 1.0)]
+    t = 1.3
+    for j in range(13):
+        f = j/12; g = pool[rng.randrange(len(pool))]; r = rng.uniform(0.92, 1.08)
+        parts.append((filt(slow(g, r), lp=7000 + (2200-7000)*f), t, 1.0*0.16**f))
+        t += 0.14*(1 + rng.uniform(-0.12, 0.12))
+    return filt(mix(*parts), hp=25)
 # name: (audio before the end fades, rms dB, fade-in s, fade-out s). The main loop trims the leading silence,
 # removes DC, then fades, so the first and last sample are 0 whatever the trim cut.
 S = {
@@ -64,7 +91,7 @@ S = {
  "vox_emote_scream": (seg(load(850699), 0.2, 2.66), -16.4, 0.02, 0.06),
  "sfx_door_slam": (mix((lead(seg(load(529396), 0.0, 0.7)), 0.0, 0.8), (lead(seg(load(452609), 0.0, 1.9)), 0.14, 1.0), (lead(load(216872)), 0.14, 0.9)), -14.0, 0.001, 0.4),
  "cre_door_bang_01": (mix((lead(seg(load(623701), 0.0, 1.6)), 0.0, 1.0), (lead(seg(load(529396), 0.0, 0.7)), 0.0, 0.7)), -13.8, 0.001, 0.3),
- "cre_jumpscare_hit": (filt(mix((seg(load(562189), 0.0, 1.0), 0, 1.0), (lead(seg(load(553886), 0.88, 2.3)), 0.0, 0.9), (lead(seg(load(115917), 1.8, 3.0)), 0.0, 0.6), (seg(load(673424), 1.0, 1.6), 0.05, 0.8)), hp=30), -9.4, 0.001, 0.4),
+ "cre_jumpscare_hit": (jumpscare(), -9.4, 0.001, 0.4),
  "cre_lunge": (mix((fade(seg(load(613567), 8.0, 8.5), 0.25, 0.05)*4, 0, 1.0), (seg(load(673424), 1.05, 1.5), 0.45, 1.0)), -13.9, 0.01, 0.2),
  "cre_presence_swell": (dog(), -16.6, 0.15, 0.4),
  "ui_paper_slide": (paper(), -20.8, 0.004, 0.08),
@@ -72,7 +99,8 @@ S = {
 only = sys.argv[1:] or list(S)
 for k in only:
     a, db, fi, fo = S[k]
-    i = np.argmax(abs(a) > 10**(-50/20)); a = a[i:]  # trim leading silence below -50 dB
+    if k != "cre_jumpscare_hit":  # the jumpscare keeps its 0.3 s head silence (the scare lands on cue)
+        i = np.argmax(abs(a) > 10**(-50/20)); a = a[i:]  # trim leading silence below -50 dB
     a = a - a.mean()
     a = norm(fade(a, fi, fo), db)
     with wave.open(f"out/{k}.wav", "wb") as w:
