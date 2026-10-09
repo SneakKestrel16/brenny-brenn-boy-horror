@@ -69,7 +69,7 @@ func _physics_process(delta: float) -> void:
 					_scripted = true
 					start(&"pry", get_tree().get_first_node_in_group(&"farm").targets[id])
 					_pin_t = -1000.0  # once per trap
-	elif _autopry and not player.pinned:
+	elif _autopry and not player.pinned and _pin_t != 0.0:  # once, so a later scripted hold (--take-loose) keeps its flag
 		_pin_t = 0.0
 		_scripted = false
 	if not _holding:

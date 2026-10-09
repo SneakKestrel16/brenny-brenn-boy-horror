@@ -26,7 +26,8 @@ extends CharacterBody3D
 ## `-- --log-creature` logs `apply_creature_state` and `apply_trap_changed` arrivals on clients.
 ## `-- --shed-lock` gives the team the pegboard lock (the store does not sell it yet). `-- --give-trap` puts a
 ## bear trap in every living player's hands at nightfall (full farm), so theft runs under `multi.py`.
-## `-- --take-loose` (host) walks the host player to a loose trap that turned up at dawn and picks it up.
+## `-- --take-loose` (host) walks the host player to a loose trap (turned up at dawn, or pried free) and picks it
+## up, then hangs it on the pegboard if an outline is empty (P4-29).
 
 signal state_changed(state: StringName, body: StringName)
 ## Host only (P1-09): the creature reached `peer` in a chase / a living player sprang an armed trap.
@@ -872,7 +873,7 @@ func _set_trap(i: int) -> void:
 	var kind := &"bear" if i % 2 == 0 else &"pit"
 	var old: Dictionary = {}
 	for t in _traps.values():
-		if t.kind == kind:
+		if t.kind == kind and not t.get("loose", false):  # P4-29: a pried trap left lying is not this set's
 			old = t
 	if not old.is_empty() and not old.armed:
 		return  # a sprung trap stays where it is (the trap race is P1-09)
@@ -987,7 +988,7 @@ func _in_sanctuary(pos: Vector3) -> bool:
 
 ## Full farm, doc 01 "The tool shed", D-053: the farm's bear traps are the creature's only supply. At
 ## nightfall it takes up to `need`: traps in living players' hands first (outdoors, or in a dark building),
-## then traps off the pegboard. One in a lit building is kept (and moved at dawn, `_dawn_traps`). During
+## then loose traps lying at a spot (P4-29, D-104), then traps off the pegboard. One in a lit building is kept (and moved at dawn, `_dawn_traps`). During
 ## the night a trap in a building that goes dark is taken too. Before `broken_from_day` the lock caps every
 ## theft together at `theft_cap_per_night` (store.json `shed_lock`).
 func _steal_traps(nightfall: bool, need: int = 0) -> void:
@@ -1018,6 +1019,17 @@ func _steal_traps(nightfall: bool, need: int = 0) -> void:
 		need -= 1
 		farm.set_hands(p, bool(Game.players[p].get("shovel", false)), false)
 		_took("held:%d" % p, "dark_building" if b != "" else "outdoor", locked, {"player": p})
+	for t: Dictionary in _traps.values().filter(func(t: Dictionary) -> bool: return t.get("loose", false)):
+		if not nightfall or need <= 0:
+			break
+		if _stolen_night >= cap:
+			capped = true
+			break
+		need -= 1
+		_traps.erase(t.id)  # P4-29, D-104: a pried or dawn-moved trap still lying out is off the pegboard too
+		Net.to_peers(&"apply_trap_changed", [t.id, &"bear", &"stolen", t.position])
+		Net.apply_received.emit(&"trap_changed", [t.id, &"bear", &"stolen", t.position])
+		_took("ground:%s" % t.id, "ground", locked, {})
 	var sweep := get_tree().get_first_node_in_group(&"trap_sweep")
 	while nightfall and need > 0 and sweep != null and sweep.filled.has(true):
 		if _stolen_night >= cap:
@@ -1097,7 +1109,7 @@ func _show_loose(id: String, on: bool) -> void:
 	m.add_child(t)
 	t.add_pick_body(Vector3(1.2, 0.5, 1.2))
 	t.set_meta(&"pick", m.get_child(m.get_child_count() - 1))
-	var mesh := TrapArt.bear()
+	var mesh := TrapArt.bear(true)  # P4-29: jaws shut, it was sprung or carried
 	m.add_child(mesh)
 	t.set_meta(&"art", mesh)
 	farm.targets[id] = t
@@ -1107,7 +1119,21 @@ func _show_loose(id: String, on: bool) -> void:
 		var st: Dictionary = Game.players[1]
 		st.pos = Vector3(stand.x, st.pos.y, stand.z)  # the speed check would clamp the teleport (as death.gd's respawn)
 		st.freeze_until = Time.get_ticks_msec() + 300
-		hc._sweep_go.call_deferred(&"take_trap", t, stand)
+		_qa_take_and_hang.call_deferred(hc, t, stand)
+
+
+## QA `--take-loose`: the host player takes the loose trap, then hangs it if an outline is empty (P4-29).
+func _qa_take_and_hang(hc: Node, t: Node, stand: Vector3) -> void:
+	await hc._sweep_go(&"take_trap", t, stand)
+	var peg: Node = get_parent().get_node(^"Farm").targets.get("pegboard")
+	var st: Dictionary = Game.players[1]
+	if peg == null or peg.can_start(&"hang_trap", st) != &"":
+		return
+	var board := peg.get_parent() as Node3D
+	var at := board.global_position + board.global_transform.basis * Vector3(0, -1.5, -1.5)  # as hold_controller's _autosweep
+	st.pos = Vector3(at.x, st.pos.y, at.z)
+	st.freeze_until = Time.get_ticks_msec() + 300
+	await hc._sweep_go(&"hang_trap", peg, at)
 
 
 ## The building `pos` is in (the door's parent), or "" outdoors.
@@ -1340,11 +1366,12 @@ func _on_apply(what: StringName, args: Array) -> void:
 				_test_lure_heard(args[2])
 		&"trap_changed":  # every peer: the Creature sends `set`, TrapRace the later states
 			_show_clue(args[0], args[1], args[2] == &"set")
-			_show_loose(args[0], args[2] == &"loose")
+			_show_loose.call_deferred(args[0], args[2] == &"loose")  # after TrapRace drops a pried trap's TrapTarget
 			if _log and not Game.is_host():
 				Log.event(&"trap_changed_applied", {"trap_id": args[0], "kind": String(args[1]), "state": String(args[2])})
-			if Game.is_host() and args[2] == &"disarmed":  # a pried-free bear trap too (on_pry_done)
-				clear_trap(args[0])
+			if Game.is_host() and args[2] == &"loose" and _traps.has(args[0]):  # P4-29: a pried-free bear trap stays (on_pry_done)
+				_traps[args[0]].loose = true
+				_traps[args[0]].armed = false  # already so after a real spring; not after TrapRace's --force-spring
 
 
 # --- debug (doc 05 section 19) -------------------------------------------------------------------

@@ -842,3 +842,15 @@ method to remove one they already placed, flags should up on the minimap as well
 **How to apply:** the limit is data only. `TrapSweep.flags` holds `{pos, by}`; code that moves a flag
 (the creature, day 5) changes `pos` and keeps `by`. Q-230 asks the Game Designer to own the number and
 mirror the schema field in doc 02.
+### D-104 · 2026-10-09 · AI Programmer (P4-29) · A pried-free bear trap lies loose at its spot
+CEO request P4-29: a sprung bear trap no longer disappears when the victim is pried free. It stays at
+its spot, jaws shut, as a loose trap (`trap_changed` `loose`, the dawn-trap `TrapPickup`). A player
+takes it (`take_trap`, instant) and hangs it on the pegboard (`hang_trap`, doc 02 s3, 1 s), filling an
+outline. A loose trap still lying out at nightfall is the creature's (doc 01 "Any trap not on the
+pegboard at nightfall is the creature's"): `_steal_traps` takes loose traps after the ones in hands and
+before the pegboard (`trap_stolen` `from: "ground"`).
+**Why:** CEO call 2026-10-09. Doc 01 already makes every trap off the pegboard at nightfall the
+creature's; the order (hands, ground, board) is an inference that keeps a team that hangs its traps back
+ahead of one that leaves them lying. A playtest settles whether the order matters.
+**How to apply:** trap race, pry, slow-after and night theft rules are unchanged. Bots pry themselves but
+do not fetch traps.
