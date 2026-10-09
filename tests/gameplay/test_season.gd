@@ -35,6 +35,7 @@ func _process(delta: float) -> bool:
 		if t.has_method("dawn_wilt"):
 			plots.append(t)
 	farm.coins = 1000
+	load("res://game/farming/debt.gd").first_made = true  # P4-07: the pumpkin is on sale once the first payment is made
 	var st: Dictionary = farm.pstate(me)
 	st.bag = 0
 	st.bag_by = {}

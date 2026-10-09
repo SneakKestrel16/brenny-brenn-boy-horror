@@ -1,11 +1,13 @@
 extends RefCounted
+
+const Debt := preload("res://game/farming/debt.gd")
 ## P4-04 (doc 05 s9): crop facts read from crops.json. No crop name lives in code; a crop is found by what it
 ## does (`harvest_phase`), so a new record in the table plants, grows and sells with no edit here.
 
-## Placeholder until P4-07 records real payments: the first payment is made at dawn `first_payment_dawn`
-## (season.json), so from the next day on it counts as made. P4-07 replaces this with the payment flag.
-static func first_paid(day: int) -> bool:
-	return day > int(Data.value(&"season", &"first_payment_dawn"))
+## P4-07: the first payment was made (Debt records it at dawn 4; every peer mirrors it). Pumpkins stay locked
+## for the season after a missed one (doc 02 s5, D-017).
+static func first_paid(_day: int = 0) -> bool:
+	return Debt.first_made
 
 
 static func rec(id: StringName) -> Dictionary:

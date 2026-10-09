@@ -21,6 +21,7 @@ const HELP := """Commands (host only unless marked):
   length <phase> <s>        set a phase's length for this session
   coins <n>                 add n coins (negative takes them away)
   buy <item>                buy a store.json item as you, anywhere (the crate's other rules apply)
+  pay                       early payment toward the debt as you (P4-07; one 50-coin step)
   fuel [s]                  add s seconds of fuel (default: fill the tank)
   gen damage|repair         break or fix the generator
   creature <state> [peer]   force lurk, stalk, chase or retreat (target defaults to you)
@@ -204,6 +205,10 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 			var farm := main.get_node_or_null("Farm")
 			farm.add_coins(a[0].to_int(), &"dev", Game.local_peer())
 			return "coins %d" % farm.coins
+		"pay":  # P4-07: the sell box's pay_early verb, without the walk
+			var dbt := get_tree().get_first_node_in_group(&"debt")
+			var why: StringName = dbt.early_blocked()
+			return "paid %d, still owed %d" % [dbt.pay_early(Game.local_peer()), dbt.owed] if why == &"" else "no payment: %s" % why
 		"pumpkin":  # P4-05: host drives the Prize Pumpkin for QA
 			var pk = main.get_node("Farm").targets.get("prize_pumpkin")
 			if pk == null or a.is_empty() or not a[0] in ["plant", "water", "gnaw", "bite", "judge"]:

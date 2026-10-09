@@ -7,15 +7,21 @@ const Crops := preload("res://game/farming/crops.gd")
 var kind: StringName = &"sell"  ## `sell` or `well`
 
 
-func verbs_for(_st: Dictionary) -> Array[StringName]:
+func verbs_for(st: Dictionary) -> Array[StringName]:
 	var out: Array[StringName] = []
 	if kind == &"well" and bool(Game.players.get(Game.local_peer(), {}).get("tainted", false)):
 		out.append(&"wash")  # the carry view has no Taint flag: read this machine's mirror of it
-	out.append(&"sell" if kind == &"sell" else &"fill_can")
+	if kind == &"sell" and st.has("bag") and int(st.bag) == 0:
+		out.append(&"pay_early")  # P4-07: doc 01 "Early payment: allowed at any dawn"; empty-handed at the box pays the bank
+	else:
+		out.append(&"sell" if kind == &"sell" else &"fill_can")
 	return out
 
 
 func can_start(verb: StringName, st: Dictionary) -> StringName:
+	if verb == &"pay_early" and kind == &"sell":
+		var d: Node = farm.get_tree().get_first_node_in_group(&"debt")
+		return d.early_blocked() if d else &"no_such_verb"
 	if verb == &"sell" and kind == &"sell":
 		return &"" if int(st.get("bag", 0)) > 0 else &"bag_empty"
 	if verb == &"fill_can" and kind == &"well":
@@ -34,6 +40,9 @@ func on_start(verb: StringName, peer: int) -> void:
 
 
 func complete(verb: StringName, peer: int, st: Dictionary) -> void:
+	if verb == &"pay_early":
+		farm.get_tree().get_first_node_in_group(&"debt").pay_early(peer)
+		return
 	if verb == &"sell":
 		var n := int(st.bag)
 		var v := Crops.bag_value(st)

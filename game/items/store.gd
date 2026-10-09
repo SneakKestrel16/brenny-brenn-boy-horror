@@ -194,19 +194,21 @@ func seizable() -> Array[StringName]:
 	return out
 
 
-## Host: take an upgrade away (P4-07). A plot pair relocks its two plots; a scarecrow takes the last one placed.
+## Host: take an upgrade away (P4-07). A plot pair clears and relocks its two plots; a scarecrow takes the last one placed.
 func seize(id: StringName) -> void:
 	if int(team.get(id, 0)) < 1:
 		return
 	team[id] = int(team[id]) - 1
-	for peer in own:
-		if team[id] <= 0:
-			own[peer].erase(id)
+	if bool(rec(id).get("per_player", false)):  # one upgrade seized = one owner's copy; the highest peer id loses it (placeholder)
+		var owners: Array = own.keys().filter(func(p: int) -> bool: return own[p].has(id))
+		if not owners.is_empty():
+			own[owners.max()].erase(id)
 	match id:
 		&"plot_pair":
 			for pid in plots.slice(-2):
 				plots.erase(pid)
 				var p: Node = farm.targets[pid]
+				p._reset()  # D-086: a seized plot loses its crop
 				p.locked = true
 				p._refresh()
 				farm.plot_changed(p)

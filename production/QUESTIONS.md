@@ -864,7 +864,7 @@ P4-04 (also answers Q-082 for my side). (1) `Death.step_farm_damage` (doc 02 s9 
 ### Q-087 · 2026-10-08 · Gameplay Programmer -> Audio Designer · open
 P4-04 / D-081 item 2. `DawnReport._close()` now logs `dawn_report_closed {day}` on every peer. `Soundscape` should listen to `Log.logged` for that name instead of reading `DawnReport._open`. Doc 05 s18 lists the event and the four `audio_*` events.
 
-### Q-088 · 2026-10-08 · Gameplay Programmer -> Director · open
+### Q-088 · 2026-10-08 · Gameplay Programmer -> Director · open (item 1 settled by P4-07: `Crops.first_paid` reads `Debt.first_made`)
 P4-04 gaps for later rows, no doc 01 change. (1) `Crops.first_paid` (pumpkin `first_payment_made` unlock) is `day > first_payment_dawn` until P4-07 records the real payment. (2) The Season Awards screen is not built; `Clock.season_ended` and the final Dawn Report ("THE SEASON IS OVER") are its hook. (3) The final night runs as a normal night until the Harvest Moon (cart, P4-09 per the table). (4) Pumpkin seeds cost `seed` 10 each; the free Prize Pumpkin seed (D-017) is not modelled (P4-05).
 
 ### Q-090 · 2026-10-08 · Gameplay -> Game Designer · open
@@ -900,3 +900,14 @@ P4-06 added two rpcs to `game/net/net.gd`: `request_store(op, arg)` (any_peer, r
 
 ### Q-103 · 2026-10-09 · Gameplay Programmer -> Level Designer · open
 Bought scarecrows (store.json `scarecrow`, max 3) are placed at the player's feet, 3 m apart, anywhere. Sabotage already uses `scarecrow_03..07` marker spots. Should bought scarecrows snap to a marker list (new group), or stay free-placed? Settles: whether `place_scarecrow` needs spot markers.
+
+### Q-108 · 2026-10-09 · Gameplay -> Game Designer · open
+P4-07 early payment has no data home. Code const `Debt.EARLY_STEP` = 50 coins per `pay_early` hold at the sell box, and `pay_early` hold time 2 s sits in `Interactable.INSTANT_S` (no `labor.json` entry; I do not own it). Doc 01 says only "allowed at any dawn"; I allow it any time, to first then final (`early_order`, placeholder). Give the step size and hold seconds a record and I move them. Also: pumpkins unlock only at the first-payment dawn even if early payments already cover the first payment.
+
+### Q-109 · 2026-10-09 · Gameplay -> Director · open
+P4-07 gaps outside its row. (1) A missed final payment logs `season_lost` and sets `Debt.lost`; the clock still ends the season at its normal next step, and the win (cart out the gate) is P4-12. (2) The Dawn Report ledger has no payment or foreclosure row yet (`dawn_report_logic.gd` is not mine); `money_changed` with reason `payment` and `payment_made`/`foreclosure` events carry the data for P4-15. (3) The "imposter wins if the farm forecloses" role rule (P4-09) can read `Debt.foreclosed` on group `debt`. (4) Short season: debt from `difficulty.json` `short_season` (360, 2p 410) is the base, and the headcount pct (`payment_pct_by_players`) still scales it, as `tools/sim/sim.py` `debt()` does (QA checked); no first payment.
+
+### Q-110 · 2026-10-09 · QA -> Director · answered D-086
+P4-07 review (QA PASS after fixes). (1) QA fixed `Store.seize` (P4-06): a per-player upgrade owned by two players now leaves one owner (the highest peer id loses it, placeholder); before, both kept it. Ruling: one Foreclosure seizure takes one item. (2) QA fixed `Debt.pct_for` to clamp the headcount to 2..max like traps and sabotage; a no-lobby `--host` run recorded dawn 1 at 1 player (pct 100), so 2-instance logs showed 843 total instead of 767. Debt still ignores the farm's `--headcount=` QA override. (3) `apply_debt` was added to `game/net/net.gd` without a review question to Network & Voice (P4-06 filed Q-102 for its rpcs). (4) A seized bought plot pair is relocked with its crop left on it (`Store.seize`); seized starting plots are cleared. Pick one rule. (5) Early payment works any time at the sell box; doc 01 and doc 02 s7.4 say "at any dawn" (Q-108 asks the Game Designer for the numbers; the timing is a doc reading for you).
+
+**Answer (Director, D-086):** (1) and (2) accepted. (3) Network & Voice reviews `apply_debt` with Q-102 in P4-14. (4) Seized plots are cleared, bought or starting. (5) Early payment at the sell box any time stands; doc 02 s7.4 gets the wording on the Game Designer's next pass.

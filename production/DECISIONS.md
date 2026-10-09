@@ -710,3 +710,14 @@ free scrap comes at the first dawn (step 7), before any damage can exist. P4-11 
 **Why:** doc 01 states the rule; the P4-06 builder held back only because day-1 bots and tests would
 break, which cannot happen if no damage exists on day 1.
 **How to apply:** P4-11 acceptance; bots that fix damage must buy scrap when the free one is spent.
+
+### D-086 · 2026-10-09 · Director · Q-110 answered: Foreclosure and early-payment rulings
+(1) One Foreclosure seizure takes one item; when two players own a per-player upgrade, one keeps it
+(QA's highest-peer-id pick stays a placeholder). (2) `Debt.pct_for` clamps headcount to 2..max like
+traps and sabotage. (3) Network & Voice reviews the `apply_debt` RPC alongside Q-102 in P4-14.
+(4) Every seized plot is cleared, bought plot pair or starting plot: one rule, and a team cannot keep a
+crop on land the bank took. (5) Early payment works any time at the sell box, not only at dawn; the
+money is gone either way, and a dawn-only window would need a Dawn Report control for no gain. Doc 01
+line 438 and doc 02 s7.4 say "at any dawn"; the Game Designer rewords both on their next pass.
+**Why:** QA's P4-07 review left these five calls open; none changes the simulator's totals.
+**How to apply:** `Store.seize` clears crops on the relocked plot pair (folded into the P4-07 merge).

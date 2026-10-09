@@ -585,7 +585,7 @@ no economy number and can start now.
 | P4-04 | Gameplay | Full 7-day season: every crop, town stand selling, dawn steps 1, 2, 5 and 7, season end, doc 05 s18 events; carried fixes | done (QA PASS; trample order Q-086) | P4-02, P4-03 |
 | P4-05 | Gameplay, Technical Artist | Prize Pumpkin: patch, growth, sizes, carrying, judging (doc 02 s6) | done (QA PASS; lift rule D-084) | P4-04 |
 | P4-06 | Gameplay, AI Programmer | Store and upgrades: every `store.json` item works (doc 02 s10) | done (QA PASS; scrap D-085) | P4-04 |
-| P4-07 | Gameplay | Debt, payment dawns, early payment, Foreclosure (doc 02 s7) | todo | P4-05 |
+| P4-07 | Gameplay | Debt, payment dawns, early payment, Foreclosure (doc 02 s7) | done (QA PASS; D-086) | P4-05 |
 | P4-08 | Gameplay, AI Programmer, Level Designer | Animals and `broken_fence`: pen animals, escape, round-up (D-071) | done (QA PASS after QA fixes) | P4-03 |
 | P4-09 | Gameplay | Roles: all ten doc 01 roles, lobby pick, locked per season (D-077) | todo | P4-04, P4-08 |
 | P4-10 | Gameplay, Network & Voice | Saving at dawn, loading, host left, joining and leaving mid-season with headcount scaling | todo | P4-07 |

@@ -532,6 +532,12 @@ func apply_money_changed(coins: int) -> void:
 	apply_received.emit(&"money_changed", [coins])
 
 
+## Host to all (P4-07): debt flags and what is still owed.
+@rpc("authority", "call_remote", "reliable")
+func apply_debt(first_made: bool, foreclosed: bool, lost: bool, owed: int, paid: int) -> void:
+	apply_received.emit(&"debt", [first_made, foreclosed, lost, owed, paid])
+
+
 ## Host to all at dawn (P3-12, doc 06 section 12): the Dawn Report, lure references only, never audio.
 @rpc("authority", "call_remote", "reliable")
 func apply_dawn_report(report: Dictionary) -> void:

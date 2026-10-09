@@ -7,6 +7,7 @@ extends Node
 
 const GhostPowersScript := preload("res://game/ghost/ghost_powers.gd")
 const Crops := preload("res://game/farming/crops.gd")
+const DebtScript := preload("res://game/farming/debt.gd")
 const RESPAWN_TEST_S := 10.0  ## `--creature-test` only: nights repeat without a real dawn, so QA respawns after 10 s
 
 var _creature: Node
@@ -14,10 +15,14 @@ var _dead: Dictionary = {}  ## every peer: peer -> {cause, position, body}
 var _test := OS.get_cmdline_user_args().has("--creature-test")
 var _respawn_at: Dictionary = {}  ## host: peer -> msec
 var _bill_deaths := 0  ## host: deaths since the last dawn bill
+var debt: Node  ## P4-07: the debt, on every peer (mirrors the flags)
 
 
 func _ready() -> void:
 	add_to_group(&"death")
+	debt = DebtScript.new()
+	debt.name = "Debt"
+	add_child(debt)
 	var powers := GhostPowersScript.new()  # P3-09: what a ghost can do
 	powers.name = "GhostPowers"
 	add_child(powers)
@@ -104,7 +109,7 @@ func dawn() -> void:
 		if t.get("state") == &"ripe":
 			ripe += 1
 	var sab := get_tree().get_first_node_in_group(&"sabotage")  # P3-06: crops trampled this dawn, in coins
-	Log.event(&"dawn_summary", {"day": Clock.day, "coins": farm.coins, "debt": 0, "plots_ripe": ripe,  # debt: P4-07
+	Log.event(&"dawn_summary", {"day": Clock.day, "coins": farm.coins, "debt": debt.owed, "plots_ripe": ripe,
 			"plots_wilted": _dawn.wilted, "farm_damage": sab.farm_damage if sab else 0, "deaths": _dawn.deaths,
 			"medical_bill": _dawn.bill, "final_extra": farm.final_extra, "final": final})
 
@@ -163,8 +168,8 @@ func step_medical_bill(farm: Node, _final: bool) -> void:
 
 
 ## Step 4: payment due and early payment (doc 02 s7). P4-07.
-func step_payment(_farm: Node, _final: bool) -> void:
-	pass
+func step_payment(farm: Node, final: bool) -> void:
+	debt.dawn_payment(farm, final)
 
 
 ## Step 5: farm damage. Night crops wilt first (doc 01 Crops); then the creature's trample. The AI Director's

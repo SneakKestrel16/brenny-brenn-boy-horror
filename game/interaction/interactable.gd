@@ -7,7 +7,7 @@ extends Node
 ## Verbs that are not chores, so labor.json has no entry: taking and returning the shovel (P2-11).
 const AnimalLogic := preload("res://game/farming/animal_logic.gd")
 const INSTANT_S := {&"take_shovel": 0.3, &"return_shovel": 0.3, &"take_trap": 1.0,
-		&"take_can": 0.5, &"drop_can": 0.3, &"lift_prize": 1.0, &"set_down_prize": 0.3}  ## placeholders; take_trap about 1 s like hanging (doc 02 s2.1, P2-19)
+		&"take_can": 0.5, &"drop_can": 0.3, &"lift_prize": 1.0, &"set_down_prize": 0.3, &"pay_early": 2.0}  ## placeholders; take_trap about 1 s like hanging (doc 02 s2.1, P2-19)
 
 var id := ""
 var range_m := 2.0  ## doc 05 section 7 step 2 (placeholder)

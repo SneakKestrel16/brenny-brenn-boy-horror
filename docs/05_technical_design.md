@@ -426,7 +426,7 @@ dawn (section 17) from `crops.json` (doc 02 section 5).
   `field` meta equals that crop id), `day` crops go in field plots. A plot holds `crop` and `state`; verb
   `plant:<crop>` carries the client's picked seed (`cycle_seed`, key T, client-local `Farm.seed_pick`; plain
   `plant` is the first day crop). The host refuses `wrong_crop`, `locked_crop` (`unlock_day`, and
-  `first_payment_made` until P4-07 supplies the payment flag; `Crops.first_paid` is the placeholder) and
+  `first_payment_made` until `Debt.first_made`, set at the first-payment dawn, is true; P4-07) and
   `no_coins`, and charges `seed` at planting. A day crop grows one day per watered day (`grow_days`); a
   bed crop ripens when night falls if watered. At dawn a night crop left unpicked is `dead` (and Taints when
   `dead_plot_taints`), an unripe one `wilted`; `clear_plot` removes either. `plot_changed` has no crop
