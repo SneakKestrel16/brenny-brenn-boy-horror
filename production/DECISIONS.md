@@ -656,3 +656,13 @@ the CEO switched to 59/85/101 (final 66/59/64, spread 6). The values are tuned t
 retuned from live logs.
 **How to apply:** Gameplay makes debt and medical bills read `payment_pct_by_players` (added to
 P4-10). Game Designer keeps doc 02 s4 and s18.6 in step.
+
+### D-081 · 2026-10-08 · Director · P4-17 follow-ups
+1. `cre_jumpscare_hit` is four per-body files, `cre_jumpscare_hit_{gaunt,scarecrow,boar,husk}`, with
+   the old file kept as fallback. The AI Programmer wires the pick in `scares.gd` in P4-11.
+2. Gameplay adds `Log.event(&"dawn_report_closed")` in `DawnReport._close()` in P4-04, so the
+   soundscape stops polling the private `_open`.
+3. Step-sound replays on the Dawn Report go through the SFX low-pass; accepted as built.
+**Why:** P4-17 reviews. The four bodies differ too much in size for one hit sound; a log event is the
+documented cross-system hook (CONTRACTS s10).
+**How to apply:** rows P4-04 and P4-11 carry the items.

@@ -641,6 +641,8 @@ Acceptance:
   (Q-073).
 - Carried fixes: `TrapArt` for the pegboard and the sprung trap (Q-058); client debug filter (Q-048
   item 4); remove the `voice_spike` main-scene override (Q-047 item 2).
+- `DawnReport._close()` logs `dawn_report_closed`; the soundscape listens for it instead of reading
+  the private `_open` (D-081).
 
 ### P4-05 Prize Pumpkin
 Owner: Gameplay; Technical Artist for size steps and the gnawed look. Output: pumpkin code; handoff
@@ -723,6 +725,8 @@ Acceptance:
   (doc 03).
 - Lobby difficulty and the streamer-safe group option (doc 01 "Difficulty and group settings").
 - The ghost flag applies to day and targeted lures too (D-075, Q-068).
+- `scares.gd` plays `cre_jumpscare_hit_<body>` (body id without `body_`), falling back to
+  `cre_jumpscare_hit` (D-081).
 
 ### P4-12 Short season and the Harvest Moon
 Owner: AI Programmer; Gameplay for the cart; Technical Artist for the sky and the cart lantern.
