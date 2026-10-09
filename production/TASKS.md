@@ -605,9 +605,10 @@ no economy number and can start now.
 | P4-25 | AI Programmer | CEO session: creature stuck in the barn; at dawn place it back in the corn; fix the cause | in progress | — |
 | P4-26 | Audio Designer | CEO session: new footstep sounds; crickets chirp less often | in progress | — |
 | P4-27 | Level Designer | CEO session: farm less open (cover, tree lines, landmarks); festival cart rests on the ground in the barn | in progress | — |
-| P4-28 | Game Designer | CEO session: simulate a bigger watering can (3 and 4 plots per fill) against the s18.3 targets and the bot-season gap | in progress | — |
+| P4-28 | Game Designer | CEO session: simulate a bigger watering can (3 and 4 plots per fill) against the s18.3 targets and the bot-season gap | done (no change: capacity stays 2, CEO 2026-10-09; 3 or 4 breaks s18.3 at 2p and 3p) | — |
 | P4-29 | AI Programmer, Gameplay | CEO: a sprung bear trap stays where it sprang; players pick it up and hang it back on the pegboard | in progress | — |
 | P4-30 | Game Designer, Gameplay | CEO: sell bonus by player count so 2p makes its payments; sim targets still pass | in progress | P4-28 |
+| P4-31 | AI Programmer | CEO: players in the town stand sanctuary do not count as outside at night (D-089); bots drop the sentinel job; re-run bot seasons | in progress | P4-21 |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
@@ -859,6 +860,13 @@ and an Opus QA review passes.
   already meets its targets), data-driven in `data/`, applied at every sale on the host and shown in the
   sale log. Sim (`tools/sim/sim.py`) models it; all s18.3 checks pass; 2p median pays the first payment.
   Decision recorded. Same done-when line as P4-22 to P4-28.
+
+### P4-31 Sanctuary no longer counts as attending (D-089)
+- `_track_night` skips living players inside the town stand sanctuary (creature `_in_sanctuary`), so a
+  player parked there all night leaves the farm unattended. Unit test for both cases.
+- Bots drop the sentinel job (`bot.gd`); at 2p the freed bot works instead. Re-run the 2p to 4p bot
+  seasons and report payments, trample counts and night deaths against P4-21. Logged; same done-when
+  line as P4-22 to P4-28.
 
 ### P4-19 Creature bodies, final art
 Owner: 3D Artist. Output: `assets/models/creature_*.glb`, `assets/blender/`, `tools/blender/`;

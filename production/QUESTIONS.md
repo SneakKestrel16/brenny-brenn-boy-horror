@@ -1112,7 +1112,7 @@ stale `held_prize`, so `hold_registry.gd` refuses every verb but `set_down_prize
 refusals per season). Bots now claim the pumpkin so only one lifts, but two humans can still hit it.
 Suggested fix: in `complete`, return without effect when `carrier != 0`, or re-run `can_start` there.
 
-### Q-164 · 2026-10-09 · QA -> Director · open
+### Q-164 · 2026-10-09 · QA -> Director · item 2 answered D-089
 P4-21 review (FAIL). Three items:
 1. **Bug, AI Programmer:** `game/bots/bot.gd:286` `_keeps_payment` lets bots buy moonflowers (`grow_days` 0)
    from the first-payment money on day 3. At 2p no bot harvests at night (the sole bot is the sentinel),
@@ -1126,3 +1126,5 @@ P4-21 review (FAIL). Three items:
 3. **Director ruling:** do Harvest Moon deaths count toward "night deaths at the sim median or below"?
    The sim spreads its 2 deaths over nights 1 to 7, and night 7 is the Harvest Moon. Counting them, 3 of
    13 builder seasons and 1 of 2 QA seasons have 3 deaths.
+**Answer to 2 (CEO, 2026-10-09):** close the hole. Players in the town stand sanctuary do not count as
+outside. D-089, P4-31.

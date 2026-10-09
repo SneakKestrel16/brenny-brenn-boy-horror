@@ -744,3 +744,11 @@ seasons (target 55 to 70) and the Prize Pumpkin size barely mattered (QA-check-2
 `min_players` is met, so the data, not the level, sets the starting field.
 **Why:** CEO call 2026-10-09 ("fix the 5-6 player balance").
 **How to apply:** 2 to 4 players are unchanged. A 5p or 6p playtest session checks it (doc 09 s3 DD Phase 4).
+
+### D-089 · 2026-10-09 · CEO · The town stand sanctuary does not count as attending the farm
+A living player within the town stand sanctuary (farm.tscn `Sanctuary`, doc 03 s11.5) does not count as
+"outside" for the night "Unattended farm" term (`game/ai_director/sabotage.gd` `_track_night`). Parking
+one player at the stand all night therefore no longer zeroes `nobody_outside_s` (Q-164 item 2, Q-161).
+The bots' sentinel job goes with it (P4-31).
+**Why:** CEO call 2026-10-09 ("close the hole"); doc 01 "Nights": hiding is never fully safe or free.
+**How to apply:** sanctuary still blocks lures, scares and kills; it only stops counting as attending.
