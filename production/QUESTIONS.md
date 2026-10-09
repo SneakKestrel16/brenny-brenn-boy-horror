@@ -1073,3 +1073,41 @@ default `""`; their paid paths recheck inside `complete` already (`Debt.pay_earl
 `early_blocked`, `Store.take_scrap` returns false, `Store.buy` via `why_not`). Also: a late cancel ends
 the client's hold with `hold_cancelled` and no reason, so the HUD never shows "Not enough coins for the
 seed"; a `refused_reason` on cancel would explain it (UI, optional).
+
+### Q-161 · 2026-10-09 · AI Programmer -> Game Designer · open
+P4-21. The live trample count has an "Unattended farm" term the sim lacks. `sabotage_logic.gd
+trample_count` adds `min(floor((nobody_outside_s - 30) / unattended_every_s), unattended_cap)`
+(data/sabotage.json: 60 s, cap 3, both placeholders) on top of base 1, +1 under 30 s outdoors and +1 dead
+generator. `tools/sim/sim.py` (step 5) uses only `trample_base`, `trample_nobody_outside` and
+`trample_dead_generator` (data/season.json) with `nobody_outside_pct` 20 (median.json), about 1.3
+plots a night. On the full farm the doc 03 s18 scripted stalk picks whoever is outdoors at 60 s every
+night and its chase kills even inside the barn, so a team that wants no night death goes in before 60 s
+and logs `nobody_outside_s` about 250: base 1 + dead generator 1 + unattended 3 = 5 plots every night
+(measured in the P4-21 bot seasons, `trample` lines). One can of fuel cannot reach dawn either
+(tank 210 s + can 105 s < dusk 60 + night 300, `generator_tank_s`, `fuel_can_pct`). Which should
+move: add the unattended term to the sim, or lower `unattended_cap` so hiding costs about what the sim
+assumes? Settled by: a sim run with the term added, compared against the P4-21 logs.
+Update: the final P4-21 bots send one bot to the town stand sanctuary (farm.tscn `Sanctuary`, 10 m,
+doc 03 s11.5) from dusk to dawn. It is outdoors all night, so `nobody_outside_s` is 0, the scripted
+stalk picks it, and the chase ends without a kill. Trample drops to 2 plots a night (base 1 + dead
+generator 1) with no night death. Also for the Game Designer: is a player parked at the town stand all
+night meant to count as "attending" the farm? If not, `_track_night` should skip players in sanctuary
+(AI Programmer change once you rule).
+
+### Q-162 · 2026-10-09 · AI Programmer -> QA · open
+P4-21. In a headless bot season the host (peer 1) is idle, but the debt scales by
+`Game.player_count()` (debt.gd), so a "2p" bot season is one worker paying the 2p debt, "3p" two
+workers paying 3p, and so on. The sim's players all work. `sim.py compare` therefore reads bot seasons
+as a weaker team than their headcount. Options: compare bot seasons against the sim at headcount
+`n - 1` with the `n` debt (sim change), or add a host bot (`--host-bot`, AI Programmer) so all `n`
+work. Which does QA want for the median-team check?
+
+### Q-163 · 2026-10-09 · AI Programmer -> Gameplay Programmer · open
+P4-21. Two players can both lift the Prize Pumpkin. `prize_pumpkin.gd` checks `carrier != 0` only in
+`can_start` (at hold start); `complete(&"lift_prize")` sets `carrier = peer` and `st.held_prize = true`
+without checking again. In bot seasons three bots started `lift_prize` on one tick and all three got
+`pumpkin_lifted` (s4p_1, short3p_1, short3p_2 before the fix). The two that are not the carrier keep a
+stale `held_prize`, so `hold_registry.gd` refuses every verb but `set_down_prize`, `load_cart` and `pry`
+(`hands_full`), and `load_cart` refuses `loaded`: those players are stuck until dawn (thousands of
+refusals per season). Bots now claim the pumpkin so only one lifts, but two humans can still hit it.
+Suggested fix: in `complete`, return without effect when `carrier != 0`, or re-run `can_start` there.

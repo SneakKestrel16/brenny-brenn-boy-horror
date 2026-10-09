@@ -8,10 +8,14 @@ extends Node
 ## bots stand unless `--bot-chores`: then they walk straight lines (no collision, no route) and do all of it.
 ## P4-11 (D-085): a damage fix spends scrap, so bots buy scrap when the team has none.
 ## P4-12: on the Harvest Moon a bot lifts the Prize Pumpkin, loads it on the cart and pushes, walking with the cart.
+## P4-21: from dusk to dawn bots wait in the lit barn (generator jobs aside) and one waits at the town stand
+## sanctuary, so the farm is never unattended; bots keep the first payment before buying
+## seeds, plant and water the Prize Pumpkin, pry themselves out of a bear trap, and move only on send steps.
 
 const Route := preload("res://game/bots/bot_route.gd")
 const Frame := preload("res://game/player/move_frame.gd")
 const Plot := preload("res://game/farming/plot.gd")
+const Crops := preload("res://game/farming/crops.gd")
 const Interactable := preload("res://game/interaction/interactable.gd")
 
 const REFUEL_BELOW := 0.5  ## refuel when one can (fuel_can_pct 50%, doc 02 section 14) fits in the tank
@@ -21,11 +25,22 @@ const REFUSED_WAIT_S := 1.0  ## placeholder: pause after a refusal so a bot neve
 const IDLE_S := Vector2(2.0, 6.0)  ## placeholder: idle pause range between strolls
 ## Where a bot stands to hold each target: inside `range_m` 2.0 (doc 05 section 7), outside walls.
 const STAND := {"sell_box": Vector3(-1.6, 0, 0), "well": Vector3(1.6, 0, 0), "fuel_drum": Vector3(-1.5, 0, 0),
-		"generator": Vector3(-1.5, 0, 0)}
+		"generator": Vector3(-1.5, 0, 0), "prize_pumpkin": Vector3(1.5, 0, 0)}
 const PLOT_STAND := Vector3(0, 0, 1.5)  ## between plot rows (rows 3 m apart, doc 04 section 9)
 const FIX_STAND := Vector3(1.2, 0, 0)  ## beside a dead crow or strange seeds, outside Taint's 0.8 m touch
 ## Open ground to stroll to when there is no chore (doc 04 section 9: yard, field A's edges, the well).
 const IDLE_SPOTS := [Vector3(0, 0, 6), Vector3(22, 0, 0), Vector3(30, 0, 1), Vector3(-20, 0, 8)]
+## P4-21: from dusk to dawn bots wait in the barn, lit while the generator runs (doc 03 s6: the creature never
+## enters a lit building). Barn floor x -8..8, z -20..0, door at the origin facing +Z (farm.tscn, doc 04 s8).
+const BARN := Rect2(-8, -20, 16, 20)
+const BARN_DOOR_OUT := Vector3(0, 0, 2)
+const SHELTER_SPOT := Vector3(0, 0, -5)
+## P4-21 night trips, seconds (placeholders sized to doc 03 s18's 60 s scripted lurk, phase1.json `scripted_lurk_s`):
+## ready the fuel can from FUEL_PREP_S before dusk, pour it from REFUEL_AT_S into the night (the tank is full until
+## dusk: generator.gd refuses `tank_full`), and be back inside the barn by HOME_BY_S.
+const FUEL_PREP_S := 30.0
+const REFUEL_AT_S := 35.0
+const HOME_BY_S := 50.0
 
 var peer := 0
 var players: Node
@@ -38,6 +53,7 @@ var _yaw := 0.0
 var _path: Array = []
 var _seq := 0
 var _send_t := 0.0
+var _pin_t := 0.0
 
 
 func _ready() -> void:
@@ -49,16 +65,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if Game.is_ghost(peer):
 		_path.clear()  # a dead bot stops where it fell
-	if not _path.is_empty():
-		var d: Vector3 = _path[0] - _pos
-		d.y = 0.0
-		var step := Data.speed(&"walk") * delta
-		if d.length() <= step:
-			_pos = Vector3(_path[0].x, _pos.y, _path[0].z)
-			_path.pop_front()
-		else:
-			_pos += d.normalized() * step
-			_yaw = atan2(-d.x, -d.z)
+	_pry(delta)
 	_send_t += delta
 	var ticks := floori(_send_t * players.SEND_HZ)
 	if ticks >= 1:
@@ -66,9 +73,43 @@ func _physics_process(delta: float) -> void:
 		# as a speed spike in the host's dt.
 		_send_t -= ticks / players.SEND_HZ
 		_seq += ticks
+		# P4-21: move only on send steps, walk x ticks / SEND_HZ, so a frame never covers more than the
+		# host's dt allows (moving every physics step outran it under `--time-scale 8`).
+		_step(Data.speed(&"walk") * float(Game.players[peer].get("speed_mult", 1.0)) * ticks / players.SEND_HZ)
 		# Same frame bytes a client's `move` packet carries, into the host's ingest.
 		players.submit(peer, Frame.unpack(Frame.pack(_seq, _pos, _yaw, 0.0, false, false), 1))
 		_pos = Game.players[peer].pos  # the host's kept position wins, as `apply_teleport` does for a client
+
+
+## P4-21 (doc 03 s7): pinned in a bear trap, pry it at once, as hold_controller's `_autopry` does for a client.
+## The trap id is in `trap_race.victims`, which every peer gets with the `trap_race` broadcast.
+func _pry(delta: float) -> void:
+	if not bool(Game.players[peer].get("pinned", false)) or Game.is_ghost(peer):
+		_pin_t = 0.0
+		return
+	_pin_t += delta
+	if _pin_t < 0.3 or farm.registry.holds.has(peer):  # after the spring cancels the chore hold
+		return
+	var race := get_tree().get_first_node_in_group(&"trap_race")
+	for id: String in race.victims:
+		if race.victims[id] == peer and farm.targets.has(id):
+			Net.request_received.emit(&"hold", peer, [&"pry", id])
+			_pin_t = -1000.0  # once per trap
+
+
+## Walk `dist` metres along the path, turning at each point.
+func _step(dist: float) -> void:
+	while dist > 0.0 and not _path.is_empty():
+		var d: Vector3 = _path[0] - _pos
+		d.y = 0.0
+		if d.length() <= dist:
+			dist -= d.length()
+			_pos = Vector3(_path[0].x, _pos.y, _path[0].z)
+			_path.pop_front()
+		else:
+			_pos += d.normalized() * dist
+			_yaw = atan2(-d.x, -d.z)
+			dist = 0.0
 
 
 func _run() -> void:
@@ -82,8 +123,22 @@ func _run() -> void:
 			await _walk(IDLE_SPOTS[rng.randi() % IDLE_SPOTS.size()])
 			await _wait(rng.randf_range(IDLE_S.x, IDLE_S.y))
 			continue
+		if job[0] == &"shelter":
+			var spot := SHELTER_SPOT + Vector3(2.0 * (absi(peer) % 4) - 3.0, 0, 0)  # side by side, never on one spot
+			_path = [spot] if BARN.has_point(Vector2(_pos.x, _pos.z)) else [BARN_DOOR_OUT, spot]  # in by the door, not through a wall
+			while not _path.is_empty() and not Game.is_ghost(peer):
+				await get_tree().physics_frame
+			await _wait(1.0)
+			continue
+		if job[0] == &"sentinel":  # 4 m inside the town stand's 10 m sanctuary (farm.tscn `Sanctuary`)
+			await _walk((get_tree().get_first_node_in_group(&"sanctuary") as Node3D).global_position + Vector3(-4, 0, 0))
+			await _wait(1.0)
+			continue
 		claims[job[1]] = peer
-		if job[0] == &"push_cart":
+		if job[0] == &"tend":  # P4-21: wait by the generator with the full fuel can, or by a moonflower
+			await _walk(_stand(job[1]))
+			await _wait(1.0)
+		elif job[0] == &"push_cart":
 			await _push()
 		else:
 			await _do(job[0], job[1])
@@ -93,29 +148,48 @@ func _run() -> void:
 ## Host state only, never positions of anything but the bot: [verb, target id], or [] for nothing to do.
 func next_job() -> Array:
 	var st: Dictionary = farm.pstate(peer)
-	if bool(st.get("tainted", false)) and _free("well"):
+	if bool(st.get("tainted", false)) and _free("well") and Clock.phase != &"night":
 		return [&"wash", "well"]  # Q-061: Taint ends with a wash at the well
 	if Clock.phase == &"harvest_moon" and farm.get(&"cart"):  # P4-12: doc 03 s14 acts 1 to 3
 		var cart: Node = farm.cart
 		if bool(st.get("held_prize", false)):
 			return [&"load_cart", "cart"]
-		if cart.act == cart.LOADING and farm.targets.has("prize_pumpkin") and &"lift_prize" in farm.targets["prize_pumpkin"].verbs_for(st):
+		if cart.act == cart.LOADING and _free("prize_pumpkin") and farm.targets.has("prize_pumpkin") and &"lift_prize" in farm.targets["prize_pumpkin"].verbs_for(st):
+			if int(st.get("held_can", -1)) >= 0:
+				return [&"drop_can", "can_%d" % int(st.held_can)]  # P4-21: lifting needs both hands (`hands_full`)
+			if bool(st.get("shovel", false)) and farm.targets.has("pegboard"):
+				return [&"return_shovel", "pegboard"]
 			return [&"lift_prize", "prize_pumpkin"]
 		if cart.can_start(&"push_cart", st) == &"":
 			return [&"push_cart", "cart"]  # every bot pushes: no claim on the cart
-	if Clock.phase in [&"dusk", &"night"] and farm.targets.has("generator") and _free("generator"):
+	if not Game.full_farm and Clock.phase in [&"dusk", &"night"] and farm.targets.has("generator") and _free("generator"):
 		var gen: Node = farm.targets["generator"].gen
+		var low: bool = gen.fuel_s < gen.tank_s * REFUEL_BELOW
 		if gen.damaged and _scrap_ok():
 			return [&"repair_generator", "generator"]
-		if gen.fuel_s < gen.tank_s * REFUEL_BELOW:
+		if low and bool(st.get("fuel_can", false)):
+			return [&"refuel", "generator"]
+		if low:
 			if st.get("held_kind", &"") != &"fuel":
 				return _fetch(st, &"fuel")
-			return [&"refuel", "generator"] if bool(st.get("fuel_can", false)) else [&"fill_fuel", "fuel_drum"]
+			return [&"fill_fuel", "fuel_drum"]
+	if Game.full_farm and (Clock.phase in [&"dusk", &"night"] or Clock.length_of(&"day") - Clock.t_phase < FUEL_PREP_S):
+		var job := _night_job(st)
+		if not job.is_empty():
+			return job
+	var pk: Node = farm.targets.get("prize_pumpkin")
+	if pk and _free("prize_pumpkin") and not pk.judged:  # P4-21: plant and water it daily, so judging has a pumpkin
+		if pk.can_start(&"plant", st) == &"":
+			return [&"plant", "prize_pumpkin"]
+		if pk.planted and not pk.watered:
+			if st.get("held_kind", &"") != &"water":
+				return _fetch(st, &"water")
+			return [&"water_prize_pumpkin", "prize_pumpkin"] if int(st.get("can", 0)) > 0 else [&"fill_can", "well"]
 	var sab := get_tree().get_first_node_in_group(&"sabotage")
 	for job: Array in (sab.fix_jobs() if sab else []):
 		if not _free(job[1]) or not farm.targets.has(job[1]) or (job[0] in SCRAP_JOBS and not _scrap_ok()):
 			continue
-		if job[0] == &"plant" and farm.targets[job[1]].can_start(&"plant", st) != &"":
+		if job[0] == &"plant" and (farm.targets[job[1]].can_start(&"plant", st) != &"" or not _keeps_payment(farm.targets[job[1]])):
 			continue  # P4-18: a trampled plot with no coins for the seed; spinning on it starved the harvest
 		if job[0] == &"bury" and not bool(st.get("shovel", false)) and farm.targets.has("pegboard"):
 			return [&"take_shovel", "pegboard"]
@@ -128,7 +202,7 @@ func next_job() -> Array:
 		return [&"sell", "sell_box"]
 	if not ripe.is_empty():
 		return [&"harvest", ripe[0].id]
-	var empty := _plots(func(p: Node) -> bool: return p.state == &"empty" and p.can_start(&"plant", st) == &"")  # P4-18: never spin on no_coins or locked_crop
+	var empty := _plots(func(p: Node) -> bool: return p.state == &"empty" and p.can_start(&"plant", st) == &"" and _keeps_payment(p))  # P4-18: never spin on no_coins or locked_crop
 	if not empty.is_empty():
 		return [&"plant", empty[0].id]
 	var dry := _plots(func(p: Node) -> bool: return p.state == &"growing" and not p.watered)
@@ -136,7 +210,86 @@ func next_job() -> Array:
 		if st.get("held_kind", &"") != &"water":
 			return _fetch(st, &"water")
 		return [&"water", dry[0].id] if int(st.get("can", 0)) > 0 else [&"fill_can", "well"]
+	var gone := _plots(func(p: Node) -> bool: return p.state in [&"wilted", &"dead"])  # P4-21: a wilted plot blocks planting
+	if not gone.is_empty():
+		return [&"clear_plot", gone[0].id]
 	return []
+
+
+## P4-21 (doc 03 s6 and s18): from dusk to dawn bots wait in the barn, lit while the generator runs. The scripted
+## night stalks whoever is outdoors once `scripted_lurk_s` (60 s) has passed, so after dusk a bot goes out only for a
+## trip it ends inside the barn by HOME_BY_S: picking ripe moonflowers (they ripen at nightfall and wilt at dawn,
+## doc 01 Crops) or pouring the fuel can. Either trip keeps someone outdoors for the first 30 s of the night
+## (sabotage.json trample `nobody_outside_s`). Late in the day it only readies the fuel can.
+# ponytail: one can lasts to about 250 s of the 300 s night (generator_tank_s 210, fuel_can_pct 50), so the generator
+# still dies late; a second drum trip means being outdoors after 60 s.
+func _night_job(st: Dictionary) -> Array:
+	var day := Clock.phase == &"day"
+	if Clock.phase == &"dusk" and int(st.get("bag", 0)) > 0:
+		return [&"sell", "sell_box"]  # the dead lose what they carry (doc 02 s9 step 1)
+	if not day and _sentinel():
+		return [&"sentinel", "sanctuary"]
+	var room := int(st.get("bag", 0)) < int(Data.value(&"labor", &"carry", &"capacity"))
+	if not day:
+		for p: Node in _plots(func(p: Node) -> bool: return p.bed and (p.state == &"ripe" or (p.state == &"growing" and p.watered))):
+			if p.state == &"ripe" and room and _home_by(_stand(p.id), Interactable.hold_seconds(&"harvest")):
+				return [&"harvest", p.id]
+			if p.state == &"growing" and _home_by(_stand(p.id), Interactable.hold_seconds(&"harvest")):
+				return [&"tend", p.id]
+	if farm.targets.has("generator") and _free("generator"):
+		var gen: Node = farm.targets["generator"].gen
+		var full := bool(st.get("fuel_can", false))
+		if gen.damaged and Clock.phase == &"dusk" and _scrap_ok():
+			return [&"repair_generator", "generator"]
+		if full and (day or _home_by(_stand("generator"), Interactable.hold_seconds(&"refuel"))):
+			if Clock.phase == &"night" and Clock.t_phase >= REFUEL_AT_S and gen.fuel_s < gen.tank_s:
+				return [&"refuel", "generator"]
+			return [&"tend", "generator"]
+		if not full and Clock.phase != &"night" and _fuel_can_free():
+			if st.get("held_kind", &"") != &"fuel":
+				return _fetch(st, &"fuel")
+			return [&"fill_fuel", "fuel_drum"]
+	return [] if day else [&"shelter", "barn"]
+
+
+## P4-21 (doc 03 s10 "Unattended farm", s11.5): one bot, the highest living bot peer, spends dusk to dawn outdoors at
+## the town stand, where the creature may not stalk, chase or kill. Someone outdoors all night keeps the dawn trample
+## to its base count (sabotage.json trample), and the scripted night's stalk (doc 03 s18) ends there without a kill.
+func _sentinel() -> bool:
+	if get_tree().get_first_node_in_group(&"sanctuary") == null:
+		return false
+	for p: int in Game.players:
+		if p < 0 and p > peer and not Game.is_ghost(p):
+			return false
+	return true
+
+
+## P4-21: a trip to `at` with a `hold_s` hold there ends inside the barn by HOME_BY_S into the night. Game clock only.
+func _home_by(at: Vector3, hold_s: float) -> bool:
+	var t := Clock.t_phase - (Clock.length_of(&"dusk") if Clock.phase == &"dusk" else 0.0)
+	var walk := Data.speed(&"walk") * float(Game.players[peer].get("speed_mult", 1.0))
+	var metres := Vector2(_pos.x - at.x, _pos.z - at.z).length() + Vector2(at.x - BARN_DOOR_OUT.x, at.z - BARN_DOOR_OUT.z).length()
+	return t + hold_s + 1.0 + (metres + BARN_DOOR_OUT.distance_to(SHELTER_SPOT)) / walk < HOME_BY_S
+
+
+## Where a bot stands to hold target `id`.
+func _stand(id: String) -> Vector3:
+	var t: Node = farm.targets[id]
+	return t.target_pos() + (PLOT_STAND if t is Plot else STAND.get(id, FIX_STAND if id.begins_with("dist_") else Vector3.ZERO))
+
+
+## P4-21 (doc 02 s7): keep the first payment. A seed whose crop ripens after the first-payment dawn is bought only
+## from coins above what that dawn takes. Dawn n comes before day n, so a crop sells in time if it ripens before day n.
+# ponytail: the first payment only; the final dawn sells the ground before it takes the payment (doc 02 s9 step 2).
+func _keeps_payment(p: Node) -> bool:
+	var debt := get_tree().get_first_node_in_group(&"debt")
+	var dawn := int(Data.value(&"season", &"first_payment_dawn"))
+	if debt == null or debt.short_season() or Clock.day >= dawn:
+		return true
+	var r: Dictionary = Crops.rec(p.crop_for(&"plant"))
+	if Clock.day + int(r.grow_days) < dawn:
+		return true
+	return farm.coins - int(r.seed) >= debt.first_of(debt.owed + debt.paid) - debt.paid
 
 
 ## D-085: a damage fix needs scrap; with none left the bot buys one (15 coins) if the team can pay.
@@ -158,6 +311,15 @@ func _fetch(st: Dictionary, kind: StringName) -> Array:
 	return [&"take_can", "can_%d" % best] if best >= 0 else []
 
 
+## P4-21: a fuel can lies free, or this bot holds it.
+func _fuel_can_free() -> bool:
+	for id in farm.cans.cans:
+		var c: Dictionary = farm.cans.cans[id]
+		if c.kind == &"fuel" and (c.holder == peer or (c.holder == 0 and _free("can_%d" % id))):
+			return true
+	return false
+
+
 ## Unlocked plots no other bot has claimed that match `pick`, nearest first.
 func _plots(pick: Callable) -> Array:
 	var out: Array = farm.targets.values().filter(func(t: Node) -> bool:
@@ -172,8 +334,7 @@ func _free(id: String) -> bool:
 
 
 func _do(verb: StringName, id: String) -> void:
-	var t: Node = farm.targets[id]
-	await _walk(t.target_pos() + (PLOT_STAND if t is Plot else STAND.get(id, FIX_STAND if id.begins_with("dist_") else Vector3.ZERO)))
+	await _walk(_stand(id))
 	if Game.is_ghost(peer):
 		return
 	Net.request_received.emit(&"hold", peer, [verb, id])  # what Net's `request_hold` RPC emits
