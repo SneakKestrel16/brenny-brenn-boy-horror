@@ -630,3 +630,16 @@ to doc 05 s18 in P4-04.
 plots to 13/14 and turned buying off, which broke doc 01 and doc 02 s4.
 **How to apply:** Game Designer retunes P4-02 in its worktree; any other doc 01 number it must move is
 raised as a question, not edited.
+
+### D-080 · 2026-10-08 · Director · P4-16 smear files and tool naming
+1. The creature smear is four per-body hull files, one per body. The Technical Artist updates the doc 07
+   s11.7 row to the four names.
+2. Hand tools keep the `tool_*` prefix (CONTRACTS s3, doc 07 s11.3). Gameplay fixes
+   `prop_watering_can`/`prop_fuel_can` in doc 05 s453 and the `game/items/cans.gd` comment when next
+   touching them.
+3. QA fixed double sRGB-to-linear vertex colours in `tools/blender/build_phase4.py` and rebuilt all 43
+   models; `default_bus_layout.tres` was dropped from the P4-16 commit.
+**Why:** QA review of P4-16; doc 07 s11.7 says "a hull of the active body", which four files match.
+**How to apply:** owners above. Nits (cart and flare gun float 0.03 m, flare gun 0.14 m vs 0.18,
+lantern glass always emissive, rebuilds not byte-stable, manual `import_script/path`) are listed in
+the P4-16 handoff for a later 3D Artist pass.
