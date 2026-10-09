@@ -268,3 +268,11 @@ Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent bac
 1. **Pusher facing is set once at lock start** (`game/player/player.gd:177`); after the route turns about 8 m in, the pusher faces off the cart. Gameplay.
 2. **The controls hint covers the push prompt** for the first 20 s. Gameplay.
 3. **Only the client checks that a push starts at the handle.** Harmless: the host moves the pusher to the push spot.
+
+## Found at the P4-29 review (QA, 2026-10-09)
+
+1. **Victim dies or leaves mid-race:** the trap stays `sprung` forever and never goes `loose` (old behaviour). `game/traps_player/trap_target.gd:16-27` offers no action, so nobody can pick it up and the creature cannot steal it; in Phase 1 it also stops further bear sets. Follow-up sent to the AI Programmer: set it `loose` on `death` or `player_left`, as `on_pry_done` does.
+2. **Doc 03 s9.1** (lines ~428-437) does not list the ground theft step (`from: "ground"`). Game Designer.
+3. **`game/net/net.gd:657` comment** does not list `loose`, `picked_up` or `stolen`. Network & Voice.
+4. **TrapRace keeps `picked_up` and `stolen` entries** and resends them to late joiners. Harmless.
+5. **P4-29 handoff calls `take_trap` instant**; logs show a 1.0 s hold.
