@@ -69,8 +69,6 @@ Start a host with `--dev`, a second instance joined; open the console with the b
 9. `phase dawn`: the paper slide as the Dawn Report shows.
 
 ## QA review
-
-## QA review
 Opus `qa-reviewer`, 2026-10-08: PASS, nothing must-fix. A 3-instance run confirmed the Taint heartbeat and the
 private scare sounds play only on the target's machine, the heartbeat stops on death and at dawn, the emote cloth
 plays for all, and the paper slide plays once per peer. All 16 WAVs are 48 kHz, peak -1 dBFS; no recordings, no
