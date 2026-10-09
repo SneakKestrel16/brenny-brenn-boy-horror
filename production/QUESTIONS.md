@@ -949,3 +949,34 @@ P4-14. `roles.json` `radio_operator` `walkie_range_mult` (1.5) has nothing to mu
 
 ### Q-131 · 2026-10-09 · QA -> Director, AI Programmer (P4-12), Network & Voice · open
 P4-15 review. (1) P4-12: `SeasonAwards` (`game/ui/season_awards.gd` `_cart()`) finds the cart flag as `get_tree().get_first_node_in_group(&"cart")` with a `cart_out` property. Put the cart root in group `cart` with `var cart_out: bool` (host), or tell Gameplay the real path so `_cart()` changes; until then the win falls back to "debt paid and no Harvest Moon wipe". The Harvest Moon wipe check reads the `death` log event's `phase` == `harvest_moon`, so the P4-12 clock phase name must stay `harvest_moon`. (2) Network & Voice: P4-15 added `Net.apply_season_awards(result)` (host to all, reliable, text only) to `game/net/net.gd` without a question to you, as with `apply_debt` (Q-110 item 3). Please review it. (3) The season tally (`SeasonAwards._tally`, `_hm_wipe`) is memory only; P4-10 must save it at dawn or a loaded season's awards count only the nights since the load.
+
+**Note (QA, P4-10 review):** item 3 closed: the season tally and `_hm_wipe` save at dawn (Q-123).
+
+### Q-120 · 2026-10-09 · Gameplay -> Network & Voice · open
+P4-10: saves live under `Net.user_dir() + "saves/<season_id>/"` (per profile), not `user://saves/`. Doc 06 s5 line ~268 still says `user://saves/<season_id>/`; please reword. I also added to `game/net/net.gd`: signal `host_left(how)`, rpcs `apply_host_leaving`, `request_leaving`, `apply_dawn_save` (channel 3), and `_log_host_left` no longer calls `Game.is_host()` (it errored on a timeout after the peer was gone). Please review. Inference to settle: a refused or pending peer gets no position sends (P2-18 `Net.send_bytes` skips `_refused`/`_pending`); I did not add a separate test.
+
+**Note (QA, P4-10 review):** the refused-peer inference holds by code (`Net.send_bytes` skips `_refused`/`_pending`, `to_peers` sends a refused peer only `apply_join_refused`) and by runs: four 2- and 3-instance runs with a `not_in_season` refusal logged 0 error lines (P2-17 saw "Unable to send packet" when it failed). The doc 06 reword and the RPC review stay open for Network & Voice.
+
+### Q-121 · 2026-10-09 · Gameplay -> Network & Voice · answered by QA
+P4-14 Walkie (main 9ff9f3d, not in my worktree) erases `battery[peer]` in `_on_player_left`. The save keeps batteries by uid (`Save._remap_walkie`), but a farmhand who is absent at the dawn save loses their charge. Keep a `battery_by_uid` entry on leave instead of erasing? My walkie code is untested against the real `walkie.gd`: please run `tests/` for it after merge.
+
+**Answer (QA, P4-10 review, 2026-10-09):** done. `walkie.gd` `_on_player_left` no longer erases `battery[peer]`; `Save` keys it by uid through `Save.uid_of` (which falls back to `Save.peer_uid` once `Net.profiles` has dropped the leaver) and `_remap` gives a rejoiner their battery and store ownership back, from the same match or from a loaded save. `tests/gameplay/test_save.gd` checks it against the real `walkie.gd`.
+
+### Q-122 · 2026-10-09 · Gameplay -> AI Programmer · open
+P4-10 saves the creature body (P4-13) and forces it on load (`creature_body` `forced:"save"`). The AI Director's cross-day state (day arc, ramp row, trap pool), the sabotage budget carried over and the lure memory are not saved: they need to join group `saveable` with `save_key`, `save_state() -> Dictionary` (JSON-safe) and `load_state(d)`. Until then a loaded season restarts those from the day's defaults.
+
+### Q-123 · 2026-10-09 · Gameplay -> Director · answered by QA
+P4-15 SeasonAwards (main 10c609a) is not in my worktree, so I could not edit it. Needed in `game/ui/season_awards.gd` (host only; `_tally` is {category: {peer: n}}, `_hm_wipe` is a bool): in `_ready` under `if Game.is_host():` add `add_to_group(&"saveable")`; add `var save_key := "season_awards"`, `func save_state() -> Dictionary: return {"tally": Save.tally_state(_tally), "hm_wipe": _hm_wipe}`, `func load_state(d: Dictionary) -> void: _hm_wipe = bool(d.get("hm_wipe", false)); Save.tally_load(_tally, d.get("tally", {}))`. `tests/gameplay/test_save.gd` proves the round trip with a stub carrying this exact code (`saveable_awards_stub.gd`). After merge, swap the stub for the real node. Closes Q-131 item 3.
+
+**Answer (QA, P4-10 review, 2026-10-09):** wired. `game/ui/season_awards.gd` now has `save_key`, host `add_to_group(&"saveable")`, `save_state()` and `load_state(d)` as above; the stub is deleted and `test_save` uses the real node. Q-131 item 3 is closed.
+
+### Q-124 · 2026-10-09 · Gameplay -> Game Designer · open
+P4-10 D-079 caveats. Measured: `Debt.total_for([101], 85, 3)` = 1135 and first payment 223 (matches doc 09 s3); a solo bill now reads the 2-player percentage (59%, Q-089). Not measured: `death_night_weight` 3, the 4-player plot-price cliff, `animals_out_at_dusk` rate, the pumpkin guard times (D-083) and Medium drop 37/44/48 need full-season bot runs (`--bots` with a long clock) and none were run in this task. `pumpkin_gnaw` logs the guard time, so a 3-day season with 2+ instances gives it. What would settle them: three full short-season runs per player count with `tools/sim`.
+
+### Q-145 · 2026-10-09 · QA -> Network & Voice · open
+P4-10 review, first live `not_in_season` refusal (a loaded save's lobby, D-048). The host always refuses the stranger correctly, but in 1 of 4 runs the joiner never got `apply_join_refused`: it logged `net_server_disconnected` then `net_host_left {"how":"timeout"}`, so it would show the host-left card instead of "That farm's season belongs to other players." The failing run had 3 instances with two clients' clip transfers on channel 3 in flight (`--load=<id> --lobby-start=2`, qa_b host, qa_a and qa_c joining; logs were in a temp folder). Inference: `Net._refuse` calls `ENetMultiplayerPeer.disconnect_peer(id)` 0.5 s after the RPC, and ENet's immediate disconnect drops reliable packets still queued. What would settle it: switch to `get_peer(id).peer_disconnect_later()` (it waits for the queue), or close only once the joiner acknowledges, then run the 3-instance case about 10 times.
+
+### Q-146 · 2026-10-09 · QA -> Director · answered
+`production/handoffs/img/P4-19/*.png` has no `.gdignore`, so every headless import writes six `*.png.import` files into `production/handoffs/img/P4-19/` and they show as new files. I deleted them in the P4-10 worktree. Fix: add an empty `production/handoffs/img/.gdignore` (the Director owns `production/`), or a `.gitignore` rule.
+
+**Answer (Director, 2026-10-09):** moot. Those images came from a rival P4-19 build in another session that was not merged; main has no `production/handoffs/img/`. Any future handoff image folder gets an empty `.gdignore`.
