@@ -9,6 +9,7 @@ const Station := preload("res://game/farming/station.gd")
 const Registry := preload("res://game/interaction/hold_registry.gd")
 const Cans := preload("res://game/items/cans.gd")
 const Crops := preload("res://game/farming/crops.gd")
+const PrizePumpkin := preload("res://game/farming/prize_pumpkin.gd")
 
 var targets: Dictionary = {}  ## id -> Interactable
 var carry: Dictionary = {}  ## every peer: peer -> {can, bag, fuel_can}, replicated by `apply_carry`
@@ -36,6 +37,8 @@ func _ready() -> void:
 			var s := Station.new()
 			s.kind = g[1]
 			_attach(n, s, g[2], Vector3(2.0, 1.0, 2.0))
+	for n in get_tree().get_nodes_in_group(&"pumpkin_patch"):  # P4-05: the Prize Pumpkin
+		_attach(n, PrizePumpkin.new(), "prize_pumpkin", Vector3(3.0, 2.0, 3.0))
 	cans = Cans.new()
 	cans.farm = self
 	add_child(cans)
@@ -162,6 +165,8 @@ func _on_request(what: StringName, peer: int, args: Array) -> void:
 			Net.to_peers(&"apply_money_changed", [coins], [peer])
 			Net.to_peers(&"apply_headcount", [headcount], [peer])
 			cans.snapshot_to(peer)
+			if targets.has("prize_pumpkin"):
+				targets["prize_pumpkin"].snapshot_to(peer)
 			for p in Game.players:
 				var cs := pstate(p)
 				Net.to_peers(&"apply_carry", [p, int(cs.can), int(cs.bag), bool(cs.get("fuel_can", false))], [peer])

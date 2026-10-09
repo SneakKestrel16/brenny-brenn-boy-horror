@@ -130,6 +130,8 @@ func step_cash_in(farm: Node, _final: bool) -> void:
 func step_final_sale(farm: Node, final: bool) -> void:
 	if not final:
 		return
+	if farm.targets.has("prize_pumpkin"):
+		farm.targets["prize_pumpkin"].judge(farm)  # P4-05: size sets the payout; P4-12 moves this to the cart
 	var total := 0
 	var plots := 0
 	for t in farm.targets.values():

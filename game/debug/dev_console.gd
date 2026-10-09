@@ -198,6 +198,19 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 			var farm := main.get_node_or_null("Farm")
 			farm.add_coins(a[0].to_int(), &"dev", Game.local_peer())
 			return "coins %d" % farm.coins
+		"pumpkin":  # P4-05: host drives the Prize Pumpkin for QA
+			var pk = main.get_node("Farm").targets.get("prize_pumpkin")
+			if pk == null or a.is_empty() or not a[0] in ["plant", "water", "gnaw", "bite", "judge"]:
+				return "? pumpkin plant|water|gnaw|bite|judge"
+			match a[0]:
+				"plant": pk.complete(&"plant", Game.local_peer(), Game.players[Game.local_peer()])
+				"water":
+					pk.watered_days += 1
+					pk._send()
+				"gnaw": pk.gnaw()
+				"bite": pk.bite()
+				"judge": pk.judge(main.get_node("Farm"))
+			return "pumpkin %s, watered %d, drops %d" % [pk.size_name(), pk.watered_days, pk.drops]
 		"fuel":
 			var gen := main.get_node_or_null("Generator")
 			var s: float = a[0].to_float() if not a.is_empty() and a[0].is_valid_float() else gen.tank_s

@@ -690,3 +690,14 @@ P4-03 placeholder at a time if the gate fails.
 (final about 52). Retuning other placeholders to absorb a guessed cost would be fitting to a guess.
 **How to apply:** P4-05 acceptance carries the log. Short-season debt is re-checked when the charge
 turns on.
+
+### D-084 · 2026-10-09 · Director · Q-096 answered: Prize Pumpkin lifts only at Harvest Moon dusk
+The Prize Pumpkin stays on its patch (at least 30 m from any door) until the Harvest Moon dusk move to
+the barn, as doc 01 "The Prize Pumpkin" says. P4-12 gates `PrizePumpkin.lift_prize` to that dusk and
+makes carrying it block other holds (can, shovel, trap). P4-11 calls `gnaw()` at dawn to match doc 03
+s10 "in the morning".
+**Why:** free carrying lets a team park the pumpkin in a lit doorway, which doc 01's placement rule
+exists to prevent; doc 02 s6 has no carrying rule, so doc 01 settles it. Building a doorway-light
+exclusion would be code for a case the design forbids.
+**How to apply:** P4-12 acceptance carries the lift gate and the hold block; until then `lift_prize`
+works on any day (dev and test use only).

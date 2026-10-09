@@ -509,6 +509,12 @@ func apply_plot_changed(id: String, state: StringName, watered: bool, age: int) 
 	apply_received.emit(&"plot_changed", [id, state, watered, age])
 
 
+## P4-05: the Prize Pumpkin's counters, carrier and position (prize_pumpkin.gd).
+@rpc("authority", "call_remote", "reliable")
+func apply_prize(planted: bool, watered_days: int, guarded: int, drops: int, carrier: int, watered: bool, judged: bool, x: float, z: float) -> void:
+	apply_received.emit(&"prize", [planted, watered_days, guarded, drops, carrier, watered, judged, x, z])
+
+
 @rpc("authority", "call_remote", "reliable")
 func apply_money_changed(coins: int) -> void:
 	apply_received.emit(&"money_changed", [coins])

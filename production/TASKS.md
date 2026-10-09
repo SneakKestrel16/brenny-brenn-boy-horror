@@ -583,7 +583,7 @@ no economy number and can start now.
 | P4-02 | Game Designer | Season simulator (doc 02 s18): `tools/sim/sim.py`, median policy, variance, scenarios, s18.4 tests, then tune `sim` and `placeholder` values until the s18.3 targets pass | done (QA PASS; D-078, D-079) | — |
 | P4-03 | Game Designer | Phase 4 data: pumpkin, debt, difficulty, roles, store effects, crops, `harvest_moon`, Phase 4 sabotage, animals, season awards, Dawn Report gaps | done (QA PASS; follow-ups D-082) | P4-02 |
 | P4-04 | Gameplay | Full 7-day season: every crop, town stand selling, dawn steps 1, 2, 5 and 7, season end, doc 05 s18 events; carried fixes | done (QA PASS; trample order Q-086) | P4-02, P4-03 |
-| P4-05 | Gameplay, Technical Artist | Prize Pumpkin: patch, growth, sizes, carrying, judging (doc 02 s6) | todo | P4-04 |
+| P4-05 | Gameplay, Technical Artist | Prize Pumpkin: patch, growth, sizes, carrying, judging (doc 02 s6) | done (QA PASS; lift rule D-084) | P4-04 |
 | P4-06 | Gameplay, AI Programmer | Store and upgrades: every `store.json` item works (doc 02 s10) | todo | P4-04 |
 | P4-07 | Gameplay | Debt, payment dawns, early payment, Foreclosure (doc 02 s7) | todo | P4-05 |
 | P4-08 | Gameplay, AI Programmer, Level Designer | Animals and `broken_fence`: pen animals, escape, round-up (D-071) | done (QA PASS after QA fixes) | P4-03 |
@@ -743,6 +743,8 @@ Acceptance:
 - Festival payout at the final dawn (doc 02 s9 step 2).
 - Harvest Moon sky (doc 07).
 
+- D-084: `PrizePumpkin.lift_prize` works only at Harvest Moon dusk; carrying blocks other holds. Judging
+  moves from `Death.step_final_sale` to the cart finish; escort bites call `PrizePumpkin.bite()`.
 ### P4-13 Creature body per season
 Owner: AI Programmer. Output: body pick in creature code; handoff note.
 Acceptance:

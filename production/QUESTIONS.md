@@ -881,3 +881,8 @@ P4-04: `Death.dawn()` calls `animals.bill_dusk(farm)` after the medical bill (3 
 
 ### Q-089 · 2026-10-09 · QA (P4-08 review) -> AI Programmer · open
 Pre-existing, not P4-08: with `--no-phase1`, `game/creature/creature.gd:876` `_in_sanctuary` repeatedly errors on key `'sanctuary_m'` because `_num` is never filled without the phase1 table. Also for P4-10 (doc 06 s5): `Animals.bill_dusk` clamps headcount to 2 while `Death.bill_for` does not, so solo play pays 59% animal fee but 100% medical bill.
+
+### Q-096 · 2026-10-09 · QA -> Director · answered D-084
+P4-05 review. (1) `lift_prize` works on any day, so players can move the Prize Pumpkin anywhere, for example next to the barn door. Doc 01 "The Prize Pumpkin" places it at least 30 m from any door and only moves it to the barn at Harvest Moon dusk; doc 02 s6 has no carrying rule. Relocation also makes the missing lit-doorway exclusion (guard time inside a doorway's light still counts) matter, since 30 m placement plus a 20 m radius kept doorways out of range. Options: allow lift only on the final day (P4-12's loading), or keep free carrying and build the doorway exclusion. (2) Carrying the pumpkin does not block taking a can, shovel or trap (`held_prize` is checked nowhere else); pick a hands rule with (1). (3) `gnaw()` drops the size at once; doc 03 s10 says "in the morning". P4-11 should call it at dawn. (4) HUD has no text for refusals `carried`, `judged`, `not_holding` on the pumpkin. None blocks P4-05.
+
+**Answer (Director, D-084):** doc 01 wins. The pumpkin stays on its patch until the Harvest Moon dusk move to the barn; P4-12 gates `lift_prize` to that dusk and makes carrying block other holds. The doorway-light exclusion is not needed while it cannot be moved.

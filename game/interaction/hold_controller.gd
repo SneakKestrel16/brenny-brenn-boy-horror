@@ -90,6 +90,9 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed(&"drop") and not Game.console_open and not _need_release and held_can_id() >= 0 and target_farm.targets.has("can_%d" % held_can_id()):
 			start(&"drop_can", target_farm.targets["can_%d" % held_can_id()])  # P2-27: G puts the carried can down
 			return
+		if Input.is_action_just_pressed(&"drop") and not Game.console_open and not _need_release and target_farm.targets.has("prize_pumpkin") and target_farm.targets["prize_pumpkin"].carrier == player.peer:
+			start(&"set_down_prize", target_farm.targets["prize_pumpkin"])  # P4-05: G puts the Prize Pumpkin down
+			return
 		if tgt != null and not _need_release and Input.is_action_pressed(&"interact") and not Game.console_open:
 			var verbs: Array[StringName] = tgt.verbs_for(mine)
 			if not verbs.is_empty():
@@ -99,7 +102,7 @@ func _physics_process(delta: float) -> void:
 	_ring.scale = Vector3.ONE * clampf(_t / _hold_s, 0.01, 1.0)
 	if is_instance_valid(_target):  # freed mid-hold (trap filled or disarmed by this hold): ring stays put
 		_ring.global_position = _target.target_pos() + Vector3(0, 1.4, 0)
-	if _scripted or _verb == &"drop_can":  # drop_can: one tap, the host times it (releasing G must not cancel)
+	if _scripted or _verb in [&"drop_can", &"set_down_prize"]:  # drop_can: one tap, the host times it (releasing G must not cancel)
 		return
 	if bool(Settings.get_value(&"toggle_holds")):  # D-047: press starts, press again stops; hold time is unchanged
 		if not Input.is_action_pressed(_action):

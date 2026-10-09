@@ -1026,6 +1026,11 @@ the QA changes.
 | `end_of_season_sale` | host, final dawn step 2 | `plots`, `coins` | Dawn Report ledger row (P4-04) |
 | `free_scrap` | host, dawn step 7 | `scrap` | Doc 02 section 9 step 7 (P4-04) |
 | `season_ended` | each peer (host from the clock, clients from the final Dawn Report) | `day` | Season Awards entry point (P4-04) |
+| `pumpkin_planted`, `pumpkin_watered`, `pumpkin_lifted`, `pumpkin_set_down` | host, Prize Pumpkin verbs | `player`, `day` / `watered_days`, `size` / `pos` | P4-05 |
+| `pumpkin_night` | host, dawn | `day`, `guard_max_s`, `guard_total_s`, `guarded`, `guarded_nights` | Guard rule, doc 02 s6 (P4-05) |
+| `pumpkin_gnaw`, `pumpkin_bite` | host, P4-11 / P4-12 call `gnaw()` / `bite()` | `day`, `size`, `drops`, `guard_max_s`, `guard_total_s`, `repair_s` (0, no fix) | D-083 guard-charge data (P4-05) |
+| `pumpkin_judged` | host, final dawn (`step_final_sale`) | `size`, `watered_days`, `guarded_nights`, `drops`, `payout`, `players` | Doc 02 s6 (P4-05) |
+| `pumpkin_seen` | client, on `apply_prize` | `size`, `watered_days`, `drops`, `judged` | Replication check (P4-05) |
 | `dawn_report_closed` | each peer, `DawnReport._close()` | `day` | `Soundscape` ends the report bed on it (D-081 item 2) |
 | `ghost_action` | host | `kind` (`flicker`, `crow`, `rustle`, `caw`), `peer`, plus `light_id` (flicker), `crow_id` (crow, caw) or `position` `[x, z]` (rustle). As built in P3-09; replaces the proposed `ghost_flicker` row and the `player`/`action`/`target` fields. P3-10 adds `kind` `static_voice` (a ghost starts a talk spurt; `peer` only) | Doc 01 Phase 3 "the dead stay engaged"; QA flicker checks (Q-037); `check_logs.py` tallies it by kind |
 | `ghost_action_refused` | host | `kind`, `peer`, `reason` (`not_ghost`, `cooldown`, `no_light`, `unlit`, `too_far`, `no_living_near`, `not_in_corn`, `used_tonight`, `no_perch`, `taken`, `no_crow`) | QA: non-ghosts and blown-out lanterns refused (P3-09) |
