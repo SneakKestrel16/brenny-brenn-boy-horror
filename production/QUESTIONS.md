@@ -545,6 +545,8 @@ Doc 08 s7.4, s13. (1) Generic stranger voice lines (`vox_stranger_*`): default i
 
 **Answer to 3 (CEO, 2026-10-07):** accepted: whistle `max_distance` 220 m, `unit_size` 20 m. DD Phase 1 spatial test may retune.
 
+**Answer (CEO, 2026-10-09):** item 2 day music: "wait on the day music". Still open; no day music.
+
 **Answer (Director, P4-01, 2026-10-08):** item 2 day music stays open and FOR CEO. Until the CEO decides, Phase 4 adds no day music, and the Phase 1 day music is never reused (CEO).
 
 ### Q-032 · 2026-10-07 · Audio Designer → Gameplay Programmer · answered
@@ -1154,7 +1156,7 @@ its emitters there and lobby voice plays unplaced (everyone at the listener). Sa
 **Answer (Director, 2026-10-09):** names approved as proposed, D-092. P4-23 QA (Network & Voice view)
 found both RPCs sender-checked and host-only; unplaced lobby voice is fine.
 
-### Q-176 · 2026-10-09 · Gameplay Programmer -> Director, Game Designer · open · FOR CEO
+### Q-176 · 2026-10-09 · Gameplay Programmer -> Director, Game Designer · answered · FOR CEO
 P4-23 conflicts with doc 01 text. The CEO asked for a menu lobby where nobody spawns in the barn
 (OPEN_ISSUES "Found in the CEO's 2-instance session" item 4), but doc 01 "Picking a role" says "each
 player picks a role in the barn lobby", and doc 01 recording "Staging" says "the lobby is the dark barn
@@ -1182,3 +1184,129 @@ seasons.
 **Answer (CEO, 2026-10-09):** "yes", the creature must sometimes go after a player at the town stand.
 Built as (b) in P4-34, D-116: on a stand night (`town_stand.reach_night_chance`, placeholder 0.5) the
 nudge jumps to the stand's region while a player is there. Bot-season numbers in the P4-34 handoff.
+**Answer (CEO, 2026-10-09):** the menu lobby should look "similar to" a Fortnite-style concept lobby the
+CEO linked (behance.net project module 35f8a0200404059): the players' characters stand side by side in
+a lit 3D scene, the local player in the centre spotlight, each name with READY or NOT READY above the head,
+panels at the sides and a large start button bottom right. Built as P4-35 with a dark barn or night farm
+backdrop (D-140); that backdrop also gives the recording staging a lantern. Doc 01 wording changes to
+"menu lobby" in P4-35.
+### Q-180 · 2026-10-09 · Gameplay Programmer -> Director · FOR CEO · answered
+P4-24. The minimap shows other living players, as the task row asks. That weakens two doc 01 rules:
+"Voice mimicry" says a fake voice "always comes from a place the teammate can't be", and the
+"Whistle" is "placed by 3D audio only, with no HUD marker". With teammate dots on the map, a player
+checks the map instead of listening, so a fake voice is exposed at a glance and the whistle is no
+longer needed to find someone. Built as asked; the dots are one `if` in `_draw_dyn` of
+`game/ui/minimap.gd` to remove. Keep the teammate dots, drop them, or show them by day only?
+
+**Answer (CEO, 2026-10-09):** "dont show players on the minimap". Only the local player's arrow stays
+(D-141). Removed in P4-33, which already edits `minimap.gd`.
+
+### Q-210 · 2026-10-09 · Game Designer -> Director · FOR CEO · answered (D-130)
+P4-30. The CEO's 2p sell bonus conflicts with the doc 02 s18.3 targets (doc 01 "55-70% final"). The sim's
+median 2p team already clears the first payment in 87% of seasons and the final in 63%; any 2p bonus
+rounding to a coin pushes the 2p final above 70% (1%: 76.8; 5%: 90.8, first 91.3). Shipped 0 (D-106).
+Options: (a) keep 0 and fix the 2p bot-season misses at their cause (one worker at 2p: Q-162 idle host,
+Q-164 sentinel, now P4-31); (b) accept a 2p final above 70%, e.g. 5% (doc 01 change, CEO only);
+(c) turn the unattended term on (Q-211) and set an economy-wide bonus of about 5/5/4/4/4, which passes
+first and final at 2p to 4p and 6p but leaves 5p final at 72.1 and Large needed failing at every headcount.
+Settled by: the CEO picking one; the Game Designer then sets the table and re-runs the gate.
+**Answer (CEO, 2026-10-09):** option (a) "go with a for now". The bonus table stays 0 at every headcount
+(D-130). The 2p misses are fixed at their cause; P4-34 re-runs the 2p bot seasons.
+
+### Q-211 · 2026-10-09 · Game Designer -> Director · open
+P4-30, answers Q-161 in part. With the D-089 sanctuary fix a hiding team takes base 1 + dead generator 1 +
+unattended 3 = 5 tramples a night. The sim now has that term (`unattended_term`, D-107). At the median hide
+rate (20% of nights) final clear falls to 32.6/26.7/26.2/26.2/26.5 at 2p to 6p; hiding every night, 2p
+first clear falls to 24.9 and final to 0. `unattended_cap` 1 still gives finals of about 44 to 50; hide rate
+5% with cap 3 almost passes (finals 63.6/58.7/58.8/58.8/57.5, 5p first 77.3). No sell bonus fixes Large
+needed under the term. Which moves: the sim's median hide rate, `unattended_cap` (AI Programmer data), or a
+debt/payout retune? Settled by: a Director ruling, then a P4-21-style bot season after P4-31 to measure the
+real hide rate.
+
+### Q-212 · 2026-10-09 · Game Designer -> Gameplay Programmer · open
+P4-30. Doc 05 s18 event rows need the new fields: `sell` gains `bonus` (coins already include it) and, from
+the dawn moonflower cash-in, `dawn: true`; `end_of_season_sale` gains `bonus`. Doc 05 is yours (CONTRACTS
+s2). Settled by: the doc 05 rows updated.
+
+### Q-230 · 2026-10-09 · Gameplay Programmer -> Game Designer · open
+P4-33 (D-120). The Director had the flag limit put in `data/labor.json` (`place_flag.max_per_player`: 3,
+`placeholder`, an inference: doc 01 says only "a few") and `data/labor.schema.json` (optional integer
+`max_per_player` on a hold record). `data/` is yours (CONTRACTS s2): please confirm or retune the number,
+and mirror the schema field in doc 02's `labor` schema copy (around line 1225). Does the sim need it? It
+does not model flags today. Settled by: the value confirmed in doc 02 and the doc 02 schema updated.
+### Q-195 · 2026-10-09 · Level Designer -> Gameplay Programmer · open (FYI, edit already made)
+P4-27 (Director-assigned, OPEN_ISSUES item 6). The cart hovered both parked in the barn and while pushed.
+Cause: `game/items/cart.gd` raised the `prop_cart.glb` model with `m.position.y = 0.86`, but the model's
+origin is at the wheel base (mesh AABB y 0.025..1.75; bed floor vertices at y 0.87 to 0.9). The body
+follows `CartRoute` at y = 0 (`_place`, `pos_at`), so the offset floated the wheels 0.86 m everywhere on
+the route. I removed that one line in your file (the task scope names the fix); `BED_Y` stays 0.9, which
+matches the bed floor, and its comment now cites the vertex levels. Screenshots parked and mid-route:
+`logs/qa/p4_27/after_cart.png`, `after_cart_mid.png`. Please check nothing else in `cart.gd` relied on
+the model being raised (pumpkin slot, lantern, handle grab points looked right in the shots).
+
+### Q-196 · 2026-10-09 · Level Designer -> AI Programmer, Gameplay Programmer · open
+P4-27 adds 39 trees to `farm.tscn` (doc 04 s14). Their canopies are layer 5 (corn sight-blocker)
+`StaticBody3D` cylinders from 1.2 m to about 4.2 m up; trunks, fences, signs and landmarks have no
+collision. Effects to confirm:
+1. **Creature sight** (`creature.gd` `_blocked`, mask 1 | 16 at eye 1.65 m): a canopy between the
+   creature and a player now hides the player, as corn does. Intended: trees are cover.
+2. **Hearing** (ray at 1 m, mask 16) and the ghost's `_in_corn` point test (1 m) and the sprint-in-corn
+   step (1 m) pass under the canopy, so standing under a tree is not "in corn" and does not muffle sound.
+   Intended (inference: a tree is not corn). Say if the ghost should count tree shade as corn.
+3. **Solid trees** would need creature avoidance: the creature moves straight with `move_and_slide` on
+   mask 1, no navmesh, no unstuck logic, so a solid trunk on its line would pin it. I kept trunks
+   non-solid. If you want players blocked by trunks, the creature needs avoidance first; tell me and I
+   add a layer-1 trunk collider.
+### Q-185 · 2026-10-09 · AI Programmer -> Game Designer · open
+P4-25. On the coordinator's instruction (from the CEO's Harvest Moon test) I added a "Nobody pushing"
+bullet to doc 03 section 14: in acts 2 and 3 with nobody pushing, the creature goes for the living
+player it senses nearest the cart and chases them as at night (a catch kills); knock cooldown, stall
+bites, lit-building and sanctuary rules unchanged; in act 2 an unpushed cart lets the AI Director
+allow that chase. Doc 03 is yours: please review the wording or rewrite it.
+
+### Q-186 · 2026-10-09 · AI Programmer -> Director · open
+P4-25. Doc 03 section 6 ("Dark buildings ... it always bangs first", `door_bang_s` 3 s, audible at
+30 m) is not implemented: the creature walks straight into a dark building. The CEO's night 1 kill
+was in the dark barn, which the rule allows, but without the bang. Needs a task (AI Programmer) and
+two `data/creature.json` rows (`door_bang_s`, `door_bang_radius_m`).
+### Q-170 · 2026-10-09 · Gameplay Programmer -> Game Designer, FOR CEO · open
+### Q-170 · 2026-10-09 · Gameplay Programmer -> Game Designer, FOR CEO · answered
+P4-22 (D-090). The store menu sells seeds as a choice: the seed is still paid per plot at planting,
+as the simulator models (doc 02 s18). Should players instead buy seed packs ahead and hold them in
+stock? That moves spending earlier in the day and needs a `tools/sim/` rerun. Default until answered:
+choose at the store, pay at planting.
+**Answer (CEO, 2026-10-09):** yes: "can we add the seeds to the shop menu instead of having an on
+screen constant seed purchase menu". Built in P4-22 as D-093 (team seed stock; planting uses a seed).
+The default `sim.py` rerun passes every target.
+
+### Q-171 · 2026-10-09 · Gameplay Programmer -> Director · open
+P4-22. The store menu now does what the old crate keys did: `cycle_item` R and `buy_item` K
+(`store.gd` `_unhandled_input`, `project.godot`). They still work. Remove them and free the keys, or
+keep them as shortcuts? Default: keep.
+### Q-240 · 2026-10-09 · Gameplay Programmer -> Level Designer, Network & Voice Programmer, Technical Artist, QA · open
+P4-35, D-140. Doc 01 "Staging" and "Picking a role" now say "menu lobby". These lines still describe the
+lobby as the barn the players stand in: doc 04 line 98 (Barn row, "lobby is the dark barn at night") and
+line 117 (recording spots "inside the dark barn"); doc 06 line 232 ("In the lobby, the player appears in the
+barn") and line 802 ("the lobby is the dark barn at night"); doc 07 s3 line 125 "Barn lobby"; doc 09 line
+333; `game/voice/recording_screen.gd` lines 170-172 ("staged in the barn", "Record in the barn"). The lobby
+is `game/ui/lobby.gd`: a menu screen over a 3D line-up in a placeholder barn set. Nobody spawns on the farm
+until the match starts; the staging lantern is the centre `LightRig` in group `barn_lantern` (Q-176).
+Settled by: each owner rewording their lines to "menu lobby", or confirming they still hold.
+
+### Q-241 · 2026-10-09 · Gameplay Programmer -> 3D Artist, Director · answered
+P4-35. The task says to reuse the farmer model and role hats; neither exists (no `char_farmer.glb`; the
+in-game body is the capsule in `game/player/player.gd`). Doc 07 s8 lists hats as DD Phase 5 cosmetics, but
+D-140 puts a role on each farmer, so the lobby draws placeholder primitives: a capsule farmer and one hat
+per role in `game/ui/lobby.gd` `LineUp.HATS` (colour, brim, crown). Are per-role hats in scope now (a Phase
+4 art row), or should the role show only as the tag text? Settled by: a Director ruling (and the CEO's if
+doc 07 s8 changes); then the 3D Artist's farmer and hats replace `LineUp._farmer` and `_hat`.
+**Answer (CEO, 2026-10-09):** "make different hats now". Recorded as D-144; the 3D Artist builds `assets/models/hat_<role_id>.glb` (P4-36, origin at the band centre, worn at 1.74 m). `LineUp._hat` loads that file when it exists and falls back to the placeholder primitives in `LineUp.HATS` until then.
+
+### Q-242 · 2026-10-09 · QA -> Director (for Gameplay Programmer) · answered
+P4-36 review. In the lobby every role hat faces away from the camera. Farmers and hat glbs face -Z, and the
+stage camera is at +Z looking -Z (`game/ui/lobby.gd:221`), so the line-up shows each hat's back: medic
+cross, mechanic goggles, night owl headlamp, warden badge, medium crescent and radio boom mic are hidden.
+Fix in `LineUp._farmer` (`lobby.gd:85`): `f.rotation.y = PI`, so farmers face the camera. Evidence:
+`logs/qa/p4_36/qa_noflip_zoomC.png` vs `qa_flip_zoomC.png` (same run with each Hat turned 180 degrees).
+Settled by: a Gameplay task turning the farmers, then a reshoot of the 6-player lobby.
+**Answer (Director, 2026-10-09):** fixed in the P4-36 merge: `LineUp._farmer` sets `f.rotation.y = PI`; reshot below.

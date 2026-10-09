@@ -599,19 +599,21 @@ no economy number and can start now.
 | P4-19 | 3D Artist | Final art for the four creature bodies, glimpse parts and smear hulls (D-087) | done (QA PASS after QA fix: husk heart visible) | P4-16 |
 | P4-20 | Technical Artist | Final night look: phase lighting, fog, darkness, post stack, creature materials (D-087) | done (QA PASS after QA fixes: HUD below post layers, Harvest Moon disc; Q-150 open) | P4-16; creature materials after P4-19 |
 | P4-21 | AI Programmer | Bot seasons stand in for a median team (Q-157): bots go inside at night, save for the payment, plant the Prize Pumpkin; speed fix under `--time-scale` | done (QA FAIL line 2 fixed by Director: moonflower reserve; 2p still forecloses, labour-bound Q-162; sentinel Q-164 for CEO) | P4-18 fixes |
-| P4-22 | Gameplay | CEO session: store menu lists every item on interact; seed shop with a seed choice that planting uses; hotbar showing held items and how to use them | in progress | P4-06 |
+| P4-22 | Gameplay | CEO session: store menu lists every item on interact; seed shop with a seed choice that planting uses; hotbar showing held items and how to use them | done (QA PASS; seeds bought into a team stock, D-093) | P4-06 |
 | P4-23 | Gameplay | CEO session: menu lobby before the match (roles, settings, ready), no spawning in the barn to pick | done (QA PASS; D-092; Q-176 for CEO) | P4-09 |
-| P4-24 | Gameplay | CEO session: minimap in the top right showing the player, buildings, fields, store, well, cart | in progress | — |
-| P4-25 | AI Programmer | CEO session: creature stuck in the barn; at dawn place it back in the corn; fix the cause | in progress | — |
-| P4-26 | Audio Designer | CEO session: new footstep sounds; crickets chirp less often | merged on CEO approval 2026-10-09 (QA review still running) | — |
-| P4-27 | Level Designer | CEO session: farm less open (cover, tree lines, landmarks); festival cart rests on the ground in the barn | in progress | — |
+| P4-24 | Gameplay | CEO session: minimap in the top right showing the player, buildings, fields, store, well, cart | done (QA PASS; Q-180 for CEO) | — |
+| P4-25 | AI Programmer | CEO session: creature stuck in the barn; at dawn place it back in the corn; fix the cause | done (QA PASS) | — |
+| P4-26 | Audio Designer | CEO session: new footstep sounds; crickets chirp less often | done (QA follow-ups merged; CEO approved the evened cricket bed 2026-10-09) | — |
+| P4-27 | Level Designer | CEO session: farm less open (cover, tree lines, landmarks); festival cart rests on the ground in the barn | done (QA PASS) | — |
 | P4-28 | Game Designer | CEO session: simulate a bigger watering can (3 and 4 plots per fill) against the s18.3 targets and the bot-season gap | done (no change: capacity stays 2, CEO 2026-10-09; 3 or 4 breaks s18.3 at 2p and 3p) | — |
-| P4-29 | AI Programmer, Gameplay | CEO: a sprung bear trap stays where it sprang; players pick it up and hang it back on the pegboard | in progress | — |
-| P4-30 | Game Designer, Gameplay | CEO: sell bonus by player count so 2p makes its payments; sim targets still pass | in progress | P4-28 |
+| P4-29 | AI Programmer, Gameplay | CEO: a sprung bear trap stays where it sprang; players pick it up and hang it back on the pegboard | done (QA PASS; follow-up sent) | — |
+| P4-30 | Game Designer, Gameplay | CEO: sell bonus by player count so 2p makes its payments; sim targets still pass | done (QA PASS; bonus 0 everywhere, Q-210 for CEO) | P4-28 |
 | P4-31 | AI Programmer | CEO: players in the town stand sanctuary do not count as outside at night (D-089); bots drop the sentinel job; re-run bot seasons | superseded by D-115, not merged (bots lost 12 of 12 seasons) | P4-21 |
 | P4-34 | AI Programmer, Game Designer | CEO: the town stand lowers creature interaction instead of being a sanctuary (D-115); re-run bot seasons and the sim | in review | P4-21 |
-| P4-32 | Gameplay | CEO: the Harvest Moon push bar shows the distance left to the gate, not a stuck 0%; pushers lock to the cart while holding interact | in progress | — |
-| P4-33 | Gameplay | CEO: flag limit per player; remove your own placed flag; flags as small icons on the minimap | waiting | P4-24 |
+| P4-35 | Gameplay | CEO: menu lobby as a character line-up scene (D-140); doc 01 menu-lobby wording (Q-176) | done (QA PASS with follow-ups) | P4-23 |
+| P4-32 | Gameplay | CEO: the Harvest Moon push bar shows the distance left to the gate, not a stuck 0%; pushers lock to the cart while holding interact | done (QA PASS; follow-ups sent) | — |
+| P4-33 | Gameplay | CEO: flag limit per player; remove your own placed flag; flags as small icons on the minimap | done (QA PASS; CEO flag rules D-142) | P4-24 |
+| P4-36 | 3D Artist | CEO: a different hat per role (D-144); ten `hat_<role_id>.glb` for the lobby line-up, later the in-game farmer | done (QA PASS with follow-ups) | — |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
@@ -889,6 +891,18 @@ and an Opus QA review passes.
 - Placed flags show as small icons on the P4-24 minimap for every living player.
 - Doc 01 "Flags" rules stay: from day 5 the creature can move one flag a night, and the minimap shows
   where the flag is now. Host-authoritative, synced, logged. Same done-when line as P4-22 to P4-28.
+- D-141: remove the teammate dots from the minimap; only the local arrow, layout and flags show.
+
+### P4-35 Menu lobby line-up scene (D-140, CEO 2026-10-09)
+- Replace the flat lobby menu with a 3D scene behind the UI: a dark barn or night farm, lantern-lit, with
+  every connected player's farmer (existing farmer model, hat by role) standing side by side, the local
+  player in the centre spotlight.
+- Above each farmer: name, chosen role, READY or NOT READY. Role pick, ready, settings and leave sit in
+  side panels; the host's start button bottom right. Joining and leaving players appear and vanish.
+- Horror tone: dark palette, warm lantern light; take layout only from the reference, not its colours.
+- The recording screen's `lantern_out` step blows out a lantern in this scene (Q-176).
+- Doc 01 "Picking a role" and recording "Staging" say "menu lobby"; docs 04, 06, 07 barn-lobby lines
+  (OPEN_ISSUES "Found at the P4-23 review" 2) updated or routed by Q. Same done-when line as P4-22 to P4-28.
 
 ### P4-34 Town stand lowers risk, no sanctuary (D-115)
 - Remove every absolute sanctuary rule (creature kill, chase retreat, AI Director `allow`, scares, trap

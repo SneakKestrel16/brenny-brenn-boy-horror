@@ -791,3 +791,164 @@ town stand. P4-34 measured 0 stand deaths in 84 bot nights without it: about 100
 doc 03 s18 scripted stalk and chase.
 **How to apply:** the stand's risk is set by `reach_night_chance` and the D-115 multipliers together.
 Tune them against bot seasons (stand deaths per night), not one at a time.
+### D-094 · 2026-10-09 · Gameplay Programmer · The minimap is the one HUD map (P4-24)
+The CEO asked for a top-right minimap (OPEN_ISSUES "Found in the CEO's 2-instance session" item 5).
+`game/ui/minimap.gd` is a north-up map of the whole farm, built once from the level's own nodes, so
+layout changes (P4-27) show without code edits. It shows the local player's arrow, living players,
+buildings, fields and plots, the corn ring, the well (W), store crate (S), town stand (T) and cart
+(C). It never shows the creature, a trap, a noise or a whistle. Doc 05 section "No HUD markers" now
+names it as the one exception.
+**Why:** CEO request; TASKS P4-24 lists the content.
+**How to apply:** new map content goes through `minimap.gd`; anything secret (creature, set traps)
+stays off it. Q-180 asks the CEO whether teammate dots stay (doc 01 voice and whistle tells).
+### D-106 · 2026-10-09 · Game Designer · Headcount sell bonus, shipped at 0
+P4-30 (CEO: "add a sell bonus based on player count to increase money so 2p still makes payments").
+`player_scaling.json` `sell_bonus_pct_by_players` (2 to 6, integer %, `sim`) adds `ceil(v * b / 100)` to
+every crop sale at the current headcount: sell box, dawn moonflower cash-in, final-dawn end-of-season
+sale. Not the Prize Pumpkin payout. The host applies it (`Crops.sell_bonus`) and logs it as `bonus` on
+`sell` (the dawn cash-in now logs a `sell` with `dawn: true`) and `end_of_season_sale`. The sim
+(`Model.sold`) models it. **The table is 0 at every headcount:** the sim's median team already meets
+every doc 02 s18.3 target at 2 to 6 players, the 2p median already pays the first payment, and any 2p
+bonus that rounds to a coin pushes the 2p final clear above 70% (1% gives 76.8, 5% gives 90.8; doc 02
+s18.6 P4-30 log).
+**Why:** the acceptance says no bonus where the sim already meets its targets, and the sim meets them at
+every headcount. The 2p misses in bot seasons come from a 2p team with one worker (Q-162, Q-164) and the
+unattended trample term (Q-161), not from 2p prices.
+**How to apply:** turn the bonus on by data only, after the Director rules on Q-210 and Q-211; re-run
+`tools/sim/sim.py` and record the new table in doc 02 s18.6.
+
+### D-107 · 2026-10-09 · Game Designer · Sim models the Q-161 unattended term, off by default
+`tools/sim/sim.py` adds `min((night_s - 30) // unattended_every_s, unattended_cap)` (3 with the shipped
+`sabotage.json` values) to the trample count on nobody-outside nights when the policy sets
+`unattended_term: true`. `median.json` keeps it `false`, so the s18.3 gate is unchanged.
+**Why:** with it on, final clear falls to about 26 to 33% at every headcount and Large needed fails
+everywhere, with or without a sell bonus (doc 02 s18.6). Turning it on is an economy retune, which the
+Director decides (Q-211).
+**How to apply:** set `unattended_term` true in a policy to measure the D-089 world.
+
+### D-130 · 2026-10-09 · CEO · No player-count sell bonus for now (Q-210 option a)
+The `sell_bonus` table stays 0 at every headcount (D-106 unchanged). The 2p bot-season misses are fixed at
+their cause, a single worker at 2p (Q-162, Q-164), not by raising 2p income.
+**Why:** any 2p bonus that rounds to a coin pushes the sim's 2p final clear above doc 01's 70% ceiling
+(Q-210). The CEO said "go with a for now".
+**How to apply:** do not set a nonzero bonus without a new CEO decision. Revisit after the P4-34 bot
+seasons; before any nonzero bonus, make the sim round per sale (OPEN_ISSUES "Found at the P4-30 review" 1).
+
+### D-140 · 2026-10-09 · CEO · The menu lobby is a character line-up scene (Q-176)
+The lobby shows every connected player's farmer standing side by side in a dark, lantern-lit 3D scene
+(barn or night farm), the local player in the centre. Each farmer has its name, role and READY or NOT
+READY above its head. Menus sit in side panels; the host's start button sits bottom right. Players still
+spawn at the barn spawn markers at match start.
+**Why:** the CEO asked for a lobby "similar to" a Fortnite-style concept image they linked
+(behance.net project module 35f8a0200404059). The image is third-party art and is not committed.
+**How to apply:** P4-35 builds it. Keep the horror tone: dark palette, lantern light, no bright colours
+from the reference. Doc 01 "Picking a role" and "Staging" say "menu lobby".
+
+### D-141 · 2026-10-09 · CEO · The minimap shows no other players (Q-180)
+The minimap shows only the local player's arrow, the farm layout and placed flags (P4-33). It never
+shows teammates or the creature.
+**Why:** the CEO said "dont show players on the minimap"; teammate dots would expose fake voices and
+replace the whistle (doc 01 "Voice mimicry", "Whistle").
+**How to apply:** P4-33 removes the teammate dots from `game/ui/minimap.gd` `_draw_dyn`.
+### D-120 · 2026-10-09 · CEO · Flags: a per-player limit, removal, and minimap icons (P4-33)
+Replaces doc 01 "Flags" "Free and unlimited". Each player has at most `labor.json`
+`place_flag.max_per_player` flags out at once (3, `placeholder`); the host refuses one more with
+`flag_limit`. A player pulls up a flag they placed by aiming at it and holding `interact`
+(`remove_flag`, 0.5 s placeholder); the host refuses anyone else (`not_your_flag`). Every placed flag
+shows as a small icon on the P4-24 minimap. Flags stay free; the day-5 flag move is unchanged.
+`labor.schema.json` gains the optional integer `max_per_player` on a hold record.
+**Why:** CEO 2026-10-09: "players should have a limit on the amount of flags they can place and add a
+method to remove one they already placed, flags should up on the minimap as well as small icons".
+**How to apply:** the limit is data only. `TrapSweep.flags` holds `{pos, by}`; code that moves a flag
+(the creature, day 5) changes `pos` and keeps `by`. Q-230 asks the Game Designer to own the number and
+mirror the schema field in doc 02.
+### D-104 · 2026-10-09 · AI Programmer (P4-29) · A pried-free bear trap lies loose at its spot
+CEO request P4-29: a sprung bear trap no longer disappears when the victim is pried free. It stays at
+its spot, jaws shut, as a loose trap (`trap_changed` `loose`, the dawn-trap `TrapPickup`). A player
+takes it (`take_trap`, instant) and hangs it on the pegboard (`hang_trap`, doc 02 s3, 1 s), filling an
+outline. A loose trap still lying out at nightfall is the creature's (doc 01 "Any trap not on the
+pegboard at nightfall is the creature's"): `_steal_traps` takes loose traps after the ones in hands and
+before the pegboard (`trap_stolen` `from: "ground"`).
+**Why:** CEO call 2026-10-09. Doc 01 already makes every trap off the pegboard at nightfall the
+creature's; the order (hands, ground, board) is an inference that keeps a team that hangs its traps back
+ahead of one that leaves them lying. A playtest settles whether the order matters.
+**How to apply:** trap race, pry, slow-after and night theft rules are unchanged. Bots pry themselves but
+do not fetch traps.
+### D-100 · 2026-10-09 · Level Designer, confirmed by Director · Farm cover blocks sight only
+P4-27 breaks up the open farm with trees, fences, dirt paths, signs and landmarks (doc 04 s14). Only tree
+canopies collide, on layer 5 (corn sight-blockers), from 1.2 m up; everything else is visual only.
+Canopies keep each work spot's doc 04 s8.4 corn distance (pumpkin 20 m), 2 m from every marker and plot,
+3 m from the cart route and 1 m from every s8.7 walk line, and stay out of the audio test band.
+`check_farm.gd` `_cover` enforces this. No marker, building, field or route point moved, so doc 04 s8 and
+`tools/sim/layout.json` are unchanged.
+**Why:** players and the creature use collision mask 1 and the creature has no navmesh or unstuck logic,
+so solid obstacles could pin it (Q-196). Sight cover is what the open ground lacked.
+**How to apply:** new world dressing stays visual or layer 5 unless the AI Programmer adds avoidance.
+### D-090 · 2026-10-09 · Gameplay Programmer · Seeds are chosen at the store, paid at planting
+**Superseded by D-093** (CEO ruling on Q-170: seeds are bought into a stock).
+P4-22 sells seeds at the shipping crate's menu (OPEN_ISSUES CEO session item 2). A seed row sets which crop
+this player's field plots plant (`farm.seed_pick`, the same pick `cycle_seed` T already made); the seed's
+price (doc 02 s10: turnip 4, pumpkin 10 from the first payment, moonflower 25 from day 3, bed only) is still
+charged per plot when it is planted. Players hold no seed stock.
+**Why:** charging at planting is what `tools/sim/` models (doc 02 s18). Seed packs bought ahead would move
+coins earlier in the day and need a retune. Q-170 asks whether real seed stock is wanted.
+**How to apply:** menu seed rows never send `request_store`; planting stays host-validated in `plot.gd`.
+
+### D-091 · 2026-10-09 · Gameplay Programmer · The hotbar is an exception to "no HUD markers"
+P4-22 adds a bottom-centre hotbar listing what the local player holds or the team owns, each with a
+one-line use hint (OPEN_ISSUES CEO session item 3). Doc 05 s16 says "No HUD markers"; doc 01's only
+HUD rule is the whistle's "no HUD marker" (doc 01 "How players fight back"). The hotbar points at no
+teammate, objective, sound or creature, so it breaks neither.
+**Why:** CEO request in the 2-instance session: players could not tell what they held or how to use it.
+**How to apply:** the hotbar shows only the local player's things and the team's shared items. It never
+shows positions, threats or other players. It hides while the player is a ghost.
+
+### D-093 · 2026-10-09 · Gameplay Programmer · Seeds are bought at the store and held in a team stock
+Supersedes D-090. The CEO answered Q-170: "can we add the seeds to the shop menu instead of having an
+on screen constant seed purchase menu". The crate's menu sells seeds (`Buy 1`, `Buy 5`) through
+`request_store` op `seeds`, arg `<crop>:<n>` (the RPC has one argument; at most 10 per request). The
+host checks the crate's reach, ghosts, the unlock and the coins, then adds to `store.team["seed_<crop>"]`.
+That dictionary is already saved and sent with `apply_store`. Planting an empty plot uses one seed of
+the picked crop and charges nothing (`plot.gd`, refusal `no_seeds`, shown as "Buy seeds at the store").
+The hotbar shows a seed slot only while the team owns seeds, with counts; T cycles only among owned day
+crops. Prices and unlocks are unchanged (doc 02 s10). Bots buy one seed just before planting.
+**Why:** the stock is the team's because coins are one shared purse and anyone plants any plot; a stock per
+player would strand seeds when a player dies or leaves. The total spent per plot is the same. Coins leave
+at purchase instead of at planting, within the same day for a team that buys as it plants, so the
+simulator (daily steps) needs no change; the default `sim.py` run still passes every target.
+**How to apply:** planting validates seeds, not coins. Foreclosure never seizes seeds (`seizable()` reads
+only `store.json` rows). Seeds stay out of `store.json`; their prices live in `crops.json`.
+
+### D-142 · 2026-10-09 · CEO · Anyone pulls up any flag; a leaver's flags go with them (P4-33)
+Amends D-120. Any player may pull up any flag (`remove_flag`), not only the one who placed it; the
+owner's slot frees. `not_your_flag` is gone; the host refuses only `no_flag` (nothing there). When a
+player leaves or disconnects, the host removes all their flags (`flags_dropped`). A flag never hides the
+trap it stands on: `HoldController.pick` sees through a flag to a target within 1 m behind it
+(placeholder), and the flag's pick body sits above a set trap's.
+**Why:** CEO 2026-10-09: "auto remove flags on leave or disconnect from that player, allow other players
+to remove someone else flags, and that should solve the issue with it overlapping the traps". The
+P4-33 QA follow-ups found a leaver's flags could never be removed and a flag's pick body could cover a
+trap's.
+**How to apply:** doc 01 "Flags" says any player can pull up any flag. `flag_removed` logs `player`
+(who pulled it) and `owner` (who placed it); the Dawn Report counts flags still out per owner.
+
+### D-143 · 2026-10-09 · Gameplay Programmer · `apply_roles` carries the role lock (P4-35, needs Director approval)
+The `apply_roles` table (peer id -> role id) gains one non-peer key, `"locked": bool`: true when the host
+loaded a season (`Game.season_uids` not empty), so its roles stay as saved. `Roles.apply` stores it and
+`Roles.locked()` returns it on clients (the host reads `season_uids` directly). `Roles.apply` reads only
+`int` keys as peers.
+**Why:** OPEN_ISSUES "Found at the P4-23 review" item 1: only the host knew a loaded season locks roles, so a
+client's role cards stayed clickable and every pick came back refused with no reason shown.
+**How to apply:** readers of the table iterate only `int` keys. The lobby greys every card and shows "Roles
+are kept from the saved season." when `Roles.locked()` is true.
+
+
+### D-144 · 2026-10-09 · CEO · One distinct hat per role, built now (Q-241)
+The CEO answered Q-241 with "make different hats now". Each of the ten roles in `data/roles.json` gets its
+own low-poly hat model, built in Phase 4 instead of waiting for the DD Phase 5 cosmetics (doc 07 s8).
+**Why:** the menu lobby line-up (D-140, P4-35) shows each player's role on their farmer, and placeholder
+primitives do not tell the roles apart.
+**How to apply:** the 3D Artist builds `assets/models/hat_<role_id>.glb` (P4-36), with the origin at the
+inside centre of the band so it sits on a head at 1.74 m. The lobby's `LineUp._hat` loads them in place of
+the primitives. The hats are role markers, not cosmetics: wider cosmetics (overalls, picked hats) stay
+Phase 5. The D-142 and D-143 numbers are taken by the P4-33 and P4-35 branches still in review.

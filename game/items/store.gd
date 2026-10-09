@@ -1,9 +1,12 @@
 extends Node
 ## P4-06 (doc 02 s10, doc 05 s9): the shipping crate's store. Host-authoritative: a client sends
-## `request_store(op, arg)` (`buy`, `flare`, `scarecrow`), the host validates, mutates, logs and broadcasts the whole
-## small state with `apply_store`. Every row is a `store.json` record; its `effect` holds the numbers. Seeds are
-## not sold here: they are charged at planting (plot.gd, P4-04), gated by crops.json (doc 02 s10 table).
+## `request_store(op, arg)` (`buy`, `flare`, `scarecrow`, `seeds` with arg `<crop>:<n>`), the host validates, mutates, logs and broadcasts
+## the whole small state with `apply_store`. Every row is a `store.json` record; its `effect` holds the numbers. Seeds
+## are not rows: the crate's menu (P4-22, game/ui/store_menu.gd) buys them into the team's stock, `team["seed_<crop>"]`
+## (saved and sent with the rest of `team`), and planting uses one (plot.gd; D-093, which supersedes D-090).
 
+const Crops := preload("res://game/farming/crops.gd")
+const SEED_BUY_MAX := 10  ## the most seeds one request may buy (the menu offers 1 and 5)
 const REACH_M := 3.5  ## how close to the crate a buy must be (placeholder)
 const SPACING_M := 3.0  ## two placed scarecrows closer than this are one (placeholder)
 
@@ -101,9 +104,7 @@ func why_not(peer: int, id: StringName, near: bool = true) -> StringName:
 		return &"no_item"
 	if Game.is_ghost(peer):
 		return &"ghost"
-	var st: Dictionary = farm.pstate(peer)
-	var crate := get_tree().get_first_node_in_group(&"store_crate") as Node3D
-	if near and (crate == null or not st.has("pos") or Vector2(st.pos.x - crate.global_position.x, st.pos.z - crate.global_position.z).length() > REACH_M):
+	if near and _too_far(peer):  # P4-22: with `near` false a client may ask too (the store menu greys rows)
 		return &"too_far"
 	if Clock.day < int(r.unlock_day):
 		return &"locked_item"
@@ -153,6 +154,57 @@ func buy(peer: int, id: StringName, near: bool = true) -> StringName:
 	Log.event(&"store_buy", {"item": String(id), "price": paid, "buyer": peer, "day": Clock.day, "coins": farm.coins})
 	_send()
 	return &""
+
+
+## Host: is `peer` out of reach of the crate? `pstate` is host-only.
+func _too_far(peer: int) -> bool:
+	var st: Dictionary = farm.pstate(peer)
+	var crate := get_tree().get_first_node_in_group(&"store_crate") as Node3D
+	return crate == null or not st.has("pos") or Vector2(st.pos.x - crate.global_position.x, st.pos.z - crate.global_position.z).length() > REACH_M
+
+
+# --- seeds (P4-22, D-093) ---------------------------------------------------------------------------
+
+static func seed_key(crop: StringName) -> StringName:
+	return StringName("seed_" + crop)
+
+
+## The team's seeds of `crop` in stock (every peer: `team` is replicated).
+func seed_count(crop: StringName) -> int:
+	return int(team.get(seed_key(crop), 0))
+
+
+## Why the team cannot buy `n` seeds of `crop` now, else empty. `near` false skips the crate (client menu, bots).
+func seed_why_not(peer: int, crop: StringName, n: int, near: bool = true) -> StringName:
+	if not crop in Crops.ids() or n < 1 or n > SEED_BUY_MAX:  # a client can send anything
+		return &"no_item"
+	if Game.is_ghost(peer):
+		return &"ghost"
+	if near and _too_far(peer):
+		return &"too_far"
+	if not Crops.is_unlocked(crop, Clock.day):
+		return &"locked_crop"
+	return &"" if farm.coins >= int(Crops.rec(crop).seed) * n else &"no_coins"
+
+
+## Host: buy `n` seeds of `crop` into the team's stock (doc 02 s10 seed prices).
+func buy_seeds(peer: int, crop: StringName, n: int, near: bool = true) -> StringName:
+	var why := seed_why_not(peer, crop, n, near)
+	if why != &"":
+		Log.event(&"store_refused", {"item": String(seed_key(crop)), "buyer": peer, "reason": String(why)})
+		return why
+	var paid := int(Crops.rec(crop).seed) * n
+	farm.add_coins(-paid, &"seed", peer)
+	team[seed_key(crop)] = seed_count(crop) + n
+	Log.event(&"store_buy", {"item": String(seed_key(crop)), "count": n, "price": paid, "buyer": peer, "day": Clock.day, "coins": farm.coins})
+	_send()
+	return &""
+
+
+## Host: one seed of `crop` goes into the ground (plot.gd `complete`).
+func use_seed(crop: StringName) -> void:
+	team[seed_key(crop)] = maxi(seed_count(crop) - 1, 0)
+	_send()
 
 
 func _locked_plots() -> Array:
@@ -266,6 +318,7 @@ func _on_request(what: StringName, peer: int, args: Array) -> void:
 				&"buy": why = buy(peer, args[1])
 				&"flare": why = fire_flare(peer)
 				&"scarecrow": why = place_scarecrow(peer)
+				&"seeds": why = buy_seeds(peer, StringName(String(args[1]).get_slice(":", 0)), String(args[1]).get_slice(":", 1).to_int())  # `<crop>:<n>` (the RPC has one arg)
 			if why != &"":
 				if peer == Game.local_peer():
 					Net.apply_received.emit(&"refused", [args[0], why])
@@ -331,14 +384,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		Net.to_host(&"request_store", [&"scarecrow", &""])
 
 
-## Text for the tester prompt when the local player stands at the crate (no marker: it shows only up close).
-func prompt_text() -> String:
+## Text for the tester prompt when the local player, standing `at`, is at the crate (no marker: it shows only up
+## close). `at` is the local body's position: a client has no `Game.players[me].pos` (only the host sets it).
+func prompt_text(at: Vector3) -> String:
 	var crate := get_tree().get_first_node_in_group(&"store_crate") as Node3D
-	var me: Dictionary = Game.players.get(Game.local_peer(), {})
-	if crate == null or not me.has("pos") or Vector2(me.pos.x - crate.global_position.x, me.pos.z - crate.global_position.z).length() > REACH_M:
+	if crate == null or Vector2(at.x - crate.global_position.x, at.z - crate.global_position.z).length() > REACH_M:
 		return ""
-	var r := items()[pick]
-	return "Store: %s, %d coins (day %d)   %s next   %s buy" % [r.name, price(Game.local_peer(), StringName(r.id)), int(r.unlock_day), _key(&"cycle_item"), _key(&"buy_item")]
+	return "%s: open the store (seeds and tools)" % _key(&"interact")  # P4-22: the list is store_menu.gd
 
 
 func _key(action: StringName) -> String:

@@ -34,6 +34,10 @@ func _init() -> void:
 		["hold_completed", {"player": -1, "verb": "pry", "target": "trap_1"}],
 		["trap_race_result", {"player": 1, "trap_id": "trap_1", "solo": false, "survived": true}],
 		["flag_placed", {"player": 1}], ["flag_placed", {"player": 1}],
+		# P4-33: pull-ups and replants (one by a teammate, D-142) leave Ann's count at the 2 still out
+		["flag_placed", {"player": 1}], ["flag_removed", {"player": 1, "owner": 1}],
+		["flag_placed", {"player": 1}], ["flag_removed", {"player": 2, "owner": 1}],
+		["flag_placed", {"player": 2}], ["flag_removed", {"player": 2, "owner": 2}],
 		["money_changed", {"reason": "dawn_cash_in", "delta": 30}], ["money_changed", {"reason": "dawn_cash_in", "delta": 10}],
 		["money_changed", {"reason": "sell", "delta": 99}],
 		["medical_bill", {"bill": 60, "paid": 40, "to_final": 20}],

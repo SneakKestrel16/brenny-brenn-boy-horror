@@ -84,8 +84,6 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 const TAINT_DB := -20.0  # CEO listens: -42 barely audible, then double (+6 dB) at listens 2 and 3
 ## Doc 08 section 8: the Taint beat ducks 8 dB under the still heartbeat; the chase heartbeat reuses that loop (inference).
 const TAINT_DUCK_DB := 8.0
-## Ids not written to the `audio_play` log (one per stride would flood it).
-const QUIET_LOG: Array[StringName] = [&"sfx_step_dirt", &"sfx_step_corn", &"sfx_step_wood"]
 ## Scare build-up (doc 03 section 13 "insects cut", "silence"), through `hush()`. Placeholder depth.
 const HUSH_WIND_DB := 12.0
 ## Chase signature loops, one per body (doc 08 sections 5.3, 6): positional on the creature, loud (placeholder).
@@ -104,7 +102,7 @@ const STRANGER_LINES: Array[StringName] = [&"vox_stranger_over_here", &"vox_stra
 ## Layer levels in dB: [day, night] (doc 08 section 4.1, placeholder). No day insect bed: day is wind only.
 const LAYERS := {
 	&"wind": {"file": "amb_wind_loop", "day": -29.1, "night": -23.1, "pitch": 0.5},  # CEO listen 3: half frequency, -30 percent (-3.1 dB)
-	&"insect_night": {"file": "amb_insect_bed_night", "day": -80.0, "night": -28.0},
+	&"insect_night": {"file": "amb_insect_bed_night", "day": -80.0, "night": -30.8},  # -28 CEO; -2.8 dB: the P4-26 QA re-render is 2.8 dB hotter (RMS -16.3 vs -19.1)
 	&"barn": {"file": "amb_barn_lobby_loop", "day": BARN_DB, "night": BARN_DB},  # gain by _barn, not the phase
 }
 const WIND_DROP_DB := 18.0  ## doc 08 section 4.3 stalk
@@ -428,7 +426,8 @@ func _log_state() -> void:
 			"bed_db": snappedf(_players[&"insect_night"].volume_db, 0.1), "wind_db": snappedf(_players[&"wind"].volume_db, 0.1), "recent": recent.map(func(s): return String(s))})
 
 
-## One-shot at a world position (doc 08 section 10.1). `opts`: `db` extra trim.
+## One-shot at a world position (doc 08 section 10.1). `opts`: `db` extra trim, `pitch` (replaces the
+## random 0.95 to 1.05), `quiet` (no `audio_play` line: footsteps, one per stride, would flood the log).
 func play_3d(id: StringName, pos: Vector3, opts: Dictionary = {}) -> void:
 	var c: Dictionary = CATALOG.get(id, {})
 	if c.is_empty() or _emitters >= MAX_EMITTERS:
@@ -442,7 +441,7 @@ func play_3d(id: StringName, pos: Vector3, opts: Dictionary = {}) -> void:
 	p.unit_size = c.unit
 	p.max_distance = c.max
 	p.volume_db = float(c.db) + float(opts.get("db", 0.0))
-	p.pitch_scale = _rng.randf_range(0.95, 1.05) * float(opts.get("pitch", 1.0))
+	p.pitch_scale = float(opts["pitch"]) if opts.has("pitch") else _rng.randf_range(0.95, 1.05)
 	_emitters += 1
 	p.finished.connect(func() -> void:
 		_emitters -= 1
@@ -450,11 +449,11 @@ func play_3d(id: StringName, pos: Vector3, opts: Dictionary = {}) -> void:
 	add_child(p)
 	p.global_position = pos
 	p.play()
-	_played(id)
+	_played(id, bool(opts.get("quiet", false)))
 
 
-## Non-positional one-shot (own footsteps, UI).
-func play_2d(id: StringName, db: float = 0.0, pitch: float = 1.0) -> void:
+## Non-positional one-shot (own footsteps, UI). `quiet`: no `audio_play` line (footsteps).
+func play_2d(id: StringName, db: float = 0.0, pitch: float = 1.0, quiet: bool = false) -> void:
 	var c: Dictionary = CATALOG.get(id, {})
 	var s := _stream(_variant(id, int(c.get("n", 0))))
 	if s == null:
@@ -467,26 +466,29 @@ func play_2d(id: StringName, db: float = 0.0, pitch: float = 1.0) -> void:
 	p.finished.connect(p.queue_free)
 	add_child(p)
 	p.play()
-	_played(id)
+	_played(id, quiet)
 
 
 ## File name for one play: a random variant `_NN`, never the one this id played last (P4-26).
 func _variant(id: StringName, n: int) -> String:
 	if n <= 0:
 		return String(id)
+	var last := int(_last_variant.get(id, 0))
 	var v := _rng.randi_range(1, n)
-	if n > 1 and v == int(_last_variant.get(id, 0)):
-		v = v % n + 1
+	if n > 1 and last > 0:
+		v = _rng.randi_range(1, n - 1)  # uniform over the other n - 1
+		if v >= last:
+			v += 1
 	_last_variant[id] = v
 	return "%s_%02d" % [id, v]
 
 
 ## Doc 08 section 10.4: the last 8 ids for `audio_state`, and an `audio_play` line so a log shows each cue's trigger.
-func _played(id: StringName) -> void:
+func _played(id: StringName, quiet: bool = false) -> void:
 	recent.append(id)
 	if recent.size() > 8:
 		recent.pop_front()
-	if not id in QUIET_LOG:
+	if not quiet:
 		Log.event(&"audio_play", {"id": String(id)})
 
 
@@ -519,9 +521,9 @@ func _footsteps(delta: float) -> void:
 		var db := (6.0 if sprint else 0.0) + _rng.randf_range(STEP_DB.x, STEP_DB.y)
 		var pitch := _rng.randf_range(STEP_PITCH.x, STEP_PITCH.y)
 		if bool(n.get(&"is_local")):
-			play_2d(id, db - 8.0, pitch)
+			play_2d(id, db - 8.0, pitch, true)
 		else:
-			play_3d(id, pos, {"db": db, "pitch": pitch})
+			play_3d(id, pos, {"db": db, "pitch": pitch, "quiet": true})
 
 
 ## Doc 08 section 11.2: corn (layer 5 point query), wood inside a building, dirt elsewhere.

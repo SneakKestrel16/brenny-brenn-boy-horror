@@ -424,14 +424,15 @@ dawn (section 17) from `crops.json` (doc 02 section 5).
 - **Crops (P4-04).** Every number comes from `crops.json` through `game/farming/crops.gd`; no crop name is in
   code. A crop is found by what it does: `harvest_phase` `night` is the bed crop (the plots whose marker
   `field` meta equals that crop id), `day` crops go in field plots. A plot holds `crop` and `state`; verb
-  `plant:<crop>` carries the client's picked seed (`cycle_seed`, key T, client-local `Farm.seed_pick`; plain
+  `plant:<crop>` carries the client's picked seed (`cycle_seed`, key T, client-local `Farm.seed_pick`, cycling
+  only among day crops the team owns seeds of; `Farm.planting_seed()` falls back to the first owned; plain
   `plant` is the first day crop). The host refuses `wrong_crop`, `locked_crop` (`unlock_day`, and
   `first_payment_made` until `Debt.first_made`, set at the first-payment dawn, is true; P4-07) and
-  `no_coins`, and charges `seed` at planting. A day crop grows one day per watered day (`grow_days`); a
+  `no_seeds`, and uses one of the team's seeds at planting (`Store.use_seed`; no coins, D-093). A day crop grows one day per watered day (`grow_days`); a
   bed crop ripens when night falls if watered. At dawn a night crop left unpicked is `dead` (and Taints when
   `dead_plot_taints`), an unripe one `wilted`; `clear_plot` removes either. `plot_changed` has no crop
   argument, so the crop rides in the state string (`ripe:pumpkin`, Q-085).
-- **Plant, water, harvest** are holds (section 7). Planting needs a seed item; watering needs a full
+- **Plant, water, harvest** are holds (section 7). Planting needs a seed in the team's stock (D-093); watering needs a full
   can (capacity from `labor.json` `can`, 2 plots per fill, `placeholder`); harvest puts crops in the
   carry bag (capacity `carry` 4, `placeholder`). A plot's visible state is the information (no HUD).
 - **Carrying** is the player's item slots (`game/items/`): hands (a tool, a lantern, a seed packet,
@@ -472,12 +473,23 @@ dawn (section 17) from `crops.json` (doc 02 section 5).
 
 - `game/items/store.gd` (`Store`, child of `Farm` on every peer, group `store`). Every `store.json` row is
   bought at the `store_crate` (within 3.5 m, placeholder) at its `price`, from its `unlock_day`. Seeds are not
-  rows: they are charged at planting (plot.gd, P4-04). No crop is sold.
-- Wire: client `request_store(op, arg)` (`buy`, `flare`, `scarecrow`) -> host validates -> `apply_store(state)`
+  `store.json` rows: the store menu buys them at crops.json `seed` into the team stock `team["seed_<crop>"]`
+  (`buy_seeds`, `seed_why_not`, `seed_count`; saved and replicated with `team`), and planting uses one (D-093,
+  superseding D-090). Foreclosure never seizes seeds. No crop is sold.
+- Wire: client `request_store(op, arg)` (`buy`, `flare`, `scarecrow`, `seeds` with arg `<crop>:<n>`, n 1 to 10) ->
+  host validates -> `apply_store(state)`
   carries the whole small state (team counts, per-player ownership, scrap, placed scarecrows, flare shots, opened
   plots) to everyone; a late joiner gets it on `farm_state`. Refusals use `apply_refused` (hud.gd `REFUSED_TEXT`).
 - Keys (placeholders, `project.godot`): `cycle_item` R, `buy_item` K, `fire_flare` H, `place_scarecrow` N. The HUD
   prompt shows only within reach of the crate. Dev console: `buy <item>` (anywhere, host).
+- Store menu (P4-22, `game/ui/store_menu.gd`, built by hud.gd): `interact` at the crate with nothing aimed opens it.
+  One row per `store.json` item (price, Buy sends the same `request_store`) and one per crops.json seed with
+  `Buy 1` and `Buy 5` (op `seeds`) and the team's count. Rows grey from `why_not(peer, id, false)` and
+  `seed_why_not(peer, crop, n, false)`, which are client-safe; the host checks again on Buy.
+  Aiming at an empty plot with no seed of its crop, the prompt says "Buy seeds at the store".
+- Hotbar (P4-22, hud.gd `_slots`): bottom-centre slots for what the local player holds or the team owns, each with
+  a one-line use hint. A CEO-requested exception to "No HUD markers" (D-091): it points at nothing. The seed
+  slot shows only while the team owns seeds, with counts and the crop T has picked (D-093).
 - Items: `scrap` adds `repairs` to `scrap_bought` (`take_scrap()` spends the free scrap first; nothing calls it yet,
   Q-100). `quiet_watering_can` (per player) offers verb `water_quiet` (5 s, noise x0.5, labor.json).
   `brighter_lantern` is tracked (`lantern_mult(peer)`); no player lantern exists yet. `shed_lock` sets
@@ -559,10 +571,21 @@ Traps are host-owned (doc 03 section 8). The player side is:
 - **Flags (built, P2-11).** Right mouse (`alt_use`) held 1 s on the ground the ray hits (3 m) is a
   `place_flag` hold; the target id is the wire name `flag:<x>,<z>` (one decimal, `FlagSpot`), built by
   the client for its ring and by the host per request (the registry frees it). Refused `flag_here`
-  within 1 m of another flag. `TrapSweep` (`game/traps_player/trap_sweep.gd`, host) keeps the list and
-  sends `apply_flags(positions)`; every peer draws a pole and red cloth (placeholder art). Disarming or
-  filling a trap clears flags within 2 m. Free and unlimited (doc 01 "Night Traps > Flags"). A late
-  joiner gets the list on `farm_state`. Not built: `request_remove_flag`, the creature moving flags.
+  within 1 m of another flag. `TrapSweep` (`game/traps_player/trap_sweep.gd`, host) keeps the list,
+  one `{pos, by}` per flag (`by` is the placing peer), and sends it whole as `apply_flags(flags)`;
+  every peer draws a pole and red cloth (placeholder art). Disarming or filling a trap clears flags
+  within 2 m. A late joiner gets the list on `farm_state`.
+  **Limit and removal (P4-33, D-120).** A player has at most `labor.json` `place_flag.max_per_player`
+  flags out (3, placeholder); one more is refused `flag_limit`. Every drawn flag carries a `FlagSpot`
+  with a thin pick body from 0.7 m to 1.8 m (above a set trap's 0.6 m box), so any player aims at it
+  and holds `interact` for `remove_flag` (0.5 s, `INSTANT_S`, placeholder; D-142); the host refuses
+  `no_flag` if none is there, and the owner's slot frees. `HoldController.pick` sees through a flag:
+  another target within `FLAG_SEE_THROUGH_M` (1 m, placeholder) behind it wins, so a flag on a trap
+  never hides its disarm, fill or pickup. A flag cleared by a disarm or fill frees its slot too. When a
+  player leaves or drops (`Game.player_left`) the host removes all their flags (`flags_dropped`).
+  Dev console: `flag [peer]` plants a flag at that player's feet through the same hold. The minimap
+  draws every flag as a small red pennant from `TrapSweep.flags`. Not built: the creature moving flags (doc 01 "Flags", day 5); when built it
+  moves `pos` and keeps `by`.
 - **Pegboard (built, P2-11).** `TrapSweep` also keeps `filled`, one bool per `pegboard_slots` marker
   (sorted by name), and `apply_pegboard_changed(filled)` sends it. The board is one target (`pegboard`,
   on the `pegboard_spots` marker): with a trap in hand it offers `hang_trap` (1 s, first empty slot;
@@ -575,7 +598,7 @@ Traps are host-owned (doc 03 section 8). The player side is:
   4 m and facing it. `TrapRace` gives every set or sprung spot a `TrapTarget` (`sync_set()` on the host
   because the Creature tells only the *other* peers about `set` and `moved`).
 - **Log events.** `trap_changed` (`set`, `sprung`, `disarmed`, `filled`) with `by` and `kind`;
-  `flag_placed`, `pegboard_changed`; every peer logs `apply_flags` and `apply_pegboard_changed` when it
+  `flag_placed`, `flag_removed`, `flags_dropped`, `pegboard_changed`; every peer logs `apply_flags` and `apply_pegboard_changed` when it
   receives them. Doc 09 section 3 reads `trap_changed`.
 - **Scarecrows and fences.** `request_place_defense(kind, position, yaw)`; the host validates:
   a placement spot on open ground, no overlap with a plot or a trap spot, **and no closer than 3 m to
@@ -629,6 +652,23 @@ P4-12: `game/items/cart.gd`, an interactable that `farm.gd` builds under `World`
   (`profile_harvest_moon`); then done.
 - Pushing is the `push_cart` hold that never completes. Each tick the host counts the living players
   holding it; the count sets the speed (`profile_harvest_moon`, doc 02 section 9).
+- Push at the handle (P4-32). `cart.gd` adds a `Handle` marker at the model's push bar (back of the cart,
+  1.45 m behind its centre, 1.05 m up; `tools/blender/build_phase4.py` `cart()`). `push_cart` is offered
+  only to a player standing within 1.5 m (flat) of it; `load_cart` is unchanged. The host does not
+  gate the request on the handle, so bots asking from their usual spot still push.
+- Lock while pushing (P4-32). `cart.push_slot(peer)` gives each pusher a slot 0.4 m behind the handle,
+  pushers side by side 0.7 m apart in `pushers` order. It is `Vector3.INF` (no lock) unless the peer is
+  in `pushers`, the act is push or gate run and the cart is not stalled, so release, a knock-off, death
+  and the end of the run all free the player. The host pins each pusher's received frame to their slot
+  in `players.submit` (no speed check for that frame); the client walks its own body to the same slot
+  each frame from the synced cart, faces the route when the lock starts and then turns with the
+  cart's heading as the route bends; mouse look stays free on top of that. Clients still own their movement; the host's copy wins as for traps.
+- The push hold's bar is the route, not a timer (P4-32): `cart.hold_progress(&"push_cart")` returns
+  `[offset / length, "N m to the gate"]` from the synced cart, so every peer shows the same value.
+  `HoldController.hold_state()` returns `[verb, progress, note]`, using a target's `hold_progress` when
+  it has one; the HUD prompt reads e.g. "Push Cart... 3%  143 m to the gate".
+- QA: `-- --autopush` (client or host) walks to the handle on the Harvest Moon, pushes 12 s and logs
+  `autopush_step` (slot distance, hold state) each second, then lets go and logs that the lock is gone.
 - The creature knocks a pusher off (`knock`): the hold is cancelled, the cart stalls `knock_stall_s`,
   and the next knock waits `knock_cooldown_s` (act 2 only). Each stall allows one `bite` of the
   pumpkin; the pumpkin caps bites at `max_escort_bites`.
@@ -711,7 +751,7 @@ P4-12: `game/items/cart.gd`, an interactable that `farm.gd` builds under `World`
   `placeholder`); the host stamps the position and sends `apply_whistle(slot, position)`; the whistle
   is a world sound everyone hears at their own distance. It emits `whistle` (50 m) to the creature,
   so it can pull the creature, which is the rule in doc 01. **It is the only sanctioned way to find
-  a teammate by sound** (doc 01's whistle rule), so there is no marker on the minimap (none exists).
+  a teammate by sound** (doc 01's whistle rule), so the whistle puts no marker on the minimap (P4-24).
   Its audible range is long (doc 04 section 8.2 suggests at least 171 m; the Audio Designer's number,
   Q-014 item 4 / doc 08).
 - **Emotes** (doc 01 "Emotes and physical comedy"): `wave`, `point`, `shrug`, `scream` (the scream is
@@ -777,7 +817,7 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
     full wipe heads it; none gives `no_deaths`), Hero of the Night (score: trap disarmed or pit filled 3,
     a pry that freed a teammate 3, a refuel 2, outside the most while someone hid 1; placeholder weights,
     the biggest deed names the action), Heard in the Corn (up to 3 more targeted lures, placeholder cap)
-    and Flags Placed (per-player `flag_placed` counts). A section with nothing to say is left out,
+    and Flags Placed (per-player flags still out: `flag_placed` less `flag_removed` by `owner`). A section with nothing to say is left out,
     except Cause of Death and Flags Placed. Copy without a template (freed, refueled, flags) is in the
     builder until the Game Designer adds it (Q-066).
   - **Screen (every peer):** placeholder newspaper card (doc 07 section 9 colours, 0.5 degree tilt,
@@ -800,8 +840,8 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
 
 ## 16. Menus and settings
 
-- **Menus** (`game/ui/`): main menu (Host, Join, Settings, Quit), lobby (a menu screen: roles,
-  difficulty, group options, ready; P4-23), pause overlay, host-left card, "waiting for a farmhand" card (doc 06
+- **Menus** (`game/ui/`): main menu (Host, Join, Settings, Quit), menu lobby (a menu screen over a
+  3D line-up: roles, difficulty, group options, ready; P4-23, P4-35), pause overlay, host-left card, "waiting for a farmhand" card (doc 06
   section 5), Dawn Report, Season Awards. The Host and Join screens are doc 06 sections 3 and 4;
   `game/ui/` embeds `game/net/`'s screens.
 - **Settings** live in `user://settings.cfg` (a `ConfigFile`, autoload `Settings`) on **each client's
@@ -853,17 +893,23 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
 - **Flow.** Launching with no arguments in a window opens the main menu (`game/ui/main_menu.tscn`):
   Host (port), Join (a join code, a raw IP or `IP:port`; D-049 brings back doc 06 s4 join codes for rejoining), Settings, Quit. Host and
   Join turn Phase 1 data on and reload it (a bare exe has no `--phase1`; remove when the full farm lands).
-  Both land in the **lobby** (`game/ui/lobby.tscn`, P4-23): a menu screen, no world and no player bodies
-  (nobody spawns until the match starts). Left: the role cards (P4-09; a taken role greyed out, all locked
-  when a loaded season keeps its roles). Right: a roster with each player's role, voice setting and ready
-  mark, the join code, doc 01's Discord line, the group settings (difficulty and streamer-safe; host edits,
-  `Game.set_group_settings`, everyone sees them) and one button. A client's button toggles Ready
+  Both land in the **menu lobby** (`game/ui/lobby.tscn`, P4-23; line-up scene P4-35, D-140): a menu screen
+  over a local 3D line-up, no farm and no player bodies (nobody spawns until the match starts). The line-up
+  is the `Players` node (`lobby.gd` `LineUp`): a placeholder barn set at night (three `LightRig` lanterns,
+  the centre one in group `barn_lantern` for the recording staging; a moon and a spot on the centre authored
+  in `lobby.tscn`), and one placeholder farmer per player with a role hat (`assets/models/hat_<role>.glb` when present, D-144; else the `LineUp.HATS` placeholders) and three
+  `Label3D` tags: name, role, and HOST / READY / NOT READY. The local farmer stands in the centre; the others
+  alternate right and left, a step back; the camera fits six (doc 01 "Format" cap) between the side panels, and odd slots lift their tags so neighbours stagger. `LineUp.sync()` runs on every refresh and frees a leaver's farmer.
+  Left: the role cards (P4-09; a taken role greyed out, all locked when a loaded season keeps its roles,
+  which clients learn from `apply_roles`' `locked` key, D-143). Right: a roster with each player's voice
+  setting, the join code, doc 01's Discord line, the group settings (difficulty and streamer-safe; host
+  edits, `Game.set_group_settings`, everyone sees them). Bottom right: one big button. A client's button toggles Ready
   (`request_lobby_ready(on)`; the host logs `lobby_ready {player, on}` and broadcasts
   `apply_lobby_ready(peers)` into `Game.lobby_ready`; a joiner sends `false` to get everyone's marks). The
   host's button, "Start the season", is enabled when `Game.all_ready()` (every other human ready; bots
-  count as ready); Enter presses it. `Game.lobby_ready` is cleared at match start and on leave. The
-  `Players` node is a stub (`lobby.gd` `Voices`) holding the AudioListener3D and one bare `Node3D` per peer
-  so Voice still hangs its emitters: lobby voice plays unplaced. `Game.start_match()` waits for `Game.match_ready()` (P2-03 clip pre-share hook, doc 06 section 12
+  count as ready); Enter presses it. `Game.lobby_ready` is cleared at match start and on leave. Voice hangs
+  each player's emitter on their farmer, so lobby voice is placed in the line-up (the AudioListener3D rides
+  the camera). `Game.start_match()` waits for `Game.match_ready()` (P2-03 clip pre-share hook, doc 06 section 12
   step 5), clears each player's movement state (the host drops frames with a stale `seq`), starts the
   `Clock`, sends `apply_match_start` and everyone changes to `main.tscn`. A client that joins during
   the lobby gets `p_lobby = true` in `apply_session_state`. The pause menu (`PauseMenu`, `CanvasLayer`
@@ -907,9 +953,14 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   (`Easy`, `Normal`, `Hard`, `Nightmare`, `difficulty.json`; "no live clips" and "streamer-safe" are
   flags; doc 01 "Difficulty and group settings"). They go in the save (section 17); the voice
   setting does not.
-- **No HUD markers.** There is no minimap, no objective marker, no player name tag over a head, no
-  health bar. Information is diegetic (doc 01 "Diegetic"): the pegboard shows what tools are out, the
-  flag shows a trap, a wrinkled leaf shows a thirsty crop, the generator hums lower.
+- **No HUD markers.** There is no objective marker, no player name tag over a head, no
+  health bar. The one exception is the CEO-requested minimap (P4-24, D-094, `game/ui/minimap.gd`,
+  a child of the HUD): a north-up farm map in the top right, read from the level's nodes when the HUD
+  is built (`Ground/Floor`, `Buildings/*`, `Regions/field_*` and `corn_*`, groups `plot_spots`,
+  `well`, `store_crate`, `sell_box`, `cart`), with the local player's arrow and every placed flag as a small red pennant (P4-33). It never reads the `creature` group,
+  and nothing on it marks a teammate (D-141), a trap, a noise or a whistle. Information is diegetic (doc 01 "Diegetic"): the pegboard shows what tools are out, the
+  flag shows a trap, a wrinkled leaf shows a thirsty crop, the generator hums lower. Exception (D-091): the
+  P4-22 hotbar lists what the local player holds, with a use hint; it points at nothing.
 - **Accessibility** (inference, unscoped in doc 01): there are no voice subtitles at all (D-019): a
   missing speaker name on a creature fake would expose it and defeat the "wrong place" tell. A
   colour-blind option for the Taint visual. Settled by the CEO if it matters.
@@ -1048,7 +1099,8 @@ the QA changes.
 | `trap_theft_capped` | host | `cap`, `day` | Shed lock (D-053) |
 | `trap_skipped` | host | `kind`, `reason` (`no_supply`, `no_spot`) | Bear supply ran out (D-053) |
 | `trap_moved` | host | `trap`, `from_building`, `to_spot`, `player` | Lit-building trap to the corn at dawn (D-053) |
-| `flag_placed` / `flag_removed` | host | `player`, `position`, `trap_id` (or null) | Flags |
+| `flag_placed` / `flag_removed` | host | `player`, `position`, `trap_id` (or null), `flags` (all out), `mine` (the owner's); `flag_removed` adds `owner` | Flags; `flag_removed` is any player pulling one up (`player` pulled it, `owner` placed it; P4-33, D-142) |
+| `flags_dropped` | host | `player`, `count` | A leaver's flags go with them (D-142) |
 | `payment_made` | host | `amount`, `balance`, `due`, `late` | Debt |
 | `dawn_summary` | host | `day`, `coins`, `debt`, `plots_ripe`, `plots_wilted`, `farm_damage`, `deaths` (+ `medical_bill`, `final_extra`; P2-06) | Simulator `compare` (reads `money_changed` by dawn too) |
 | `generator` | host | `state` (`fuelled`, `dead`, `repaired`), `fuel_s` | Generator run |
@@ -1089,9 +1141,10 @@ the QA changes.
 | `dawn_step` | host, before each step of `Death.dawn()` | `step` (`cash_in`, `final_sale`, `medical_bill`, `payment`, `farm_damage`, `save`, `free_scrap`), `day` | Doc 02 section 9 order test (P4-04) |
 | `end_of_season_sale` | host, final dawn step 2 | `plots`, `coins` | Dawn Report ledger row (P4-04) |
 | `free_scrap` | host, dawn step 7 | `scrap` | Doc 02 section 9 step 7 (P4-04) |
-| `store_buy` | host | `item`, `price`, `buyer`, `day`, `coins` | Doc 02 section 10 (P4-06) |
+| `store_buy` | host | `item`, `price`, `buyer`, `day`, `coins`; seeds: `item` `seed_<crop>`, `count`, `price` the total | Doc 02 section 10 (P4-06, D-093) |
 | `store_refused` | host | `item`, `buyer`, `reason` | P4-06 |
 | `store_picked` | local peer | `item`, `price` | P4-06 |
+| `store_menu` | local peer, on opening the crate's menu | `open` | P4-22 |
 | `store_seized` | host | `item` | Foreclosure (P4-07) |
 | `scrap_used` | host | `left` | P4-06 |
 | `flare_fired` | host | `player`, `hit`, `left` | P4-06 |

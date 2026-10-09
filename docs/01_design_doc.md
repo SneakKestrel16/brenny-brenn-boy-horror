@@ -229,7 +229,7 @@ There's no forced consent screen. Each player picks a setting on their own machi
 
 ### Recording lines that sound scared
 
-- **Staging:** the lobby is the dark barn at night. Each line follows a staged moment, such as a lantern blowing out (never flickering) before "help me," or a bang on the door before "over here."
+- **Staging:** the menu lobby is a dark, lantern-lit barn at night (D-140). Each line follows a staged moment, such as a lantern blowing out (never flickering) before "help me," or a bang on the door before "over here."
 - **Takes:** each line is recorded 2 to 3 times. The game keeps the most energetic take, judged by loudness and pitch variation.
 - **Lines:** "over here," "help me," "come look at this," "I found something," "where are you?", "wait for me," "it's fine, come on," and each teammate's name.
 - **Barn chatter:** 20 to 40 seconds of free talk.
@@ -262,7 +262,9 @@ Traps still armed in the morning become daytime chores, and weapons for the lure
 - **Clues:** fresh dirt, bent stalks and glinting metal, visible only to players who look closely.
 - **Spotting:** disarming is safer with a teammate watching, which pulls two players off farming.
 - **Flags:**
-  - Free and unlimited: a shared, honest "checked" or "trap here" map that needs no voice.
+  - Free, but each player has only a few out at once: a shared, honest "checked" or "trap here" map that needs no voice.
+  - Any player can pull up any flag, freeing its slot for the player who placed it. A player who leaves takes their flags with them.
+  - Placed flags show as small icons on the minimap, where each flag is now.
   - From day 5 the creature can move one flag a night.
 - **Lure combo:** day lures pull players toward unchecked rows. Teams that split sweeps and share which rows are clear stay safe, but talking feeds the creature clips.
 - **Lethality:** rarely lethal by day (only by losing the race); deadly at night, when a trapped player is easy prey.
@@ -617,7 +619,7 @@ and the creature as the only liar. The normal game stays as written.
  Placeholder perks are
 set before roles are built.
 
-**Picking a role:** each player picks a role in the barn lobby before the match starts.
+**Picking a role:** each player picks a role in the menu lobby before the match starts.
 - A role card per role shows its perk; a taken role is greyed out, so no two players share one.
 - "No role" is always open. Players can change picks until the host starts the match.
 - Roles are locked for the season once the match starts.

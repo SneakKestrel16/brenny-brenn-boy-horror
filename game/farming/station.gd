@@ -46,9 +46,10 @@ func complete(verb: StringName, peer: int, st: Dictionary) -> void:
 	if verb == &"sell":
 		var n := int(st.bag)
 		var v := Crops.bag_value(st)
+		var bonus := Crops.sell_bonus(v)  # P4-30
 		Crops.bag_clear(st)
-		Log.event(&"sell", {"player": peer, "items": n, "coins": v})
-		farm.add_coins(v, &"sell", peer)
+		Log.event(&"sell", {"player": peer, "items": n, "coins": v + bonus, "bonus": bonus})
+		farm.add_coins(v + bonus, &"sell", peer)
 	elif verb == &"wash":
 		NoiseBus.emit_kind(&"well_pump", target_pos(), peer)
 		farm.get_tree().get_first_node_in_group(&"taint").set_taint(peer, false, &"well")

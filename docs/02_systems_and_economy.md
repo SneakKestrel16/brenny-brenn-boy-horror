@@ -216,6 +216,16 @@ steps (the final clear moves about 6 points per 1% of debt) and get retuned from
 The tables in 7.1 and 8 below are the doc 01 columns; the sim multiplies by the tuned percentages. The
 game still reads only `pct_by_players` until Gameplay reads the new key.
 
+**Sell bonus (P4-30, D-106; CEO request 2026-10-09).** Every crop sale pays `sold(v) = v + ceil(v * b / 100)`,
+`b` = `player_scaling.json` `sell_bonus_pct_by_players` at the current headcount (`Game.player_count()`,
+`sim`). It applies, rounded up per sale, at the sell box, at the dawn moonflower cash-in and in the
+final-dawn end-of-season sale; it never touches the Prize Pumpkin payout or early payments. The host
+adds it (`Crops.sell_bonus`) and logs it as `bonus` on the `sell` and `end_of_season_sale` events.
+**The table is 0 at every headcount.** The simulator's median team already meets every section 18.3
+target at 2 to 6 players, and any 2p bonus above about 0.5% pushes the 2p final clear past 70% (section
+18.6, P4-30 log). The key stays so the bonus can be turned on by data once the Director rules on Q-210
+and Q-211.
+
 **Exception: the debt.** Its total and the first-payment split round to the **nearest** coin
 (section 7). Rounding up there breaks doc 01's worked example.
 
@@ -240,7 +250,7 @@ and `field_plots_max` stay doc 01's 4-player values. Without this the field was 
 6p, planting 20 and 24 plots' worth of labor into 16 (section 17.2 finding). `plot_pair` costs 22
 coins for 2 plots (retuned from 40, section 18.6), and the number of pairs the store sells is `(max - start) / 2` (4 at 2 to 4p,
 4 at 5p and 6p); the 5p and 6p plots simply start open, so 5p and 6p have 4 pairs to buy, the same as 4p. Roles (section 15) are optional and have no headcount
-rule; 5 and 6 players just have more of them in play. Nothing else reads headcount.
+rule; 5 and 6 players just have more of them in play. The sell bonus (above) reads it too; nothing else does.
 
 Every scaled doc 01 table already lands on whole numbers (sections 7, 8 and 6); the rounding only
 matters for trap and disturbance counts (section 11).
@@ -480,6 +490,15 @@ stand and at the dawn cash-in (D-017). `sim` prices are the simulator's starting
   store. They are bought; no crafting system exists (D-017).
 - **Plots sold in pairs** because Foreclosure seizes 2 (placeholder).
 - **Upgrades** (what Foreclosure can seize): every bought item except seeds and scrap.
+- **Seeds are bought ahead (P4-22, D-093, CEO ruling on Q-170):** the crate's menu sells seeds into a
+  team stock (`Buy 1`, `Buy 5`, at most 10 per request); planting an empty plot uses one seed of the
+  picked crop and charges nothing. With no seed owned, planting is refused ("Buy seeds at the store").
+  The prices and unlocks are the table above. The total spent per plot is unchanged; the coins leave
+  when the seed is bought instead of when it is planted. The simulator still charges at planting: its
+  step is a day, and a team that buys just before planting spends the same coins the same day
+  (inference; a live season log through `compare.py` would settle it). P4-22 reran the default
+  `sim.py`: every target still passes (first clear 83.8 to 87.1%, final 57.9 to 63.4%).
+  Bots buy one seed at a time, just before planting, so bot seasons keep the simulator's timing.
 
 ### 10.1 Animals
 
@@ -921,6 +940,45 @@ payment 138. Plot pairs to buy stay 4 at every headcount.
 
 10,000 runs, `--players 2,3,4,5,6`; the gate exits 0 on all three seeds. Like 4p's `plot_pair` price, 5p
 and 6p sit near a cliff: 5p 121% drops the final clear to about 52%, 6p 139% to about 52%.
+
+**P4-30 sell bonus (seed 1, 2,000 to 4,000 runs per count; first / final clear %).** The sim applies
+`sell_bonus_pct_by_players` to day sales, the dawn moonflower cash-in (after death losses) and the
+end-of-season sale, not to the payout (`Model.sold`). With the shipped table (all 0) every result above is
+unchanged. Bonus at 2p (and 3p), rounded up per sale:
+
+| 2p / 3p bonus | 2p first / final | 3p final | Fails |
+|---|---|---|---|
+| 0 / 0 (shipped) | 87.1 / 63.1 | 57.9 | none |
+| 0.01 / 0 (any nonzero, ceil) | 70.9 final | | 2p final |
+| 1 / 1 | 76.8 final | 73.7 | 2p, 3p final |
+| 2 / 1 | 81.5 final | | 2p final, 2p Large needed |
+| 5 / 0 | 91.3 / 90.8 | | 2p first, final |
+| 10 / 5 | 97.3 final | 85.5 | first and final |
+
+Rounded to nearest instead, 0.5% at 2p and 3p passes (final 69.2 / 66.9) and is worth about 10 coins a
+season, so it is not a bonus. The sim's median 2p team already pays the first payment (dawn-4 margin
+quartiles 60 / 70 / 74 coins). The 2p misses in the P4-21 bot seasons come from a 2p team with one
+worker (idle host, bot sentinel; Q-162, Q-164), which the bonus does not model.
+
+**Q-161 unattended term (policy `unattended_term`, off in `median.json`).** On a night when nobody is
+outside the sim adds `min((night_s 300 - 30) // unattended_every_s 60, unattended_cap 3)` = 3 tramples,
+matching `sabotage_logic.gd`. With the median hide rate (`nobody_outside_pct` 20) and no bonus, final clear
+falls to 32.6 / 26.7 / 26.2 / 26.2 / 26.5 at 2p to 6p and Large needed fails everywhere. With the term on:
+
+| Bonus 2p/3p/4p/5p/6p | First 2p..6p | Final 2p..6p | Fails |
+|---|---|---|---|
+| 0 at all | 85.2 at 2p (3,000 runs); 75.3 at 4p, 54.8 at 5p | 32.6 / 26.7 / 26.2 / 26.2 / 26.5 | finals, firsts, Large needed |
+| 2p 3 only | 88.3 at 2p | 56.2 at 2p | Large needed |
+| 2p 5 only | 89.7 at 2p | 67.2 at 2p | Large needed |
+| 2p 8 only | 91.8 at 2p | 81.4 at 2p | 2p first, final, Large needed |
+| 5/5/4/4/4 | 89.7/81.8/80.8/84.8/84.4 | 67.2/67.5/67.3/72.1/67.5 | 5p final, Large needed all |
+| 5/6/5/5/5 | 89.7/81.9/81.0/85.3/85.1 | 67.2/72.5/72.7/76.6/73.5 | 3p to 6p final, Large needed all |
+
+With the term on and the team hiding every night (`nobody_outside_pct` 100, about 5 tramples a night as in
+the P4-21 bot seasons after D-089), 2p needs 10% to clear the first payment (85.3) and its final stays 0.2;
+30% gives 86.8 / 76.5. So under the term the bonus is an economy-wide offset of about 4 to 5%, not a 2p
+taper, and no bonus fixes Large needed (Medium drop 12 to 22 points; the bonus raises crop money and leaves
+the payout alone). Which world the sim should assume is Q-211.
 
 ## 19. Gotchas
 
@@ -1530,6 +1588,18 @@ Section 4.
               "4": {"type": "integer", "minimum": 1, "maximum": 64},
               "5": {"type": "integer", "minimum": 1, "maximum": 64},
               "6": {"type": "integer", "minimum": 1, "maximum": 64}
+            }
+          },
+          "sell_bonus_pct_by_players": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["2", "3", "4", "5", "6"],
+            "properties": {
+              "2": {"type": "integer", "minimum": 0, "maximum": 100},
+              "3": {"type": "integer", "minimum": 0, "maximum": 100},
+              "4": {"type": "integer", "minimum": 0, "maximum": 100},
+              "5": {"type": "integer", "minimum": 0, "maximum": 100},
+              "6": {"type": "integer", "minimum": 0, "maximum": 100}
             }
           },
           "rounding": {"const": "ceil"},

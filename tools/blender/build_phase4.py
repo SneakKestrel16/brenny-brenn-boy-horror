@@ -98,6 +98,16 @@ class Part:
         self._fin(v, col, mat)
         return self
 
+    def dome(self, radii, centre, col, seg=8, rings=6):
+        """Upper half of ball() (rings even), open underneath: hat crowns, so nothing hangs into the head."""
+        v = bmesh.ops.create_uvsphere(self.bm, u_segments=seg, v_segments=rings, radius=1.0)["verts"]
+        low = [x for x in v if x.co.z < -1e-4]
+        bmesh.ops.delete(self.bm, geom=low, context="VERTS")
+        v = [x for x in v if x.is_valid]
+        self._xf(v, centre, (0, 0, 0), radii)
+        self._fin(v, col, MAT_FLAT)
+        return self
+
     def cyl(self, r1, r2, depth, centre, col, rot=(0, 0, 0), seg=8, mat=MAT_FLAT):
         """Cone/cylinder on local Z; r1 at the -Z end."""
         v = bmesh.ops.create_cone(self.bm, cap_ends=True, cap_tris=False, segments=seg, radius1=r1, radius2=r2, depth=depth)["verts"]
@@ -676,6 +686,135 @@ def cow():
     p.done()
 
 
+# ---------------------------------------------------------------- role hats (P4-36, D-144)
+# One "Hat" object per role. Origin at the centre of the band's bottom edge, where the hat meets the head. The
+# lobby (LineUp._hat) puts it at y 1.74 on its head sphere (r 0.16, centre 1.62): there the head is r 0.106, so
+# the band's inner radius is about 0.11 and anything below z 0 stays outside r 0.165 of (0, 0, -0.12).
+# Silhouette first, colour second (doc 07 s1); none of it glows (doc 07 s2: no light source here).
+DARK, BRASS = "#2C2624", "#B89A3A"
+
+
+def hat_farmer():  # wide straw hat, low flat crown, barn-red band
+    p = Part("Hat")
+    p.cyl(0.34, 0.3, 0.03, (0, 0, 0.01), "#D2B15A", seg=12)
+    p.cyl(0.13, 0.115, 0.13, (0, 0, 0.085), "#C9A855", seg=8)
+    p.cyl(0.133, 0.13, 0.035, (0, 0, 0.04), "#9A3B2B", seg=8)
+    for i in range(6):  # frayed straw at the brim edge
+        a = i * math.tau / 6 + 0.3
+        p.box((0.05, 0.012, 0.006), (0.35 * math.cos(a), 0.35 * math.sin(a), 0.0), "#B8963F", rot=(0, 0, a))
+    p.done()
+
+
+def hat_rancher():  # cowboy hat: oval brim with the sides curled up, creased crown
+    p = Part("Hat")
+    p.ball((0.26, 0.23, 0.014), (0, 0, 0.01), "#7A5638", seg=12, rings=3)
+    for s in (-1, 1):
+        p.box((0.09, 0.3, 0.02), (s * 0.255, 0, 0.035), "#7A5638", rot=(0, -s * 0.55, 0))
+    p.cyl(0.125, 0.105, 0.15, (0, 0, 0.085), "#6B4A2F", seg=8)
+    p.box((0.03, 0.2, 0.03), (0, 0, 0.16), "#5C402A")  # crease down the top
+    for s in (-1, 1):  # front pinch
+        p.box((0.02, 0.05, 0.08), (s * 0.06, 0.1, 0.12), "#5C402A", rot=(0, 0, s * 0.5))
+    p.cyl(0.128, 0.125, 0.03, (0, 0, 0.03), "#3A2E27", seg=8)
+    p.ball((0.018, 0.01, 0.018), (0, 0.126, 0.03), "#B8AE98", seg=5, rings=3)  # concho
+    p.done()
+
+
+def hat_mechanic():  # cap worn backwards, goggles strapped over the front
+    p = Part("Hat")
+    p.dome((0.125, 0.135, 0.11), (0, 0, 0.0), "#3C4A5A")
+    p.box((0.17, 0.11, 0.012), (0, -0.17, 0.012), "#2E3A48", rot=(0.12, 0, 0))  # peak at the back
+    p.ball((0.016, 0.016, 0.01), (0, 0, 0.11), "#2E3A48", seg=5, rings=3)
+    p.cyl(0.128, 0.125, 0.025, (0, 0, 0.035), DARK, seg=8)  # goggle strap
+    for s in (-1, 1):
+        p.cyl(0.036, 0.036, 0.03, (s * 0.048, 0.125, 0.05), BRASS, rot=(math.pi / 2, 0, 0), seg=8)
+        p.cyl(0.026, 0.026, 0.01, (s * 0.048, 0.142, 0.05), "#5A6E78", rot=(math.pi / 2, 0, 0), seg=8)
+    p.done()
+
+
+def hat_tracker():  # blaze-orange hunting cap, ear flaps down, short peak
+    p = Part("Hat")
+    p.dome((0.13, 0.135, 0.12), (0, 0, 0.0), "#B8562A")
+    p.cyl(0.136, 0.134, 0.03, (0, 0, 0.015), "#3A2E27", seg=8)
+    p.box((0.18, 0.1, 0.014), (0, 0.17, 0.01), "#3A2E27", rot=(-0.15, 0, 0))
+    for s in (-1, 1):
+        p.box((0.025, 0.12, 0.13), (s * 0.17, -0.005, -0.05), "#B8562A", rot=(0, -s * 0.12, 0))
+        p.box((0.01, 0.1, 0.11), (s * 0.155, -0.005, -0.05), "#CFC7B0", rot=(0, -s * 0.12, 0))  # fleece lining
+    p.box((0.2, 0.03, 0.06), (0, -0.15, 0.02), "#B8562A", rot=(-0.3, 0, 0))  # back flap
+    p.done()
+
+
+def hat_carpenter():  # yellow hard hat: dome, ridge, all-round brim longer at the front
+    p = Part("Hat")
+    p.dome((0.135, 0.15, 0.125), (0, 0, 0.0), "#D2A82A")
+    p.dome((0.03, 0.155, 0.135), (0, 0, 0.0), "#C9A02A", seg=6)  # ridge
+    p.ball((0.18, 0.23, 0.012), (0, 0.035, 0.006), "#C9A02A", seg=10, rings=3)
+    p.done()
+
+
+def hat_medic():  # cream pillbox cap, red cross on the front and top
+    p = Part("Hat")
+    p.cyl(0.125, 0.13, 0.14, (0, 0, 0.07), "#E8E4DA", rot=(0, 0, math.pi / 8), seg=8)  # a flat face to the front
+    for pos, sz in (((0, 0.122, 0.075), ((0.075, 0.012, 0.024), (0.024, 0.012, 0.075))),
+                    ((0, 0, 0.141), ((0.09, 0.03, 0.012), (0.03, 0.09, 0.012)))):
+        for s in sz:
+            p.box(s, pos, "#B83A2E")
+    p.done()
+
+
+def hat_night_owl():  # navy knit beanie with owl-ear tufts and a headlamp (lens is flat, not emissive)
+    p = Part("Hat")
+    p.dome((0.13, 0.135, 0.15), (0, 0, 0.0), "#2C3550")
+    p.cyl(0.14, 0.136, 0.06, (0, 0, 0.03), "#3A4562", seg=8)
+    for s in (-1, 1):
+        p.cyl(0.035, 0.0, 0.08, (s * 0.07, 0, 0.16), "#2C3550", rot=(0, s * 0.45, 0), seg=4)
+    p.cyl(0.146, 0.146, 0.022, (0, 0, 0.035), DARK, seg=8)
+    p.box((0.065, 0.035, 0.045), (0, 0.155, 0.035), "#3E4244")
+    p.cyl(0.02, 0.02, 0.01, (0, 0.175, 0.035), "#E8C88A", rot=(math.pi / 2, 0, 0), seg=6)
+    p.done()
+
+
+def hat_radio_operator():  # olive cap under headphones, whip antenna up from the right cup, boom mic
+    p = Part("Hat")
+    p.dome((0.125, 0.13, 0.1), (0, 0, 0.0), "#5A6440")
+    p.box((0.17, 0.1, 0.012), (0, 0.165, 0.012), "#4A5434", rot=(-0.1, 0, 0))
+    arc = [(0.17 * math.cos(a), 0, -0.01 + 0.13 * math.sin(a)) for a in (0, 0.6, 1.2, 1.94, 2.54, math.pi)]
+    for a, b in zip(arc, arc[1:]):
+        p.between(a, b, 0.012, 0.012, DARK, seg=4)
+    for s in (-1, 1):
+        p.cyl(0.05, 0.05, 0.04, (s * 0.175, 0, -0.03), "#3E4244", rot=(0, math.pi / 2, 0), seg=8)
+    p.between((0.19, 0, 0.0), (0.22, -0.02, 0.36), 0.008, 0.004, IRON, seg=4)
+    p.ball((0.015, 0.015, 0.015), (0.22, -0.02, 0.365), "#9A3B2B", seg=5, rings=3)
+    p.between((-0.18, 0.02, -0.05), (-0.09, 0.16, -0.1), 0.006, 0.006, DARK, seg=4)
+    p.ball((0.018, 0.018, 0.018), (-0.085, 0.165, -0.1), DARK, seg=5, rings=3)
+    p.done()
+
+
+def hat_warden():  # ranger campaign hat: flat brim, four-dent pointed crown, green band and brass badge
+    p = Part("Hat")
+    p.cyl(0.3, 0.3, 0.02, (0, 0, 0.01), "#8A7448", seg=12)
+    p.cyl(0.15, 0.03, 0.18, (0, 0, 0.1), "#9A8350", rot=(0, 0, math.pi / 4), seg=4)
+    p.cyl(0.152, 0.138, 0.035, (0, 0, 0.0375), "#3F5A2A", rot=(0, 0, math.pi / 4), seg=4)
+    p.ball((0.02, 0.01, 0.022), (0, 0.11, 0.04), BRASS, seg=5, rings=3)
+    p.done()
+
+
+def hat_medium():  # tall bent witch hat, mauve, a bone-pale crescent charm on the band
+    p = Part("Hat")
+    p.cyl(0.32, 0.3, 0.02, (0, 0, 0.01), "#5A3A5A", seg=12)
+    p.cyl(0.125, 0.095, 0.13, (0, 0, 0.075), "#5A3A5A", seg=8)
+    p.between((0, 0, 0.14), (0, -0.04, 0.27), 0.095, 0.05, "#5A3A5A", seg=7)
+    p.between((0, -0.04, 0.27), (0, -0.15, 0.33), 0.05, 0.008, "#5A3A5A", seg=6)
+    p.cyl(0.128, 0.124, 0.03, (0, 0, 0.035), "#2E2238", seg=8)
+    for i in range(3):  # crescent charm
+        a = -0.9 + i * 0.9
+        p.box((0.016, 0.01, 0.024), (0.03 * math.sin(a), 0.13, 0.05 + 0.03 * math.cos(a) - 0.01), "#CFC7B0", rot=(0, a, 0))
+    p.done()
+
+
+ROLE_IDS = ("farmer", "rancher", "mechanic", "tracker", "carpenter", "medic", "night_owl", "radio_operator",
+            "warden", "medium")
+
+
 # ---------------------------------------------------------------- registry
 # (file name, builder, budget class). Smear files wrap the body builder in hull_of.
 def _smear(fn):
@@ -731,7 +870,7 @@ MODELS = [
     ("tool_seed_packet_turnip", lambda: seed_packet("#CFC3D8"), "small"),
     ("tool_seed_packet_pumpkin", lambda: seed_packet("#C8761F"), "small"),
     ("tool_seed_packet_moonflower", lambda: seed_packet("#7FE6D8"), "small"),
-]
+] + [("hat_" + r, globals()["hat_" + r], "small") for r in ROLE_IDS]
 
 
 def build(name, fn, cls):

@@ -7,6 +7,7 @@ extends Node
 ## P3-06: a Tainted bot washes (Q-061), and bots fix sabotage (sabotage.gd `fix_jobs`). On the full farm
 ## bots stand unless `--bot-chores`: then they walk straight lines (no collision, no route) and do all of it.
 ## P4-11 (D-085): a damage fix spends scrap, so bots buy scrap when the team has none.
+## P4-22 (D-093): planting uses a seed from the team's stock, so bots buy one seed when the team has none.
 ## P4-12: on the Harvest Moon a bot lifts the Prize Pumpkin, loads it on the cart and pushes, walking with the cart.
 ## P4-21: from dusk to dawn bots wait in the lit barn (generator jobs aside) and one waits at the town stand
 ## (safer, never safe: D-115), so the farm is never unattended; bots keep the first payment before buying
@@ -189,7 +190,7 @@ func next_job() -> Array:
 	for job: Array in (sab.fix_jobs() if sab else []):
 		if not _free(job[1]) or not farm.targets.has(job[1]) or (job[0] in SCRAP_JOBS and not _scrap_ok()):
 			continue
-		if job[0] == &"plant" and (farm.targets[job[1]].can_start(&"plant", st) != &"" or not _keeps_payment(farm.targets[job[1]])):
+		if job[0] == &"plant" and not (_keeps_payment(farm.targets[job[1]]) and _plantable(farm.targets[job[1]], st)):
 			continue  # P4-18: a trampled plot with no coins for the seed; spinning on it starved the harvest
 		if job[0] == &"bury" and not bool(st.get("shovel", false)) and farm.targets.has("pegboard"):
 			return [&"take_shovel", "pegboard"]
@@ -202,7 +203,7 @@ func next_job() -> Array:
 		return [&"sell", "sell_box"]
 	if not ripe.is_empty():
 		return [&"harvest", ripe[0].id]
-	var empty := _plots(func(p: Node) -> bool: return p.state == &"empty" and p.can_start(&"plant", st) == &"" and _keeps_payment(p))  # P4-18: never spin on no_coins or locked_crop
+	var empty := _plots(func(p: Node) -> bool: return p.state == &"empty" and _keeps_payment(p) and _plantable(p, st))  # P4-18: never spin on no_coins or locked_crop
 	if not empty.is_empty():
 		return [&"plant", empty[0].id]
 	var dry := _plots(func(p: Node) -> bool: return p.state == &"growing" and not p.watered)
@@ -302,6 +303,13 @@ func _pickers() -> int:
 # ponytail: buys from anywhere (`near` false) instead of walking to the store crate; add the walk when bots shop.
 func _scrap_ok() -> bool:
 	return farm.store.scrap_total() > 0 or farm.store.buy(peer, &"scrap", false) == &""
+
+
+## D-093: planting uses a seed of the plot's crop (the bot's plain `plant`); with none left the bot buys one.
+# ponytail: one at a time from anywhere (`near` false), as `_scrap_ok`; keeps the simulator's cash timing.
+func _plantable(plot: Node, st: Dictionary) -> bool:
+	var why: StringName = plot.can_start(&"plant", st)
+	return why == &"" or (why == &"no_seeds" and farm.store.buy_seeds(peer, plot.crop_for(&"plant"), 1, false) == &"")
 
 
 ## P2-27: the job that gets a can of `kind` into the hands: put down the wrong one, else pick up the nearest free one.

@@ -26,6 +26,8 @@ the diagram.
 10. [Doc 01 elements checklist](#10-doc-01-elements-checklist)
 11. [Gotchas](#11-gotchas)
 12. [Questions raised](#12-questions-raised)
+13. [Built scenes (P2-02)](#13-built-scenes-p2-02)
+14. [Cover, tree lines and landmarks (P4-27)](#14-cover-tree-lines-and-landmarks-p4-27)
 
 ## 1. Conventions
 
@@ -64,6 +66,7 @@ up. Every shape in it has its coordinates in sections 3 to 7, so it can be check
 | Orange crosses | Scarecrow spots |
 | Teal circles | Animal escape spots |
 | Small blue dots | Spatial audio test markers |
+| Dark green circles | Tree canopies, drawn at their sight-blocker radius (section 14) |
 
 ## 3. Ground: the clearing, the corn ring and the strips
 
@@ -213,6 +216,10 @@ cart counts as out only if it's past the fields" ("Nights > Length").
 - **"Past the fields" is x > 78**, field B's east edge (inference: the line beyond which both fields
   are behind the cart; doc 05 makes it a check on the cart's position).
 - Cart speed by pusher count is doc 02's or doc 03's, so the push time is not given here.
+- **A 3 m dirt path is drawn on the route** (P4-27, CEO Harvest Moon test: players couldn't see where to
+  push). `build_farm.py` draws it from the same `ROUTE` list as `CartRoute`, one flat visual strip per
+  leg from R0 to R8, then on along the lane to the town stand, so if the route moves the path moves
+  with it. It is visual only (no collision) and 2 cm high, so the cart's wheels stay at y = 0.
 - The route keeps ≥ 4 m from every field edge (R3 to R4 passes 4 m east of field A).
 - Player-placed fences and scarecrows ("Farming Meets Horror > Defense") could block it; the host
   should refuse placements within 3 m of the route (inference; doc 05 settles the rule, Q-014 item
@@ -563,6 +570,12 @@ coordinates, so nothing moves when DD Phase 2 widens it:
   change to it changes section 8.2.
 - The diagram is generated from the coordinates in this doc; if a number changes, change the SVG
   with it, and check one point against the formula in section 2.
+- **Players and the creature walk through layer 5.** Both use collision mask 1, so corn and tree
+  canopies stop sight, not bodies, and the creature has no navmesh or unstuck logic. A solid tree
+  or fence on a walk would trap it; anything solid needs the AI Programmer first (section 14).
+- **Check a model's origin before offsetting it.** `prop_cart.glb` has its origin at the wheel
+  base, but `cart.gd` raised it 0.86 m as if the origin were the bed, so the cart hovered parked and
+  while pushed (P4-27).
 
 ## 12. Questions raised
 
@@ -586,3 +599,76 @@ perches, 7 scarecrow spots, 4 escape spots, 4 audio markers, 6 barn spawns (D-03
 `"$GODOT" --headless --path . --script res://game/world/check_farm.gd` (all pass; every doc distance
 matches within 0.1 m, corn distances within 0.5 m). `game/world/farm_view.tscn` loads the full farm with the
 corn visuals for render measures. Results are in `production/handoffs/P2-02.md`.
+
+## 14. Cover, tree lines and landmarks (P4-27)
+
+The CEO session found the farm too open and hard to read: flat ground between the buildings, nothing
+to steer by (`production/OPEN_ISSUES.md` items 5 and 6). P4-27 adds trees, fences, dirt paths, signs
+and landmarks to `farm.tscn` only; `farm_phase1.tscn` is unchanged. All are built by
+`game/world/build_farm.py` (lists `TREES`, `FENCES`, `SIGNS`, `PATHS`, function `landmarks()`).
+No marker, building, field, plot or route point moved, so every distance in section 8 and
+`tools/sim/layout.json` stands.
+
+**What blocks what (D-100, proposed).** Only the tree canopies collide, and only on layer 5, the corn
+sight-blocker layer: they block sight at eye height the way corn does. Players and the creature both
+use collision mask 1, so they walk through canopies, trunks and fences as they walk through corn
+(read from the masks in `player.gd` and `creature.gd`; a solid obstacle would need creature avoidance
+first, Q-196). Each canopy collider starts 1.2 m up, so queries at 1 m (the ghost's "in corn" point
+test, the sprint-in-corn step, the hearing ray) never hit a tree: a tree hides you from sight but
+not from hearing, and standing under one is not "in corn". Trunks, fences, paths, signs and landmarks have no
+collision.
+
+### 14.1 Trees
+
+Pine: trunk 0.25 m radius, cone canopy 1.8 m radius from 1.2 to 6.7 m, collider radius 1.3 m from 1.2
+to 4.2 m. Round tree: sphere canopy 2 m radius at 3 m, collider radius 1.8 m from 1.3 to 4.3 m.
+
+| Group | Kind | Positions (x, z) | Purpose |
+|---|---|---|---|
+| Orchard 1 to 9 | round | x 24, 30, 36 × z 30, 36, 42 | Cover in the empty south-centre yard |
+| Windbreak A 1 to 5 | pine | x 22 to 38 step 4, z -32 | Tree line north of field A |
+| Windbreak B 1 to 4 | pine | x 24 to 36 step 4, z -36 | Second row behind it |
+| North-east 1 to 5 | pine | (80, -30), (84, -35), (88, -29), (91, -36), (85, -40) | Clump north of the route's R7 leg |
+| East line 1 to 6 | pine | x 97, z 22 to 47 step 5 | Tree line along the east fence |
+| East line B 1, 2 | pine | (93, 30), (93, 40) | Second row |
+| West 1 to 5 | pine | (-56, -34), (-51, -29), (-47, -37), (-59, -25), (-53, -41) | North-west corner clump |
+| South grove 1 to 3 | round | (-27, 47), (-22, 51), (-19, 44) | Cover south of the shed |
+
+**Placement rules**, checked by `check_farm.gd` (`_cover`, all 39 pass), counting each canopy's
+collider edge, not its centre:
+
+- Every work spot keeps at least its section 8.4 corn distance clear of canopies, so no tree gives
+  the ghost a closer hiding place than corn already does. The pumpkin uses 20 m, its section 8.5
+  radius, which is stricter than its 7 m corn distance.
+- ≥ 2 m from every marker in every marker group, and from every plot.
+- ≥ 3 m from every cart route leg (the section 6.1 placement rule).
+- ≥ 1 m from every section 8.7 walk line, so no walk gets longer.
+- Outside the spatial audio band (x -30..38, z 10..22, section 8.2), so the 10, 30 and 60 m test
+  stays a clear line of sight.
+
+### 14.2 Fences, paths and signs
+
+- **Fences** (split rail, 1 m, visual only): field A's north and south sides (z -14 and 0, x 23..37,
+  gap x 28..32 for the walk), field B's north side (z -11, gap x 70..74), the moonflower bed's west,
+  south and east sides (north open), and two wings beside the farm gate (x 104.5, z -20..-8.5 and
+  -1.5..10).
+- **Paths** (packed dirt, visual only): the 3 m cart route path (section 6.1) and 1.6 m side paths:
+  barn door to well, well to farmhouse, well to shed, farmhouse to pumpkin, barn to pen, crate, and
+  crate to moonflowers.
+- **Signs** (post with a 2.6 m label that faces the camera and darkens at night): FIELD A (21.5, 0.5),
+  FIELD B (63.5, -8), MOONFLOWERS (55, 17), STORE (75, 6.5), TOWN (102, -10), PRIZE PUMPKIN (-42, 28),
+  TOOL SHED (-11, 23.5), PEN (-20.5, -25.5), FARMHOUSE (-39, 3), WELL (-22, 6.5).
+
+### 14.3 Landmarks
+
+Tall shapes that read over the 2.4 m corn, so a player in the yard or the corn can tell direction.
+All visual only.
+
+| Landmark | (x, z) | Height | Reads as |
+|---|---|---|---|
+| Silo | (6, -53), in the north ring behind the barn | 14 m + dome | North |
+| Water tower | (40, 64), in the south ring | 17 m | South |
+| Windpump | (-28, 7), beside the well | 9 m | The well and the west yard |
+| Gate arch | (105, -5), over the farm gate | 4.9 m, "TOWN" facing west | The way out |
+| Hay stack | (38, 12), off the audio test line (z 16) | 1.6 m | Yard clutter by field A |
+| Wood pile | (-20, 29), by the shed | 0.9 m | Yard clutter by the shed |

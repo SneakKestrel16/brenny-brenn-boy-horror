@@ -104,9 +104,10 @@
     {
       "id": "place_flag",
       "source": "placeholder",
-      "cite": "doc 02 2.1; doc 01 Night Traps: flags free",
+      "cite": "doc 02 2.1; doc 01 Night Traps: flags free; max_per_player placeholder, D-120 (P4-33)",
       "kind": "hold",
-      "hold_s": 1
+      "hold_s": 1,
+      "max_per_player": 3
     },
     {
       "id": "fill_fuel",

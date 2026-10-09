@@ -8,6 +8,7 @@ const Interactable := preload("res://game/interaction/interactable.gd")
 const FlagSpot := preload("res://game/traps_player/flag_spot.gd")
 const REACH_M := 3.0  ## ray length from the eye (placeholder; the host range check is range_m)
 const PICK_MASK := 8  ## layer 4 "interactable"
+const FLAG_SEE_THROUGH_M := 1.0  ## placeholder: a target this close behind a flag wins the pick (a trap's half-width plus room)
 const REFUSED_SHOW_MS := 2000  ## how long a refusal reason stays on screen (placeholder)
 
 var player: CharacterBody3D
@@ -29,6 +30,7 @@ var _pin_t := 0.0
 var refused_reason: StringName = &""  ## HUD: why the host refused the last hold
 var _refused_ms := -REFUSED_SHOW_MS
 var aimed_verb: StringName = &""  ## HUD: first verb of the aimed target, empty if none (set while not holding)
+var aimed_target: Node = null  ## HUD: the target `aimed_verb` belongs to (P4-22: "Buy seeds at the store")
 
 
 func _ready() -> void:
@@ -50,6 +52,8 @@ func _ready() -> void:
 		_autotap.call_deferred()
 	if OS.get_cmdline_user_args().has("--autosweep"):
 		_autosweep.call_deferred()
+	if OS.get_cmdline_user_args().has("--autopush"):
+		_autopush.call_deferred()
 
 
 func _physics_process(delta: float) -> void:
@@ -67,7 +71,7 @@ func _physics_process(delta: float) -> void:
 					_scripted = true
 					start(&"pry", get_tree().get_first_node_in_group(&"farm").targets[id])
 					_pin_t = -1000.0  # once per trap
-	elif _autopry and not player.pinned:
+	elif _autopry and not player.pinned and _pin_t != 0.0:  # once, so a later scripted hold (--take-loose) keeps its flag
 		_pin_t = 0.0
 		_scripted = false
 	if not _holding:
@@ -76,6 +80,7 @@ func _physics_process(delta: float) -> void:
 		var tgt := _look_target()
 		var mine: Dictionary = target_farm.carry.get(player.peer, {}) if target_farm else {}
 		aimed_verb = &""
+		aimed_target = tgt
 		if tgt != null:
 			var vs: Array[StringName] = tgt.verbs_for(mine)
 			aimed_verb = vs[0] if not vs.is_empty() else &""
@@ -99,7 +104,7 @@ func _physics_process(delta: float) -> void:
 				start(verbs[0], tgt)
 		return
 	_t += delta
-	_ring.scale = Vector3.ONE * clampf(_t / _hold_s, 0.01, 1.0)
+	_ring.scale = Vector3.ONE * maxf(hold_state()[1], 0.01)
 	if is_instance_valid(_target):  # freed mid-hold (trap filled or disarmed by this hold): ring stays put
 		_ring.global_position = _target.target_pos() + Vector3(0, 1.4, 0)
 	if _scripted or _verb in [&"drop_can", &"set_down_prize"]:  # drop_can: one tap, the host times it (releasing G must not cancel)
@@ -118,9 +123,13 @@ var _scripted := false
 var _armed := false  ## toggle_holds: the starting press has been released, the next press stops
 
 
-## HUD: the verb being held and its progress 0..1, or an empty verb.
+## HUD: the verb being held, its progress 0..1 and a note, or an empty verb. A target with `hold_progress`
+## (the cart's push, P4-32) supplies its own progress and note; otherwise the hold timer, no note.
 func hold_state() -> Array:
-	return [_verb, clampf(_t / maxf(_hold_s, 0.01), 0.0, 1.0)] if _holding else [&"", 0.0]
+	if not _holding:
+		return [&"", 0.0, ""]
+	var own: Array = _target.hold_progress(_verb) if is_instance_valid(_target) and _target.has_method(&"hold_progress") else []
+	return [_verb] + (own if not own.is_empty() else [clampf(_t / maxf(_hold_s, 0.01), 0.0, 1.0), ""])
 
 
 ## The id of the can this player carries, or -1.
@@ -178,9 +187,29 @@ func _ground_spot() -> Node:
 
 func _look_target() -> Node:
 	var from := _cam.global_position
-	var q := PhysicsRayQueryParameters3D.create(from, from - _cam.global_transform.basis.z * REACH_M, PICK_MASK)
-	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
-	return hit.collider.get_meta(&"interactable") if hit and hit.collider.has_meta(&"interactable") else null
+	return pick(player.get_world_3d().direct_space_state, from, from - _cam.global_transform.basis.z * REACH_M)
+
+
+## The interactable the ray from `from` to `to` hits. A flag does not hide what it stands on: the ray goes
+## on through a flag, and another target within FLAG_SEE_THROUGH_M behind it along the ground wins (D-142: a flag
+## on a trap must not stop its disarm, fill or pickup; the pole hit is higher than a trap hit, so 3D distance would
+## overstate the gap). Anything further back loses to the flag.
+static func pick(space: PhysicsDirectSpaceState3D, from: Vector3, to: Vector3) -> Object:
+	var q := PhysicsRayQueryParameters3D.create(from, to, PICK_MASK)
+	var flag: Object = null
+	var flag_at := Vector3.ZERO
+	for i in 4:  # placeholder cap: at most this many flags in one line
+		var hit := space.intersect_ray(q)
+		if hit.is_empty() or not hit.collider.has_meta(&"interactable"):
+			return flag
+		var it: Object = hit.collider.get_meta(&"interactable")
+		if it.get_script() != FlagSpot:
+			return it if flag == null or Vector2(flag_at.x, flag_at.z).distance_to(Vector2(hit.position.x, hit.position.z)) <= FLAG_SEE_THROUGH_M else flag
+		if flag == null:
+			flag = it
+			flag_at = hit.position
+		q.exclude = q.exclude + [hit.rid]
+	return flag
 
 
 func _on_apply(what: StringName, args: Array) -> void:
@@ -230,6 +259,8 @@ func _autochore() -> void:
 	var farm: Node = await _wait_farm()
 	var host := Game.is_host()
 	var mine := "Plot01" if host else "Plot02"
+	if host:  # D-093: planting uses the team's seeds; the host buys both plots' seeds (from anywhere: QA script)
+		farm.store.buy_seeds(player.peer, preload("res://game/farming/crops.gd").default_seed(), 2, false)
 	await get_tree().create_timer(2.0).timeout
 	var out_of_barn := [Vector3(0, 0, -4), Vector3(0, 0, 4), Vector3(22, 0, 4)]  # door at (0, 0), corn strip 2 at x 12..18
 	var front := Vector3(0, 0, 1.5)
@@ -314,6 +345,30 @@ func _autosweep() -> void:
 	_flag = spot
 	await _sweep_go(&"place_flag", spot, at_board)
 	Log.event(&"autosweep_done", {})
+
+
+## QA (`-- --autopush`, P4-32): on the Harvest Moon walk to the cart's handle, hold `push_cart` for 12 s and log,
+## once a second, where this body is against its handle slot; then let go and log that the lock is gone.
+func _autopush() -> void:
+	await _wait_farm()
+	while Clock.phase != &"harvest_moon":
+		await get_tree().create_timer(0.5).timeout
+	var cart: Node = get_tree().get_first_node_in_group(&"cart")
+	await _walk([Vector3(0, 0, -4), Vector3(0, 0, 4), cart.handle_pos() + cart.body.global_basis.z * 0.6])
+	Log.event(&"autopush_step", {"step": "at_handle", "verbs": str(cart.verbs_for({}))})
+	_scripted = true
+	start(&"push_cart", cart)
+	for i in 12:
+		await get_tree().create_timer(1.0).timeout
+		var slot: Vector3 = cart.push_slot(player.peer)
+		var p := player.global_position
+		Log.event(&"autopush_step", {"step": "pushing", "holding": _holding, "offset_m": snappedf(cart.offset, 0.1), "pushers": cart.pushers.size(),
+				"slot_dist_m": snappedf(Vector2(p.x - slot.x, p.z - slot.z).length(), 0.01) if slot != Vector3.INF else -1.0, "hs": str(hold_state()),
+				"cart_yaw": snappedf(cart.body.global_rotation.y, 0.01), "yaw_off": snappedf(angle_difference(cart.body.global_rotation.y, player.yaw), 0.01)})
+	_scripted = false
+	cancel()
+	await get_tree().create_timer(1.5).timeout
+	Log.event(&"autopush_step", {"step": "released", "locked": cart.push_slot(player.peer) != Vector3.INF, "offset_m": snappedf(cart.offset, 0.1)})
 
 
 ## QA scripts start in the barn lobby, where no Farm exists yet (P2-20): wait for the match scene's Farm.

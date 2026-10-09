@@ -90,6 +90,13 @@ static func refusal(role: StringName, uid: String, taken: Dictionary) -> StringN
 
 # --- Host side: pick, lock, replicate -----------------------------------------------------------
 
+static var _locked := false  ## the last `apply_roles` said a loaded season keeps its roles
+
+
+## A loaded season keeps its roles (`on_request` refuses every pick). True on the host and, via `sync`, on clients.
+static func locked() -> bool:
+	return not Game.season_uids.is_empty() if Game.is_host() else _locked
+
 static func _uid(peer: int) -> String:
 	return str(Net.profiles.get(peer, {}).get("uid", ""))
 
@@ -133,7 +140,7 @@ static func on_request(peer: int, role: StringName) -> void:
 static func sync() -> void:
 	if not Game.is_host():
 		return
-	var table := {}
+	var table := {"locked": not Game.season_uids.is_empty()}  # P4-35: clients grey the cards of a loaded season too
 	for p in Game.players:
 		table[p] = String(Game.roles.get(_uid(p), ""))
 	apply(table)
@@ -141,7 +148,8 @@ static func sync() -> void:
 
 
 static func apply(table: Dictionary) -> void:
+	_locked = bool(table.get("locked", false))
 	for p in table:
-		if Game.players.has(int(p)):
+		if p is int and Game.players.has(p):
 			Game.players[int(p)].role = StringName(String(table[p]))
 	Game.roles_changed.emit()

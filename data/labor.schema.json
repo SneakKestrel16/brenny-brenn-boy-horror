@@ -47,6 +47,10 @@
               "helped_mult": {
                 "type": "number",
                 "exclusiveMinimum": 0
+              },
+              "max_per_player": {
+                "type": "integer",
+                "minimum": 1
               }
             },
             "required": [

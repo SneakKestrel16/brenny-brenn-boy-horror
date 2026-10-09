@@ -53,6 +53,11 @@ static func build(events: Array, ctx: Dictionary, templates: Dictionary) -> Dict
 				inside[d.player] = float(d.seconds)
 			"flag_placed":
 				flags[d.player] = flags.get(d.player, 0) + 1
+			"flag_removed":  # P4-33: count the flags still out, not every placement (pull-up and replant)
+				var by = d.get("owner", d.player)
+				flags[by] = flags.get(by, 0) - 1
+				if flags[by] <= 0:
+					flags.erase(by)
 			"trap_changed":
 				if d.get("state") in ["disarmed", "filled"] and d.get("by") is int:
 					disarms[d.by] = disarms.get(d.by, 0) + 1

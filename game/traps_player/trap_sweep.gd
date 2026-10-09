@@ -1,6 +1,7 @@
 extends Node
 ## Doc 05 section 11 (P2-11): the sweep tools' shared state. Flags (world objects every peer sees,
-## `apply_flags`) and the shed pegboard (`apply_pegboard_changed`: which `pegboard_slots` hold a bear
+## `apply_flags`; each remembers who placed it, so the limit counts it; anyone pulls one up, and a leaver's
+## flags go with them, P4-33, D-142) and the shed pegboard (`apply_pegboard_changed`: which `pegboard_slots` hold a bear
 ## trap). The host owns both and broadcasts the whole list on every change; a late joiner gets them on
 ## `farm_state`. The disarm and fill holds are in `trap_target.gd`; the pegboard and flag holds are
 ## `peg_target.gd` and `flag_spot.gd`. For P2-05 (the creature steals a trap): `take_trap()`.
@@ -8,10 +9,11 @@ extends Node
 
 const FlagSpot := preload("res://game/traps_player/flag_spot.gd")
 const PegTarget := preload("res://game/traps_player/peg_target.gd")
+const PICK_FROM_M := 0.7  ## a flag's pick body starts above a set trap's 0.6 m pick box, so the trap wins the aim
 const START_FILLED := true  ## doc 02 section 12: the starting pegboard holds its bear traps (placeholder)
 
 var farm: Node
-var flags: Array = []  ## every peer: Vector3 per flag
+var flags: Array = []  ## every peer: {pos: Vector3, by: peer} per flag
 var filled: Array = []  ## every peer: bool per slot, slots sorted by marker name
 var _flag_root: Node3D
 var _slots: Array = []
@@ -42,6 +44,7 @@ func _ready() -> void:
 		if a.begins_with("--sweep-shot=") and Game.is_host():
 			_shots.call_deferred(a.trim_prefix("--sweep-shot="))
 	if Game.is_host():
+		Game.player_left.connect(_drop_flags_of)
 		Net.request_received.connect(func(what: StringName, peer: int, _a: Array) -> void:
 			if what == &"farm_state":  # a late joiner sees the flags and the pegboard
 				Net.to_peers(&"apply_flags", [flags], [peer])
@@ -52,23 +55,66 @@ func _ready() -> void:
 
 func flag_near(p: Vector3, gap: float) -> bool:
 	for f in flags:
-		if Vector2(f.x - p.x, f.z - p.z).length() < gap:
+		if _flat(f.pos, p) < gap:
 			return true
 	return false
 
 
+## Flags out per player at once (doc 01 "Flags", D-120; labor.json `place_flag.max_per_player`, placeholder).
+func limit() -> int:
+	return int(Data.record(&"labor", &"place_flag").get("max_per_player", 3))
+
+
+func count_of(peer: int) -> int:
+	return flags.filter(func(f: Dictionary) -> bool: return f.by == peer).size()
+
+
+## The index of the flag at `p` (the wire rounds to 0.1 m), or -1.
+func flag_at(p: Vector3) -> int:
+	for i in flags.size():
+		if _flat(flags[i].pos, p) < 0.1:
+			return i
+	return -1
+
+
 func add_flag(p: Vector3, peer: int) -> void:
-	flags.append(p)
-	Log.event(&"flag_placed", {"player": peer, "position": [p.x, p.z], "flags": flags.size()})
+	flags.append({"pos": p, "by": peer})
+	Log.event(&"flag_placed", {"player": peer, "position": [p.x, p.z], "trap_id": null, "flags": flags.size(), "mine": count_of(peer)})
 	_send_flags()
 
 
-## A flag is cleared when a trap beside it is disarmed or filled (the sweep for that spot is done).
+## P4-33, D-142: `peer` (anyone) pulls a flag up; its owner's slot frees.
+func remove_flag(i: int, peer: int) -> void:
+	if i < 0 or i >= flags.size():
+		return
+	var p: Vector3 = flags[i].pos
+	var by: int = flags[i].by
+	flags.remove_at(i)
+	Log.event(&"flag_removed", {"player": peer, "owner": by, "position": [p.x, p.z], "trap_id": null,
+			"flags": flags.size(), "mine": count_of(by)})
+	_send_flags()
+
+
+## D-142: a player who leaves or drops takes their flags with them.
+func _drop_flags_of(peer: int) -> void:
+	var keep: Array = flags.filter(func(f: Dictionary) -> bool: return f.by != peer)
+	if keep.size() != flags.size():
+		Log.event(&"flags_dropped", {"player": peer, "count": flags.size() - keep.size()})
+		flags = keep
+		_send_flags()
+
+
+## A flag is cleared when a trap beside it is disarmed or filled (the sweep for that spot is done); its
+## owner gets the slot back.
 func remove_flags_near(p: Vector3, radius: float) -> void:
-	var keep: Array = flags.filter(func(f: Vector3) -> bool: return Vector2(f.x - p.x, f.z - p.z).length() > radius)
+	var keep: Array = flags.filter(func(f: Dictionary) -> bool: return _flat(f.pos, p) > radius)
 	if keep.size() != flags.size():
 		flags = keep
 		_send_flags()
+
+
+static func _flat(a: Vector3, b: Vector3) -> float:
+	return Vector2(a.x - b.x, a.z - b.z).length()
 
 
 ## `peer` hangs the trap in their hands on the first free slot (the registry has checked there is one).
@@ -131,7 +177,18 @@ func _on_apply(what: StringName, args: Array) -> void:
 func _draw_flags() -> void:
 	for c in _flag_root.get_children():
 		c.free()
-	for f in flags:
+	for fl in flags:
+		var f: Vector3 = fl.pos
+		var at := Node3D.new()  # P4-33: a player aims at the flag to pull it up
+		at.position = f + Vector3(0, PICK_FROM_M, 0)
+		_flag_root.add_child(at)
+		var spot := FlagSpot.new()
+		spot.id = FlagSpot.make_id(f)
+		spot.pos = f
+		spot.by = int(fl.by)
+		spot.sweep = self
+		at.add_child(spot)
+		spot.add_pick_body(Vector3(0.25, 1.8 - PICK_FROM_M, 0.25))  # a thin pole up to the cloth, above the trap
 		var pole := MeshInstance3D.new()  # placeholder art: a thin pole with a red cloth, visible from far
 		var pm := CylinderMesh.new()
 		pm.top_radius = 0.025

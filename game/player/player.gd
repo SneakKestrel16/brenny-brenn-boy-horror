@@ -49,6 +49,8 @@ var _t := 0.0
 var _eye := EYE_STAND  ## smoothed eye height; the head bob rides on it
 var _bob := 0.0  ## head bob phase
 var _sprint_on := false  ## toggle_sprint (D-047): sprint stays on until you stop, run dry or crouch
+var _pushing := false  ## P4-32: locked to a festival cart handle slot (cart.push_slot)
+var _cart_yaw := 0.0  ## P4-32: the cart heading last frame, so the pusher turns with the route
 
 
 func _ready() -> void:
@@ -371,7 +373,16 @@ func _local(delta: float) -> void:
 			want_sprint = false  # walking: a stamina-flipping sprint trips the host speed check
 	if not bool(Settings.get_value(&"toggle_crouch")) and not typing:
 		_set_crouch(Input.is_action_pressed(&"crouch"))
-	if still or pinned:
+	var cart := get_tree().get_first_node_in_group(&"cart")
+	var slot: Vector3 = cart.push_slot(peer) if cart else Vector3.INF
+	if slot != Vector3.INF:
+		# P4-32: face along the route at lock start, then turn with the cart as the route bends; the mouse
+		# look stays free on top of that.
+		var cy: float = cart.body.global_rotation.y
+		yaw = cy if not _pushing else yaw + angle_difference(_cart_yaw, cy)
+		_cart_yaw = cy
+	_pushing = slot != Vector3.INF
+	if still or pinned or _pushing:
 		dir = Vector2.ZERO
 	var sprint_rec := Data.record(&"labor", &"sprint")
 	if exhausted and stamina >= RESUME_S:
@@ -387,6 +398,8 @@ func _local(delta: float) -> void:
 	stamina = minf(stamina, sprint_max())  # Tainted or Shaken mid-sprint: the shorter tank
 	var speed := Data.speed(&"crouch" if crouching else (&"sprint" if sprinting else &"walk")) * speed_mult
 	var wish := (global_transform.basis * Vector3(dir.x, 0, dir.y)).normalized() * speed
+	if _pushing:  # P4-32: held at the handle slot, moving with the cart (the host pins the same spot)
+		wish = Vector3(slot.x - global_position.x, 0.0, slot.z - global_position.z) / delta
 	velocity.x = wish.x
 	velocity.z = wish.z
 	velocity.y = 0.0 if is_on_floor() else velocity.y - GRAVITY * delta

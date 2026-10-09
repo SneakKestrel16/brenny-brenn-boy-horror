@@ -66,9 +66,42 @@ func _process(delta: float) -> bool:
 	cart._physics_process(0.0)  # the first tick reads the holds
 	cart._physics_process(1.0)
 	_check(cart.pushers == [me] and is_equal_approx(cart.offset, 1.0), "one pusher: 1.0 m in 1 s (got %.2f)" % cart.offset)
+	# P4-32: the push bar is the route (offset of length) and the metres left, not the never-ending hold timer
+	var hp: Array = cart.hold_progress(&"push_cart")
+	_check(is_equal_approx(hp[0], 1.0 / cart.length) and hp[1] == "%d m to the gate" % ceili(cart.length - 1.0)
+			and cart.hold_progress(&"load_cart").is_empty(), "push progress is the route (got %s)" % [hp])
+	var hc: Node = main.get_node("Players").player(me).get_node("HoldController")
+	hc._holding = true  # the HUD's view of a push hold, without the input loop
+	hc._verb = &"push_cart"
+	hc._target = cart
+	_check(hc.hold_state() == [&"push_cart", hp[0], hp[1]], "hold_state reads the cart's progress (got %s)" % [hc.hold_state()])
+	hc._holding = false
+	# P4-32: a pusher is held at a handle slot behind the cart; the host pins their frames there
+	var slot: Vector3 = cart.push_slot(me)
+	var back: Vector3 = cart.body.global_transform * Vector3(0, 0, C.HANDLE_Z + C.SLOT_BACK_M)
+	_check(slot.distance_to(back) < 0.01, "one pusher stands centred behind the handle (got %s, want %s)" % [slot, back])
+	cart.pushers = [me, 99]
+	var s0: Vector3 = cart.push_slot(me)
+	var s1: Vector3 = cart.push_slot(99)
+	_check(is_equal_approx(s0.distance_to(s1), C.SLOT_GAP_M) and s0.distance_to(back) < s1.distance_to(back) + 0.5, "two pushers side by side along the handle")
+	cart.pushers = [me]
+	var players: Node = main.get_node("Players")
+	var pst: Dictionary = game.players[me]
+	players.submit(me, {"seq": int(pst.seq) + 1, "pos": slot + Vector3(30, 0, 30), "yaw": 0.0, "pitch": 0.0, "crouch": false, "sprint": false})
+	var got: Vector3 = game.players[me].pos
+	_check(Vector2(got.x - slot.x, got.z - slot.z).length() < 0.01, "host pins a pusher's frame to the slot (got %s)" % got)
+	var body: Node3D = players.player(me)
+	var was: Vector3 = body.global_position
+	body.global_position = cart.handle_pos() + cart.body.global_basis.z * 0.5
+	var at_handle: Array = cart.verbs_for({})
+	body.global_position = cart.body.global_position - cart.body.global_basis.z * 1.5  # at the front
+	var at_front: Array = cart.verbs_for({})
+	body.global_position = was
+	_check(at_handle == [&"push_cart"] and at_front.is_empty(), "push offered at the handle only (%s / %s)" % [at_handle, at_front])
 	# knock-off: stall, one bite per stall, cooldown
 	_check(cart.knock_ready() and cart.knock(me), "knock the pusher off")
 	_check(not farm.registry.holds.has(me) and cart.pushers.is_empty() and cart.stall_s == float(pr.knock_stall_s), "hold cancelled, stall set")
+	_check(cart.push_slot(me) == Vector3.INF, "a knock-off frees the pusher from the handle")
 	_check(cart.bite() and not cart.bite() and pk.bites == 1, "one bite per stall")
 	_check(not cart.knock_ready() and not cart.knock(me), "no knock in the stall")
 	var off: float = cart.offset

@@ -232,3 +232,104 @@ Source: `production/handoffs/P4-23.md` "QA review" (PASS). None blocks.
 6. **Intermittent exit crash 0xC0000005** when the host quits in the lobby with a ready client (1 of 4
    runs; also in `production/handoffs/P4-06.md:38`). Not attributed to P4-23.
 
+
+## Found at the P4-24 review (QA, 2026-10-09)
+
+Source: `production/handoffs/P4-24.md` "QA review" (PASS). None blocks.
+
+1. **The ghost "YOU ARE DEAD" text runs off-screen and under the minimap** (`game/ui/hud.gd:125`). Gameplay.
+2. **`docs/05_technical_design.md` line 906 is not wrapped.** Gameplay.
+3. **Teammate dots on the minimap** may undercut doc 01's voice-mimicry and whistle tells (Q-180, for the CEO).
+
+## Found at the P4-30 review (QA, 2026-10-09)
+
+Source: the Opus QA review of P4-30 (PASS). None blocks. Game Designer unless noted.
+
+1. **The sim rounds the sell bonus once per day** (`tools/sim/sim.py:224, 227, 278`); the game rounds up per
+   sale (`game/farming/station.gd:49`). Fix before the bonus table goes above 0; Q-210 sizes are low until then.
+2. **`tests/gameplay/test_season.gd:134-140` checks headcount 1**, which has no table key, so the "shipped 0"
+   check passes by default. Loop over keys 2 to 6. Gameplay.
+3. **Doc 02 line 225 says a 2p bonus "above about 0.5%"** breaks 70%; with ceil any nonzero bonus does (D-106).
+4. **With `unattended_term` on, 6p first clear stays 84.3** while 4p and 5p fall. Recheck with a per-night
+   trample trace before Q-211 is ruled on (inference).
+
+## Found at the P4-33 review (QA, 2026-10-09)
+
+Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent back to the Gameplay Programmer.
+
+1. **A flag's pick body may cover the trap it marks** (`game/traps_player/trap_sweep.gd:177` against
+   `game/traps_player/trap_race.gd:282`), hiding disarm, fill and P4-29's loose-trap pickup (inference).
+2. **A leaver's flags can never be pulled up** (owner keyed by peer id); they clear only by a disarm or fill.
+3. **Dawn report flag count** (`game/ui/dawn_report_logic.gd:54`) is inflated by placing and pulling up.
+4. **`apply_flags(positions)` in `game/net/net.gd`** still names a list that now holds `{pos, by}`. Network & Voice.
+
+## Found at the P4-32 review (QA, 2026-10-09)
+
+1. **Pusher facing is set once at lock start** (`game/player/player.gd:177`); after the route turns about 8 m in, the pusher faces off the cart. Gameplay.
+2. **The controls hint covers the push prompt** for the first 20 s. Gameplay.
+3. **Only the client checks that a push starts at the handle.** Harmless: the host moves the pusher to the push spot.
+
+## Found at the P4-29 review (QA, 2026-10-09)
+
+1. **Victim dies or leaves mid-race:** the trap stays `sprung` forever and never goes `loose` (old behaviour). `game/traps_player/trap_target.gd:16-27` offers no action, so nobody can pick it up and the creature cannot steal it; in Phase 1 it also stops further bear sets. Follow-up sent to the AI Programmer: set it `loose` on `death` or `player_left`, as `on_pry_done` does.
+2. **Doc 03 s9.1** (lines ~428-437) does not list the ground theft step (`from: "ground"`). Game Designer.
+3. **`game/net/net.gd:657` comment** does not list `loose`, `picked_up` or `stolen`. Network & Voice.
+4. **TrapRace keeps `picked_up` and `stolen` entries** and resends them to late joiners. Harmless.
+5. **P4-29 handoff calls `take_trap` instant**; logs show a 1.0 s hold.
+
+## Found at the P4-27 review (QA, 2026-10-09)
+
+1. **Wrong section cited:** `game/world/check_farm.gd:236` and `game/world/build_farm.py:130`, `:395` cite "doc 04 s13"; cover is s14. Level Designer.
+2. **Doc 03 s3.2 (line 127)** still says only corn blocks sight; tree canopies now block it too (layer 16). AI Programmer, once Q-196 is answered.
+3. **No solid trees:** players and the creature walk through trunks and fences (D-100), until the creature can steer round obstacles. Expect a playtest note.
+4. **Not checked:** that `build_farm.py` regenerates `farm.tscn` exactly (QA sandbox blocked the overwrite).
+5. **`test_debt_sync` race:** a client that joins after dawn misses the early 50 payment and fails the test. Harness problem, not P4-27. QA.
+6. **Merge note:** the P4-32 cart `Handle` now sits at `HANDLE_UP` (1.05 m) above the ground-level glb instead of 0.86 m higher; `test_cart` PASS after the merge.
+
+## Found at the P4-32 follow-up review (QA, 2026-10-09)
+
+1. **`yaw_off` in `game/interaction/hold_controller.gd:342` is always 0** because `--autopush` never moves the mouse; it proves facing tracks the cart, not that mouse look survives a turn. Add a fixed yaw offset in `--autopush` to prove it. Gameplay.
+2. **The cart turns about 86 degrees in about 0.3 s at a route corner** (`game/items/cart.gd:364`), and the pusher camera now turns with it. Playtest note.
+
+## Found at the P4-25 review (QA, 2026-10-09)
+
+1. **Corner pin:** a creature inside the wall pad at a barn corner (e.g. (8.43, -20.43)) never moves; `_way_to` (`game/creature/creature.gd:1261-1275`) aims through the wall. Only a spawn, teleport or push puts it there; dawn frees it. Fix: skip `_crosses` when inside `r.grow(WALL_PAD_M)` but not `r`, or step out first. AI Programmer.
+2. **Harvest Moon act 2 opens with a chase** before anyone pushes (`_begin_push`). Game Designer to confirm under Q-185.
+3. **Doc 03 edited by the AI Programmer** (Game Designer owns it). Director asked for it; Game Designer to review under Q-185.
+4. **`creature_dawn_reset` log event** is not in the CONTRACTS log table or doc 05 s18.
+5. **`_door_step`** takes the outward direction from building centre to door; right only while doors are centred on their walls.
+6. **Door bang before entering a dark building** (doc 03 s6) not built; Q-186.
+
+## Found at the P4-22 seed stock review (QA, 2026-10-09)
+
+1. **`tests/net/test_store_client.gd:4-8`** documents `--duration 90`; the client is killed before planting. Use 200. QA.
+2. **Broke team log noise:** every bot `next_job` logs `store_refused seed_turnip no_coins` (`game/items/store.gd:194`, `game/bots/bot.gd`); 287 lines in one run. AI Programmer.
+3. **Cross-owner edits:** `game/bots/bot.gd` (AI Programmer) and `docs/02` line 483 (Game Designer) edited by Gameplay; owners to sign off.
+4. **`request_store` doc comment** in `game/net/net.gd` omits the `seeds` op. Network & Voice.
+5. **Merge note:** bot planting now needs `_keeps_payment(p) and _plantable(p, st)` (P4-18 payment guard kept with P4-22 seed buying); the P4-22 hint offset was dropped for P4-32 left-edge hint.
+
+## Found at the P4-29 follow-up review (QA, 2026-10-09)
+
+1. **`tests/creature/test_p4_29_e2e.gd:142-161`** does not cover a lost race, a client mirror or a late joiner (manual multi.py runs did). QA.
+2. **`production/CONTRACTS.md:265`** does not list the `loose`/`picked_up` states or the new `cause` field. Director, with a DECISIONS entry.
+3. **`tools/qa/check_logs.py:291-297`** counts loose events from a death or leave as the victim acting; count only `cause: "pried"`. QA.
+4. **A client victim quitting mid-race** not tested live (`--force-spring` springs only host traps).
+
+## Found at the P4-33 follow-up review (QA, 2026-10-09)
+
+1. **Dawn Report flag count** is "planted minus pulled up"; flags cleared by disarm, fill or a leaver still count. Accepted as deliberate. Gameplay, if the CEO asks.
+2. **A dropped flag seen by a third client** not verified; needs 3 instances. QA.
+3. **`game/net/net.gd` `apply_flags(positions)`** name no longer matches what it carries. Gameplay.
+4. **Q-230** still open.
+
+## Found at the P4-35 re-review (QA, 2026-10-09)
+
+1. **4:3 screens** (1024x768) fit only 3 farmers: the camera keeps its height while the side panels stay a fixed pixel width (`game/ui/lobby.gd:220-223`). 1280x720 and 1920x1080 fit all six. Director: which aspect ratios are supported.
+2. **The far-right raised tag** sits on the right lantern; its glow washes out the end of the name. Still readable. Gameplay.
+3. **A real `hat_<role>.glb`** loading in `LineUp._hat` (`game/ui/lobby.gd:138`) untested until P4-36 lands. QA.
+
+## Found at the P4-36 review (QA, 2026-10-09)
+
+1. **Night owl tufts read as cat ears** (two upright 4-sided cones, `tools/blender/build_phase4.py:768-769`). Fallback: the handoff's pompom, or flatter outward-tilted tufts. CEO to look first. 3D Artist.
+2. **The 14-energy lobby spot** (`game/ui/lobby.tscn:16`) washes the local player's hat near-white (navy beanie, straw hat). Technical Artist.
+3. Fixed at merge: lobby farmers faced away, hiding every hat's front (Q-242); `LineUp._farmer` now turns them 180 degrees. Director checked by screenshot.

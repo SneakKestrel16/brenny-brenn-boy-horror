@@ -26,7 +26,8 @@ extends CharacterBody3D
 ## `-- --log-creature` logs `apply_creature_state` and `apply_trap_changed` arrivals on clients.
 ## `-- --shed-lock` gives the team the pegboard lock (the store does not sell it yet). `-- --give-trap` puts a
 ## bear trap in every living player's hands at nightfall (full farm), so theft runs under `multi.py`.
-## `-- --take-loose` (host) walks the host player to a loose trap that turned up at dawn and picks it up.
+## `-- --take-loose` (host) walks the host player to a loose trap (turned up at dawn, or pried free) and picks it
+## up, then hangs it on the pegboard if an outline is empty (P4-29).
 
 signal state_changed(state: StringName, body: StringName)
 ## Host only (P1-09): the creature reached `peer` in a chase / a living player sprang an armed trap.
@@ -57,6 +58,10 @@ const LONE_M := 15.0  ## inference: doc 03 section 4.2 "a lone player"; reuses t
 const CLUE_M := 4.0  ## doc 03 section 9: trap clues are seen within 4 m (placeholder)
 const TRAP_SPRING_M := 1.0  ## placeholder: a living player this close to an armed trap springs it
 const ARRIVE_M := 1.0
+const DOOR_STEP_M := 2.0  ## P4-25 placeholder: the waypoints this far either side of a door it walks through
+const WALL_PAD_M := 0.5  ## P4-25: a line nearer a wall line than this is blocked (half the 0.3 m wall plus its 0.4 m radius)
+const CORNER_M := 1.5  ## P4-25 placeholder: it rounds a building this far out from the wall lines
+const SNAP_M := 10.0  ## P4-25 placeholder: clients jump, not glide, to a host position this far off
 const DAY_COVER := "cover_15"  ## doc 04 sec 9: the far south cover point; where it waits by day (placeholder)
 const BODY := &"body_gaunt"  ## shown until the host's season pick arrives (P4-13)
 const TELLS: Array[StringName] = [&"none", &"echo", &"pitch_up", &"pitch_down", &"no_crackle"]  ## doc 03 section 12.2
@@ -123,6 +128,7 @@ var _theft_t := 0.0
 var _nights := 0
 var _rects: Array[Rect2] = []  ## building floors (x, z), for "outdoor"
 var _rect_names: Array[String] = []  ## the building of each rect (the door's parent)
+var _doors: Array[Vector2] = []  ## the door of each rect (x, z)
 var _send_t := 0.0
 var _log_t := 0.0
 var _log := false
@@ -212,6 +218,7 @@ func _ready() -> void:
 				first = false
 		_rects.append(r)
 		_rect_names.append(String(door.get_parent().name))
+		_doors.append(Vector2(door.global_position.x, door.global_position.z))
 	NoiseBus.noise_emitted.connect(_on_noise)
 	Clock.phase_changed.connect(func(p: StringName) -> void:
 		if p == &"night" and not _test:
@@ -221,6 +228,7 @@ func _ready() -> void:
 		elif p == &"dawn" and not _test:
 			_night_t = -1.0
 			_harvest = false
+			_to_corn()
 			if _full:
 				_dawn_traps())
 	Net.request_received.connect(func(what: StringName, peer: int, _a: Array) -> void:
@@ -351,12 +359,12 @@ func _harvest_moon(delta: float) -> void:
 		_goal = cart.body.global_position  # it is at the cart: it just knocked the pusher off
 		if cart.stall_s <= 0.0 or Vector2(_goal.x - global_position.x, _goal.z - global_position.z).length() <= _num[&"reach_m"] + 1.0:
 			_bite_cart = false
+			var away := global_position - _goal  # P4-25: before _set_state, which clears _goal (it stood still 30 s)
 			_set_state(&"retreat", &"bit_pumpkin" if cart.bite() else &"knock_off", 0)
 			# ponytail: a straight 30 m back-off (placeholder), not the farthest cover: act 3 needs it near (Q-129)
-			var away := global_position - _goal
 			_goal = global_position + Vector3(away.x, 0.0, away.z).normalized() * 30.0
 		return
-	if cart.act == cart.PUSH and state == &"chase":
+	if cart.act == cart.PUSH and state == &"chase" and not cart.pushers.is_empty():
 		var sensed := _sensed_pos(target, {})
 		if sensed != Vector3.INF:
 			_goal = sensed
@@ -371,6 +379,22 @@ func _harvest_moon(delta: float) -> void:
 	if state in [&"chase", &"retreat", &"lure"]:
 		_hunt(delta)  # act 3 chase and every retreat run as at night (catch, losing it)
 		return
+	if cart.pushers.is_empty():  # P4-25: nobody pushing: it goes for the sensed player nearest the cart, as at night
+		var best := 0
+		var best_d := INF
+		for q in Game.players:
+			var at := _sensed_pos(q, {})
+			if _alive(q) and at != Vector3.INF and not _sheltered(at) and at.distance_to(cart.body.global_position) < best_d:
+				best = q
+				best_d = at.distance_to(cart.body.global_position)
+		if best != 0:
+			_goal = _sensed_pos(best, {})
+			if _dir.allow(&"chase", best):
+				_dir.spend(&"chase", best)
+				_set_state(&"chase", &"no_pushers", best)
+			else:
+				_set_state(&"stalk", &"no_pushers", best)
+			return
 	var mem := _memory.filter(func(e: Dictionary) -> bool: return cart.pushers.has(int(e.peer)))
 	var heard := Logic.pick_heard(mem if mem else _memory, _now, _num[&"hearing_memory_s"], LOUDER_WINS_S)
 	var p := 0 if heard.is_empty() else int(heard.peer)
@@ -415,7 +439,10 @@ func _run_script() -> void:
 		&"stalk", &"chase":
 			if _alive(target):
 				_goal = Game.players[target].pos  # scripted: doc 03 section 18 names the player
-				if state == &"chase" and _t_state >= _num[&"chase_tell_s"] and _goal.distance_to(global_position) <= _num[&"reach_m"]:
+				if state == &"chase" and _sheltered(_goal):  # P4-25: the scripted chase obeys the lit building rule too
+					_scripted = false
+					_end_chase(&"lit_building", &"lit_building")
+				elif state == &"chase" and _t_state >= _num[&"chase_tell_s"] and _goal.distance_to(global_position) <= _num[&"reach_m"]:
 					_scripted = false
 					var kill: bool = _dir.allow(&"kill", target)  # D-115: at the town stand only on a won roll
 					if kill:
@@ -490,13 +517,13 @@ func _hunt(delta: float) -> void:
 			var sensed := _sensed_pos(target, {})
 			if sensed != Vector3.INF:
 				_goal = sensed
-			if _alive(target) and _t_state >= _num[&"chase_tell_s"] and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
+			if _alive(target) and _sheltered(Game.players[target].pos):  # P4-25: before the catch, so no kill in the light
+				_end_chase(&"lit_building", &"lit_building")
+			elif _alive(target) and _t_state >= _num[&"chase_tell_s"] and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
 				var kill: bool = _dir.allow(&"kill", target)  # D-115: at the town stand only on a won roll
 				if kill:
 					caught.emit(target)
 				_end_chase(&"retreat", &"reached" if kill else &"town_stand")
-			elif _alive(target) and _in_lit_doorway(Game.players[target].pos):
-				_end_chase(&"lit_building", &"lit_building")
 			elif not _alive(target) or (_chase_t >= _num[&"chase_commit_s"] and _lose_t >= _num[&"chase_lose_quiet_s"]):
 				_end_chase(&"lost", &"lost")
 		&"retreat":
@@ -873,7 +900,7 @@ func _set_trap(i: int) -> void:
 	var kind := &"bear" if i % 2 == 0 else &"pit"
 	var old: Dictionary = {}
 	for t in _traps.values():
-		if t.kind == kind:
+		if t.kind == kind and not t.get("loose", false):  # P4-29: a pried trap left lying is not this set's
 			old = t
 	if not old.is_empty() and not old.armed:
 		return  # a sprung trap stays where it is (the trap race is P1-09)
@@ -989,7 +1016,7 @@ func _at_stand(pos: Vector3) -> bool:
 
 ## Full farm, doc 01 "The tool shed", D-053: the farm's bear traps are the creature's only supply. At
 ## nightfall it takes up to `need`: traps in living players' hands first (outdoors, or in a dark building),
-## then traps off the pegboard. One in a lit building is kept (and moved at dawn, `_dawn_traps`). During
+## then loose traps lying at a spot (P4-29, D-104), then traps off the pegboard. One in a lit building is kept (and moved at dawn, `_dawn_traps`). During
 ## the night a trap in a building that goes dark is taken too. Before `broken_from_day` the lock caps every
 ## theft together at `theft_cap_per_night` (store.json `shed_lock`).
 func _steal_traps(nightfall: bool, need: int = 0) -> void:
@@ -1020,6 +1047,17 @@ func _steal_traps(nightfall: bool, need: int = 0) -> void:
 		need -= 1
 		farm.set_hands(p, bool(Game.players[p].get("shovel", false)), false)
 		_took("held:%d" % p, "dark_building" if b != "" else "outdoor", locked, {"player": p})
+	for t: Dictionary in _traps.values().filter(func(t: Dictionary) -> bool: return t.get("loose", false)):
+		if not nightfall or need <= 0:
+			break
+		if _stolen_night >= cap:
+			capped = true
+			break
+		need -= 1
+		_traps.erase(t.id)  # P4-29, D-104: a pried or dawn-moved trap still lying out is off the pegboard too
+		Net.to_peers(&"apply_trap_changed", [t.id, &"bear", &"stolen", t.position])
+		Net.apply_received.emit(&"trap_changed", [t.id, &"bear", &"stolen", t.position])
+		_took("ground:%s" % t.id, "ground", locked, {})
 	var sweep := get_tree().get_first_node_in_group(&"trap_sweep")
 	while nightfall and need > 0 and sweep != null and sweep.filled.has(true):
 		if _stolen_night >= cap:
@@ -1099,7 +1137,7 @@ func _show_loose(id: String, on: bool) -> void:
 	m.add_child(t)
 	t.add_pick_body(Vector3(1.2, 0.5, 1.2))
 	t.set_meta(&"pick", m.get_child(m.get_child_count() - 1))
-	var mesh := TrapArt.bear()
+	var mesh := TrapArt.bear(true)  # P4-29: jaws shut, it was sprung or carried
 	m.add_child(mesh)
 	t.set_meta(&"art", mesh)
 	farm.targets[id] = t
@@ -1109,7 +1147,21 @@ func _show_loose(id: String, on: bool) -> void:
 		var st: Dictionary = Game.players[1]
 		st.pos = Vector3(stand.x, st.pos.y, stand.z)  # the speed check would clamp the teleport (as death.gd's respawn)
 		st.freeze_until = Time.get_ticks_msec() + 300
-		hc._sweep_go.call_deferred(&"take_trap", t, stand)
+		_qa_take_and_hang.call_deferred(hc, t, stand)
+
+
+## QA `--take-loose`: the host player takes the loose trap, then hangs it if an outline is empty (P4-29).
+func _qa_take_and_hang(hc: Node, t: Node, stand: Vector3) -> void:
+	await hc._sweep_go(&"take_trap", t, stand)
+	var peg: Node = get_parent().get_node(^"Farm").targets.get("pegboard")
+	var st: Dictionary = Game.players[1]
+	if peg == null or peg.can_start(&"hang_trap", st) != &"":
+		return
+	var board := peg.get_parent() as Node3D
+	var at := board.global_position + board.global_transform.basis * Vector3(0, -1.5, -1.5)  # as hold_controller's _autosweep
+	st.pos = Vector3(at.x, st.pos.y, at.z)
+	st.freeze_until = Time.get_ticks_msec() + 300
+	await hc._sweep_go(&"hang_trap", peg, at)
 
 
 ## The building `pos` is in (the door's parent), or "" outdoors.
@@ -1184,7 +1236,8 @@ func _move(_delta: float) -> void:
 		&"chase", &"retreat": speed = _num[&"chase_speed_mps"]
 	if _night_t < 0.0:
 		_goal = _dir.day_cover(_marker(&"creature_cover", DAY_COVER))
-	var d := Vector3.INF if _goal == Vector3.INF else _goal - global_position
+	var goal := _goal if _goal == Vector3.INF else _shut_out(_goal)
+	var d := Vector3.INF if goal == Vector3.INF else goal - global_position
 	var stop := ARRIVE_M
 	if state == &"stalk" and target != 0:
 		stop = _num[&"scripted_standoff_m"] if _scripted else STALK_STANDOFF_M
@@ -1195,6 +1248,8 @@ func _move(_delta: float) -> void:
 		if state == &"lurk" and _search_until < _now:
 			_goal = Vector3.INF
 		return
+	else:
+		d = _way_to(goal) - global_position
 	d.y = 0.0
 	if state in [&"lurk", &"lure", &"stalk"] and _scarecrow_in_way(d.normalized()):  # P4-06: store.json `scarecrow` creature_avoid_m
 		_goal = Vector3.INF
@@ -1210,6 +1265,79 @@ func _move(_delta: float) -> void:
 		if _leave_m >= _num[&"leavings_every_m"]:
 			_leave_m = 0.0
 			get_tree().get_first_node_in_group(&"taint").add_source(&"leavings", global_position)
+
+
+## P4-25: it has no navmesh and steered straight at its goal, so a line through the barn door walked it in and
+## pinned it on the far wall all night and all day (the CEO's session, OPEN_ISSUES item 7). The next waypoint
+## toward `to`: out by the door of the building it is in, in by the door of the building `to` is in, else round
+## the corner of the nearest building in the way. Buildings are the `_rects`, one door each.
+func _way_to(to: Vector3) -> Vector3:
+	var at := Vector2(global_position.x, global_position.z)
+	var goal := Vector2(to.x, to.z)
+	for i in _rects.size():
+		var by_door := at.distance_to(_doors[i]) < DOOR_STEP_M + 0.5
+		var out := _door_step(i, DOOR_STEP_M)
+		if _rects[i].has_point(goal):
+			if not _rects[i].has_point(at):
+				if by_door:
+					return _door_step(i, -DOOR_STEP_M)
+				goal = Vector2(out.x, out.z)
+		elif _rects[i].has_point(at):
+			return out if by_door else _door_step(i, -DOOR_STEP_M)
+		elif by_door and _rects[i].grow(WALL_PAD_M).has_point(at):
+			return out  # just out of the doorway, still inside the wall pad: step clear before rounding a corner
+	var best := goal
+	var block := INF
+	for r in _rects:
+		var pad := r.grow(WALL_PAD_M)
+		if not _crosses(at, goal, pad) or at.distance_to(r.get_center()) >= block:
+			continue
+		block = at.distance_to(r.get_center())
+		var left := INF
+		var g := r.grow(CORNER_M)
+		# the clear corner nearest the goal: each hop gets closer, so it never swings between two corners
+		for c: Vector2 in [g.position, Vector2(g.end.x, g.position.y), g.end, Vector2(g.position.x, g.end.y)]:
+			if at.distance_to(c) > ARRIVE_M and not _crosses(at, c, pad) and c.distance_to(goal) < left:
+				left = c.distance_to(goal)
+				best = c
+	return Vector3(best.x, 0.0, best.y)
+
+
+## The point `m` metres out from door `i` along its wall's outward normal (negative: inside).
+func _door_step(i: int, m: float) -> Vector3:
+	var p := _doors[i] + (_doors[i] - _rects[i].get_center()).normalized() * m
+	return Vector3(p.x, 0.0, p.y)
+
+
+static func _crosses(a: Vector2, b: Vector2, r: Rect2) -> bool:
+	var box := PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+	return not Geometry2D.intersect_polyline_with_polygon(PackedVector2Array([a, b]), box).is_empty()
+
+
+## P4-25, doc 03 section 6: it never enters a lit building. A goal inside one becomes a spot outside its door,
+## out of the doorway light; power coming back walks it out of one it was in.
+func _shut_out(to: Vector3) -> Vector3:
+	if not _lit():
+		return to
+	for i in _rects.size():
+		if _rects[i].has_point(Vector2(to.x, to.z)):
+			return _door_step(i, LIT_DOOR_M)
+	return to
+
+
+## P4-25 (OPEN_ISSUES item 7): it spent the CEO's whole day 2 in the barn. By day it lives in the corn ring (doc 01
+## "The Creature", doc 03 section 4.2, doc 04 section 3), so at dawn the host puts it back at its day cover.
+func _to_corn() -> void:
+	var r: String = _dir.region_of(global_position)
+	if r.begins_with("corn_ring") and _dir.region_rect(r).has_point(Vector2(global_position.x, global_position.z)):
+		return
+	var from := global_position
+	global_position = _dir.day_cover(_marker(&"creature_cover", DAY_COVER))
+	velocity = Vector3.ZERO
+	_memory.clear()
+	_set_state(&"lurk", &"dawn", 0)  # doc 03 section 4.2: by day only lurk, lure and stalk, so a night's retreat ends
+	_goal = Vector3.INF
+	Log.event(&"creature_dawn_reset", {"from": _v(from), "to": _v(global_position), "region": r})
 
 
 ## P4-06: a bought scarecrow keeps it `creature_avoid_m` away; it never blocks a chase or a retreat.
@@ -1271,9 +1399,18 @@ func _lone(p: int) -> bool:
 	return true
 
 
-func _in_lit_doorway(pos: Vector3) -> bool:
+func _lit() -> bool:
 	var gen := get_parent().get_node_or_null(^"Generator")
-	if gen == null or not gen.powered():  # doors are lit only while the generator runs (doc 03 section 6)
+	return gen != null and gen.powered()  # buildings and doors are lit only while the generator runs (doc 03 section 6)
+
+
+## P4-25, doc 03 sections 5 and 6: a player in a lit building or its doorway light cannot be caught.
+func _sheltered(pos: Vector3) -> bool:
+	return _lit() and (_building(pos) != "" or _in_lit_doorway(pos))
+
+
+func _in_lit_doorway(pos: Vector3) -> bool:
+	if not _lit():
 		return false
 	for d in get_tree().get_nodes_in_group(&"doors"):
 		if (d as Node3D).global_position.distance_to(pos) <= LIT_DOOR_M:
@@ -1299,6 +1436,8 @@ func _on_bytes(_from: int, pkt: PackedByteArray) -> void:
 	if Game.is_host() or pkt.size() < PKT_BYTES or pkt[0] != PKT:
 		return
 	_target_pos = Vector3(pkt.decode_float(2), pkt.decode_float(6), pkt.decode_float(10))
+	if _target_pos.distance_to(global_position) > SNAP_M:
+		global_position = _target_pos  # P4-25: a host teleport (the dawn reset) must not glide through the walls
 	_target_yaw = pkt.decode_float(14)
 
 
@@ -1342,11 +1481,12 @@ func _on_apply(what: StringName, args: Array) -> void:
 				_test_lure_heard(args[2])
 		&"trap_changed":  # every peer: the Creature sends `set`, TrapRace the later states
 			_show_clue(args[0], args[1], args[2] == &"set")
-			_show_loose(args[0], args[2] == &"loose")
+			_show_loose.call_deferred(args[0], args[2] == &"loose")  # after TrapRace drops a pried trap's TrapTarget
 			if _log and not Game.is_host():
 				Log.event(&"trap_changed_applied", {"trap_id": args[0], "kind": String(args[1]), "state": String(args[2])})
-			if Game.is_host() and args[2] == &"disarmed":  # a pried-free bear trap too (on_pry_done)
-				clear_trap(args[0])
+			if Game.is_host() and args[2] == &"loose" and _traps.has(args[0]):  # P4-29: a pried-free bear trap stays (on_pry_done)
+				_traps[args[0]].loose = true
+				_traps[args[0]].armed = false  # already so after a real spring; not after TrapRace's --force-spring
 
 
 # --- debug (doc 05 section 19) -------------------------------------------------------------------

@@ -24,7 +24,7 @@ grit = rrand(0.6, 1.0); gd = rrand(1400, 2600); extra = rrand(0.7, 1.0);
 			var lEnv = EnvGen.ar(Env([0, 1, 0.6, 0], [0.025, toe + 0.05, 0.22 * extra], [2, -1, -4]));
 			var leaf = BPF.ar(WhiteNoise.ar, LFNoise1.kr(9).range(2600, 5200) * tone, 0.9) * LFNoise2.ar(90).range(0, 1).squared;
 			var dry = HPF.ar(Decay2.ar(Dust.ar(450 * extra), 0.0002, 0.002) * WhiteNoise.ar, 2800);
-			Out.ar(out, thud + weight + toeHit + scuff + crunch + (LPF.ar(leaf * 0.9 + (dry * 0.6), 7000) * lEnv * extra));
+			Out.ar(out, HPF.ar(HPF.ar(thud + weight + toeHit + scuff + crunch + (LPF.ar(leaf * 0.9 + (dry * 0.6), 7000) * lEnv * extra), 30), 30));
 		})
 	],
 	events: [[0, [\s_new, \step, -1, 0, 0]]]

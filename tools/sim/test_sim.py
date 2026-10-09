@@ -105,6 +105,12 @@ class Tests(unittest.TestCase):
         self.assertEqual(m.debt([], 101, 4), sim.rhu(360 * 101, 100))
         self.assertNotIn("pumpkin_grow_days", DATA["difficulty"]["short_season"])  # D-082 item 4: grow time lives in pumpkin.json only
 
+    def test_sell_bonus_and_unattended(self):  # P4-30, D-106: bonus rounds up per sale; Q-161 term is +3 when on
+        m = model()
+        m.sell_bonus = {2: 5}
+        self.assertEqual((m.sold(40, 2), m.sold(41, 2), m.sold(0, 2), m.sold(40, 4)), (42, 44, 0, 40))
+        self.assertEqual((model().unattended, model(dict(MEDIAN, unattended_term=True)).unattended), (0, 3))
+
     def test_fixed_seed_repeats(self):
         m = model()
         a = sim.simulate(m, 3, random.Random("1:3:0"))

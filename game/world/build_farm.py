@@ -67,6 +67,122 @@ def box(parent, name, cx, cz, sx, sz, h, m, layer=L_WORLD, y0=0.0, groups=()):
     node("Shape", "CollisionShape3D", body, f'shape = SubResource("{bs}")\n')
 
 
+def vis(parent, name, mesh, m, x, y, z, s=0.0, c=1.0):
+    """Visual-only mesh (no collision) at x/y/z, yawed so local +z points along (s, c) = (sin, cos)."""
+    node(name, "MeshInstance3D", parent, f"transform = Transform3D({c}, 0, {s}, 0, 1, 0, {-s}, 0, {c}, {x}, {y}, {z})\n"
+         f'mesh = SubResource("{mesh}")\nmaterial_override = SubResource("{MATS[m]}")\n')
+
+
+def vbox(parent, name, cx, cz, sx, sz, h, m, y0=0.0, s=0.0, c=1.0):
+    vis(parent, name, sub("BoxMesh", f"size = Vector3({sx}, {h}, {sz})\n"), m, cx, y0 + h / 2, cz, s, c)
+
+
+def cyl(parent, name, x, z, r, h, m, y0=0.0, top=None):
+    mesh = sub("CylinderMesh", f"top_radius = {r if top is None else top}\nbottom_radius = {r}\nheight = {h}\nradial_segments = 12\n")
+    vis(parent, name, mesh, m, x, y0 + h / 2, z)
+
+
+def path(name, pts, w):
+    """Dirt path: one flat visual strip per leg, joints overlap by half a width so corners close."""
+    for i in range(1, len(pts)):
+        (x0, z0), (x1, z1) = pts[i - 1], pts[i]
+        dx, dz = x1 - x0, z1 - z0
+        n = (dx * dx + dz * dz) ** 0.5
+        s, c = round(dx / n, 5), round(dz / n, 5)
+        vbox("Paths", f"{name}{i}", (x0 + x1) / 2, (z0 + z1) / 2, w, n + w, 0.02, "path", 0.0, s, c)
+
+
+def tree(name, x, z, kind):
+    """Gray-box tree. Trunk is visual only; the canopy from 1.2 m up is a layer-5 sight blocker like corn
+    (D-100): the creature and players pass through, nothing at the 1 m corn point queries hits it."""
+    t = node(name, "StaticBody3D", "Trees", f"transform = {tf(x, 0, z)}\ncollision_layer = {L_CORN}\ncollision_mask = 0\n")
+    cyl(t, "Trunk", 0, 0, 0.25, 2.0, "trunk")
+    if kind == "pine":
+        cyl(t, "Canopy", 0, 0, 1.8, 5.5, "pine", y0=1.2, top=0.0)
+        shape = sub("CylinderShape3D", "height = 3.0\nradius = 1.3\n")
+        node("Shape", "CollisionShape3D", t, f'transform = {tf(0, 2.7, 0)}\nshape = SubResource("{shape}")\n')
+    else:
+        vis(t, "Canopy", sub("SphereMesh", "radius = 2.0\nheight = 3.4\nradial_segments = 12\nrings = 6\n"), "leaf", 0, 3.0, 0)
+        shape = sub("CylinderShape3D", "height = 3.0\nradius = 1.8\n")
+        node("Shape", "CollisionShape3D", t, f'transform = {tf(0, 2.8, 0)}\nshape = SubResource("{shape}")\n')
+
+
+def fence(name, x0, z0, x1, z1):
+    """Visual-only split-rail fence on an axis-aligned line: posts about every 3 m and two rails, 1 m tall."""
+    n = max(1, round(max(abs(x1 - x0), abs(z1 - z0)) / 3))
+    f = node(name, "Node3D", "Fences")
+    for i in range(n + 1):
+        vbox(f, f"Post{i}", x0 + (x1 - x0) * i / n, z0 + (z1 - z0) * i / n, 0.15, 0.15, 1.0, "fence")
+    sx, sz = max(abs(x1 - x0), 0.08), max(abs(z1 - z0), 0.08)
+    for k, y in (("RailLow", 0.4), ("RailHigh", 0.8)):
+        vbox(f, k, (x0 + x1) / 2, (z0 + z1) / 2, sx, sz, 0.08, "fence", y0=y)
+
+
+def sign(name, x, z, text):
+    """Visual-only signpost: a post and a billboard label 2.6 m up, shaded so it darkens at night."""
+    s = node(name, "Node3D", "Signs", f"transform = {tf(x, 0, z)}\n")
+    vbox(s, "Post", 0, 0, 0.15, 0.15, 2.3, "fence")
+    node("Label", "Label3D", s, f"transform = {tf(0, 2.6, 0)}\nbillboard = 1\nshaded = true\ndouble_sided = true\n"
+         f'pixel_size = 0.008\nmodulate = Color(1, 0.95, 0.8, 1)\noutline_modulate = Color(0.2, 0.12, 0.05, 1)\n'
+         f'text = "{text}"\nfont_size = 96\noutline_size = 24\n')
+
+
+# P4-27 (doc 04 s13): cover, tree lines and landmarks. Tree canopies keep every work spot's open ground at least
+# as wide as its corn distance (doc 04 s8.4), stay out of the audio band and off the cart route and walk lines.
+TREES = ([(f"Orchard{i + 1}", x, z, "round") for i, (x, z) in enumerate(
+             (x, z) for z in (30, 36, 42) for x in (24, 30, 36))]
+         + [(f"WindbreakA{i + 1}", x, -32, "pine") for i, x in enumerate(range(22, 39, 4))]
+         + [(f"WindbreakB{i + 1}", x, -36, "pine") for i, x in enumerate(range(24, 37, 4))]
+         + [(f"NorthEast{i + 1}", x, z, "pine") for i, (x, z) in enumerate(((80, -30), (84, -35), (88, -29), (91, -36), (85, -40)))]
+         + [(f"EastLine{i + 1}", 97, z, "pine") for i, z in enumerate(range(22, 48, 5))]
+         + [(f"EastLineB{i + 1}", 93, z, "pine") for i, z in enumerate((30, 40))]
+         + [(f"West{i + 1}", x, z, "pine") for i, (x, z) in enumerate(((-56, -34), (-51, -29), (-47, -37), (-59, -25), (-53, -41)))]
+         + [(f"SouthGrove{i + 1}", x, z, "round") for i, (x, z) in enumerate(((-27, 47), (-22, 51), (-19, 44)))])
+PATHS = [  # side paths, 1.6 m; the 3 m cart route path is drawn from ROUTE in generate()
+         ("ToWell", [(0, 1), (-25, 9)], 1.6), ("ToHouse", [(-25, 9), (-45, 1)], 1.6),
+         ("ToShed", [(-25, 11), (-15, 25)], 1.6), ("ToPumpkin", [(-45, 1), (-44, 20), (-46, 31)], 1.6),
+         ("ToPen", [(-1, 1), (-13, 0), (-13, -24), (-23, -27)], 1.6),
+         ("ToCrate", [(72, 2), (72, 4.4)], 1.6), ("ToMoon", [(71, 5.6), (61, 18)], 1.6)]
+FENCES = [("FieldA_N", 23, -14, 28, -14), ("FieldA_N2", 32, -14, 37, -14), ("FieldA_S", 23, 0, 28, 0),
+          ("FieldA_S2", 32, 0, 37, 0), ("FieldB_N", 65, -11, 70, -11), ("FieldB_N2", 74, -11, 79, -11),
+          ("Moon_W", 56, 18, 56, 26), ("Moon_S", 56, 26, 64, 26), ("Moon_E", 64, 18, 64, 26),
+          ("Gate_N", 104.5, -20, 104.5, -8.5), ("Gate_S", 104.5, -1.5, 104.5, 10)]
+SIGNS = [("FieldA", 21.5, 0.5, "FIELD A"), ("FieldB", 63.5, -8, "FIELD B"), ("Moonflowers", 55, 17, "MOONFLOWERS"),
+         ("Store", 75, 6.5, "STORE"), ("Town", 102, -10, "TOWN  >"), ("Pumpkin", -42, 28, "PRIZE PUMPKIN"),
+         ("Shed", -11, 23.5, "TOOL SHED"), ("Pen", -20.5, -25.5, "PEN"), ("Farmhouse", -39, 3, "FARMHOUSE"),
+         ("Well", -22, 6.5, "WELL")]
+
+
+def landmarks() -> None:
+    """Visual-only landmarks tall enough to read over the corn: silo north (behind the barn), water tower south,
+    windpump at the well, an arch over the farm gate. No collision: the silo and tower stand in the ring corn."""
+    node("Silo", "Node3D", "Landmarks", f"transform = {tf(6, 0, -53)}\n")
+    cyl("Landmarks/Silo", "Body", 0, 0, 3.5, 14, "metal")
+    vis("Landmarks/Silo", "Dome", sub("SphereMesh", "radius = 3.5\nheight = 3.5\nis_hemisphere = true\nradial_segments = 12\nrings = 4\n"), "metal", 0, 14, 0)
+    node("WaterTower", "Node3D", "Landmarks", f"transform = {tf(40, 0, 64)}\n")
+    for i, (lx, lz) in enumerate(((-2, -2), (2, -2), (-2, 2), (2, 2)), 1):
+        vbox("Landmarks/WaterTower", f"Leg{i}", lx, lz, 0.3, 0.3, 10, "trunk")
+    cyl("Landmarks/WaterTower", "Tank", 0, 0, 3, 5, "rust", y0=10)
+    cyl("Landmarks/WaterTower", "Roof", 0, 0, 3.3, 2, "rust", y0=15, top=0.0)
+    node("Windpump", "Node3D", "Landmarks", f"transform = {tf(-28, 0, 7)}\n")
+    cyl("Landmarks/Windpump", "Mast", 0, 0, 0.15, 9, "metal")
+    cyl("Landmarks/Windpump", "Tail", 0, -1, 0.05, 0.1, "metal", y0=9)
+    vbox("Landmarks/Windpump", "Rotor", 0, 0.3, 3.2, 0.1, 3.2, "metal", y0=7.4)
+    node("GateArch", "Node3D", "Landmarks", f"transform = {tf(105, 0, -5)}\n")
+    for nm, z in (("PoleN", -3.2), ("PoleS", 3.2)):
+        vbox("Landmarks/GateArch", nm, 0, z, 0.3, 0.3, 4.6, "fence")
+    vbox("Landmarks/GateArch", "Beam", 0, 0, 0.4, 7.0, 0.5, "fence", y0=4.4)
+    node("Label", "Label3D", "Landmarks/GateArch", f"transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.25, 4.65, 0)\n"
+         'shaded = true\ndouble_sided = true\npixel_size = 0.01\nmodulate = Color(1, 0.95, 0.8, 1)\n'
+         'outline_modulate = Color(0.2, 0.12, 0.05, 1)\ntext = "TOWN"\nfont_size = 96\noutline_size = 24\n')
+    node("HayStack", "Node3D", "Landmarks", f"transform = {tf(38, 0, 12)}\n")
+    for i, (hx, hz, hy) in enumerate(((0, 0, 0), (1.3, 0, 0), (0.65, 0, 0.8), (0, 1.1, 0)), 1):
+        vbox("Landmarks/HayStack", f"Bale{i}", hx, hz, 1.2, 1.0, 0.8, "hay", y0=hy)
+    node("WoodPile", "Node3D", "Landmarks", f"transform = {tf(-20, 0, 29)}\n")
+    for i, y in enumerate((0, 0.3, 0.6), 1):
+        vbox("Landmarks/WoodPile", f"Logs{i}", 0, 0, 0.9, 2.6, 0.3, "trunk", y0=y)
+
+
 def building(name, door_x, door_z, x0, x1, z0, z1, door_side, h, parent="Buildings", m="bldg"):
     """Walls as local boxes; node origin = door threshold (CONTRACTS section 4). 3 m door gap."""
     b = node(name, "Node3D", parent, f"transform = {tf(door_x, 0, door_z)}\n")
@@ -153,6 +269,10 @@ def generate(full: bool) -> str:
         "bldg": mat("0.45, 0.30, 0.22, 1"), "prop": mat("0.55, 0.55, 0.58, 1"),
         "house": mat("0.82, 0.78, 0.66, 1"), "plot": mat("0.35, 0.24, 0.14, 1"), "fence": mat("0.55, 0.45, 0.30, 1"),
     }
+    if full:  # P4-27 cover and landmarks; the Phase 1 scene stays byte-identical
+        MATS |= {"path": mat("0.52, 0.43, 0.30, 1"), "trunk": mat("0.33, 0.24, 0.16, 1"),
+                 "pine": mat("0.12, 0.26, 0.16, 1"), "leaf": mat("0.22, 0.36, 0.14, 1"),
+                 "metal": mat("0.62, 0.66, 0.70, 1"), "rust": mat("0.55, 0.22, 0.16, 1"), "hay": mat("0.80, 0.68, 0.36, 1")}
     node("Farm", "Node3D", None)
     for c in ("Ground", "CornBlockers", "Buildings", "Props", "Fields", "Pen", "Markers", "Regions", "Bounds"):
         node(c, "Node3D", ".")
@@ -272,6 +392,18 @@ def generate(full: bool) -> str:
         tilts = ", ".join("0" for _ in ROUTE)
         curve = sub("Curve3D", f'_data = {{\n"points": PackedVector3Array({pts}),\n"tilts": PackedFloat32Array({tilts})\n}}\n')
         node("CartRoute", "Path3D", ".", f'curve = SubResource("{curve}")\n')
+        for c in ("Paths", "Fences", "Trees", "Signs", "Landmarks"):  # P4-27, doc 04 s13
+            node(c, "Node3D", ".")
+        path("Route", ROUTE + [(120, -5)], 3.0)  # doc 04 s6.1 R0..R8, then the lane to the town stand
+        for nm, pts, w in PATHS:
+            path(nm, pts, w)
+        for f in FENCES:
+            fence(*f)
+        for t in TREES:
+            tree(*t)
+        for s in SIGNS:
+            sign(*s)
+        landmarks()
 
     out = ["[gd_scene format=3]\n"]
     for k, v in subs.items():

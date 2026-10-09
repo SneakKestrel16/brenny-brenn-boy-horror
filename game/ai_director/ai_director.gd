@@ -199,7 +199,8 @@ func allow(kind: StringName, peer: int) -> bool:
 
 func _profile_allows(kind: StringName, peer: int) -> bool:
 	if _profile_id() == &"harvest_moon":  # section 14: acts, not tension; no lures or scares; act 3 a guaranteed peak
-		return kind in [&"kill", &"stalk"] or (kind == &"chase" and _cart_act() == 3)
+		# P4-25: in act 2 an unpushed cart frees a chase too (section 14 "Nobody pushing")
+		return kind in [&"kill", &"stalk"] or (kind == &"chase" and (_cart_act() == 3 or (_cart_act() == 2 and get_tree().get_first_node_in_group(&"cart").pushers.is_empty())))
 	var pr: Dictionary = _d["profile_" + _profile_id()]
 	var n := int(_events.get(peer, 0))
 	match kind:

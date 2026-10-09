@@ -17,9 +17,16 @@ const SYNC_EVERY_S := 1.0  ## placeholder: position resync while moving (Q-128)
 const SQUEAK_EVERY_S := 1.0  ## placeholder: one squeak Noise per second while moving
 const SQUEAK_M := 25.0  ## placeholder: no creature.json `noise_cart_squeak` row yet (Q-127)
 const OUT_X := 78.0  ## doc 03 s14, doc 04 s6: past the fields
-const BED_Y := 0.9  ## inference from prop_cart.glb (1.72 m tall with the lantern post); settle by eye
+const BED_Y := 0.9  ## prop_cart.glb bed floor at y 0.87 to 0.9 above the wheel base (vertex levels, P4-27)
 const KNOCK_CAMERA_S := 2.0  ## placeholder: the knocked pusher's knockdown camera
 const LANTERN := Vector3(0.0, 1.86, -1.3)  ## front of the cart (it faces -Z along the route)
+## P4-32: the push handle bar of prop_cart.glb (tools/blender/build_phase4.py `cart()`: x -0.55..0.55, Blender
+## y -1.45 is +Z here, 1.05 m above the model base). The `Handle` marker follows the model's height.
+const HANDLE_Z := 1.45
+const HANDLE_UP := 1.05
+const HANDLE_NEAR_M := 1.5  ## placeholder: push is offered within this of the handle (flat)
+const SLOT_GAP_M := 0.7  ## pushers stand shoulder to shoulder: two Player radii (player.gd RADIUS 0.35)
+const SLOT_BACK_M := 0.4  ## body centre behind the bar: hands on it (radius plus forearms; placeholder)
 
 enum { PARKED, LOADING, PUSH, GATE_RUN, DONE }
 
@@ -51,8 +58,11 @@ static func build(world: Node) -> Node3D:
 	var b := Node3D.new()
 	b.name = "Cart"
 	var m: Node3D = load("res://assets/models/prop_cart.glb").instantiate()
-	m.position.y = 0.86  # the glb is centred on its 1.72 m height
-	b.add_child(m)
+	b.add_child(m)  # P4-27: the glb origin is at the wheel base (AABB y 0.025..1.75), so no lift: it sat 0.86 m up
+	var handle := Node3D.new()  # P4-32: pushers stand along this bar
+	handle.name = "Handle"
+	handle.position = Vector3(0.0, HANDLE_UP, HANDLE_Z)
+	b.add_child(handle)
 	var spot := Node3D.new()
 	spot.name = "Lantern"
 	spot.position = LANTERN
@@ -122,8 +132,36 @@ func _carrying(st: Dictionary) -> bool:
 func verbs_for(st: Dictionary) -> Array[StringName]:
 	var out: Array[StringName] = []
 	if Clock.phase == &"harvest_moon" and act != DONE:
-		out.append(&"load_cart" if not loaded and _carrying(st) else &"push_cart")
+		if not loaded and _carrying(st):
+			out.append(&"load_cart")
+		elif _near_handle(st):
+			out.append(&"push_cart")  # P4-32: offered at the handle only; the host's range check is unchanged
 	return out
+
+
+## P4-32: the asking player (their body, else `st.pos`) stands within HANDLE_NEAR_M of the handle.
+func _near_handle(st: Dictionary) -> bool:
+	var pl: Node = farm.get_parent().get_node_or_null(^"Players") if farm else null
+	var me: Node = pl.player(int(st.get("peer", Game.local_peer()))) if pl else null
+	var p: Variant = me.global_position if me else st.get("pos")
+	if p == null:
+		return true
+	var h := handle_pos()
+	return Vector2(p.x - h.x, p.z - h.z).length() <= HANDLE_NEAR_M
+
+
+func handle_pos() -> Vector3:
+	return body.get_node(^"Handle").global_position
+
+
+## P4-32, every peer: where pusher `peer` stands while the push holds them, or Vector3.INF when it does not.
+## Pushers (host-sorted, replicated) get slots side by side along the handle, behind the cart; the y is the
+## route's. A stall (knock-off) or the end of the push frees everyone; dropping the hold or dying leaves `pushers`.
+func push_slot(peer: int) -> Vector3:
+	var i := pushers.find(peer)
+	if i < 0 or not act in [PUSH, GATE_RUN] or stall_s > 0.0:
+		return Vector3.INF
+	return body.global_transform * Vector3((i - (pushers.size() - 1) / 2.0) * SLOT_GAP_M, 0.0, HANDLE_Z + SLOT_BACK_M)
 
 
 func can_start(verb: StringName, st: Dictionary) -> StringName:
@@ -139,6 +177,14 @@ func can_start(verb: StringName, st: Dictionary) -> StringName:
 		return &"stalled"
 	var pk := _pumpkin()
 	return &"not_loaded" if not loaded and pk != null and pk.planted else &""
+
+
+## HUD, every peer (P4-32): a push never completes, so its bar is the route instead: progress 0..1 and the
+## metres left to the gate (the route's end). Empty for other verbs: they use the hold timer.
+func hold_progress(verb: StringName) -> Array:
+	if verb != &"push_cart" or length <= 0.0:
+		return []
+	return [clampf(offset / length, 0.0, 1.0), "%d m to the gate" % ceili(length - offset)]
 
 
 func on_start(verb: StringName, _peer: int) -> void:

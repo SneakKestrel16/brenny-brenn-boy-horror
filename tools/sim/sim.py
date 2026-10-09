@@ -65,6 +65,7 @@ class Model:
         self.pay = {int(k): v for k, v in hc.get("payment_pct_by_players", hc["pct_by_players"]).items()}
         self.start_plots = {int(k): v for k, v in hc["field_plots_start_by_players"].items()}
         self.max_plots = {int(k): v for k, v in hc["field_plots_max_by_players"].items()}
+        self.sell_bonus = {int(k): v for k, v in hc.get("sell_bonus_pct_by_players", {}).items()}  # P4-30, D-106
         self.min_players, self.max_players = hc["min_players"], hc["max_players"]
         self.crops = {k: dict(v) for k, v in data["crops"].items()}
         for k, v in scn.get("crops_override", {}).items():
@@ -92,6 +93,10 @@ class Model:
         self.pair_plots = data["store"]["plot_pair"]["effect"]["plots"]
         self.pool = [r for r in data["sabotage"].values() if r["enabled"] and r["budget"]]
         self.end_pct = self.S["end_season_sale_pct"]
+        # Q-161: a nobody-outside night is a whole night hidden, so the game's "unattended farm" term is full (doc 03 s10).
+        # Policy switch: on, every headcount fails s18.3 (doc 02 s18.6 P4-30 log)
+        tr = data["sabotage"]["trample"]
+        self.unattended = min(int((self.S["night_s"] - tr["nobody_outside_s"]) // tr["unattended_every_s"]), tr["unattended_cap"]) if pol.get("unattended_term") else 0
         # doc 02 section 10.2: a broken fence frees animals; each is herded back with round_up, or costs coins if still out at dusk
         self.animals = self.S["animals_per_fence_break"]
         self.animal_cost = self.S["animal_out_at_dusk_coins"]
@@ -105,6 +110,10 @@ class Model:
 
     def pct_of(self, hc: int) -> int:
         return self.pct[hc]
+
+    def sold(self, v: int, hc: int) -> int:
+        """A sale's coins plus the headcount sell bonus, rounded up (doc 02 section 4, D-106). The game rounds per sale."""
+        return v + scaled(v, self.sell_bonus.get(hc, 0))
 
     def _t_plot(self) -> tuple[float, float]:
         """Doc 02 section 2.3: seconds per plot per day, blended over the fields, and P = day_s / t."""
@@ -212,10 +221,10 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
                     cash -= moon["sell"]
                 carried = rng.randint(0, M.carry) * M.crops["turnip"]["sell"]
                 cash = max(0, cash - carried)
-            coins += cash
+            coins += M.sold(cash, hc)
             # 2. final dawn: the ground sells at 50%, then the festival payout
             if d == M.final_dawn:
-                coins += sum(M.crops[c]["sell"] * M.end_pct // 100 for c, _ in ground) + M.payout(M.size, hc)
+                coins += M.sold(sum(M.crops[c]["sell"] * M.end_pct // 100 for c, _ in ground), hc) + M.payout(M.size, hc)
             # 3. medical bill, never below the floor; the rest goes to the final
             if n in dead_nights:
                 died += 1  # first_4p, then later_4p each, up to the cap (doc 02 section 8)
@@ -255,7 +264,7 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
             if d <= M.days:
                 k = S["trample_base"]
                 if rng.random() * 100 < pol["nobody_outside_pct"]:
-                    k = S["trample_nobody_outside"]
+                    k = S["trample_nobody_outside"] + M.unattended
                 p_dead = min(100, pol["generator_dead_base_pct"] + pol["generator_dead_tank_factor_pct"] * (100 - M.diff["generator_tank_pct"]) / 100)
                 if rng.random() * 100 < p_dead or (kill_pending and rng.random() * 100 < pol["generator_kill_unfixed_pct"]):
                     k += S["trample_dead_generator"]
@@ -266,7 +275,7 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
         if d > M.days:
             break
         # ---- day d ----
-        coins += sum(M.crops[c]["sell"] for c, ripe in ground if ripe <= d)
+        coins += M.sold(sum(M.crops[c]["sell"] for c, ripe in ground if ripe <= d), hc)
         ground = [g for g in ground if g[1] > d]
         pumpkin_open = (d >= M.crops["pumpkin"]["unlock_day"]) and (M.unlock_rule == "day" or first_paid)
         moon_n = 0

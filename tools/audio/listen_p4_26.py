@@ -3,7 +3,7 @@ Run: uv run --no-project python tools/audio/listen_p4_26.py [--old-bed <old amb_
 Writes logs/qa/p4_26/*.wav (48 kHz, 16-bit). Mirrors soundscape.gd: the local player's steps (play_2d),
 one per 1.6 m stride (walk 3.0 m/s, sprint 5.0 m/s, data/labor.json), sprint +6 dB, a random variant never
 repeated back to back, pitch 0.9 to 1.1 (resampled, like pitch_scale), level -2.5 to +1 dB. Night ambience:
-wind at pitch 0.5 and -23.1 dB plus the insect bed at -28 dB, both through the Ambience bus (-8 dB).
+wind at pitch 0.5 and -23.1 dB plus the insect bed at -30.8 dB (the old bed for A/B at -28), both through the Ambience bus (-8 dB).
 Levels are relative to full scale, before Master; footstep files add the SFX bus (-4 dB) and catalog -8 dB.
 Standard library only."""
 import argparse
@@ -78,11 +78,11 @@ def loop(x: array.array, n: int, start: int) -> array.array:
     return array.array("f", (x[(start + i) % len(x)] for i in range(n)))
 
 
-def night(bed_path: Path, seconds: float) -> list[array.array]:
+def night(bed_path: Path, seconds: float, bed_db: float) -> list[array.array]:
     n = int(seconds * SR)
     wind = [loop(resample(c, 0.5), n, 0) for c in read(AUDIO / "amb_wind_loop.wav")]
     bed = [loop(c, n, SR) for c in read(bed_path)]
-    gw, gb = db(-23.1 - 8), db(-28 - 8)
+    gw, gb = db(-23.1 - 8), db(bed_db - 8)
     fade = int(2 * SR)
     out = []
     for c in range(2):
@@ -103,9 +103,9 @@ if __name__ == "__main__":
         for name, speed, sprint in (("walk", 3.0, False), ("run", 5.0, True)):
             x = steps(surface, speed, sprint, 8.0, rng)
             write(OUT / f"steps_{surface}_{name}.wav", [x])
-    write(OUT / "night_ambience_60s.wav", night(AUDIO / "amb_insect_bed_night.wav", 60))
+    write(OUT / "night_ambience_60s.wav", night(AUDIO / "amb_insect_bed_night.wav", 60, -30.8))
     if args.old_bed:
-        write(OUT / "night_ambience_60s_OLD.wav", night(args.old_bed, 60))
+        write(OUT / "night_ambience_60s_OLD.wav", night(args.old_bed, 60, -28.0))  # the old bed at its old level
     for p in sorted(OUT.glob("*.wav")):
         chans = read(p)
         peak = max(max(abs(v) for v in c) for c in chans)

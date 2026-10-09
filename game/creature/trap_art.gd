@@ -8,7 +8,8 @@ const DIRT := Color(0.42, 0.27, 0.14)
 
 
 ## A bear trap, open: a steel ring, a row of teeth up its rim, the pan in the middle. Origin on the ground.
-static func bear() -> Node3D:
+## `sprung` (P4-29): the teeth fold in over the pan, jaws shut, so a sprung trap reads as spent.
+static func bear(sprung := false) -> Node3D:
 	var root := Node3D.new()
 	var mat := _mat(STEEL, 0.35, 0.8)
 	var ring := TorusMesh.new()
@@ -26,6 +27,8 @@ static func bear() -> Node3D:
 		tooth.size = Vector3(0.05, 0.14, 0.03)
 		var t := _part(tooth, mat, Vector3(cos(a) * 0.365, 0.1, sin(a) * 0.365))
 		t.rotation.y = -a
+		if sprung:
+			t.rotation.z = 1.1  # leans the tooth toward the middle (local x points out from the ring)
 		root.add_child(t)
 	for s in [-1, 1]:  # the springs either side
 		var spring := BoxMesh.new()
@@ -51,8 +54,8 @@ static func pit() -> Node3D:
 	return root
 
 
-static func of(kind: StringName) -> Node3D:
-	return bear() if kind == &"bear" else pit()
+static func of(kind: StringName, sprung := false) -> Node3D:
+	return bear(sprung) if kind == &"bear" else pit()
 
 
 static func _part(m: Mesh, mat: Material, pos: Vector3) -> MeshInstance3D:

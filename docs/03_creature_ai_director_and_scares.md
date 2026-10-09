@@ -887,6 +887,12 @@ cart counts out only if it is past the fields (x > 78, doc 04 sec 6).
   per 15 s at most (placeholder, `harvest_knock_cooldown_s`). A pusher within 10 m of the town stand
   is knocked off only on a won `town_stand.knock_off_mult` roll, and killed only on a won
   `kill_mult` roll (section 11.5, D-115); the stand is never a safe zone for the cart.
+- **Nobody pushing.** While the cart is in act 2 or 3 and nobody pushes it, the creature goes for
+  the living player it senses nearest the cart (sensed positions only, section 3) and chases them
+  as at night: a catch kills. The knock-off cooldown and the stall bites are unchanged, and the
+  lit-building rule and the town stand rolls still hold (sections 6 and 11.5). In act 2 an unpushed cart lets
+  the AI Director allow that chase. Source: the CEO's Harvest Moon test, where players stopped
+  and started pushing and the creature stood off (P4-25).
 - **The gate run** is the final 30 m of the route (R7 to the gate, doc 04 sec 6.1, 3.7 m from corn
   at the pinch), where the creature gives a chase `chase_speed_mps` against a cart speed of
   1.0 to 2.4 m/s by pushers (doc 02 section 9, `profile_harvest_moon`). The peak ends when the cart reaches the gate (x > 105) or the cap
