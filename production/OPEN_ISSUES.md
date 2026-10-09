@@ -307,3 +307,10 @@ Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent bac
 3. **Cross-owner edits:** `game/bots/bot.gd` (AI Programmer) and `docs/02` line 483 (Game Designer) edited by Gameplay; owners to sign off.
 4. **`request_store` doc comment** in `game/net/net.gd` omits the `seeds` op. Network & Voice.
 5. **Merge note:** bot planting now needs `_keeps_payment(p) and _plantable(p, st)` (P4-18 payment guard kept with P4-22 seed buying); the P4-22 hint offset was dropped for P4-32 left-edge hint.
+
+## Found at the P4-29 follow-up review (QA, 2026-10-09)
+
+1. **`tests/creature/test_p4_29_e2e.gd:142-161`** does not cover a lost race, a client mirror or a late joiner (manual multi.py runs did). QA.
+2. **`production/CONTRACTS.md:265`** does not list the `loose`/`picked_up` states or the new `cause` field. Director, with a DECISIONS entry.
+3. **`tools/qa/check_logs.py:291-297`** counts loose events from a death or leave as the victim acting; count only `cause: "pried"`. QA.
+4. **A client victim quitting mid-race** not tested live (`--force-spring` springs only host traps).
