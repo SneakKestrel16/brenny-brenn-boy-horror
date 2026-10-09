@@ -20,6 +20,7 @@ const HELP := """Commands (host only unless marked):
   tension <n>               set the AI Director's tension meter (0 to 100)
   length <phase> <s>        set a phase's length for this session
   coins <n>                 add n coins (negative takes them away)
+  buy <item>                buy a store.json item as you, anywhere (the crate's other rules apply)
   fuel [s]                  add s seconds of fuel (default: fill the tank)
   gen damage|repair         break or fix the generator
   creature <state> [peer]   force lurk, stalk, chase or retreat (target defaults to you)
@@ -192,6 +193,11 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? length day|dusk|night <seconds>"
 			Clock.set_length(StringName(a[0]), a[1].to_float())
 			return "%s is now %.0f s on the host (a client's countdown still shows its own length)" % [a[0], a[1].to_float()]
+		"buy":
+			if a.is_empty():
+				return "? buy <store item id>"
+			var why: StringName = main.get_node("Farm").store.buy(Game.local_peer(), StringName(a[0]), false)
+			return "bought %s" % a[0] if why == &"" else "? %s" % why
 		"coins":
 			if a.is_empty() or not a[0].is_valid_int():
 				return "? coins <n>"

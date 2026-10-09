@@ -489,6 +489,18 @@ func request_farm_state() -> void:
 	request_received.emit(&"farm_state", _sender(), [])
 
 
+## Client to host (P4-06): a store action, `buy` (item id), `flare` or `scarecrow`. The host validates and answers `apply_store`.
+@rpc("any_peer", "call_remote", "reliable")
+func request_store(op: StringName, arg: StringName) -> void:
+	request_received.emit(&"store", _sender(), [op, arg])
+
+
+## Host to all (P4-06): the store's whole state (bought items, scrap, placed scarecrows, flare shots, opened plots).
+@rpc("authority", "call_remote", "reliable")
+func apply_store(state: Dictionary) -> void:
+	apply_received.emit(&"store", [state])
+
+
 @rpc("authority", "call_remote", "reliable")
 func apply_refused(verb: StringName, reason: StringName) -> void:
 	apply_received.emit(&"refused", [verb, reason])

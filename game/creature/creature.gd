@@ -108,6 +108,7 @@ var _last_lure_t := -INF
 var _traps: Dictionary = {}  ## trap id (spot name) -> {id, kind, position, deep, armed}
 var _trap_i := 0
 var _full := Game.full_farm  ## P2-05 traps and theft; the Phase 1 farm keeps the scripted traps
+var _flare_retreat_s := 0.0  ## P4-06: a flare hit's longer Retreat; 0 means the normal one
 var shed_lock := OS.get_cmdline_user_args().has("--shed-lock")  ## the team owns the pegboard lock (store hook)
 var _plan: Array = []  ## tonight's sets still to come: {t, kind}, sorted by t
 var _work: Array = []  ## heard player noise positions, oldest first: the region players work in
@@ -414,7 +415,7 @@ func _hunt(delta: float) -> void:
 			elif not _alive(target) or (_chase_t >= _num[&"chase_commit_s"] and _lose_t >= _num[&"chase_lose_quiet_s"]):
 				_end_chase(&"lost", &"lost")
 		&"retreat":
-			if _t_state >= _num[&"retreat_s"]:
+			if _t_state >= maxf(_num[&"retreat_s"], _flare_retreat_s):
 				_set_state(&"lurk", &"retreat_done", 0)
 			else:
 				_goal_retreat()
@@ -454,6 +455,19 @@ func force_state(s: StringName, reason: StringName, p_target: int) -> void:
 		_set_state(s, reason, p_target)
 
 
+## P4-06 (store.json `flare_gun`): a flare hit sends it into Retreat for `seconds` (doc 01 Store: 30 s). False if it
+## is not hunting yet (day, or before its night starts).
+func flare_hit(seconds: float) -> bool:
+	if not _ok or (_night_t < 0.0 and not _full):
+		return false
+	_flare_retreat_s = seconds
+	if state == &"retreat":
+		_t_state = 0.0  # a second hit restarts the 30 s
+	else:
+		_set_state(&"retreat", &"flare", 0)
+	return true
+
+
 func _set_state(s: StringName, reason: StringName, p_target: int) -> void:
 	if s == state and p_target == target:
 		return
@@ -474,6 +488,8 @@ func _set_state(s: StringName, reason: StringName, p_target: int) -> void:
 			"chase_s": snappedf(state_s, 0.01)})
 	if s == &"retreat":
 		_goal = Vector3.INF
+	elif from == &"retreat":
+		_flare_retreat_s = 0.0
 	Log.event(&"creature_state", {"from": String(from), "to": String(s), "reason": String(reason),
 		"position": _v(global_position), "target": target if target != 0 else null})
 	if from != s:
@@ -1087,6 +1103,10 @@ func _move(_delta: float) -> void:
 			_goal = Vector3.INF
 		return
 	d.y = 0.0
+	if state in [&"lurk", &"lure", &"stalk"] and _scarecrow_in_way(d.normalized()):  # P4-06: store.json `scarecrow` creature_avoid_m
+		_goal = Vector3.INF
+		velocity = Vector3.ZERO
+		return
 	velocity = d.normalized() * speed
 	rotation.y = atan2(-d.x, -d.z)
 	var was := global_position
@@ -1097,6 +1117,17 @@ func _move(_delta: float) -> void:
 		if _leave_m >= _num[&"leavings_every_m"]:
 			_leave_m = 0.0
 			get_tree().get_first_node_in_group(&"taint").add_source(&"leavings", global_position)
+
+
+## P4-06: a bought scarecrow keeps it `creature_avoid_m` away; it never blocks a chase or a retreat.
+func _scarecrow_in_way(dir: Vector3) -> bool:
+	var avoid := float(Data.value(&"store", &"scarecrow", &"effect").get("creature_avoid_m", 0.0)) if Data.has_table(&"store") else 0.0
+	var next := global_position + dir * 1.0
+	for s: Node3D in get_tree().get_nodes_in_group(&"bought_scarecrow"):
+		var now := Vector2(s.global_position.x - global_position.x, s.global_position.z - global_position.z).length()
+		if now < avoid and Vector2(s.global_position.x - next.x, s.global_position.z - next.z).length() < now:
+			return true
+	return false
 
 
 ## Lurk: walk between cover points and trap spots in its region (doc 03 section 4): the AI Director's wander

@@ -10,6 +10,7 @@ const Registry := preload("res://game/interaction/hold_registry.gd")
 const Cans := preload("res://game/items/cans.gd")
 const Crops := preload("res://game/farming/crops.gd")
 const PrizePumpkin := preload("res://game/farming/prize_pumpkin.gd")
+const Store := preload("res://game/items/store.gd")
 
 var targets: Dictionary = {}  ## id -> Interactable
 var carry: Dictionary = {}  ## every peer: peer -> {can, bag, fuel_can}, replicated by `apply_carry`
@@ -19,6 +20,7 @@ var seed_pick: StringName = &""  ## this machine's chosen seed for field plots (
 var free_scrap := 0  ## host: scrap handed out at the last dawn, spent by the store (P4-05; doc 02 s9 step 7)
 var registry: Node
 var cans: Cans  ## D-054: the physical watering and fuel cans
+var store: Store  ## P4-06: the shipping crate's store
 var _log_farm := OS.get_cmdline_user_args().has("--log-farm")
 var headcount := 0  ## players at match start: fixes which `extra` plots are open (P2-14, D-039); host decides, clients are told
 var _headcount_arg := _int_arg("--headcount=")  ## QA: host-only override for a no-lobby run (joiners arrive after the farm loads)
@@ -42,6 +44,9 @@ func _ready() -> void:
 	cans = Cans.new()
 	cans.farm = self
 	add_child(cans)
+	store = Store.new()
+	store.farm = self
+	add_child(store)
 	Net.request_received.connect(_on_request)
 	Net.apply_received.connect(_on_apply)
 	if Game.is_host():
@@ -69,7 +74,7 @@ func _int_arg(prefix: String) -> int:
 
 
 ## D-039: `extra` plots open when the match-start headcount reaches their `min_players`. The bought-plot
-## ceiling for the store is `plot_ceiling()` (player_scaling.json, not season.json); no store sells plots yet.
+## ceiling for the store is `plot_ceiling()` (player_scaling.json, not season.json); the store's `plot_pair` reads it (P4-06).
 func _set_headcount(n: int) -> void:
 	headcount = n
 	var open := 0
@@ -104,6 +109,7 @@ func pstate(peer: int) -> Dictionary:
 		st.held_kind = &""
 		st.bag = 0
 		Game.players[peer] = st
+	st.peer = peer  # P4-06: a verb's `can_start` may need to know whose state it is
 	return st
 
 

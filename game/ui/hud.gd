@@ -14,7 +14,10 @@ const VERB_TEXT := {&"plant": "Plant", &"water": "Water", &"harvest": "Harvest",
 const REFUSED_TEXT := {&"locked": "Locked: needs more players, or buy it at the store", &"need_shovel": "You need the shovel", &"hands_full": "Your hands are full",
 		&"pegboard_full": "No free hook", &"flag_here": "A flag is already here", &"not_armed": "Nothing set here",
 		&"no_can": "You need a watering can", &"no_fuel_can": "You need the fuel can", &"can_taken": "Someone has it", &"has_fuel_can": "The can is full",
-		&"not_tainted": "Your hands are clean", &"no_coins": "Not enough coins for the seed", &"locked_crop": "That seed is not on sale yet"}
+		&"not_tainted": "Your hands are clean", &"no_coins": "Not enough coins for the seed", &"locked_crop": "That seed is not on sale yet",
+		&"too_far": "Stand at the shipping crate", &"locked_item": "Not on sale yet", &"owned": "You have that already", &"max_bought": "The crate has no more",
+		&"plots_max": "No more plots can be opened", &"no_flare": "No flare gun", &"flare_empty": "The flare gun is empty", &"flare_reloading": "Reloading",
+		&"no_scarecrow": "No scarecrow to put up", &"too_close": "Too close to another scarecrow"}
 
 var player: CharacterBody3D
 var hold: Node  ## the player's HoldController
@@ -129,6 +132,8 @@ func _process(delta: float) -> void:
 		prompt = "Hold %s: %s" % [_key(&"interact"), _verb_text(hold.aimed_verb)]
 	elif hold.held_can_id() >= 0:
 		prompt = "Tap %s: put the can down" % _key(&"drop")
+	if prompt == "" and farm:
+		prompt = farm.store.prompt_text()
 	var why: StringName = hold.fresh_refusal()
 	if why != &"" and hs[0] == &"":
 		prompt = REFUSED_TEXT.get(why, String(why).capitalize().replace("_", " "))

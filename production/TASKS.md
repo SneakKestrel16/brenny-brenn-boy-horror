@@ -584,7 +584,7 @@ no economy number and can start now.
 | P4-03 | Game Designer | Phase 4 data: pumpkin, debt, difficulty, roles, store effects, crops, `harvest_moon`, Phase 4 sabotage, animals, season awards, Dawn Report gaps | done (QA PASS; follow-ups D-082) | P4-02 |
 | P4-04 | Gameplay | Full 7-day season: every crop, town stand selling, dawn steps 1, 2, 5 and 7, season end, doc 05 s18 events; carried fixes | done (QA PASS; trample order Q-086) | P4-02, P4-03 |
 | P4-05 | Gameplay, Technical Artist | Prize Pumpkin: patch, growth, sizes, carrying, judging (doc 02 s6) | done (QA PASS; lift rule D-084) | P4-04 |
-| P4-06 | Gameplay, AI Programmer | Store and upgrades: every `store.json` item works (doc 02 s10) | todo | P4-04 |
+| P4-06 | Gameplay, AI Programmer | Store and upgrades: every `store.json` item works (doc 02 s10) | done (QA PASS; scrap D-085) | P4-04 |
 | P4-07 | Gameplay | Debt, payment dawns, early payment, Foreclosure (doc 02 s7) | todo | P4-05 |
 | P4-08 | Gameplay, AI Programmer, Level Designer | Animals and `broken_fence`: pen animals, escape, round-up (D-071) | done (QA PASS after QA fixes) | P4-03 |
 | P4-09 | Gameplay | Roles: all ten doc 01 roles, lobby pick, locked per season (D-077) | todo | P4-04, P4-08 |
@@ -730,6 +730,9 @@ Acceptance:
 - `scares.gd` plays `cre_jumpscare_hit_<body>` (body id without `body_`), falling back to
   `cre_jumpscare_hit` when `Soundscape.creature_body` is empty or the file is missing
   (`ResourceLoader.exists`; `play_2d` fails silently) (D-081).
+- D-085: every creature-damage fix (sabotage.json fix verbs, generator repair) spends 1 scrap via
+  `Store.take_scrap()`, refused `no_scrap` when none is left; `pumpkin_gnaw` calls `PrizePumpkin.gnaw()` at
+  dawn (D-084); the Sabotage dawn trample moves into `Death.step_farm_damage` (Q-086).
 
 ### P4-12 Short season and the Harvest Moon
 Owner: AI Programmer; Gameplay for the cart; Technical Artist for the sky and the cart lantern.

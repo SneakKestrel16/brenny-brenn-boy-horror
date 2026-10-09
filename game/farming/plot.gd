@@ -37,7 +37,7 @@ func verbs_for(_st: Dictionary) -> Array[StringName]:
 		&"growing":
 			var out: Array[StringName] = []
 			if not watered:
-				out.append(&"water")
+				out.append(&"water_quiet" if farm and farm.store.owns(Game.local_peer(), &"quiet_watering_can") else &"water")  # P4-06
 			return out
 		&"ripe": return [&"harvest"]
 		&"wilted", &"dead": return [&"clear_plot"]
@@ -66,7 +66,9 @@ func can_start(verb: StringName, st: Dictionary) -> StringName:
 			if not Crops.is_unlocked(c, Clock.day):
 				return &"locked_crop"
 			return &"" if farm.coins >= int(r.seed) else &"no_coins"
-		&"water":
+		&"water", &"water_quiet":
+			if base(verb) == &"water_quiet" and not farm.store.owns(int(st.get("peer", 0)), &"quiet_watering_can"):
+				return &"no_quiet_can"
 			if st.get("held_kind", &"") != &"water":
 				return &"no_can"
 			if state != &"growing":
@@ -93,10 +95,10 @@ func complete(verb: StringName, peer: int, st: Dictionary) -> void:
 			watered = false
 			age = 0
 			NoiseBus.emit_kind(&"tool_plant", pos, peer)
-		&"water":
+		&"water", &"water_quiet":
 			watered = true
 			st.can = int(st.can) - 1
-			NoiseBus.emit_kind(&"tool_water", pos, peer)  # noisy can: mult 1.0 (quiet can x0.5 is bought, later)
+			NoiseBus.emit_kind(&"tool_water", pos, peer, 0.5 if base(verb) == &"water_quiet" else 1.0)  # doc 03 s3.1: the quiet can x0.5
 			_ripen_at_night()
 		&"harvest":
 			Crops.bag_add(st, crop)

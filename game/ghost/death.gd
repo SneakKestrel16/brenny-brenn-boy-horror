@@ -184,12 +184,13 @@ func step_save(_farm: Node, _final: bool) -> void:
 	pass
 
 
-## Step 7: the free scrap each dawn (doc 02 s10): it does not stack unless `free_scrap_stacks`. The store (P4-05)
-## spends it; the flare gun refill (P4-09) joins here.
+## Step 7: the free scrap each dawn (doc 02 s10): it does not stack unless `free_scrap_stacks`. The store (P4-06)
+## spends it; then the flare gun refill (P4-06).
 func step_free_scrap(farm: Node, _final: bool) -> void:
 	var n := int(Data.value(&"season", &"free_scrap_per_dawn"))
 	farm.free_scrap = farm.free_scrap + n if bool(Data.value(&"season", &"free_scrap_stacks")) else maxi(farm.free_scrap, n)
 	Log.event(&"free_scrap", {"scrap": farm.free_scrap})
+	farm.store.refill_flare()  # doc 01 Store: the flare gun is loaded again (P4-06)
 
 
 ## Host only: the ghost walks again at its barn spawn (the same slot as at the start).

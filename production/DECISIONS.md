@@ -701,3 +701,12 @@ exists to prevent; doc 02 s6 has no carrying rule, so doc 01 settles it. Buildin
 exclusion would be code for a case the design forbids.
 **How to apply:** P4-12 acceptance carries the lift gate and the hold block; until then `lift_prize`
 works on any day (dev and test use only).
+
+### D-085 · 2026-10-09 · Director · Q-100 answered: scrap pays for every creature-damage fix
+Every fix of creature damage costs 1 scrap: the `sabotage.json` fix verbs, generator repair included
+(doc 01 "Repairs" line 289 and the store table, line 540). There is no free scrap on day 1; the first
+free scrap comes at the first dawn (step 7), before any damage can exist. P4-11 calls
+`Store.take_scrap()` from those fixes and refuses the hold with `no_scrap` when none is left.
+**Why:** doc 01 states the rule; the P4-06 builder held back only because day-1 bots and tests would
+break, which cannot happen if no damage exists on day 1.
+**How to apply:** P4-11 acceptance; bots that fix damage must buy scrap when the free one is spent.

@@ -468,6 +468,27 @@ dawn (section 17) from `crops.json` (doc 02 section 5).
   host against live player positions (doc 01 "Prize Pumpkin"; the check is part of the AI
   Director's gnaw rule in doc 03 section 10, not duplicated here).
 
+### The store (P4-06, doc 02 section 10)
+
+- `game/items/store.gd` (`Store`, child of `Farm` on every peer, group `store`). Every `store.json` row is
+  bought at the `store_crate` (within 3.5 m, placeholder) at its `price`, from its `unlock_day`. Seeds are not
+  rows: they are charged at planting (plot.gd, P4-04). No crop is sold.
+- Wire: client `request_store(op, arg)` (`buy`, `flare`, `scarecrow`) -> host validates -> `apply_store(state)`
+  carries the whole small state (team counts, per-player ownership, scrap, placed scarecrows, flare shots, opened
+  plots) to everyone; a late joiner gets it on `farm_state`. Refusals use `apply_refused` (hud.gd `REFUSED_TEXT`).
+- Keys (placeholders, `project.godot`): `cycle_item` R, `buy_item` K, `fire_flare` H, `place_scarecrow` N. The HUD
+  prompt shows only within reach of the crate. Dev console: `buy <item>` (anywhere, host).
+- Items: `scrap` adds `repairs` to `scrap_bought` (`take_scrap()` spends the free scrap first; nothing calls it yet,
+  Q-100). `quiet_watering_can` (per player) offers verb `water_quiet` (5 s, noise x0.5, labor.json).
+  `brighter_lantern` is tracked (`lantern_mult(peer)`); no player lantern exists yet. `shed_lock` sets
+  `creature.shed_lock`. `scarecrow` (max 3) is placed at the player's feet, 3 m apart, and the creature's
+  lurk/lure/stalk moves will not step closer than `creature_avoid_m` (`creature.gd` `_scarecrow_in_way`).
+  `flare_gun`: one shot; `fire_flare` makes `noise_flare` and, if the creature is within that radius (inference),
+  calls `creature.flare_hit(30)`: Retreat for 30 s. `Death.step_free_scrap` (dawn step 7) calls `refill_flare()`.
+  `plot_pair` unlocks 2 locked plots, refused past `farm.plot_ceiling()` (doc 02 section 4).
+  `walkie_talkie`/`walkie_battery` are stocked; P4-14 builds the radio.
+- `seizable()` lists the bought upgrades; `seize(id)` takes one away (P4-07 calls both).
+
 ## 10. Taint, Shaken and the well
 
 - **Taint** (doc 01 "The Taint"; effects table in `taint.json`, doc 02 section 13): host-owned flag
@@ -1025,6 +1046,13 @@ the QA changes.
 | `dawn_step` | host, before each step of `Death.dawn()` | `step` (`cash_in`, `final_sale`, `medical_bill`, `payment`, `farm_damage`, `save`, `free_scrap`), `day` | Doc 02 section 9 order test (P4-04) |
 | `end_of_season_sale` | host, final dawn step 2 | `plots`, `coins` | Dawn Report ledger row (P4-04) |
 | `free_scrap` | host, dawn step 7 | `scrap` | Doc 02 section 9 step 7 (P4-04) |
+| `store_buy` | host | `item`, `price`, `buyer`, `day`, `coins` | Doc 02 section 10 (P4-06) |
+| `store_refused` | host | `item`, `buyer`, `reason` | P4-06 |
+| `store_picked` | local peer | `item`, `price` | P4-06 |
+| `store_seized` | host | `item` | Foreclosure (P4-07) |
+| `scrap_used` | host | `left` | P4-06 |
+| `flare_fired` | host | `player`, `hit`, `left` | P4-06 |
+| `scarecrow_placed` | host | `player`, `position`, `avoid_m` | P4-06 |
 | `season_ended` | each peer (host from the clock, clients from the final Dawn Report) | `day` | Season Awards entry point (P4-04) |
 | `pumpkin_planted`, `pumpkin_watered`, `pumpkin_lifted`, `pumpkin_set_down` | host, Prize Pumpkin verbs | `player`, `day` / `watered_days`, `size` / `pos` | P4-05 |
 | `pumpkin_night` | host, dawn | `day`, `guard_max_s`, `guard_total_s`, `guarded`, `guarded_nights` | Guard rule, doc 02 s6 (P4-05) |

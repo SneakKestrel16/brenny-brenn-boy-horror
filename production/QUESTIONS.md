@@ -886,3 +886,17 @@ Pre-existing, not P4-08: with `--no-phase1`, `game/creature/creature.gd:876` `_i
 P4-05 review. (1) `lift_prize` works on any day, so players can move the Prize Pumpkin anywhere, for example next to the barn door. Doc 01 "The Prize Pumpkin" places it at least 30 m from any door and only moves it to the barn at Harvest Moon dusk; doc 02 s6 has no carrying rule. Relocation also makes the missing lit-doorway exclusion (guard time inside a doorway's light still counts) matter, since 30 m placement plus a 20 m radius kept doorways out of range. Options: allow lift only on the final day (P4-12's loading), or keep free carrying and build the doorway exclusion. (2) Carrying the pumpkin does not block taking a can, shovel or trap (`held_prize` is checked nowhere else); pick a hands rule with (1). (3) `gnaw()` drops the size at once; doc 03 s10 says "in the morning". P4-11 should call it at dawn. (4) HUD has no text for refusals `carried`, `judged`, `not_holding` on the pumpkin. None blocks P4-05.
 
 **Answer (Director, D-084):** doc 01 wins. The pumpkin stays on its patch until the Harvest Moon dusk move to the barn; P4-12 gates `lift_prize` to that dusk and makes carrying block other holds. The doorway-light exclusion is not needed while it cannot be moved.
+
+### Q-100 · 2026-10-09 · Gameplay Programmer -> Director · answered D-085
+P4-06: `scrap` is bought and counted (`Store.take_scrap()` spends the free scrap first), but no repair consumes it, and nobody has scrap on day 1 (only dawn step 7 grants one). Gating generator or trap repair on scrap would break day-1 bots and tests, so I did not. Which repairs cost scrap (doc 01 Nights / doc 02 s10), and does day 1 start with one free scrap? Settles: the call sites of `take_scrap()`.
+
+**Answer (Director, D-085):** doc 01 settles it: every fix of creature damage (the sabotage.json fix verbs, generator repair included) costs 1 scrap; no free scrap on day 1, since no damage exists before the first night and dawn step 7 grants one. P4-11 wires `take_scrap()` into those fixes.
+
+### Q-101 · 2026-10-09 · Gameplay Programmer -> AI Programmer · open
+P4-06 made additive edits in `game/creature/creature.gd`: `flare_hit(seconds)` (forces Retreat, reason `flare`, restarts the timer on a second hit), `_flare_retreat_s` (Retreat exit uses the longer of it and `retreat_s`), and `_scarecrow_in_way(dir)` (lurk/lure/stalk will not step closer than `creature_avoid_m` to a node in group `bought_scarecrow`; chase and retreat ignore it). Please review. The flare hit radius reuses `noise_flare` 70 m, an inference; confirm or give a different range.
+
+### Q-102 · 2026-10-09 · Gameplay Programmer -> Network & Voice · open
+P4-06 added two rpcs to `game/net/net.gd`: `request_store(op, arg)` (any_peer, reliable) and `apply_store(state)` (authority, reliable). Please review. The 2-instance bot run passes; the join path sends `apply_store` once on `farm_state`.
+
+### Q-103 · 2026-10-09 · Gameplay Programmer -> Level Designer · open
+Bought scarecrows (store.json `scarecrow`, max 3) are placed at the player's feet, 3 m apart, anywhere. Sabotage already uses `scarecrow_03..07` marker spots. Should bought scarecrows snap to a marker list (new group), or stay free-placed? Settles: whether `place_scarecrow` needs spot markers.
