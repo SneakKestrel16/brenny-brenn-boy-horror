@@ -898,3 +898,13 @@ at purchase instead of at planting, within the same day for a team that buys as 
 simulator (daily steps) needs no change; the default `sim.py` run still passes every target.
 **How to apply:** planting validates seeds, not coins. Foreclosure never seizes seeds (`seizable()` reads
 only `store.json` rows). Seeds stay out of `store.json`; their prices live in `crops.json`.
+
+### D-144 · 2026-10-09 · CEO · One distinct hat per role, built now (Q-241)
+The CEO answered Q-241 with "make different hats now". Each of the ten roles in `data/roles.json` gets its
+own low-poly hat model, built in Phase 4 instead of waiting for the DD Phase 5 cosmetics (doc 07 s8).
+**Why:** the menu lobby line-up (D-140, P4-35) shows each player's role on their farmer, and placeholder
+primitives do not tell the roles apart.
+**How to apply:** the 3D Artist builds `assets/models/hat_<role_id>.glb` (P4-36), with the origin at the
+inside centre of the band so it sits on a head at 1.74 m. The lobby's `LineUp._hat` loads them in place of
+the primitives. The hats are role markers, not cosmetics: wider cosmetics (overalls, picked hats) stay
+Phase 5. The D-142 and D-143 numbers are taken by the P4-33 and P4-35 branches still in review.
