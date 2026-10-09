@@ -252,3 +252,13 @@ Source: the Opus QA review of P4-30 (PASS). None blocks. Game Designer unless no
 3. **Doc 02 line 225 says a 2p bonus "above about 0.5%"** breaks 70%; with ceil any nonzero bonus does (D-106).
 4. **With `unattended_term` on, 6p first clear stays 84.3** while 4p and 5p fall. Recheck with a per-night
    trample trace before Q-211 is ruled on (inference).
+
+## Found at the P4-33 review (QA, 2026-10-09)
+
+Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent back to the Gameplay Programmer.
+
+1. **A flag's pick body may cover the trap it marks** (`game/traps_player/trap_sweep.gd:177` against
+   `game/traps_player/trap_race.gd:282`), hiding disarm, fill and P4-29's loose-trap pickup (inference).
+2. **A leaver's flags can never be pulled up** (owner keyed by peer id); they clear only by a disarm or fill.
+3. **Dawn report flag count** (`game/ui/dawn_report_logic.gd:54`) is inflated by placing and pulling up.
+4. **`apply_flags(positions)` in `game/net/net.gd`** still names a list that now holds `{pos, by}`. Network & Voice.
