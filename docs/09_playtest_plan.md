@@ -94,12 +94,12 @@ Director).
 
 | Item | Test | Log measure | Pass |
 |---|---|---|---|
-| The dead stay engaged | A tester dies early and keeps playing as a ghost | ghost actions: flicker, crow, rustle, static voice (events not yet defined, section 13); time a dead tester stays connected and in the session | The dead tester stays to the dawn and reports something to do (debrief question 4) |
-| The living argue over a static voice | A dead teammate's voice or a faked dead voice plays in static | `lure_played.ghost` = true; observer counts a spoken argument about whether it was real | At least one argument per session, and at least one tester used the flicker as the tiebreaker (doc 01 "The dead-voice twist") |
-| Someone laughs at the Dawn Report | The Dawn Report shown at dawn | none | Observer logs at least one laugh per session |
-| The AI Director, day arc, jumpscares | Day arc thirds; at most one big scare per player per day; never two on the same player within 2 minutes (doc 01 "Rules") | `tension` every 10 s, `creature_state`, scare events | No player has two big scares within 2 minutes; first third of the day has no scare except evidence of sabotage |
-| Taint and Shaken | Cause each once | `taint_changed`, `shaken` | Cause and cure as doc 01 states; Shaken never Taints |
-| Do the four bodies feel different? | Open Issue 4; each session uses a different body | none | Debrief: can the tester name the body by sound alone? Written into OPEN_ISSUES |
+| The dead stay engaged | A tester dies early and keeps playing as a ghost | `ghost_action` by `kind` (`flicker`, `crow`, `rustle`, `caw`, `static_voice`; P3-09, P3-10); time from the tester's `death` to the dawn with no `net_peer_left` for them | The dead tester stays to the dawn and reports something to do (debrief question 4) |
+| The living argue over a static voice | A dead teammate's voice or a faked dead voice plays in static | `lure_played.ghost` = true and `owner_dead` (P3-03; `check_logs.py` counts both); observer counts a spoken argument about whether it was real | At least one argument per session, and at least one tester used the flicker as the tiebreaker (doc 01 "The dead-voice twist") |
+| Someone laughs at the Dawn Report | The Dawn Report shown at dawn | `dawn_report_shown` (P3-12) proves it was shown; the laugh is the observer's | Observer logs at least one laugh per session |
+| The AI Director, day arc, jumpscares | Day arc thirds; at most one big scare per player per day; never two on the same player within 2 minutes (doc 01 "Rules") | `tension` every 10 s (`value`, `phase`, `profile`), `creature_state`, `scare` (`kind`, `target`, `big`, `private`, `third`), `scare_dropped` (`why`), `disturbance_placed` | `check_logs.py` scare rules PASS: per player at most one big scare a day, no two big or private scares within 120 s (`ai_director.json` `scare_rules`), none in day third 1; scares forced from the dev console are counted apart. Sabotage kinds only from their `opens_day` (`data/sabotage.json`) |
+| Taint and Shaken | Cause each once | `taint_changed` (`player`, `on`, `cause`), `shaken` (`player`, `seconds`) | Cause and cure as doc 01 states; `check_logs.py` lists any Taint on a player within 2 s after a `shaken` (Shaken never Taints) |
+| Do the four bodies feel different? | Open Issue 4; each session uses a different body | none. Blocked at P3-13: the build always uses `body_gaunt` (OPEN_ISSUES "Found at the P3-13 review" item 1) | Debrief: can the tester name the body by sound alone? Written into OPEN_ISSUES |
 
 ### DD Phase 4
 
@@ -124,7 +124,13 @@ three doc 01 measures plus tallies.
 | Time inside at night | `inside_at_night` | seconds by player | Done |
 | Deaths, traps, money | `death`, `trap_sprung`, `money_changed` | counts | Done |
 | Ghost powers used (DD Phase 3 "the dead stay engaged") | `ghost_action` (`kind`: `flicker`, `crow`, `rustle`, `caw`, `static_voice`; `peer`) | count by `kind` | Done (P3-09; `static_voice` P3-10: one per ghost talk spurt). Refusals are `ghost_action_refused` with a `reason` (doc 05 section 18), counted in the event list only |
-| Lure success by source (recorded line, generic line, sound) | `lure_played` joined to `lure_result` on `lure_id` | not built | Needed for DD Phase 2 "fooled" (section 13) |
+| Lure success by source (recorded line, generic line, sound) | `lure_played` joined to `lure_result` on `lure_id` | `kind` `clip` is recorded, anything else generic; read, not gated | Done (P2-22) |
+| Dead and ghost lures (DD Phase 3) | `lure_played` `owner_dead`, `ghost` | count of each | Done (P3-13) |
+| AI Director tension | `tension` (`value`, `phase`, `profile`) | samples, value range, gap between samples (doc 09 s3 asks every 10 s), phases and profiles seen | Done (P3-13) |
+| Scare rules | `scare`, `scare_dropped`, `dev_command` | per player count, big, private, closest gap; violations of one big a day, 120 s, day third 1; a scare within 5 s after a dev `scare` command is forced and not judged (*inference*: 3 s build-up plus margin) | Done (P3-13) |
+| Taint and Shaken | `taint_changed`, `shaken` | Taints by cause, cures by cause, Shaken lengths; Taint within 2 s after Shaken flagged (*inference*: the window) | Done (P3-13) |
+| Sabotage | `sabotage_plan`, `disturbance_placed`, `disturbance_fixed`, `trample` | plans, kinds by day, fixes by verb, dawn trample; kinds placed before their `opens_day` listed | Done (P3-13) |
+| Dawn Report shown | `dawn_report_shown` | count | Done (P3-13) |
 | Sim comparison | `dawn_summary`, `payment_made` | not built | DD Phase 4 (section 13) |
 | Close calls missed for timeout vs disagreement, per RTT | `close_call` | not built | OPEN_ISSUES "A laggy player is hard to kill"; DD Phase 1 logs settle it |
 
@@ -511,9 +517,17 @@ Filed in `production/QUESTIONS.md` (see the PP-10 handoff for the IDs):
 3. **Game Designer:** is `tools/sim/` getting the `compare` command doc 05 section 18 names, and which
    metric does "within 15 points" mean (clear rates, or the coin trajectory)? How many seasons does the
    comparison need?
-4. **QA (mine, next task, not asked of anyone):** extend `check_logs.py` with lure success by source
-   (join `lure_played` and `lure_result`), `angle_error_deg` tally, the host-only events in client
+4. **QA (mine, next task, not asked of anyone):** extend `check_logs.py` with `angle_error_deg` tally, the host-only events in client
    files check, and the sim comparison once the format exists.
+
+5. **AI Programmer (P3-13, Q in QUESTIONS):** the creature body is fixed at `body_gaunt`
+   (`game/creature/creature.gd` `BODY`); doc 01 "Bodies" has the host pick one of four per season. DD
+   Phase 3 "Do the four bodies feel different?" needs a way to set the body per session. Settled by a
+   `--body=` flag or the season pick.
+6. **Scares in headless runs (P3-13):** a headless host spawns indoors, so an unmodified bot run never
+   fits a natural scare (P3-05 handoff). The scare rule check is proven on synthetic records
+   (`tests/qa/test_harness.py`) and on dev-forced scares; natural scares wait for the STOP 4 human
+   sessions.
 
 Inference in this doc: the 20-lure and 36-trial sample sizes and the 80% and 60% spatial pass
 thresholds (doc 01 gives none); the 6 full seasons for Phase 4; the "a second Phase 2 or 3 tester must

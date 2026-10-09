@@ -100,6 +100,45 @@ class LogCheckerFixture(unittest.TestCase):
         rtt = check_logs.rtt_measure([rec("net_rtt", {"to": 1, "rtt_ms": 10}, peer=2), rec("net_rtt", {"to": 1, "rtt_ms": 20}, peer=2)])
         self.assertEqual(rtt["s/peer_2->1"]["mean"], 15.0)
 
+    def test_p313_phase3_measures_on_synthetic_records(self) -> None:
+        def rec(t: float, event: str, data: dict, day: int = 1, phase: str = "day") -> check_logs.Record:
+            return check_logs.Record("s", 1, t, day, phase, 1, event, data)
+
+        recs = [
+            rec(0, "tension", {"value": 5, "phase": "relax", "profile": "day"}), rec(10, "tension", {"value": 50, "phase": "build_up", "profile": "day"}),
+            # Player 2: big at 100, private at 150 (50 s gap: violation), second big on day 1 (violation).
+            rec(100, "scare", {"kind": "jumpscare", "target": 2, "big": True, "private": False, "third": 2}),
+            rec(150, "scare", {"kind": "whisper", "target": 2, "big": False, "private": True, "third": 3}),
+            rec(400, "scare", {"kind": "shed", "target": 2, "big": True, "private": False, "third": 3}),
+            # Player 3: one in third 1 (violation); a forced one 3 s after a dev command (not judged).
+            rec(20, "scare", {"kind": "wrong_count", "target": 3, "big": False, "private": True, "third": 1}),
+            rec(500, "dev_command", {"peer": 1, "line": "scare jumpscare 3"}),
+            rec(503, "scare", {"kind": "jumpscare", "target": 3, "big": True, "private": False, "third": 1}),
+            rec(600, "scare", {"kind": "fake_out", "target": -1, "big": False, "private": False, "third": 3}),
+            rec(601, "scare_dropped", {"kind": "jumpscare", "target": 2, "why": "budget"}),
+            rec(700, "shaken", {"player": 2, "seconds": 60}), rec(701, "taint_changed", {"player": 2, "on": True, "cause": "leavings"}),
+            rec(800, "taint_changed", {"player": 2, "on": False, "cause": "wash"}),
+            rec(0, "disturbance_placed", {"kind": "trample", "day": 1}), rec(0, "disturbance_placed", {"kind": "dead_crow", "day": 1}),
+            rec(900, "disturbance_fixed", {"kind": "trample", "fix": "plant"}),
+            rec(1000, "lure_played", {"lure_id": "x", "owner_dead": True, "ghost": True}, phase="night"),
+        ]
+        te = check_logs.tension_measure(recs)
+        self.assertEqual((te["samples"], te["value_max"], te["gap_s_max"]), (2, 50.0, 10.0))
+        sc = check_logs.scare_measure(recs)
+        self.assertEqual((sc["scares"], sc["forced"], sc["dropped_by_why"]), (6, 1, {"budget": 1}))
+        self.assertEqual(len(sc["violations"]), 3, sc["violations"])
+        self.assertEqual(sc["per_player"]["s/2"]["min_gap_s"], 50.0)
+        self.assertIn("s/public", sc["per_player"])
+        tn = check_logs.taint_measure(recs)
+        self.assertEqual((tn["tainted_by_cause"], tn["cured_by_cause"], len(tn["taint_after_shaken"])), ({"leavings": 1}, {"wash": 1}, 1))
+        sb = check_logs.sabotage_measure(recs)
+        self.assertEqual(sb["fixed_by_fix"], {"plant": 1})
+        opens = check_logs._sabotage_opens()
+        self.assertEqual(opens["trample"], 1)
+        self.assertEqual(sb["before_opens_day"], ["s day 1 dead_crow (opens day 3)"])
+        lure = check_logs.lure_measure(recs, [])
+        self.assertEqual((lure["played_owner_dead"], lure["played_ghost"]), (1, 1))
+
     def test_clean_fixture_has_no_problems_and_text_report_renders(self) -> None:
         self.assertEqual(self.rep["problems"], [])
         self.assertEqual(self.rep["warnings"], [])
@@ -117,7 +156,7 @@ class LogCheckerEdgeCases(unittest.TestCase):
         self.assertIsNone(rep["lure"]["rate"])
         self.assertEqual(rep["trap_race"]["races"], 0)
         self.assertEqual(rep["spatial_audio"]["trials"], 0)
-        self.assertEqual(check_logs.format_report(rep).count("none logged"), 5)
+        self.assertEqual(check_logs.format_report(rep).count("none logged"), 6)
 
     def test_session_without_host_file_falls_back_with_warning(self) -> None:
         rep = check_logs.analyze([FIXTURES / "sessions_no_host"])

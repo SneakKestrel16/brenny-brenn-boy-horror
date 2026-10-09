@@ -407,7 +407,7 @@ that belong to Phase 4, so these wait: the `harvest_moon` profile and acts (doc 
 | P3-10 | Network & Voice, Audio Designer | Ghost voice: the ghost static chain on dead players' voice to the living and on dead-voice lures (doc 06 s9, D-011); today ghost voice is muted (OPEN_ISSUES playtest 9) | done (CEO listen of the static pending) | P3-09 |
 | P3-11 | Gameplay | Whistle and emotes (doc 05 s14); recheck whistle placement by ear (OPEN_ISSUES P2-01 review 1) | done (by-ear test pending a tester, OPEN_ISSUES) | P3-01 |
 | P3-12 | Gameplay, Technical Artist | Dawn Report screen: headlines, obituaries, hero actions, flags placed (doc 05 s15, doc 03 s17, doc 07 card style) | done | P3-02 |
-| P3-13 | QA | Review each P3 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 3 gate plus the carried measures | todo | all above |
+| P3-13 | QA | Review each P3 task; 4-instance run; `check_logs.py` on a full session; doc 09 Phase 3 gate plus the carried measures | done (STOP 4 pending: dead stay engaged, static-voice argument, Dawn Report laugh, bodies blocked by Q-074, by-ear whistle, Phase 1 lure over 20 human results, Phase 2 fooled and sweeps, CEO static listen) | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
 s3 "DD Phase 3" reads, and leaves a handoff note. Placeholders cite doc 01 or say `placeholder`.

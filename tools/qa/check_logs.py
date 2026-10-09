@@ -26,7 +26,11 @@ Measures (doc 01 "Testing" and "Build Plan"):
   - Also reported (P2-22): recorded vs generic lures played, trap sweeps, medical bills and
     dawn summaries, and `net_rtt` per peer pair.
   - Also tallied: deaths, hold_completed by verb, inside_at_night seconds, money_changed count,
-    ghost_action by kind (P3-09).
+    ghost_action by kind (P3-09), dawn_report_shown.
+  - Phase 3 (P3-13): `tension` samples and gaps; scares per player against doc 01 "Rules" (one big
+    a day, none within 2 minutes, none in the first third of the day; dev-forced ones left out);
+    Taint causes and cures and "Shaken never Taints"; sabotage by day against data opens_day; lures
+    in a dead player's voice (`owner_dead`) and as ghost static (`ghost`).
 A report with no measures is still a pass: absent events are reported as "none logged".
 """
 
@@ -180,6 +184,9 @@ def lure_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
     rate = worked / counted if counted else None
     return {
         "lure_played": played,
+        # P3-03 / P3-10: lures in a dead player's voice, and lures sent as ghost static (night only).
+        "played_owner_dead": sum(1 for r in recs if r.event == "lure_played" and r.data.get("owner_dead")),
+        "played_ghost": sum(1 for r in recs if r.event == "lure_played" and r.data.get("ghost")),
         "lure_results": counted,
         "worked": worked,
         "rate": rate,
@@ -271,6 +278,135 @@ def bill_measure(recs: list[Record]) -> dict[str, Any]:
     }
 
 
+def tension_measure(recs: list[Record]) -> dict[str, Any]:
+    """Doc 09 s3 "The AI Director": `tension` every 10 s (P3-04) with value, phase and profile."""
+    ts = [r for r in recs if r.event == "tension" and _is_number(r.data.get("value"))]
+    by_session: dict[str, list[float]] = defaultdict(list)
+    for r in ts:
+        by_session[r.session].append(r.t)
+    gaps: list[float] = []
+    for times in by_session.values():
+        times.sort()
+        gaps += [b - a for a, b in zip(times, times[1:])]
+    vals = [float(r.data["value"]) for r in ts]
+    return {
+        "samples": len(ts),
+        "value_min": min(vals) if vals else None,
+        "value_max": max(vals) if vals else None,
+        "gap_s_min": min(gaps) if gaps else None,
+        "gap_s_max": max(gaps) if gaps else None,
+        "phases": dict(sorted(Counter(str(r.data.get("phase")) for r in ts).items())),
+        "profiles": dict(sorted(Counter(str(r.data.get("profile")) for r in ts).items())),
+    }
+
+
+SCARE_BIG_PER_DAY = 1  # doc 01 "Rules": at most one big scare per player per day (ai_director.json scare_rules)
+SCARE_GAP_S = 120.0  # doc 01 "Rules": never two on the same player within 2 minutes
+SCARE_FORCED_WINDOW_S = 5.0  # inference: a dev "scare" command then the 3 s build-up (doc 03 s13.1)
+
+
+def scare_measure(recs: list[Record]) -> dict[str, Any]:
+    """Doc 09 s3 "The AI Director, day arc, jumpscares": per player, at most one big scare a day, no two
+    big or private scares within 120 s, none in the first third of the day. A scare that follows a dev
+    console `scare` command within 5 s is counted as forced and left out of the rules."""
+    devs = [(r.session, r.t) for r in recs if r.event == "dev_command" and str(r.data.get("line", "")).startswith("scare")]
+    per_player: dict[str, dict[str, Any]] = {}
+    violations: list[str] = []
+    forced = 0
+    last: dict[tuple[str, int], float] = {}
+    big_day: Counter = Counter()
+    scares = sorted((r for r in recs if r.event == "scare"), key=lambda r: (r.session, r.t))
+    for r in scares:
+        tgt = r.data.get("target")
+        key = f"{r.session}/{tgt}" if isinstance(tgt, int) and tgt >= 0 else f"{r.session}/public"
+        p = per_player.setdefault(key, {"scares": 0, "big": 0, "private": 0, "kinds": Counter(), "min_gap_s": None})
+        p["scares"] += 1
+        p["big"] += bool(r.data.get("big"))
+        p["private"] += bool(r.data.get("private"))
+        p["kinds"][str(r.data.get("kind"))] += 1
+        if any(s == r.session and 0 <= r.t - t <= SCARE_FORCED_WINDOW_S for s, t in devs):
+            forced += 1
+            continue
+        where = f"{r.session} t={r.t:.0f} day {r.day} target {tgt} {r.data.get('kind')}"
+        if r.phase == "day" and r.data.get("third") == 1:
+            violations.append(f"{where}: scare in the first third of the day")
+        if not (isinstance(tgt, int) and tgt >= 0):
+            continue  # the crow fake-out is public (target -1)
+        if r.data.get("big") or r.data.get("private"):
+            prev = last.get((r.session, tgt))
+            if prev is not None:
+                gap = r.t - prev
+                p["min_gap_s"] = gap if p["min_gap_s"] is None else min(p["min_gap_s"], gap)
+                if gap < SCARE_GAP_S:
+                    violations.append(f"{where}: {gap:.0f} s after the last big or private scare (rule {SCARE_GAP_S:g} s)")
+            last[(r.session, tgt)] = r.t
+        if r.data.get("big"):
+            big_day[(r.session, tgt, r.day)] += 1
+            if big_day[(r.session, tgt, r.day)] > SCARE_BIG_PER_DAY:
+                violations.append(f"{where}: big scare {big_day[(r.session, tgt, r.day)]} today (rule {SCARE_BIG_PER_DAY})")
+    for p in per_player.values():
+        p["kinds"] = dict(sorted(p["kinds"].items()))
+    return {
+        "scares": len(scares),
+        "forced": forced,
+        "dropped_by_why": dict(sorted(Counter(str(r.data.get("why")) for r in recs if r.event == "scare_dropped").items())),
+        "per_player": dict(sorted(per_player.items())),
+        "violations": violations,
+    }
+
+
+def taint_measure(recs: list[Record]) -> dict[str, Any]:
+    """Doc 09 s3 "Taint and Shaken" (P3-07): causes and cures from `taint_changed`, `shaken` lengths, and
+    doc 01's rule that Shaken never Taints: a Taint on the same player within 2 s after a `shaken` is
+    listed (inference: the 2 s window is mine; a scare's Shaken and a Taint from it would share a frame)."""
+    tc = [r for r in recs if r.event == "taint_changed"]
+    sh = [r for r in recs if r.event == "shaken"]
+    flagged = [
+        f"{r.session} t={r.t:.0f} player {r.data.get('player')} tainted ({r.data.get('cause')}) {r.t - s.t:.1f} s after shaken"
+        for r in tc if r.data.get("on")
+        for s in sh if s.session == r.session and s.data.get("player") == r.data.get("player") and 0 <= r.t - s.t <= 2.0
+    ]
+    return {
+        "tainted_by_cause": dict(sorted(Counter(str(r.data.get("cause")) for r in tc if r.data.get("on")).items())),
+        "cured_by_cause": dict(sorted(Counter(str(r.data.get("cause")) for r in tc if not r.data.get("on")).items())),
+        "shaken": len(sh),
+        "shaken_seconds": sorted({r.data.get("seconds") for r in sh if _is_number(r.data.get("seconds"))}),
+        "taint_after_shaken": flagged,
+    }
+
+
+SABOTAGE_JSON = Path(__file__).resolve().parents[2] / "data" / "sabotage.json"
+
+
+def _sabotage_opens() -> dict[str, int]:
+    """`opens_day` per sabotage kind from data/sabotage.json (P3-02); empty if the file is missing."""
+    try:
+        recs = json.loads(SABOTAGE_JSON.read_text(encoding="utf-8"))["records"]
+    except (OSError, KeyError, json.JSONDecodeError):
+        return {}
+    return {r["id"]: r["opens_day"] for r in recs if isinstance(r.get("opens_day"), int)}
+
+
+def sabotage_measure(recs: list[Record]) -> dict[str, Any]:
+    """P3-06 sabotage: kinds placed by day, fixes by verb, the dawn trample, and any kind placed before its
+    `opens_day` in data/sabotage.json."""
+    opens = _sabotage_opens()
+    placed = [r for r in recs if r.event == "disturbance_placed"]
+    by_day: dict[int, Counter] = defaultdict(Counter)
+    for r in placed:
+        by_day[int(r.data.get("day", r.day))][str(r.data.get("kind"))] += 1
+    return {
+        "plans": sum(1 for r in recs if r.event == "sabotage_plan"),
+        "placed_by_day": {d: dict(sorted(c.items())) for d, c in sorted(by_day.items())},
+        "fixed_by_fix": dict(sorted(Counter(str(r.data.get("fix")) for r in recs if r.event == "disturbance_fixed").items())),
+        "dawn_trample": [{"day": r.day, **{k: r.data.get(k) for k in ("want", "trampled", "farm_damage")}} for r in recs if r.event == "trample"],
+        "before_opens_day": [
+            f"{r.session} day {r.data.get('day', r.day)} {r.data.get('kind')} (opens day {opens[r.data.get('kind')]})" for r in placed
+            if r.data.get("kind") in opens and int(r.data.get("day", r.day)) < opens[r.data.get("kind")]
+        ],
+    }
+
+
 def rtt_measure(loaded_records: list[Record]) -> dict[str, Any]:
     """Doc 06 s13/s14 `net_rtt`: every peer writes its own, so read every file (P2-21)."""
     cells: dict[str, list[float]] = defaultdict(list)
@@ -295,6 +431,7 @@ def other_measures(recs: list[Record]) -> dict[str, Any]:
         "hold_seconds_by_verb": {v: {"n": len(s), "mean": sum(s) / len(s)} for v, s in sorted(holds.items())},
         "inside_at_night_seconds_by_player": dict(sorted(inside.items())),
         # Doc 09 s13 (P3-09, P3-10): ghost powers used, by kind (flicker, crow, rustle, caw, static_voice).
+        "dawn_reports_shown": sum(1 for r in recs if r.event == "dawn_report_shown"),
         "ghost_actions_by_kind": dict(sorted(Counter(str(r.data.get("kind")) for r in recs if r.event == "ghost_action").items())),
     }
 
@@ -316,6 +453,10 @@ def analyze(paths: list[Path]) -> dict[str, Any]:
         "bills": bill_measure(recs),
         "net_rtt": rtt_measure([r for r in loaded.records if r.event == "net_rtt"]),
         "other": other_measures(recs),
+        "tension": tension_measure(recs),
+        "scares": scare_measure(recs),
+        "taint": taint_measure(recs),
+        "sabotage": sabotage_measure(recs),
         "problems": problems,
         "warnings": loaded.warnings,
     }
@@ -345,6 +486,7 @@ def format_report(rep: dict[str, Any]) -> str:
             add(f"  MISMATCH {m}")
     else:
         add(f"  none logged (lure_played: {lure['lure_played']})")
+    add(f"  in a dead player's voice: {lure['played_owner_dead']}; as ghost static: {lure['played_ghost']}")
     tr = rep["trap_race"]
     add("")
     add("Trap race (doc 01 Testing: does a solo, untainted player who pries at once survive?)")
@@ -397,6 +539,37 @@ def format_report(rep: dict[str, Any]) -> str:
         add(f"  inside at night, player {player}: {s:.0f} s")
     if o["ghost_actions_by_kind"]:
         add("  ghost actions: " + ", ".join(f"{k}={v}" for k, v in o["ghost_actions_by_kind"].items()))
+    add(f"  dawn reports shown: {o['dawn_reports_shown']}")
+    te = rep["tension"]
+    add("")
+    add("AI Director tension (doc 09 s3: a `tension` line every 10 s)")
+    if te["samples"]:
+        add(f"  {te['samples']} samples, value {te['value_min']}..{te['value_max']}, gap {te['gap_s_min']:.1f}..{te['gap_s_max']:.1f} s" if te["gap_s_min"] is not None else f"  {te['samples']} samples")
+        add(f"  phases {te['phases']}; profiles {te['profiles']}")
+    else:
+        add("  none logged")
+    sc = rep["scares"]
+    add("")
+    add(f"Scares (doc 01 Rules: <= {SCARE_BIG_PER_DAY} big per player per day, none within {SCARE_GAP_S:g} s, none in day third 1)")
+    add(f"  {sc['scares']} scares ({sc['forced']} forced from the dev console); dropped {sc['dropped_by_why'] or 'none'}")
+    for who, v in sc["per_player"].items():
+        gap = "" if v["min_gap_s"] is None else f", closest {v['min_gap_s']:.0f} s"
+        add(f"  {who}: {v['scares']} ({v['big']} big, {v['private']} private{gap}) {v['kinds']}")
+    add("  rules: " + ("PASS" if not sc["violations"] else f"{len(sc['violations'])} VIOLATION(S)"))
+    out += [f"  VIOLATION {v}" for v in sc["violations"]]
+    tn = rep["taint"]
+    add("")
+    add("Taint and Shaken (doc 09 s3: cause and cure; Shaken never Taints)")
+    add(f"  tainted by {tn['tainted_by_cause'] or 'none'}; cured by {tn['cured_by_cause'] or 'none'}")
+    add(f"  shaken {tn['shaken']} (seconds {tn['shaken_seconds']}); Taint right after Shaken: " + ("none" if not tn["taint_after_shaken"] else str(len(tn["taint_after_shaken"]))))
+    out += [f"  FLAG {f}" for f in tn["taint_after_shaken"]]
+    sb = rep["sabotage"]
+    add("")
+    add("Sabotage (P3-06)")
+    add(f"  plans {sb['plans']}; placed by day {sb['placed_by_day'] or 'none'}; fixed by {sb['fixed_by_fix'] or 'none'}")
+    for x in sb["dawn_trample"]:
+        add(f"  dawn trample day {x['day']}: want {x['want']}, trampled {x['trampled']}, farm damage {x['farm_damage']}")
+    out += [f"  BEFORE OPENS_DAY {v}" for v in sb["before_opens_day"]]
     if rep["problems"]:
         add("")
         add(f"Malformed records ({len(rep['problems'])}):")

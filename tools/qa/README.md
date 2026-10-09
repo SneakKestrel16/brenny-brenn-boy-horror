@@ -141,7 +141,13 @@ session with no `peer_1.jsonl` falls back to all of its files, with a warning.
 | Lure success rate | `lure_result` counts as worked when `moved_m > 10` and `within_s <= 8`. The rule is recomputed, not read from the logged `worked`, and disagreements are listed. Also broken down by phase. Gate: at least 30% | Doc 01 "Testing" ("A lure worked"); Build Plan Phase 1 "Done when" |
 | Trap race | `trap_race_result` survival, overall and for the doc 01 case (`solo`, not `tainted`, `pried_at_once`). Deaths in that case are listed. Also reports the minimum and mean `seconds_spare` | Doc 01 "Testing" ("Trap race") |
 | Spatial audio | `spatial_audio_trial` correct placements by sound and distance, overall and per tester, plus the doc 01 cells not tested yet (voice and whistle at 10, 30 and 60 m). Read from **every** peer's file: the tester's own client writes it (doc 05 s18) | Doc 01 "Testing" ("Spatial audio") |
-| Other | `death`, `trap_sprung` and `money_changed` counts; `hold_completed` mean seconds by verb; `inside_at_night` seconds by player | Doc 01 "Testing" ("Logs") |
+| Other | `death`, `trap_sprung` and `money_changed` counts; `hold_completed` mean seconds by verb; `inside_at_night` seconds by player; `ghost_action` by kind; `dawn_report_shown` count | Doc 01 "Testing" ("Logs") |
+| Phase 2 tallies | Lures by source (recorded `clip` against generic), trap sweeps, `medical_bill` and `dawn_summary`, `net_rtt` per peer pair (every file) | Doc 09 s3 DD Phase 2 (P2-22) |
+| AI Director tension | `tension` samples, value range, gap between samples, phases and profiles | Doc 09 s3 DD Phase 3 (P3-13) |
+| Scare rules | `scare` per player: count, big, private, closest gap. Violations: more than one big scare a day, two big or private within 120 s, any scare in day third 1. A scare within 5 s after a dev `scare` command is forced and not judged | Doc 01 "Rules"; doc 09 s3 DD Phase 3 (P3-13) |
+| Taint and Shaken | `taint_changed` Taints and cures by cause; `shaken` lengths; a Taint within 2 s after a Shaken is flagged | Doc 01 "Taint", "Shaken never Taints" (P3-13) |
+| Sabotage | `sabotage_plan`, `disturbance_placed` by day, `disturbance_fixed` by fix, dawn `trample`; kinds placed before their `opens_day` in `data/sabotage.json` | P3-06 (P3-13) |
+| Dead and ghost lures | `lure_played` with `owner_dead` and with `ghost` | P3-03, P3-10 (P3-13) |
 
 Every record is checked against the section 10 shape:
 
@@ -162,7 +168,7 @@ exit code 1. A log with none of these events is still a pass: each measure repor
 
 ## Playtest kit: `playtest.py`, `package_playtest.py`, `playtest/`
 
-Step by step: [playtest/checklist.md](playtest/checklist.md). Hand testers
+Step by step: [playtest/checklist.md](playtest/checklist.md). Phase checklists: [DD Phase 2](playtest/checklist_p2.md), [DD Phase 3](playtest/checklist_p3.md). Hand testers
 [playtest/tester_brief.md](playtest/tester_brief.md) (controls and setup only; no coaching).
 
 ```bash

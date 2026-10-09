@@ -127,3 +127,18 @@ session rechecks them (P2-09, D-034).
       P2-01 issue 1; compare with 4/6 and 3/6. If either is below 4/6, raise it with the Audio Designer
       (the 20 m `unit_size`, doc 08 section 9.3) and the Director (doc 08's fallback is a lantern or hat
       flash, never a HUD marker).
+
+## Found at the P3-13 review (QA, 2026-10-08)
+
+1. **The creature body is fixed at `body_gaunt`.** Doc 01 "Bodies": "The host's game picks one of four bodies
+   per season." `game/creature/creature.gd` has `const BODY := &"body_gaunt"` (Phase 1 placeholder) and
+   nothing picks another. Doc 01 Open Issue 4 ("Do the four bodies feel different enough? ... Check after
+   Phase 3") cannot be tested until a session can choose the body. Asked the AI Programmer in Q-074.
+   Blocks the doc 09 s3 "Four bodies" row.
+2. **Headless runs show few scare kinds.** Two 840 s runs logged 3 natural scares: 2 `own_voice` (big,
+   private, day 2 third 3) and 1 `fake_out` (public, at dawn, third 0). No natural `jumpscare`.
+   Other kinds are covered by dev commands and the P3-05 review, not by a natural run. Inference: bots stay near the farm, so the AI Director rarely picks a
+   corn-edge jumpscare. Settled by the STOP 4 sessions: count scare kinds in `check_logs.py`.
+3. **The dawn trample does nothing on a bare farm.** Run 1 (joiners replaced both chore bots, no crops) logged `trample`
+   with `trampled` 0. Run 2 (one chore bot kept, crops planted) trampled 1 to 3 plots each dawn. Known as
+   Q-070 item 2; listed so STOP 4 plants crops before night 1.

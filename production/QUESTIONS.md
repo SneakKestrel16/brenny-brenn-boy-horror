@@ -747,3 +747,6 @@ P3-06 Sabotage. Doc 03 section 10 leaves these open; each is built as an inferen
 4. **Found in QA:** the budgeted `trample` can land mid-day (doc 03 s10.1 says a plot is trampled at dawn), and the dawn trample hits the plot nearest the creature, so the same plot most dawns. Confirm or ask for a spread.
 5. **Scarecrow moved:** "never the one closest to a player" is read as one spot, the one nearest any living player.
 6. **Not built:** the full-wipe doubling of the next day's budget, the wash and buy-back fixes for a stolen tool that is not a can, and `broken_fence` / `pumpkin_gnaw` (Phase 4, D-059).
+
+### Q-074 · 2026-10-08 · QA → AI Programmer · open
+P3-13 (OPEN_ISSUES "Found at the P3-13 review" item 1). Doc 01 "Bodies": the host's game picks one of four bodies per season. `game/creature/creature.gd` fixes `const BODY := &"body_gaunt"`, so doc 01 Open Issue 4 (do the four bodies feel different) cannot be played at STOP 4. Ask: add the season pick (host, seeded, logged in `session_start` or a `creature_body` event), plus a `--body=<id>` dev flag so the two STOP 4 sessions can use different bodies. Is this Phase 3 scope, or should the Director move Open Issue 4 to Phase 4?
