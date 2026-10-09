@@ -593,6 +593,13 @@ func apply_taint_source(id: int, kind: StringName, position: Vector3, on: bool) 
 	apply_received.emit(&"taint_source", [id, kind, position, on])
 
 
+## Host to all (P3-06, AI Programmer): a sabotage disturbance's mark appears or goes (`id` > 0), or a
+## scarecrow moves (`id` < 0: scarecrow -id, with its `yaw`). sabotage.gd applies it.
+@rpc("authority", "call_remote", "reliable")
+func apply_disturbance(id: int, kind: StringName, position: Vector3, yaw: float, on: bool) -> void:
+	apply_received.emit(&"disturbance", [id, kind, position, yaw, on])
+
+
 @rpc("authority", "call_remote", "reliable")
 func apply_death(peer: int, cause: StringName, position: Vector3) -> void:
 	apply_received.emit(&"death", [peer, cause, position])

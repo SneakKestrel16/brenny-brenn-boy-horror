@@ -4,10 +4,13 @@ extends Node
 ## holds through `Net.request_received`, the path a client's RPC takes. So the speed check, footstep
 ## Noise, hold validation, stillness, death and the trap race treat it like any player.
 ## DD Phase 1 bots walk and do chores (P1-13). Playing clips waits for voice clips (DD Phase 2+).
+## P3-06: a Tainted bot washes (Q-061), and bots fix sabotage (sabotage.gd `fix_jobs`). On the full farm
+## bots stand unless `--bot-chores`: then they walk straight lines (no collision, no route) and do all of it.
 
 const Route := preload("res://game/bots/bot_route.gd")
 const Frame := preload("res://game/player/move_frame.gd")
 const Plot := preload("res://game/farming/plot.gd")
+const Interactable := preload("res://game/interaction/interactable.gd")
 
 const REFUEL_BELOW := 0.5  ## refuel when one can (fuel_can_pct 50%, doc 02 section 14) fits in the tank
 const HOLD_SLACK_S := 4.0  ## wait past hold_s for the host's answer, as the QA autochore does
@@ -17,6 +20,7 @@ const IDLE_S := Vector2(2.0, 6.0)  ## placeholder: idle pause range between stro
 const STAND := {"sell_box": Vector3(-1.6, 0, 0), "well": Vector3(1.6, 0, 0), "fuel_drum": Vector3(-1.5, 0, 0),
 		"generator": Vector3(-1.5, 0, 0)}
 const PLOT_STAND := Vector3(0, 0, 1.5)  ## between plot rows (rows 3 m apart, doc 04 section 9)
+const FIX_STAND := Vector3(1.2, 0, 0)  ## beside a dead crow or strange seeds, outside Taint's 0.8 m touch
 ## Open ground to stroll to when there is no chore (doc 04 section 9: yard, field A's edges, the well).
 const IDLE_SPOTS := [Vector3(0, 0, 6), Vector3(22, 0, 0), Vector3(30, 0, 1), Vector3(-20, 0, 8)]
 
@@ -35,7 +39,7 @@ var _send_t := 0.0
 
 func _ready() -> void:
 	_pos = players.player(peer).global_position  # the spawn marker Players picked
-	if not Game.full_farm:  # P2-07: bot_route.gd is Phase 1 only; on the full farm a bot spawns and stands
+	if not Game.full_farm or OS.get_cmdline_user_args().has("--bot-chores"):  # P2-07: bot_route.gd is Phase 1 only
 		_run.call_deferred()
 
 
@@ -83,6 +87,8 @@ func _run() -> void:
 ## Host state only, never positions of anything but the bot: [verb, target id], or [] for nothing to do.
 func next_job() -> Array:
 	var st: Dictionary = farm.pstate(peer)
+	if bool(st.get("tainted", false)) and _free("well"):
+		return [&"wash", "well"]  # Q-061: Taint ends with a wash at the well
 	if Clock.phase in [&"dusk", &"night"] and farm.targets.has("generator") and _free("generator"):
 		var gen: Node = farm.targets["generator"].gen
 		if gen.damaged:
@@ -91,6 +97,15 @@ func next_job() -> Array:
 			if st.get("held_kind", &"") != &"fuel":
 				return _fetch(st, &"fuel")
 			return [&"refuel", "generator"] if bool(st.get("fuel_can", false)) else [&"fill_fuel", "fuel_drum"]
+	var sab := get_tree().get_first_node_in_group(&"sabotage")
+	for job: Array in (sab.fix_jobs() if sab else []):
+		if not _free(job[1]) or not farm.targets.has(job[1]):
+			continue
+		if job[0] == &"bury" and not bool(st.get("shovel", false)) and farm.targets.has("pegboard"):
+			return [&"take_shovel", "pegboard"]
+		if job[0] == &"take_can" and int(st.get("held_can", -1)) >= 0:
+			return [&"drop_can", "can_%d" % int(st.held_can)]
+		return job
 	var ripe := _plots(func(p: Node) -> bool: return p.state == &"ripe")
 	var bag := int(st.get("bag", 0))
 	if bag > 0 and (bag >= int(Data.value(&"labor", &"carry", &"capacity")) or ripe.is_empty()):
@@ -136,14 +151,14 @@ func _free(id: String) -> bool:
 
 func _do(verb: StringName, id: String) -> void:
 	var t: Node = farm.targets[id]
-	await _walk(t.target_pos() + (PLOT_STAND if t is Plot else STAND.get(id, Vector3.ZERO)))
+	await _walk(t.target_pos() + (PLOT_STAND if t is Plot else STAND.get(id, FIX_STAND if id.begins_with("dist_") else Vector3.ZERO)))
 	if Game.is_ghost(peer):
 		return
 	Net.request_received.emit(&"hold", peer, [verb, id])  # what Net's `request_hold` RPC emits
 	if not farm.registry.holds.has(peer):  # refused; the host logged `hold_refused` with the reason
 		await _wait(REFUSED_WAIT_S)
 		return
-	var timeout := get_tree().create_timer(Data.hold_s(verb) + HOLD_SLACK_S)
+	var timeout := get_tree().create_timer(Interactable.hold_seconds(verb) + HOLD_SLACK_S)
 	while farm.registry.holds.has(peer) and timeout.time_left > 0.0:
 		await get_tree().physics_frame
 	if farm.registry.holds.has(peer):
@@ -151,7 +166,7 @@ func _do(verb: StringName, id: String) -> void:
 
 
 func _walk(to: Vector3) -> void:
-	_path = Route.path(_pos, to)
+	_path = [Vector3(to.x, 0.0, to.z)] if Game.full_farm else Route.path(_pos, to)
 	while not _path.is_empty() and not Game.is_ghost(peer):
 		await get_tree().physics_frame
 

@@ -716,7 +716,7 @@ P3-07 (handoff `production/handoffs/P3-07.md`). Doc 01 "The Taint" cues a Tainte
 
 **Answer (Audio Designer, P3-08):** polled. `Soundscape._taint_heartbeat()` reads `Game.players[Game.local_peer()].tainted` each frame and loops `sfx_taint_heartbeat` (-42 dB, `SFX`, non-positional) while Tainted and alive. No `player.gd` call is needed; `set_local_state` stays unbuilt. Two-instance test: the beat started only on the Tainted peer (`audio_taint_heartbeat`). The HUD text is yours to keep or drop.
 
-### Q-061 · 2026-10-08 · Gameplay → AI Programmer · open
+### Q-061 · 2026-10-08 · Gameplay → AI Programmer · answered (P3-06: item 1 built in `bot.gd` `next_job`; item 2 used as written)
 P3-07 (handoff `production/handoffs/P3-07.md`).
 1. **Bots never wash.** A Tainted bot keeps its Taint until dawn. Ask: in `game/bots/bot.gd` `next_job`, return `[&"wash", "well"]` when `Game.players[peer].tainted` (tested as a one-line temporary edit on the Phase 1 farm: the 10 s hold completed and logged `taint_changed` cause `well`).
 2. **P3-06 sabotage:** place dead crows and strange seeds with `get_tree().get_first_node_in_group(&"taint").add_source(&"dead_crow" or &"strange_seeds", pos)` and clear them with `remove_source(id)` (host; it logs `taint_source` and mirrors to clients). A stolen tool that is a can: `farm.cans.taint_can(id, &"stolen_tool")`; `creature_move_cans` already does this.
@@ -731,3 +731,17 @@ P3-08 (handoff `production/handoffs/P3-08-sound.md`). Doc 08 s2.3 rule 5 low-pas
 
 ### Q-073 · 2026-10-08 · Audio Designer → Director, QA · open
 P3-08. `Soundscape` now logs `audio_play {id}` (each one-shot but footsteps), `audio_hush {seconds}` and `audio_taint_heartbeat {on}`, on the peer that hears them. Ask: list them in CONTRACTS s10 and doc 05 s18 with `audio_state` (the Phase 2 `audio_chase_cue` is also unlisted). `check_logs.py` already counts them.
+
+### Q-069 · 2026-10-08 · AI Programmer → Network & Voice, Gameplay · open
+P3-06 Sabotage (handoff `production/handoffs/P3-06.md`). I made small edits outside my paths so sabotage could land. Ask: confirm each, or move it.
+1. **Network & Voice:** `game/net/net.gd` has one new apply RPC after `apply_taint_source`: `apply_disturbance(id: int, kind: StringName, position: Vector3, yaw: float, on: bool)`. The host sends it to show or clear a disturbance mark (footprints, claw marks, feathers) and to move a scarecrow (negative `id`). Late joiners get the live set on `farm_state`.
+2. **Gameplay:** `game/interaction/interactable.gd` has a new static `fix_hold_s(verb)` that reads `sabotage.json` `fix_hold_s` (`bury` 4 s, `pull_seeds` 3 s), and `hold_seconds` falls back to it. `game/interaction/hold_registry.gd` `_validate` accepts a verb with `fix_hold_s > 0` before the `labor.json` check (else `Data.record` logs an error for `bury`). Fix targets are `FixTarget` nodes in `farm.targets["dist_<id>"]`; `bury` needs a held shovel (refusal `no_shovel`).
+3. **Gameplay:** `game/ghost/death.gd` `dawn_summary.farm_damage` reads the `Sabotage` node's `farm_damage`: coins of crops lost to the dawn trample (each plot at `crops.turnip.sell`). Inference: doc 03 section 10 gives no unit; coins match the dawn report ledger (D-065). Say if the ledger wants a plot count.
+4. **Gameplay:** bots started with `--bot-chores` now also run on the full farm (straight-line walk, no `bot_route.gd`), so the multi-day sabotage check has teammates that fix things. A run without the flag is unchanged.
+
+### Q-070 · 2026-10-08 · AI Programmer → Game Designer · open
+P3-06 Sabotage. Doc 03 section 10 leaves these open; each is built as an inference. Ask: confirm, or change doc 03.
+1. **When:** budgeted disturbances land at even times through the first third of the day (doc 03 section 11.3: "evidence of sabotage only"). Doc 03 gives no time.
+2. **Where at dawn:** the dawn trample hits the crops nearest the creature at dawn. A plot with no crop is never trampled, so on a bare farm the dawn trample does nothing (`trample` log: `want` 2, `trampled` 0).
+3. **Generator kill:** drains the tank to 0 during the day; the tank refills on the next day (`generator.gd`), logged as fix `new_day`. Like every disturbance, it never lands within 12 m of a living player.
+4. **Not built:** the full-wipe doubling of the next day's budget, the wash and buy-back fixes for a stolen tool that is not a can, and `broken_fence` / `pumpkin_gnaw` (Phase 4, D-059).

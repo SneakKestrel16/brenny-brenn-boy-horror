@@ -69,7 +69,7 @@ func _validate(peer: int, verb: StringName, id: String) -> StringName:
 	var reason := &"no_such_verb"
 	if _flat_dist(st.pos, t.target_pos()) > t.range_m:
 		reason = &"out_of_range"
-	elif Interactable.INSTANT_S.has(verb) or (Data.has_table(&"labor") and not Data.record(&"labor", verb).is_empty()):
+	elif Interactable.INSTANT_S.has(verb) or Interactable.fix_hold_s(verb) > 0.0 			or (Data.has_table(&"labor") and not Data.record(&"labor", verb).is_empty()):  # fix_hold_s: P3-06 sabotage
 		reason = t.can_start(verb, st)
 	_release({"target": t})
 	return reason

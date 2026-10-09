@@ -111,8 +111,9 @@ func dawn() -> void:
 	for t in farm.targets.values():
 		if t.get("state") == &"ripe":
 			ripe += 1
-	Log.event(&"dawn_summary", {"day": Clock.day, "coins": farm.coins, "debt": 0, "plots_ripe": ripe,  # debt, wilting, damage: later tasks
-			"plots_wilted": 0, "farm_damage": 0, "deaths": deaths, "medical_bill": bill, "final_extra": farm.final_extra})
+	var sab := get_tree().get_first_node_in_group(&"sabotage")  # P3-06: crops trampled this dawn, in coins
+	Log.event(&"dawn_summary", {"day": Clock.day, "coins": farm.coins, "debt": 0, "plots_ripe": ripe,  # debt, wilting: later tasks
+			"plots_wilted": 0, "farm_damage": sab.farm_damage if sab else 0, "deaths": deaths, "medical_bill": bill, "final_extra": farm.final_extra})
 
 
 ## Host only: the ghost walks again at its barn spawn (the same slot as at the start).

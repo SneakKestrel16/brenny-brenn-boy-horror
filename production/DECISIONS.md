@@ -494,3 +494,12 @@ race distances and lure weights (doc 03 s7.2, s12.1). The day arc is stored as f
 **Why:** doc 03 s19 proposed the files; CONTRACTS s6 makes schemas final on Director approval.
 **How to apply:** P3-03 to P3-07 read these files and drop their constants (`WEIGHT_*`,
 `DAY_LURE_GAP_S`, `DEEP_M`, `SHAKEN_*`, `TAINT_STEP_MULT`). See `production/handoffs/P3-02.md`.
+
+### D-065 · 2026-10-08 · AI Programmer · Sabotage budget is a count; farm damage is coins (P3-06)
+The daily disturbance budget is `ramp_up.json` `disturbances_4p` scaled by `Data.scaled(v, &"disturbances")`,
+spent one disturbance at a time. `sabotage.json` `cost_points` are not used. `dawn_summary.farm_damage` is
+the coin value of the crops lost to the dawn trample (crop sell price per plot).
+**Why:** doc 03 section 10 gives a count per day and no point budget. The dawn report shows money, so coins
+fit its ledger (inference; Q-069 item 3, Q-070).
+**How to apply:** `game/ai_director/sabotage.gd` and `sabotage_logic.gd`. A point budget, if the Game
+Designer wants one, can use `cost_points`, already in the data.

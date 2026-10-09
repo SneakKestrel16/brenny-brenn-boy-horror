@@ -3,6 +3,7 @@ extends SceneTree
 ##   "$GODOT" --headless --path . -s res://tests/creature/test_director_logic.gd
 
 const Logic := preload("res://game/ai_director/director_logic.gd")
+const Sab := preload("res://game/ai_director/sabotage_logic.gd")
 
 var _fails := 0
 
@@ -13,6 +14,11 @@ func _init() -> void:
 	var r := {}
 	for rec in data.records(&"ai_director"):
 		r[String(rec.id)] = rec
+	var sab: Array = data.records(&"sabotage")
+	var dist: Array = []  # ramp_up disturbances per day at 2, 3 and 4 players
+	for day in range(1, 8):
+		var v := int(data.record(&"ramp_up", StringName("day_%d" % day)).disturbances_4p)
+		dist.append([data.scaled(v, &"disturbances", 2), data.scaled(v, &"disturbances", 3), data.scaled(v, &"disturbances", 4)])
 	data.free()
 	# phases: peak at 70, peak at most 20 s, fade to 30, relax at least 40 s
 	var ph: Dictionary = r.phases
@@ -58,6 +64,24 @@ func _init() -> void:
 	_check(Logic.hop(links, "c", "d") == "d", "adjacent: the target")
 	_check(Logic.hop(links, "b", "b") == "b", "already there")
 	_check(Logic.hop(links, "a", "x") == "a", "no path: stay")
+	# sabotage (P3-06, doc 03 section 10): the pool opens by day; days 1-2 only trample and stolen tool
+	_check(Sab.pool(sab, 1) == [&"trample", &"stolen_tool"], "day 1 pool: trample, stolen tool")
+	_check(Sab.pool(sab, 2) == [&"trample", &"stolen_tool"], "day 2 pool: broken fence is Phase 4, nothing else")
+	_check(Sab.pool(sab, 3) == [&"trample", &"stolen_tool", &"dead_crow", &"strange_seeds"], "day 3 adds the Taint sources")
+	_check(Sab.pool(sab, 4).has(&"generator_kill") and not Sab.pool(sab, 3).has(&"generator_kill"), "generator kill from day 4")
+	_check(not Sab.pool(sab, 9).has(&"scarecrow_moved") and not Sab.pool(sab, 9).has(&"pumpkin_gnaw"), "free and disabled kinds never budgeted")
+	_check(dist[0] == [1, 1, 1] and dist[2] == [2, 2, 2] and dist[4] == [2, 3, 3] and dist[6] == [3, 4, 4], "disturbance counts scale up by headcount")
+	var tr: Dictionary = {}
+	for rec: Dictionary in sab:
+		if rec.id == "trample":
+			tr = rec
+	_check(Sab.trample_count(tr, 30.0, 0.0, false) == 1, "trample: 1 a night")
+	_check(Sab.trample_count(tr, 29.9, 0.0, false) == 2, "trample: +1 if nobody spent 30 s outside")
+	_check(Sab.trample_count(tr, 30.0, 0.0, true) == 2, "trample: +1 dead generator")
+	_check(Sab.trample_count(tr, 30.0, 89.9, false) == 1, "unattended: under 30 + 60 s adds nothing")
+	_check(Sab.trample_count(tr, 30.0, 90.0, false) == 2, "unattended: +1 per 60 s after the first 30")
+	_check(Sab.trample_count(tr, 0.0, 600.0, true) == 6, "unattended capped at +3")
+	_check(is_equal_approx(Sab.place_at(0, 2, 300.0, 0.3333), 24.9975) and Sab.place_at(1, 2, 300.0, 0.3333) < 100.0, "placed inside the first third")
 	print("test_director_logic: %s" % ("PASS" if _fails == 0 else "%d FAILED" % _fails))
 	quit(0 if _fails == 0 else 1)
 

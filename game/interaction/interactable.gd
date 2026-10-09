@@ -13,9 +13,21 @@ var range_m := 2.0  ## doc 05 section 7 step 2 (placeholder)
 var farm: Node  ## the Farm that owns this
 
 
-## Hold seconds for a verb: labor.json, or INSTANT_S for the few verbs that are not chores.
+## Hold seconds for a verb: labor.json, or INSTANT_S for the few verbs that are not chores, or a sabotage
+## fix's `fix_hold_s` (P3-06: bury, pull_seeds; sabotage.json).
 static func hold_seconds(verb: StringName) -> float:
-	return float(INSTANT_S[verb]) if INSTANT_S.has(verb) else Data.hold_s(verb)
+	if INSTANT_S.has(verb):
+		return float(INSTANT_S[verb])
+	var fix := fix_hold_s(verb)
+	return fix if fix > 0.0 else Data.hold_s(verb)
+
+
+## P3-06: a sabotage.json fix hold for `verb`, 0 when it is not one.
+static func fix_hold_s(verb: StringName) -> float:
+	for r in Data.records(&"sabotage"):
+		if StringName(r.fix) == verb and r.get("fix_hold_s") != null:
+			return float(r.fix_hold_s)
+	return 0.0
 
 
 func target_pos() -> Vector3:

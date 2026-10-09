@@ -4,7 +4,8 @@ extends Node
 ## and the daily roll, and nudges the creature's wander region one hop toward the players (section 11.6).
 ## It decides when and where, never a goal point: the Creature asks `allow(kind, peer)` before a lure,
 ## stalk, chase or kill and reports with `spend`. Rules live in director_logic.gd; numbers in
-## `ai_director.json`. Scares (picking `scare_*`, calling `jumpscare`) live in scares.gd (P3-05).
+## `ai_director.json`. Scares (picking `scare_*`, calling `jumpscare`) live in scares.gd (P3-05); the daily
+## disturbances in its child `Sabotage` (sabotage.gd, P3-06).
 ## Not built: the `harvest_moon` profile (section 14), nightmare trap race numbers (no difficulty yet),
 ## deep and earshot day deaths (rolled and logged only, nothing reads them).
 
@@ -37,6 +38,10 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	add_to_group(&"ai_director")
+	var sab := Node.new()  # P3-06: sabotage (sabotage.gd), on every peer for its clue marks; added here, not in main.gd
+	sab.set_script(load("res://game/ai_director/sabotage.gd"))
+	sab.name = "Sabotage"
+	add_child(sab)
 	if not Game.is_host() or not Data.has_table(&"ai_director"):
 		return
 	_ok = true
