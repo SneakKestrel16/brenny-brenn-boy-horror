@@ -60,6 +60,16 @@ func _init() -> void:
 	_check(fix.call(Vector3(101, 0, 1), Vector3(200, 0, 0)) == Vector3(108, 0, 0), "on the trail: 3 steps newer than the newest point within 3 m")
 	_check(fix.call(Vector3(117, 0, 0), Vector3(200, 0, 0)) == Vector3(118, 0, 0), "near the trail's head: its newest point")
 	_check(Logic.taint_fix(Vector3.ZERO, Vector3(130, 0, 0), [], 60.0, 3.0, 3) == Vector3.INF, "no trail (washed, or by day): nothing")
+	# season body (P4-13): seeded, stable per seed, forced by --body, all four reachable
+	var ids := [&"body_gaunt", &"body_scarecrow", &"body_boar", &"body_husk"]
+	_check(Logic.pick_body(ids, 42) == Logic.pick_body(ids, 42), "one seed, one body")
+	_check(Logic.pick_body(ids, 42, "boar") == &"body_boar", "--body=boar forces it")
+	_check(Logic.pick_body(ids, 42, "body_husk") == &"body_husk", "--body=body_husk forces it")
+	_check(Logic.pick_body(ids, 42, "dragon") == Logic.pick_body(ids, 42), "an unknown --body falls back to the seed")
+	var seen := {}
+	for i in 64:
+		seen[Logic.pick_body(ids, i)] = true
+	_check(seen.size() == 4, "64 seeds reach all four bodies (%d)" % seen.size())
 	print("test_creature_logic: %s" % ("PASS" if _fails == 0 else "%d FAILED" % _fails))
 	quit(0 if _fails == 0 else 1)
 

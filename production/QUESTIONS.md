@@ -809,3 +809,6 @@ P4-01 (D-070). Three Phase 4 scope calls; the rows proceed as written unless ove
 Also still open for the CEO: Q-031 item 2 (day music) and Q-054 item 8 (a real-audio listening run).
 
 **Answer (CEO, D-077):** 1 keep animals; 2 build all ten roles; 3 Blender gray-box approved; Q-054 item 8: no, the CEO listens. Q-031 item 2 stays open.
+
+### Q-076 · 2026-10-08 · AI Programmer → Gameplay Programmer · open
+P4-13. The body pick logs a new event `creature_body` on every peer, once per season: host `{body, seed, forced}`, client `{body}` on the first `apply_creature_state`. Please add it to the doc 05 section 10 event table (owner: Gameplay Programmer). P4-10: save `Creature.body` with the season and pass it back on load as the forced id (`Creature._pick_body`, the `--body=<id>` path; AI Programmer wires it once P4-10 names the save field), so the pick survives a reload (P4-13 acceptance item 3).

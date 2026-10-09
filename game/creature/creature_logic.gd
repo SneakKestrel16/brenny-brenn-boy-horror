@@ -63,3 +63,14 @@ static func taint_fix(from: Vector3, pos: Vector3, trail: Array, radius_m: float
 		if from.distance_to(trail[i].position) <= pickup_m:
 			return trail[mini(i + lead, trail.size() - 1)].position
 	return Vector3.INF
+
+
+## Doc 01 "Bodies", doc 03 section 2: the season's body, one of `ids` (creature.json `kind` body).
+## `forced` (`--body=<id>`, `body_` prefix optional) wins when it names a body; else `seed_n` picks.
+static func pick_body(ids: Array, seed_n: int, forced: String = "") -> StringName:
+	var f := StringName(forced if forced.begins_with("body_") else "body_" + forced)
+	if forced != "" and f in ids:
+		return f
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_n
+	return ids[rng.randi_range(0, ids.size() - 1)]

@@ -591,7 +591,7 @@ no economy number and can start now.
 | P4-10 | Gameplay, Network & Voice | Saving at dawn, loading, host left, joining and leaving mid-season with headcount scaling | todo | P4-07 |
 | P4-11 | AI Programmer, Gameplay | Phase 4 sabotage and difficulty: `pumpkin_gnaw`, full-wipe doubling, difficulty settings | todo | P4-05, P4-06 |
 | P4-12 | AI Programmer, Gameplay, Technical Artist | Short season and the Harvest Moon: festival cart, acts, `harvest_moon` profile (doc 03 s14) | todo | P4-05, P4-07 |
-| P4-13 | AI Programmer | Creature body per season: host seeded pick, logged, `--body=<id>` dev flag (doc 01 "Bodies", Q-074, D-068) | todo | P4-01 |
+| P4-13 | AI Programmer | Creature body per season: host seeded pick, logged, `--body=<id>` dev flag (doc 01 "Bodies", Q-074, D-068) | done (save and load waits for P4-10, Q-076) | P4-01 |
 | P4-14 | Network & Voice | Walkie-talkies as store items (doc 06 s10, doc 02 s10) | todo | P4-06 |
 | P4-15 | Gameplay, Technical Artist | Season Awards and season end screens (doc 03 s17.4, doc 05 s15) | todo | P4-07 |
 | P4-16 | 3D Artist, Technical Artist | Phase 4 models in Blender 5.2: four bodies, pumpkins, patch, cart, town stand, animals, store items (doc 07 s12) | todo | P4-01 |

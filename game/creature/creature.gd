@@ -58,7 +58,7 @@ const CLUE_M := 4.0  ## doc 03 section 9: trap clues are seen within 4 m (placeh
 const TRAP_SPRING_M := 1.0  ## placeholder: a living player this close to an armed trap springs it
 const ARRIVE_M := 1.0
 const DAY_COVER := "cover_15"  ## doc 04 sec 9: the far south cover point; where it waits by day (placeholder)
-const BODY := &"body_gaunt"  ## doc 03 section 2: Phase 1 shows one body (placeholder choice)
+const BODY := &"body_gaunt"  ## shown until the host's season pick arrives (P4-13)
 const TELLS: Array[StringName] = [&"none", &"echo", &"pitch_up", &"pitch_down", &"no_crackle"]  ## doc 03 section 12.2
 # P2-04 recorded lures (doc 03 section 12.1). Whose-voice weights are `ai_director.json` `lures` (P3-03).
 ## Doc 03 section 16 "Day or night use"; which lines fit both is a placeholder reading. A name call fits both.
@@ -135,6 +135,7 @@ var _leave_m := 0.0  ## lurk and stalk metres walked since the last stain
 var _target_pos := Vector3.ZERO
 var _target_yaw := 0.0
 var _clip_lures: Array = []  ## every peer: [owner, clip_id, AudioStreamPlayer3D] playing now
+var _body_logged := false
 
 
 func _ready() -> void:
@@ -173,6 +174,7 @@ func _ready() -> void:
 		_test_walk.call_deferred()
 	if not Game.is_host():
 		return
+	_pick_body()
 	if not Data.has_table(&"phase1"):
 		push_warning("Creature: Phase 1 creature needs --phase1; idle")
 		return
@@ -1176,9 +1178,34 @@ func _on_bytes(_from: int, pkt: PackedByteArray) -> void:
 	_target_yaw = pkt.decode_float(14)
 
 
+## P4-13, doc 01 "Bodies", doc 03 section 2: the host picks the season's body once; clients get it with
+## every `apply_creature_state`. `--body=<id>` forces it. Without `--seed` the seed is the session id, so
+## unseeded seasons differ (inference: doc 01 names no seed source; P4-10 saves the pick).
+func _pick_body() -> void:
+	var ids := []
+	for r in Data.records(&"creature"):
+		if r.get("kind") == "body":
+			ids.append(StringName(r.id))
+	var forced := ""
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--body="):
+			forced = a.trim_prefix("--body=")
+	var seed_n := Game.seed_value if Game.seed_value != 0 else hash(Game.session_id)
+	body = Logic.pick_body(ids, seed_n, forced)
+	if forced != "" and String(body) != forced and String(body) != "body_" + forced:
+		push_warning("Creature: --body=%s names no body; the seed picked %s" % [forced, body])
+	Log.event(&"creature_body", {"body": String(body), "seed": seed_n, "forced": forced})
+
+
 func _on_apply(what: StringName, args: Array) -> void:
 	match what:
 		&"creature_state":
+			if not _body_logged or args[1] != body:  # the season's body: the first packet carries it (farm_state reply)
+				_body_logged = true
+				body = args[1]
+				Log.event(&"creature_body", {"body": String(body)})
+				if args[0] == state:
+					state_changed.emit(state, body)
 			if args[0] != state:
 				state = args[0]
 				body = args[1]
