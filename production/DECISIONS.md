@@ -864,3 +864,19 @@ Canopies keep each work spot's doc 04 s8.4 corn distance (pumpkin 20 m), 2 m fro
 **Why:** players and the creature use collision mask 1 and the creature has no navmesh or unstuck logic,
 so solid obstacles could pin it (Q-196). Sight cover is what the open ground lacked.
 **How to apply:** new world dressing stays visual or layer 5 unless the AI Programmer adds avoidance.
+### D-090 · 2026-10-09 · Gameplay Programmer · Seeds are chosen at the store, paid at planting
+P4-22 sells seeds at the shipping crate's menu (OPEN_ISSUES CEO session item 2). A seed row sets which crop
+this player's field plots plant (`farm.seed_pick`, the same pick `cycle_seed` T already made); the seed's
+price (doc 02 s10: turnip 4, pumpkin 10 from the first payment, moonflower 25 from day 3, bed only) is still
+charged per plot when it is planted. Players hold no seed stock.
+**Why:** charging at planting is what `tools/sim/` models (doc 02 s18). Seed packs bought ahead would move
+coins earlier in the day and need a retune. Q-170 asks whether real seed stock is wanted.
+**How to apply:** menu seed rows never send `request_store`; planting stays host-validated in `plot.gd`.
+
+### D-091 · 2026-10-09 · Gameplay Programmer · The hotbar is an exception to "no HUD markers"
+P4-22 adds a bottom-centre hotbar listing what the local player holds or the team owns, each with a
+one-line use hint (OPEN_ISSUES CEO session item 3). Doc 05 s16 says "No HUD markers"; the hotbar
+points at no teammate, objective or creature, so it does not break the doc 01 "Diegetic" rule.
+**Why:** CEO request in the 2-instance session: players could not tell what they held or how to use it.
+**How to apply:** the hotbar shows only the local player's things and the team's shared items. It never
+shows positions, threats or other players. It hides while the player is a ghost.

@@ -2,7 +2,7 @@ extends Node
 ## P4-06 (doc 02 s10, doc 05 s9): the shipping crate's store. Host-authoritative: a client sends
 ## `request_store(op, arg)` (`buy`, `flare`, `scarecrow`), the host validates, mutates, logs and broadcasts the whole
 ## small state with `apply_store`. Every row is a `store.json` record; its `effect` holds the numbers. Seeds are
-## not sold here: they are charged at planting (plot.gd, P4-04), gated by crops.json (doc 02 s10 table).
+## picked in the crate's menu (P4-22, game/ui/store_menu.gd) and charged at planting (plot.gd, P4-04; D-090).
 
 const REACH_M := 3.5  ## how close to the crate a buy must be (placeholder)
 const SPACING_M := 3.0  ## two placed scarecrows closer than this are one (placeholder)
@@ -101,10 +101,11 @@ func why_not(peer: int, id: StringName, near: bool = true) -> StringName:
 		return &"no_item"
 	if Game.is_ghost(peer):
 		return &"ghost"
-	var st: Dictionary = farm.pstate(peer)
-	var crate := get_tree().get_first_node_in_group(&"store_crate") as Node3D
-	if near and (crate == null or not st.has("pos") or Vector2(st.pos.x - crate.global_position.x, st.pos.z - crate.global_position.z).length() > REACH_M):
-		return &"too_far"
+	if near:  # P4-22: with `near` false a client may ask too (the store menu greys rows); pstate is host-only
+		var st: Dictionary = farm.pstate(peer)
+		var crate := get_tree().get_first_node_in_group(&"store_crate") as Node3D
+		if crate == null or not st.has("pos") or Vector2(st.pos.x - crate.global_position.x, st.pos.z - crate.global_position.z).length() > REACH_M:
+			return &"too_far"
 	if Clock.day < int(r.unlock_day):
 		return &"locked_item"
 	if farm.coins < price(peer, id):
@@ -337,8 +338,7 @@ func prompt_text() -> String:
 	var me: Dictionary = Game.players.get(Game.local_peer(), {})
 	if crate == null or not me.has("pos") or Vector2(me.pos.x - crate.global_position.x, me.pos.z - crate.global_position.z).length() > REACH_M:
 		return ""
-	var r := items()[pick]
-	return "Store: %s, %d coins (day %d)   %s next   %s buy" % [r.name, price(Game.local_peer(), StringName(r.id)), int(r.unlock_day), _key(&"cycle_item"), _key(&"buy_item")]
+	return "%s: open the store (seeds and tools)" % _key(&"interact")  # P4-22: the list is store_menu.gd
 
 
 func _key(action: StringName) -> String:

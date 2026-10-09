@@ -3,6 +3,7 @@ extends CanvasLayer
 ## pointing at anything (doc 05 section 3 "No HUD markers"; doc 01 "Onboarding" wants in-world intros, which
 ## come later). Local player only. Built in code; the same on a headless run (controls exist, nothing draws).
 
+const Crops := preload("res://game/farming/crops.gd")
 const HINT_S := 20.0  ## controls hint stays this long after first spawn (placeholder)
 const PHASE_TEXT := {&"day": "Daylight", &"dusk": "Dusk", &"night": "NIGHT", &"dawn": "Dawn", &"harvest_moon": "HARVEST MOON"}
 const VERB_TEXT := {&"plant": "Plant", &"water": "Water", &"harvest": "Harvest", &"sell": "Sell the crop",
@@ -29,6 +30,7 @@ var _banner: Label
 var _hint: Label
 var _bar: ProgressBar
 var _dot: ColorRect
+var _hotbar: HBoxContainer  ## P4-22: what this player holds, one slot each with a one-line use hint
 var _t := 0.0
 
 
@@ -83,6 +85,18 @@ func _ready() -> void:
 	map.set_script(preload("res://game/ui/minimap.gd"))
 	map.player = player
 	add_child(map)
+	_hotbar = HBoxContainer.new()
+	_hotbar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_hotbar.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_hotbar.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_hotbar.offset_bottom = -12
+	_hotbar.alignment = BoxContainer.ALIGNMENT_CENTER
+	_hotbar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_hotbar)
+	var menu := CanvasLayer.new()  # P4-22: the shipping crate's list
+	menu.set_script(preload("res://game/ui/store_menu.gd"))
+	menu.hud = self
+	add_child(menu)
 
 
 ## P3-07 tester text until the black-hands model and the heartbeat land (doc 01 "The Taint" cues are diegetic).
@@ -142,6 +156,67 @@ func _process(delta: float) -> void:
 	if why != &"" and hs[0] == &"":
 		prompt = REFUSED_TEXT.get(why, String(why).capitalize().replace("_", " "))
 	_prompt.text = prompt
+	_show_hotbar(_slots(farm) if farm and not player.ghost else [])
+
+
+## P4-22 (CEO session): [name, one-line use hint] for each thing the local player holds or the team owns.
+## Read from the replicated `carry` and store state; nothing here is authoritative.
+func _slots(farm: Node) -> Array:
+	var me := Game.local_peer()
+	var c: Dictionary = farm.carry.get(me, {})
+	var st: Node = farm.store
+	var out := []
+	match c.get("held_kind", &""):
+		&"water": out.append(["Watering can %d/%d" % [int(c.get("can", 0)), int(Data.value(&"labor", &"can", &"capacity"))],
+				"Hold %s on a growing plot: water. Well: refill. %s: put down" % [_key(&"interact"), _key(&"drop")]])
+		&"fuel": out.append(["Fuel can, %s" % ("full" if c.get("fuel_can", false) else "empty"),
+				"Hold %s on the generator: refuel. %s: put down" % [_key(&"interact"), _key(&"drop")]])
+	if farm.targets.has("prize_pumpkin") and farm.targets["prize_pumpkin"].carrier == me:
+		out.append(["Prize Pumpkin", "Load it on the cart. %s: set it down" % _key(&"drop")])
+	if c.get("shovel", false):
+		out.append(["Shovel", "Hold %s on a pit: fill it. Pegboard: hang it back" % _key(&"interact")])
+	if c.get("trap", false):
+		out.append(["Bear trap", "Hold %s on the pegboard: hang it" % _key(&"interact")])
+	var seed: StringName = farm.seed_pick if farm.seed_pick != &"" else Crops.default_seed()
+	out.append(["%s seed, %d coins" % [Data.record(&"crops", seed).get("name", seed), int(Data.record(&"crops", seed).get("seed", 0))],
+			"Hold %s on an empty plot: plant. %s or the store: change" % [_key(&"interact"), _key(&"cycle_seed")]])
+	if int(c.get("bag", 0)) > 0:
+		out.append(["Crops %d/%d" % [int(c.bag), int(Data.value(&"labor", &"carry", &"capacity"))], "Hold %s at the town stand: sell" % _key(&"interact")])
+	if int(st.team.get(&"flare_gun", 0)) > 0:
+		out.append(["Flare gun, %d shot%s" % [st.flare_shots, "" if st.flare_shots == 1 else "s"], "%s: fire (scares it off, loud)" % _key(&"fire_flare")])
+	if int(st.team.get(&"scarecrow", 0)) > st.scarecrows.size():
+		out.append(["Scarecrow x%d" % (int(st.team.scarecrow) - st.scarecrows.size()), "%s: put one up where you stand" % _key(&"place_scarecrow")])
+	if st.owns(me, &"quiet_watering_can"):
+		out.append(["Quiet watering can", "Water as usual: slower, heard less far"])
+	if st.owns(me, &"walkie_talkie"):
+		out.append(["Walkie-talkie, %d spare batter%s" % [int(st.team.get(&"walkie_battery", 0)), "y" if int(st.team.get(&"walkie_battery", 0)) == 1 else "ies"],
+				"Hold %s: talk on the radio" % _key(&"voice_radio")])
+	if st.owns(me, &"brighter_lantern"):
+		out.append(["Brighter lantern", "Your light reaches further"])
+	if st.scrap_total() > 0:
+		out.append(["Scrap x%d" % st.scrap_total(), "Hold %s on broken things: repair" % _key(&"interact")])
+	return out
+
+
+func _show_hotbar(slots: Array) -> void:
+	while _hotbar.get_child_count() > slots.size():
+		var gone := _hotbar.get_child(-1)
+		_hotbar.remove_child(gone)
+		gone.queue_free()
+	while _hotbar.get_child_count() < slots.size():
+		var box := PanelContainer.new()
+		var bg := StyleBoxFlat.new()
+		bg.bg_color = Color(0, 0, 0, 0.55)
+		bg.set_content_margin_all(6)
+		box.add_theme_stylebox_override(&"panel", bg)
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var l := Label.new()
+		l.add_theme_font_size_override(&"font_size", 14)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		box.add_child(l)
+		_hotbar.add_child(box)
+	for i in slots.size():
+		(_hotbar.get_child(i).get_child(0) as Label).text = "%s\n%s" % slots[i]
 
 
 func _verb_text(verb: StringName) -> String:

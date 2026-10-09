@@ -472,12 +472,18 @@ dawn (section 17) from `crops.json` (doc 02 section 5).
 
 - `game/items/store.gd` (`Store`, child of `Farm` on every peer, group `store`). Every `store.json` row is
   bought at the `store_crate` (within 3.5 m, placeholder) at its `price`, from its `unlock_day`. Seeds are not
-  rows: they are charged at planting (plot.gd, P4-04). No crop is sold.
+  `store.json` rows: they are picked in the store menu and charged at planting (plot.gd, P4-04). No crop is sold.
 - Wire: client `request_store(op, arg)` (`buy`, `flare`, `scarecrow`) -> host validates -> `apply_store(state)`
   carries the whole small state (team counts, per-player ownership, scrap, placed scarecrows, flare shots, opened
   plots) to everyone; a late joiner gets it on `farm_state`. Refusals use `apply_refused` (hud.gd `REFUSED_TEXT`).
 - Keys (placeholders, `project.godot`): `cycle_item` R, `buy_item` K, `fire_flare` H, `place_scarecrow` N. The HUD
   prompt shows only within reach of the crate. Dev console: `buy <item>` (anywhere, host).
+- Store menu (P4-22, `game/ui/store_menu.gd`, built by hud.gd): `interact` at the crate with nothing aimed opens it.
+  One row per `store.json` item (price, Buy sends the same `request_store`) and one per crops.json seed. A seed
+  row only sets the local `farm.seed_pick` (as `cycle_seed` T does); the seed is still paid per plot at planting
+  (D-090). Rows grey from `why_not(peer, id, false)`, which is client-safe; the host checks again on Buy.
+- Hotbar (P4-22, hud.gd `_slots`): bottom-centre slots for what the local player holds or the team owns, each with
+  a one-line use hint. A CEO-requested exception to "No HUD markers" (D-091): it points at nothing.
 - Items: `scrap` adds `repairs` to `scrap_bought` (`take_scrap()` spends the free scrap first; nothing calls it yet,
   Q-100). `quiet_watering_can` (per player) offers verb `water_quiet` (5 s, noise x0.5, labor.json).
   `brighter_lantern` is tracked (`lantern_mult(peer)`); no player lantern exists yet. `shed_lock` sets
