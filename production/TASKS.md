@@ -610,6 +610,7 @@ no economy number and can start now.
 | P4-30 | Game Designer, Gameplay | CEO: sell bonus by player count so 2p makes its payments; sim targets still pass | done (QA PASS; bonus 0 everywhere, Q-210 for CEO) | P4-28 |
 | P4-31 | AI Programmer | CEO: players in the town stand sanctuary do not count as outside at night (D-089); bots drop the sentinel job; re-run bot seasons | superseded by D-115, not merged (bots lost 12 of 12 seasons) | P4-21 |
 | P4-34 | AI Programmer, Game Designer | CEO: the town stand lowers creature interaction instead of being a sanctuary (D-115); re-run bot seasons and the sim | in progress | P4-21 |
+| P4-35 | Gameplay | CEO: menu lobby as a character line-up scene (D-140); doc 01 menu-lobby wording (Q-176) | in progress | P4-23 |
 | P4-32 | Gameplay | CEO: the Harvest Moon push bar shows the distance left to the gate, not a stuck 0%; pushers lock to the cart while holding interact | in progress | — |
 | P4-33 | Gameplay | CEO: flag limit per player; remove your own placed flag; flags as small icons on the minimap | waiting | P4-24 |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
@@ -889,6 +890,18 @@ and an Opus QA review passes.
 - Placed flags show as small icons on the P4-24 minimap for every living player.
 - Doc 01 "Flags" rules stay: from day 5 the creature can move one flag a night, and the minimap shows
   where the flag is now. Host-authoritative, synced, logged. Same done-when line as P4-22 to P4-28.
+- D-141: remove the teammate dots from the minimap; only the local arrow, layout and flags show.
+
+### P4-35 Menu lobby line-up scene (D-140, CEO 2026-10-09)
+- Replace the flat lobby menu with a 3D scene behind the UI: a dark barn or night farm, lantern-lit, with
+  every connected player's farmer (existing farmer model, hat by role) standing side by side, the local
+  player in the centre spotlight.
+- Above each farmer: name, chosen role, READY or NOT READY. Role pick, ready, settings and leave sit in
+  side panels; the host's start button bottom right. Joining and leaving players appear and vanish.
+- Horror tone: dark palette, warm lantern light; take layout only from the reference, not its colours.
+- The recording screen's `lantern_out` step blows out a lantern in this scene (Q-176).
+- Doc 01 "Picking a role" and recording "Staging" say "menu lobby"; docs 04, 06, 07 barn-lobby lines
+  (OPEN_ISSUES "Found at the P4-23 review" 2) updated or routed by Q. Same done-when line as P4-22 to P4-28.
 
 ### P4-34 Town stand lowers risk, no sanctuary (D-115)
 - Remove every absolute sanctuary rule (creature kill, chase retreat, AI Director `allow`, scares, trap

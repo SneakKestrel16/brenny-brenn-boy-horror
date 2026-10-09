@@ -813,3 +813,20 @@ their cause, a single worker at 2p (Q-162, Q-164), not by raising 2p income.
 (Q-210). The CEO said "go with a for now".
 **How to apply:** do not set a nonzero bonus without a new CEO decision. Revisit after the P4-34 bot
 seasons; before any nonzero bonus, make the sim round per sale (OPEN_ISSUES "Found at the P4-30 review" 1).
+
+### D-140 · 2026-10-09 · CEO · The menu lobby is a character line-up scene (Q-176)
+The lobby shows every connected player's farmer standing side by side in a dark, lantern-lit 3D scene
+(barn or night farm), the local player in the centre. Each farmer has its name, role and READY or NOT
+READY above its head. Menus sit in side panels; the host's start button sits bottom right. Players still
+spawn at the barn spawn markers at match start.
+**Why:** the CEO asked for a lobby "similar to" a Fortnite-style concept image they linked
+(behance.net project module 35f8a0200404059). The image is third-party art and is not committed.
+**How to apply:** P4-35 builds it. Keep the horror tone: dark palette, lantern light, no bright colours
+from the reference. Doc 01 "Picking a role" and "Staging" say "menu lobby".
+
+### D-141 · 2026-10-09 · CEO · The minimap shows no other players (Q-180)
+The minimap shows only the local player's arrow, the farm layout and placed flags (P4-33). It never
+shows teammates or the creature.
+**Why:** the CEO said "dont show players on the minimap"; teammate dots would expose fake voices and
+replace the whistle (doc 01 "Voice mimicry", "Whistle").
+**How to apply:** P4-33 removes the teammate dots from `game/ui/minimap.gd` `_draw_dyn`.

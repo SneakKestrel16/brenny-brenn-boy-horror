@@ -545,6 +545,8 @@ Doc 08 s7.4, s13. (1) Generic stranger voice lines (`vox_stranger_*`): default i
 
 **Answer to 3 (CEO, 2026-10-07):** accepted: whistle `max_distance` 220 m, `unit_size` 20 m. DD Phase 1 spatial test may retune.
 
+**Answer (CEO, 2026-10-09):** item 2 day music: "wait on the day music". Still open; no day music.
+
 **Answer (Director, P4-01, 2026-10-08):** item 2 day music stays open and FOR CEO. Until the CEO decides, Phase 4 adds no day music, and the Phase 1 day music is never reused (CEO).
 
 ### Q-032 · 2026-10-07 · Audio Designer → Gameplay Programmer · answered
@@ -1142,7 +1144,7 @@ its emitters there and lobby voice plays unplaced (everyone at the listener). Sa
 **Answer (Director, 2026-10-09):** names approved as proposed, D-092. P4-23 QA (Network & Voice view)
 found both RPCs sender-checked and host-only; unplaced lobby voice is fine.
 
-### Q-176 · 2026-10-09 · Gameplay Programmer -> Director, Game Designer · open · FOR CEO
+### Q-176 · 2026-10-09 · Gameplay Programmer -> Director, Game Designer · answered · FOR CEO
 P4-23 conflicts with doc 01 text. The CEO asked for a menu lobby where nobody spawns in the barn
 (OPEN_ISSUES "Found in the CEO's 2-instance session" item 4), but doc 01 "Picking a role" says "each
 player picks a role in the barn lobby", and doc 01 recording "Staging" says "the lobby is the dark barn
@@ -1153,13 +1155,23 @@ the lobby, but no `barn_lantern` marker exists there, so the "lantern_out" step 
 Soundscape still plays the barn room tone in the lobby (Audio's `_in_barn`), which fits either.
 Players still spawn at the six barn spawn markers at match start (doc 04 s13): "players spawn on the
 farm" read as those markers (inference; the CEO can name another spawn area).
-### Q-180 · 2026-10-09 · Gameplay Programmer -> Director · FOR CEO · open
+
+**Answer (CEO, 2026-10-09):** the menu lobby should look "similar to" a Fortnite-style concept lobby the
+CEO linked (behance.net project module 35f8a0200404059): the players' characters stand side by side in
+a lit 3D scene, the local player in the centre spotlight, each name with READY or NOT READY above the head,
+panels at the sides and a large start button bottom right. Built as P4-35 with a dark barn or night farm
+backdrop (D-140); that backdrop also gives the recording staging a lantern. Doc 01 wording changes to
+"menu lobby" in P4-35.
+### Q-180 · 2026-10-09 · Gameplay Programmer -> Director · FOR CEO · answered
 P4-24. The minimap shows other living players, as the task row asks. That weakens two doc 01 rules:
 "Voice mimicry" says a fake voice "always comes from a place the teammate can't be", and the
 "Whistle" is "placed by 3D audio only, with no HUD marker". With teammate dots on the map, a player
 checks the map instead of listening, so a fake voice is exposed at a glance and the whistle is no
 longer needed to find someone. Built as asked; the dots are one `if` in `_draw_dyn` of
 `game/ui/minimap.gd` to remove. Keep the teammate dots, drop them, or show them by day only?
+
+**Answer (CEO, 2026-10-09):** "dont show players on the minimap". Only the local player's arrow stays
+(D-141). Removed in P4-33, which already edits `minimap.gd`.
 
 ### Q-210 · 2026-10-09 · Game Designer -> Director · FOR CEO · answered (D-130)
 P4-30. The CEO's 2p sell bonus conflicts with the doc 02 s18.3 targets (doc 01 "55-70% final"). The sim's
