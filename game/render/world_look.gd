@@ -6,26 +6,31 @@ extends Node
 ## setter (only game/core/lights.gd may) and never changes a light on its own.
 ## Debug user args: --look-phase=<phase>[:progress]  --look-shot=<png>  --look-cam=x,y,z,yaw,pitch
 
-# Keys per phase, placeholders from doc 07 section 3. sun_e is the directional light energy.
+# Keys per phase, placeholders from doc 07 section 3. sun_e is the directional light energy. sat and con are
+# the colour grade (doc 07 s6 step 2: day warm and saturated, night desaturated), an Environment adjustment.
 const NOON := {"sun_col": Color("FFE2B0"), "sun_e": 1.2, "elev": 55.0, "amb_col": Color("FFF1D8"), "amb_e": 0.8,
 		"fog_col": Color("D8E2E8"), "fog_d": 0.0008, "sky_top": Color("5F9AD8"), "sky_hor": Color("D8E2E8"),
-		"vig": 0.15, "grain": 0.02}
+		"vig": 0.15, "grain": 0.02, "sat": 1.15, "con": 1.05, "moon": 0.0}
 const DAY_END := {"sun_col": Color("FFD090"), "sun_e": 1.2, "elev": 20.0, "amb_col": Color("FFE6C8"), "amb_e": 0.8,
 		"fog_col": Color("D8E2E8"), "fog_d": 0.0008, "sky_top": Color("5F9AD8"), "sky_hor": Color("E8D8C0"),
-		"vig": 0.15, "grain": 0.02}
+		"vig": 0.15, "grain": 0.02, "sat": 1.1, "con": 1.05, "moon": 0.0}
 const SUNSET := {"sun_col": Color("FF6A30"), "sun_e": 0.35, "elev": 5.0, "amb_col": Color("A07CA0"), "amb_e": 0.45,
 		"fog_col": Color("6A4A5A"), "fog_d": 0.004, "sky_top": Color("3A3A6A"), "sky_hor": Color("C8683F"),
-		"vig": 0.25, "grain": 0.04}
+		"vig": 0.25, "grain": 0.04, "sat": 1.0, "con": 1.0, "moon": 0.0}
 const NIGHT := {"sun_col": Color("8FA8D8"), "sun_e": 0.12, "elev": 35.0, "amb_col": Color("7088D0"), "amb_e": 0.25,
 		"fog_col": Color("0D1220"), "fog_d": 0.012, "sky_top": Color("0A0F20"), "sky_hor": Color("222C48"),
-		"vig": 0.4, "grain": 0.06}
+		"vig": 0.4, "grain": 0.06, "sat": 0.7, "con": 1.0, "moon": 0.0}
 const HARVEST := {"sun_col": Color("FFD8B0"), "sun_e": 0.2, "elev": 12.0, "amb_col": Color("4A4C80"), "amb_e": 0.3,
 		"fog_col": Color("1A1C2C"), "fog_d": 0.010, "sky_top": Color("0E1226"), "sky_hor": Color("3A3050"),
-		"vig": 0.4, "grain": 0.06}
+		"vig": 0.4, "grain": 0.06, "sat": 0.8, "con": 1.0, "moon": 1.0}
 const DAWN_MID := {"sun_col": Color("FFA860"), "sun_e": 0.5, "elev": 8.0, "amb_col": Color("B09090"), "amb_e": 0.5,
 		"fog_col": Color("8A6A6A"), "fog_d": 0.004, "sky_top": Color("4A5A8A"), "sky_hor": Color("E89A60"),
-		"vig": 0.25, "grain": 0.04}
+		"vig": 0.25, "grain": 0.04, "sat": 0.95, "con": 1.0, "moon": 0.0}
 const SUN_AZIMUTH := -30.0
+const HARVEST_EASE_S := 15.0  ## placeholder: night to Harvest Moon look, on the shared clock
+const MOON_M := 300.0  ## QA P4-20: moon disc distance from the camera, beyond the farm, inside the far plane
+const MOON_R := 16.0  ## placeholder: disc radius at MOON_M (about 6 degrees across, "low and large", doc 07 s3)
+const MOON_COL := Color("FFE2C0")  ## placeholder: "full orange-white moon" (doc 07 s3 harvest_moon row)
 
 var corn: CornField
 var _env: Environment
@@ -37,6 +42,9 @@ var _override_p := 0.0
 var _shot := ""
 var _frames := 0
 var _fixed_cam: Camera3D
+var _lp: Node  ## local Player, found lazily
+var _tired := 0.0
+var _moon: MeshInstance3D  ## Harvest Moon disc; `moon` key 0..1 eases it in with the look
 
 
 func _ready() -> void:
@@ -126,8 +134,18 @@ func _build_environment() -> void:
 	_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	_sun.directional_shadow_max_distance = 60.0
 	add_child(_sun)
+	# The Harvest Moon disc (doc 07 s3): unshaded, under the bloom threshold, never animated, not a light.
+	var moon_mat := StandardMaterial3D.new()
+	moon_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	moon_mat.disable_fog = true
+	_moon = MeshInstance3D.new()
+	_moon.mesh = SphereMesh.new()
+	_moon.material_override = moon_mat
+	_moon.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_moon.scale = Vector3.ONE * MOON_R * 2.0  # SphereMesh is 1 m across
+	add_child(_moon)
 	var layer := CanvasLayer.new()
-	layer.layer = 100
+	layer.layer = -2  # QA P4-20: every UI CanvasLayer is at the default 1 (hud.gd, menus); negative layers still draw over the 3D world, so grain and vignette sit under all UI and under Taint (-1): doc 07 s6 order, HUD ungraded
 	var rect := ColorRect.new()
 	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -149,6 +167,7 @@ func _place_rigs(world: Node) -> void:
 
 func _process(_delta: float) -> void:
 	_apply(_state())
+	_tired_step(_delta)
 	if _fixed_cam and _shot == "" and not _fixed_cam.current:
 		_fixed_cam.make_current()  # --look-cam in a live session: hold the view over the Player camera
 	if _shot != "":
@@ -161,6 +180,20 @@ func _process(_delta: float) -> void:
 					corn.stalk_count if corn else 0, corn.cell_count if corn else 0,
 					Engine.get_frames_per_second(), RenderingServer.get_video_adapter_name()])
 			get_tree().quit()
+
+
+## Stamina vignette (doc 07 s6 step 3): 0 with a full tank, up to 1 when dry, slewed over about 1.5 s.
+func _tired_step(delta: float) -> void:
+	if _lp == null or not is_instance_valid(_lp):
+		_lp = null
+		for n in get_tree().root.find_children("*", "CharacterBody3D", true, false):
+			if n.get("is_local") == true:
+				_lp = n
+		if _lp == null:
+			return
+	var mx: float = _lp.sprint_max()
+	_tired = move_toward(_tired, 1.0 - clampf(_lp.stamina / mx, 0.0, 1.0) if mx > 0.0 else 0.0, delta / 1.5)
+	_post.set_shader_parameter(&"tired", _tired)
 
 
 func _state() -> Dictionary:
@@ -179,8 +212,9 @@ func _state() -> Dictionary:
 			return _sample([DAY_END, SUNSET, NIGHT], [0.0, 0.6, 1.0], p)
 		&"dawn":
 			return _sample([NIGHT, DAWN_MID, DAY_END], [0.0, 0.5, 1.0], p)
-		&"harvest_moon":
-			return HARVEST
+		&"harvest_moon":  # no timer (doc 02 s3): ease in from night over HARVEST_EASE_S so there is no pop
+			var ease_p := clampf(Clock.t_phase / HARVEST_EASE_S, 0.0, 1.0) if _override_phase == &"" else 1.0
+			return _sample([NIGHT, HARVEST], [0.0, 1.0], ease_p)
 	return NIGHT
 
 
@@ -195,7 +229,14 @@ func _sample(keys: Array, at: Array, p: float) -> Dictionary:
 	return out
 
 
+## Doc 07 s6 quality switch: the "low" preset drops grain and the fog layer. Local-light shadows are
+## already off for every LightRig; whoever adds the held lantern's shadow must gate it on this too.
+static func low_quality() -> bool:
+	return Settings.is_set(&"quality_preset") and str(Settings.get_value(&"quality_preset")) == "low"
+
+
 func _apply(s: Dictionary) -> void:
+	var low := low_quality()
 	_sun.rotation_degrees = Vector3(-s.elev, SUN_AZIMUTH, 0.0)
 	_sun.light_color = s.sun_col
 	_sun.light_energy = s.sun_e
@@ -203,13 +244,21 @@ func _apply(s: Dictionary) -> void:
 	_env.ambient_light_energy = s.amb_e
 	_env.fog_light_color = s.fog_col
 	_env.fog_density = s.fog_d
-	_env.fog_height_density = s.fog_d * 4.0  # ground fog layer (doc 07 s3 night row)
+	_env.fog_height_density = 0.0 if low else s.fog_d * 4.0  # ground fog layer (doc 07 s3 night row); off on low (s6)
 	_sky.sky_top_color = s.sky_top
 	_sky.sky_horizon_color = s.sky_hor
 	_sky.ground_horizon_color = s.sky_hor
 	_sky.ground_bottom_color = s.fog_col
 	_post.set_shader_parameter(&"vignette", s.vig)
-	_post.set_shader_parameter(&"grain", s.grain)
+	_post.set_shader_parameter(&"grain", 0.0 if low else s.grain)
+	_env.adjustment_enabled = true
+	_env.adjustment_saturation = s.sat
+	_env.adjustment_contrast = s.con
+	var cam := get_viewport().get_camera_3d()
+	_moon.visible = s.moon > 0.01 and cam != null
+	if _moon.visible:  # opposite the light direction, so the disc sits where the moonlight comes from
+		_moon.global_position = cam.global_position + _sun.global_basis.z * MOON_M
+		(_moon.material_override as StandardMaterial3D).albedo_color = s.sky_hor.lerp(MOON_COL, s.moon)
 
 
 func _cam_arg() -> bool:

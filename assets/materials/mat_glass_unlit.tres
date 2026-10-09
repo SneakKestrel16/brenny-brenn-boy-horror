@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "mat_glass_unlit"
+albedo_color = Color(0.32, 0.2, 0.1, 1)
+roughness = 1.0

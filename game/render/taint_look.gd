@@ -75,7 +75,7 @@ static func _arms(local: bool) -> Node3D:
 static func _smudge() -> CanvasLayer:
 	var layer := CanvasLayer.new()
 	layer.name = "TaintSmudge"
-	layer.layer = 5  # over the world, under the HUD (10) and the post pass (100)
+	layer.layer = -1  # over the world and the post pass (-2, grain and vignette), under every UI layer (default 1): Taint is last in the stack (doc 07 s6)
 	var rect := ColorRect.new()
 	rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE

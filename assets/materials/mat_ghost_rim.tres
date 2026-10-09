@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://game/render/ghost_rim.gdshader" id="1"]
+
+[resource]
+resource_name = "mat_ghost_rim"
+render_priority = 1
+shader = ExtResource("1")
+shader_parameter/rim_color = Color(0.749, 0.847, 1, 1)
+shader_parameter/strength = 0.8
+shader_parameter/power = 2.5
