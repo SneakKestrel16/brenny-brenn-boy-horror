@@ -61,9 +61,17 @@ class GrepRules(unittest.TestCase):
 
     def test_rpc_outside_net_fails(self) -> None:
         self.assertEqual(_run({"game/player/p.gd": "foo.rpc_id(1, x)"}), 1)
+        # Q-039 item 1: bare calls on self and @rpc annotations count too.
+        self.assertEqual(_run({"game/player/p.gd": "\trpc_id(1, x)"}), 1)
+        self.assertEqual(_run({"game/player/p.gd": "\trpc(x)"}), 1)
+        self.assertEqual(_run({"game/player/p.gd": '@rpc("any_peer")\nfunc f(): pass'}), 1)
+        self.assertEqual(_run({"game/player/p.gd": "  @rpc\nfunc f(): pass"}), 1)
+        # Names that only contain the word are not calls.
+        self.assertEqual(_run({"game/player/p.gd": "send_rpc_id(1)\nrpc_config(&\"f\", {})"}), 0)
 
     def test_voice_files_fail(self) -> None:
-        self.assertEqual(_run({"spikes/a.wav": "x"}), 1)
+        self.assertEqual(_run({"spikes/a.wav": "x"}), 1)  # Q-039 item 2: no spikes/ exception
+        self.assertEqual(_run({"spikes/voice/take.ogg": "x"}), 1)
         self.assertEqual(_run({"assets/audio/line.vclip": "x"}), 1)
 
 

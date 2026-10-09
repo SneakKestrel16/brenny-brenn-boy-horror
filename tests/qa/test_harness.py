@@ -139,6 +139,31 @@ class LogCheckerFixture(unittest.TestCase):
         lure = check_logs.lure_measure(recs, [])
         self.assertEqual((lure["played_owner_dead"], lure["played_ghost"]), (1, 1))
 
+    def test_q021_lure_window_s_tally(self) -> None:
+        recs = [check_logs.Record("s", 1, t, 1, "night", 1, "lure_result", d) for t, d in (
+            (1.0, {"moved_m": 12, "within_s": 3, "window_s": 8}), (2.0, {"moved_m": 1, "within_s": 6, "window_s": 6}),
+            (3.0, {"moved_m": 1, "within_s": 8}))]
+        lure = check_logs.lure_measure(recs, [])
+        self.assertEqual(lure["window_s"], {"6": 1, "8": 1, "missing": 1})
+        self.assertEqual(len(lure["window_not_doc01"]), 1)
+        self.assertIn("window_s=6", lure["window_not_doc01"][0])
+
+    def test_q021_spatial_angle_error_tally(self) -> None:
+        recs = [check_logs.Record("s", 2, 1.0, 1, "day", 2, "spatial_audio_trial", {"sound": "voice", "distance_m": 30, "correct": True, "angle_error_deg": a})
+                for a in (10.0, 30.0)]
+        recs.append(check_logs.Record("s", 2, 2.0, 1, "day", 2, "spatial_audio_trial", {"sound": "voice", "distance_m": 30, "correct": False}))
+        sp = check_logs.spatial_measure(recs, [])
+        self.assertEqual(sp["angle_error_deg"], {"voice@30m": {"n": 2, "mean": 20.0, "max": 30.0}})
+        self.assertEqual(sp["by_sound_distance"]["voice@30m"]["trials"], 3)
+
+    def test_q021_close_call_tally(self) -> None:
+        def cc(victim: int, result: str, rtt: float) -> check_logs.Record:
+            return check_logs.Record("s", 1, 1.0, 1, "night", 1, "close_call", {"victim": victim, "kind": "lunge", "result": result, "rtt_ms": rtt})
+
+        rep = check_logs.close_call_measure([cc(2, "hit", 40), cc(2, "miss_timeout", 300), cc(3, "miss_disagree", 90)])
+        self.assertEqual((rep["calls"], rep["by_result"]), (3, {"hit": 1, "miss_disagree": 1, "miss_timeout": 1}))
+        self.assertEqual(rep["by_victim"]["s/2"], {"results": {"hit": 1, "miss_timeout": 1}, "rtt_ms_max": 300})
+
     def test_clean_fixture_has_no_problems_and_text_report_renders(self) -> None:
         self.assertEqual(self.rep["problems"], [])
         self.assertEqual(self.rep["warnings"], [])
@@ -156,7 +181,7 @@ class LogCheckerEdgeCases(unittest.TestCase):
         self.assertIsNone(rep["lure"]["rate"])
         self.assertEqual(rep["trap_race"]["races"], 0)
         self.assertEqual(rep["spatial_audio"]["trials"], 0)
-        self.assertEqual(check_logs.format_report(rep).count("none logged"), 6)
+        self.assertEqual(check_logs.format_report(rep).count("none logged"), 7)  # close calls added (Q-021)
 
     def test_session_without_host_file_falls_back_with_warning(self) -> None:
         rep = check_logs.analyze([FIXTURES / "sessions_no_host"])

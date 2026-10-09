@@ -391,7 +391,9 @@ grep -rn 'energy_override' game/ | grep -vE '^game/(render/light_rig|ghost/light
 grep -rn 'light_energy' game/ | grep -v '^game/render/'
 ```
 
-All three must print nothing. Details:
+All three must print nothing. The script is the rule: hand grep 1 passes any `game/net/` line that holds a
+message name, even with a second `flicker` on it, while the script strips the names first (Q-039 item 3).
+Details:
 
 - Rule 1 counts comments. A comment saying "no flicker here" outside `game/ghost/` is a hit, so reword
   it ("steady"). The only exception is the two message names in `game/net/`; a line in `game/net/`
@@ -408,8 +410,8 @@ All three must print nothing. Details:
 
 | Rule | Check | Source |
 |---|---|---|
-| `rpc_outside_net` | `.rpc(` and `.rpc_id(` in `.gd` only under `game/net/` | doc 06 section 14, doc 05 section 22 |
-| `voice_files` | tracked `.vclip` and `.opus` nowhere; `.wav`, `.ogg`, `.mp3`, `.flac` only in `assets/audio/` and `tests/` | CONTRACTS section 11 |
+| `rpc_outside_net` | `rpc(` and `rpc_id(` calls, with or without a receiver, and `@rpc` annotations in `.gd` only under `game/net/` | doc 06 section 14, doc 05 section 22 |
+| `voice_files` | tracked `.vclip` and `.opus` nowhere; `.wav`, `.ogg`, `.mp3`, `.flac` only in `assets/audio/` and `tests/`; `spikes/` gets no exception | CONTRACTS section 11 bans real voice recordings; the extension list is mine (*inference*: section 11 names no extensions, and test voice input lives outside the repo) |
 
 **Review by hand (no grep exists yet):** doc 08 section 4.4's rules for the ambience tell. Only
 `Soundscape.set_creature_state()` lowers the `bed` or `wind` layers by more than 6 dB (the dusk and

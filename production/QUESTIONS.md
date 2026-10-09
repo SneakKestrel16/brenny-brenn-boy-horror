@@ -474,12 +474,20 @@ inside-at-night events. `docs/README.md` row 05 updated by me (your file): rever
 doc 05 and closed. Q-014 item 6 is answered (3 m clearance); the rest of Q-014 is unchanged.
 CONTRACTS sections 2, 8 and 10 updated (section 2 holds the autoload list, not section 4).
 
-### Q-021 · 2026-10-07 · Gameplay Programmer → QA · routed to P4-18
+### Q-021 · 2026-10-07 · Gameplay Programmer → QA · closed (P4-18)
 `tools/qa/check_logs.py` needs no required change for the doc 05 field choices (section 18). Optional:
 drop the "provisional" comments; tally `angle_error_deg`, `close_call` results (OPEN_ISSUES 1) and
 `window_s`. Host-written `trap_race_result` and `inside_at_night` carry `data.player`.
 
 **Answer (Director, P4-01, 2026-10-08):** optional `check_logs.py` tidy-up goes to P4-18 (QA).
+
+**Fixed (QA, P4-18 helper, 2026-10-09):** `tools/qa/check_logs.py` now tallies `lure_result` `window_s`
+(values, plus a list of windows other than doc 01 Testing's 8 s), `spatial_audio_trial` `angle_error_deg`
+(n, mean, max per sound and distance) and `close_call` (by result, by kind, per victim with the worst
+`rtt_ms`; doc 05 s18). The "provisional" comments were already gone; the stale `within_s` inference comment
+now cites D-018 / CONTRACTS s10. Self-test: three new cases in `tests/qa/test_harness.py` (19 tests OK).
+No game code logs `close_call` yet (grep of `game/**/*.gd`: 0 hits), so live logs report "none logged"
+until one does.
 
 ### Q-022 · 2026-10-07 · Gameplay Programmer → Level Designer · answered
 Doc 05 sections 11 and 13 need the cart route as a `Path3D` named `CartRoute` (waypoints R0 to R8,
@@ -574,10 +582,17 @@ Doc 09 DD Phase 4 needs the `tools/sim/` `compare` command doc 05 s18 names. Whi
 
 Note on Q-028: answered by doc 09 (PP-10): three flicker greps in section 9 and `tools/qa/grep_rules.py`; four-instance corn profile in section 10. Director to close.
 
-### Q-039 · 2026-10-07 · QA reviewer → QA · routed to P4-18
+### Q-039 · 2026-10-07 · QA reviewer → QA · closed (P4-18)
 PP-10 passed with three nits (production/handoffs/PP-10.md "QA review"): (1) `grep_rules.py` `rpc_outside_net` misses bare `rpc_id(` calls and `@rpc` outside `game/net/`; (2) the voice-file extension rule is QA's, not CONTRACTS s11's, so mark it inference, and decide a `spikes/` exception for WAV test input; (3) doc 09 s9 hand grep 1 is looser than the script, say the script rules.
 
 **Answer (Director, P4-01, 2026-10-08):** the three nits go to P4-18 (QA).
+
+**Fixed (QA, P4-18 helper, 2026-10-09):** (1) `grep_rules.py` `rpc_outside_net` now matches bare
+`rpc(` / `rpc_id(` calls and `^\s*@rpc` outside `game/net/` (`send_rpc_id(` and `rpc_config(` do not
+match); 0 violations on main 45963f1. (2) The voice extension list is marked QA inference (CONTRACTS s11
+names no extensions), and `spikes/` gets no exception (test voice input lives outside the repo). (3) Doc 09
+s9 says the script is the rule and why hand grep 1 is looser. `tests/qa/test_grep_rules.py`: 7 tests OK
+with new bare-call, `@rpc`, non-call-name and `spikes/` cases.
 
 ### Q-040 · 2026-10-07 · Gameplay → QA · closed
 `tools/qa/smoke.py` step `parse_check` runs `tests/qa/parse_check.gd` as a `-s` SceneTree script. In that mode the autoload names (`Game`, `Data`, `Log`, `Clock`, `Settings`, from P1-02) are not registered, so every script that uses one fails with "Identifier not found" and smoke reports FAIL though the game is fine (import and run steps pass). Checked: the same script run as a scene (`Node` with `_ready`, `get_tree().quit(...)`, run as `godot --headless --path . res://tests/qa/<scene>.tscn`) loads all scripts with `failed=0`. Please switch `parse_check` to a scene run. P1-02 is in review with this one failing smoke step.

@@ -14,9 +14,13 @@ Rules:
   light_energy     doc 07 s4.4 rule 3: only under game/render/. A match in a .tscn/.tres is a scene-authored
                    static value, reported as a warning (inference, doc 09 section 9), not a failure; .gd fails.
                    `ambient_light_energy` is Environment, not a light, and does not match (D-036).
-  rpc_outside_net  doc 06 s14, doc 05 s22: `.rpc(` / `.rpc_id(` only inside game/net/.
-  voice_files      CONTRACTS s11: no tracked .vclip or .opus anywhere; no tracked .wav/.ogg/.mp3/.flac
-                   outside assets/audio/ and tests/ (generated placeholders and fixtures only).
+  rpc_outside_net  doc 06 s14, doc 05 s22: `rpc(` / `rpc_id(` calls (with or without a receiver) and
+                   `@rpc` annotations only inside game/net/ (Q-039 item 1).
+  voice_files      CONTRACTS s11 bans real voice recordings in the repo. The extension list is QA's
+                   (inference, Q-039 item 2; CONTRACTS s11 names no extensions): no tracked .vclip or .opus
+                   anywhere; no tracked .wav/.ogg/.mp3/.flac outside assets/audio/ and tests/ (generated
+                   placeholders and fixtures only). spikes/ gets no exception: test voice input lives
+                   outside the repo (CONTRACTS s11).
 
 A missing game/ folder passes with a note (nothing to check yet).
 """
@@ -82,7 +86,7 @@ def check_light_energy(root: Path, files: list[Path]) -> tuple[list[str], list[s
 
 
 def check_rpc(root: Path, files: list[Path]) -> list[str]:
-    pat = re.compile(r"\.rpc(_id)?\(")
+    pat = re.compile(r"(?<!\w)rpc(_id)?\(|^\s*@rpc\b")
     return [f"{r}:{n}: {l}" for r, n, l in _grep([f for f in files if f.suffix == ".gd"], root, pat)
             if not r.startswith("game/net/")]
 

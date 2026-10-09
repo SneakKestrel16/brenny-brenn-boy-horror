@@ -25,6 +25,8 @@ Measures (doc 01 "Testing" and "Build Plan"):
     file, not the host's only. Also broken down by tester (file peer) for doc 09's 60% floor.
   - Also reported (P2-22): recorded vs generic lures played, trap sweeps, medical bills and
     dawn summaries, and `net_rtt` per peer pair.
+  - Also tallied (Q-021): lure `window_s` values (a window other than 8 s is listed), spatial
+    `angle_error_deg` per cell, and `close_call` results per victim with the worst `rtt_ms`.
   - Also tallied: deaths, hold_completed by verb, inside_at_night seconds, money_changed count,
     ghost_action by kind (P3-09), dawn_report_shown.
   - Phase 3 (P3-13): `tension` samples and gaps; scares per player against doc 01 "Rules" (one big
@@ -158,6 +160,8 @@ def lure_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
     worked = 0
     counted = 0
     mismatches: list[str] = []
+    windows: Counter = Counter()
+    off_window: list[str] = []
     by_phase: dict[str, list[int]] = defaultdict(lambda: [0, 0])
     # Doc 09 s3 "lure success by source" (P2-04): a recorded clip (kind "clip") against the generic
     # stranger and sound lures; read, not gated. Logs before P2-04 have no kind and count as generic.
@@ -169,10 +173,14 @@ def lure_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
         if not (_is_number(moved) and _is_number(within)):
             problems.append(f"{r.session} t={r.t}: lure_result needs numeric moved_m and within_s")
             continue
-        # Inference: within_s is the seconds the target took to cover moved_m. CONTRACTS section 10
-        # shows within_s: 8 in its example; doc 05 (PP-07) settles whether it is the time or the window.
+        # within_s is the seconds the target took; window_s is the allowed window (D-018, CONTRACTS s10).
         ok = moved > LURE_MIN_MOVE_M and within <= LURE_MAX_SECONDS
         counted += 1
+        # Q-021: tally window_s; a window other than doc 01's 8 s is listed (the rule above stays 8 s).
+        window = r.data.get("window_s")
+        windows[f"{window:g}" if _is_number(window) else "missing"] += 1
+        if _is_number(window) and window != LURE_MAX_SECONDS:
+            off_window.append(f"{r.session} t={r.t}: window_s={window:g}, doc 01 Testing gives {LURE_MAX_SECONDS:g}")
         worked += ok
         by_phase[r.phase][0] += ok
         by_phase[r.phase][1] += 1
@@ -194,6 +202,8 @@ def lure_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
         "by_phase": {k: {"worked": v[0], "total": v[1]} for k, v in sorted(by_phase.items())},
         "by_source": {k: {"played": played_by_source[k], "worked": v[0], "total": v[1], "rate": v[0] / v[1] if v[1] else None} for k, v in sorted(by_source.items())},
         "worked_mismatches": mismatches,
+        "window_s": dict(sorted(windows.items())),
+        "window_not_doc01": off_window,
     }
 
 
@@ -225,6 +235,7 @@ def trap_race_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]
 def spatial_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
     cells: dict[tuple[str, float], list[int]] = defaultdict(lambda: [0, 0])
     per_tester: dict[tuple[str, int], dict[tuple[str, float], list[int]]] = defaultdict(lambda: defaultdict(lambda: [0, 0]))
+    angles: dict[tuple[str, float], list[float]] = defaultdict(list)
     trials = 0
     for r in recs:
         if r.event != "spatial_audio_trial":
@@ -239,13 +250,37 @@ def spatial_measure(recs: list[Record], problems: list[str]) -> dict[str, Any]:
         tester = per_tester[(r.session, r.file_peer if r.file_peer is not None else r.peer)][(sound, dist)]
         tester[0] += correct
         tester[1] += 1
+        if _is_number(r.data.get("angle_error_deg")):  # doc 05 s18 extra field, Q-021
+            angles[(sound, dist)].append(float(r.data["angle_error_deg"]))
     grid = {f"{s}@{d:g}m": {"correct": c, "trials": n} for (s, d), (c, n) in sorted(cells.items())}
+    angle_error = {f"{s}@{d:g}m": {"n": len(a), "mean": sum(a) / len(a), "max": max(a)} for (s, d), a in sorted(angles.items())}
     by_tester = {
         f"{session}/peer_{peer}": {f"{s}@{d:g}m": {"correct": c, "trials": n} for (s, d), (c, n) in sorted(t.items())}
         for (session, peer), t in sorted(per_tester.items())
     }
     missing = [f"{s}@{d}m" for s in SPATIAL_SOUNDS for d in SPATIAL_DISTANCES_M if (s, float(d)) not in {(k[0], float(k[1])) for k in cells}]
-    return {"trials": trials, "by_sound_distance": grid, "by_tester": by_tester, "untested_doc01_cells": missing if trials else []}
+    return {"trials": trials, "by_sound_distance": grid, "angle_error_deg": angle_error, "by_tester": by_tester, "untested_doc01_cells": missing if trials else []}
+
+
+def close_call_measure(recs: list[Record]) -> dict[str, Any]:
+    """Doc 05 s18 `close_call` (OPEN_ISSUES "Found by the studio" 1, a laggy player must be killable):
+    results overall and per victim with the worst `rtt_ms`, since `miss_timeout` vs `miss_disagree` per
+    player RTT settles it (Q-021)."""
+    calls = [r for r in recs if r.event == "close_call"]
+    victims: dict[str, dict[str, Any]] = {}
+    for r in calls:
+        v = victims.setdefault(f"{r.session}/{r.data.get('victim')}", {"results": Counter(), "rtt_ms_max": None})
+        v["results"][str(r.data.get("result"))] += 1
+        if _is_number(r.data.get("rtt_ms")):
+            v["rtt_ms_max"] = r.data["rtt_ms"] if v["rtt_ms_max"] is None else max(v["rtt_ms_max"], r.data["rtt_ms"])
+    for v in victims.values():
+        v["results"] = dict(sorted(v["results"].items()))
+    return {
+        "calls": len(calls),
+        "by_result": dict(sorted(Counter(str(r.data.get("result")) for r in calls).items())),
+        "by_kind": dict(sorted(Counter(str(r.data.get("kind")) for r in calls).items())),
+        "by_victim": dict(sorted(victims.items())),
+    }
 
 
 def trap_sweep_measure(recs: list[Record]) -> dict[str, Any]:
@@ -449,6 +484,7 @@ def analyze(paths: list[Path]) -> dict[str, Any]:
         "trap_race": trap_race_measure(recs, problems),
         # Clients write their own trials (doc 09 section 7), so every file counts here.
         "spatial_audio": spatial_measure([r for r in loaded.records if r.event == "spatial_audio_trial"], problems),
+        "close_calls": close_call_measure(recs),
         "trap_sweeps": trap_sweep_measure(recs),
         "bills": bill_measure(recs),
         "net_rtt": rtt_measure([r for r in loaded.records if r.event == "net_rtt"]),
@@ -484,6 +520,8 @@ def format_report(rep: dict[str, Any]) -> str:
             add(f"  {src} lures: played {v['played']}, results {v['worked']}/{v['total']} = {_pct(v['rate'])}  (doc 09 s3, read not gated)")
         for m in lure["worked_mismatches"]:
             add(f"  MISMATCH {m}")
+        add("  window_s: " + ", ".join(f"{k}={v}" for k, v in lure["window_s"].items()))
+        out += [f"  WINDOW {w}" for w in lure["window_not_doc01"]]
     else:
         add(f"  none logged (lure_played: {lure['lure_played']})")
     add(f"  in a dead player's voice: {lure['played_owner_dead']}; as ghost static: {lure['played_ghost']}")
@@ -503,9 +541,19 @@ def format_report(rep: dict[str, Any]) -> str:
     add("Spatial audio trials (doc 01 Testing: voice and whistle at 10, 30, 60, 72 m)")
     if sp["trials"]:
         for cell, v in sp["by_sound_distance"].items():
-            add(f"  {cell}: {v['correct']}/{v['trials']} placed correctly")
+            a = sp["angle_error_deg"].get(cell)
+            add(f"  {cell}: {v['correct']}/{v['trials']} placed correctly" + (f"; angle error mean {a['mean']:.1f}, max {a['max']:.1f} deg" if a else ""))
         if sp["untested_doc01_cells"]:
             add(f"  untested: {', '.join(sp['untested_doc01_cells'])}")
+    else:
+        add("  none logged")
+    cc = rep["close_calls"]
+    add("")
+    add("Close calls (doc 05 s18 close_call; OPEN_ISSUES studio 1: a laggy player must be killable)")
+    if cc["calls"]:
+        add(f"  {cc['calls']} calls; results {cc['by_result']}; kinds {cc['by_kind']}")
+        for who, v in cc["by_victim"].items():
+            add(f"  {who}: {v['results']}, worst rtt {v['rtt_ms_max']} ms")
     else:
         add("  none logged")
     ts = rep["trap_sweeps"]
