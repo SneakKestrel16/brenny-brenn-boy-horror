@@ -805,3 +805,11 @@ unattended trample term (Q-161), not from 2p prices.
 everywhere, with or without a sell bonus (doc 02 s18.6). Turning it on is an economy retune, which the
 Director decides (Q-211).
 **How to apply:** set `unattended_term` true in a policy to measure the D-089 world.
+
+### D-130 · 2026-10-09 · CEO · No player-count sell bonus for now (Q-210 option a)
+The `sell_bonus` table stays 0 at every headcount (D-106 unchanged). The 2p bot-season misses are fixed at
+their cause, a single worker at 2p (Q-162, Q-164), not by raising 2p income.
+**Why:** any 2p bonus that rounds to a coin pushes the sim's 2p final clear above doc 01's 70% ceiling
+(Q-210). The CEO said "go with a for now".
+**How to apply:** do not set a nonzero bonus without a new CEO decision. Revisit after the P4-34 bot
+seasons; before any nonzero bonus, make the sim round per sale (OPEN_ISSUES "Found at the P4-30 review" 1).

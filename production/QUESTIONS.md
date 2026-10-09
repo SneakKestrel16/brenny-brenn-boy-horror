@@ -1161,7 +1161,7 @@ checks the map instead of listening, so a fake voice is exposed at a glance and 
 longer needed to find someone. Built as asked; the dots are one `if` in `_draw_dyn` of
 `game/ui/minimap.gd` to remove. Keep the teammate dots, drop them, or show them by day only?
 
-### Q-210 · 2026-10-09 · Game Designer -> Director · FOR CEO · open
+### Q-210 · 2026-10-09 · Game Designer -> Director · FOR CEO · answered (D-130)
 P4-30. The CEO's 2p sell bonus conflicts with the doc 02 s18.3 targets (doc 01 "55-70% final"). The sim's
 median 2p team already clears the first payment in 87% of seasons and the final in 63%; any 2p bonus
 rounding to a coin pushes the 2p final above 70% (1%: 76.8; 5%: 90.8, first 91.3). Shipped 0 (D-106).
@@ -1170,6 +1170,8 @@ Q-164 sentinel, now P4-31); (b) accept a 2p final above 70%, e.g. 5% (doc 01 cha
 (c) turn the unattended term on (Q-211) and set an economy-wide bonus of about 5/5/4/4/4, which passes
 first and final at 2p to 4p and 6p but leaves 5p final at 72.1 and Large needed failing at every headcount.
 Settled by: the CEO picking one; the Game Designer then sets the table and re-runs the gate.
+**Answer (CEO, 2026-10-09):** option (a) "go with a for now". The bonus table stays 0 at every headcount
+(D-130). The 2p misses are fixed at their cause; P4-34 re-runs the 2p bot seasons.
 
 ### Q-211 · 2026-10-09 · Game Designer -> Director · open
 P4-30, answers Q-161 in part. With the D-089 sanctuary fix a hiding team takes base 1 + dead generator 1 +
