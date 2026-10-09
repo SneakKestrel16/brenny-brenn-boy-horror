@@ -921,3 +921,13 @@ P4-33 QA follow-ups found a leaver's flags could never be removed and a flag's p
 trap's.
 **How to apply:** doc 01 "Flags" says any player can pull up any flag. `flag_removed` logs `player`
 (who pulled it) and `owner` (who placed it); the Dawn Report counts flags still out per owner.
+
+### D-142 · 2026-10-09 · Gameplay Programmer · `apply_roles` carries the role lock (P4-35, needs Director approval)
+The `apply_roles` table (peer id -> role id) gains one non-peer key, `"locked": bool`: true when the host
+loaded a season (`Game.season_uids` not empty), so its roles stay as saved. `Roles.apply` stores it and
+`Roles.locked()` returns it on clients (the host reads `season_uids` directly). `Roles.apply` reads only
+`int` keys as peers.
+**Why:** OPEN_ISSUES "Found at the P4-23 review" item 1: only the host knew a loaded season locks roles, so a
+client's role cards stayed clickable and every pick came back refused with no reason shown.
+**How to apply:** readers of the table iterate only `int` keys. The lobby greys every card and shows "Roles
+are kept from the saved season." when `Roles.locked()` is true.

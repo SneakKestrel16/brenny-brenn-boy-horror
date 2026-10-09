@@ -68,16 +68,33 @@ func _process(_d: float) -> bool:
 
 
 ## P4-23: the lobby is a menu screen with no player bodies; Start waits for every other human's Ready.
+## P4-35: its `Players` node is the line-up: one farmer per player, the local one centred, leavers freed.
 func _lobby(Game: Node) -> void:
-	_check(current_scene is Control and current_scene.get_node("Players").get_child_count() == 1, "lobby is a menu: no bodies, only the voice listener")
+	var line: Node = current_scene.get_node("Players")
+	_check(current_scene is Control and not root.has_node("Main"), "lobby is a menu: nobody spawned on the farm")
 	_check(Game.all_ready(), "host alone (and bots) count as ready")
 	Game.players[2] = {}
 	_check(not Game.all_ready(), "a joined client is not ready yet")
+	line.sync()
+	_check(line.get_child_count() == 3 and line.player(1).position == Vector3.ZERO, "a farmer per player, the local one centred")
+	_check(line.player(2).get_node("Status").text == "NOT READY" and line.player(-2).get_node("Status").text == "READY", "tags: client not ready, bot ready")
+	_check(line.player(1).get_node("Role").text == "MEDIC" and line.player(1).has_node("Hat"), "role tag and hat")
 	Game.on_lobby_ready_request(2, true)
 	_check(Game.all_ready(), "client marked ready")
+	line.sync()
+	_check(line.player(2).get_node("Status").text == "READY", "tag shows the client ready")
 	Game.on_lobby_ready_request(2, false)
 	_check(not Game.all_ready(), "client took Ready back")
 	Game.players.erase(2)
+	line.sync()
+	_check(line.get_node_or_null("2") == null or line.get_node("2").is_queued_for_deletion(), "a leaver's farmer (and its voice emitter) goes")
+	_check(not Roles.locked(), "a new season's roles are open")
+	Game.season_uids = ["a".repeat(32)]
+	_check(Roles.locked(), "a loaded season locks the roles on the host")
+	Game.season_uids = []
+	Roles.apply({"locked": true})
+	_check(Roles._locked, "clients learn the lock from apply_roles")
+	Roles.apply({"locked": false})
 
 
 ## Medic: pries someone else free at x0.6, not themselves; the bill cut counts deaths within 15 m of a living Medic.

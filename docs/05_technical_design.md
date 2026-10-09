@@ -840,8 +840,8 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
 
 ## 16. Menus and settings
 
-- **Menus** (`game/ui/`): main menu (Host, Join, Settings, Quit), lobby (a menu screen: roles,
-  difficulty, group options, ready; P4-23), pause overlay, host-left card, "waiting for a farmhand" card (doc 06
+- **Menus** (`game/ui/`): main menu (Host, Join, Settings, Quit), menu lobby (a menu screen over a
+  3D line-up: roles, difficulty, group options, ready; P4-23, P4-35), pause overlay, host-left card, "waiting for a farmhand" card (doc 06
   section 5), Dawn Report, Season Awards. The Host and Join screens are doc 06 sections 3 and 4;
   `game/ui/` embeds `game/net/`'s screens.
 - **Settings** live in `user://settings.cfg` (a `ConfigFile`, autoload `Settings`) on **each client's
@@ -893,17 +893,23 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
 - **Flow.** Launching with no arguments in a window opens the main menu (`game/ui/main_menu.tscn`):
   Host (port), Join (a join code, a raw IP or `IP:port`; D-049 brings back doc 06 s4 join codes for rejoining), Settings, Quit. Host and
   Join turn Phase 1 data on and reload it (a bare exe has no `--phase1`; remove when the full farm lands).
-  Both land in the **lobby** (`game/ui/lobby.tscn`, P4-23): a menu screen, no world and no player bodies
-  (nobody spawns until the match starts). Left: the role cards (P4-09; a taken role greyed out, all locked
-  when a loaded season keeps its roles). Right: a roster with each player's role, voice setting and ready
-  mark, the join code, doc 01's Discord line, the group settings (difficulty and streamer-safe; host edits,
-  `Game.set_group_settings`, everyone sees them) and one button. A client's button toggles Ready
+  Both land in the **menu lobby** (`game/ui/lobby.tscn`, P4-23; line-up scene P4-35, D-140): a menu screen
+  over a local 3D line-up, no farm and no player bodies (nobody spawns until the match starts). The line-up
+  is the `Players` node (`lobby.gd` `LineUp`): a placeholder barn set at night (three `LightRig` lanterns,
+  the centre one in group `barn_lantern` for the recording staging; a moon and a spot on the centre authored
+  in `lobby.tscn`), and one placeholder farmer per player with a role hat (`LineUp.HATS`, Q-241) and three
+  `Label3D` tags: name, role, and HOST / READY / NOT READY. The local farmer stands in the centre; the others
+  alternate right and left, a step back. `LineUp.sync()` runs on every refresh and frees a leaver's farmer.
+  Left: the role cards (P4-09; a taken role greyed out, all locked when a loaded season keeps its roles,
+  which clients learn from `apply_roles`' `locked` key, D-142). Right: a roster with each player's voice
+  setting, the join code, doc 01's Discord line, the group settings (difficulty and streamer-safe; host
+  edits, `Game.set_group_settings`, everyone sees them). Bottom right: one big button. A client's button toggles Ready
   (`request_lobby_ready(on)`; the host logs `lobby_ready {player, on}` and broadcasts
   `apply_lobby_ready(peers)` into `Game.lobby_ready`; a joiner sends `false` to get everyone's marks). The
   host's button, "Start the season", is enabled when `Game.all_ready()` (every other human ready; bots
-  count as ready); Enter presses it. `Game.lobby_ready` is cleared at match start and on leave. The
-  `Players` node is a stub (`lobby.gd` `Voices`) holding the AudioListener3D and one bare `Node3D` per peer
-  so Voice still hangs its emitters: lobby voice plays unplaced. `Game.start_match()` waits for `Game.match_ready()` (P2-03 clip pre-share hook, doc 06 section 12
+  count as ready); Enter presses it. `Game.lobby_ready` is cleared at match start and on leave. Voice hangs
+  each player's emitter on their farmer, so lobby voice is placed in the line-up (the AudioListener3D rides
+  the camera). `Game.start_match()` waits for `Game.match_ready()` (P2-03 clip pre-share hook, doc 06 section 12
   step 5), clears each player's movement state (the host drops frames with a stale `seq`), starts the
   `Clock`, sends `apply_match_start` and everyone changes to `main.tscn`. A client that joins during
   the lobby gets `p_lobby = true` in `apply_session_state`. The pause menu (`PauseMenu`, `CanvasLayer`

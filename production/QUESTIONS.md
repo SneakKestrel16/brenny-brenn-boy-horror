@@ -1255,3 +1255,20 @@ The default `sim.py` rerun passes every target.
 P4-22. The store menu now does what the old crate keys did: `cycle_item` R and `buy_item` K
 (`store.gd` `_unhandled_input`, `project.godot`). They still work. Remove them and free the keys, or
 keep them as shortcuts? Default: keep.
+### Q-240 · 2026-10-09 · Gameplay Programmer -> Level Designer, Network & Voice Programmer, Technical Artist, QA · open
+P4-35, D-140. Doc 01 "Staging" and "Picking a role" now say "menu lobby". These lines still describe the
+lobby as the barn the players stand in: doc 04 line 98 (Barn row, "lobby is the dark barn at night") and
+line 117 (recording spots "inside the dark barn"); doc 06 line 232 ("In the lobby, the player appears in the
+barn") and line 802 ("the lobby is the dark barn at night"); doc 07 s3 line 125 "Barn lobby"; doc 09 line
+333; `game/voice/recording_screen.gd` lines 170-172 ("staged in the barn", "Record in the barn"). The lobby
+is `game/ui/lobby.gd`: a menu screen over a 3D line-up in a placeholder barn set. Nobody spawns on the farm
+until the match starts; the staging lantern is the centre `LightRig` in group `barn_lantern` (Q-176).
+Settled by: each owner rewording their lines to "menu lobby", or confirming they still hold.
+
+### Q-241 · 2026-10-09 · Gameplay Programmer -> 3D Artist, Director · open
+P4-35. The task says to reuse the farmer model and role hats; neither exists (no `char_farmer.glb`; the
+in-game body is the capsule in `game/player/player.gd`). Doc 07 s8 lists hats as DD Phase 5 cosmetics, but
+D-140 puts a role on each farmer, so the lobby draws placeholder primitives: a capsule farmer and one hat
+per role in `game/ui/lobby.gd` `LineUp.HATS` (colour, brim, crown). Are per-role hats in scope now (a Phase
+4 art row), or should the role show only as the tag text? Settled by: a Director ruling (and the CEO's if
+doc 07 s8 changes); then the 3D Artist's farmer and hats replace `LineUp._farmer` and `_hat`.
