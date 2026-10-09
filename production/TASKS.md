@@ -381,7 +381,8 @@ Approved by the CEO 2026-10-08 (D-058). Source: doc 01 "Build Plan > Phase 3": d
 players' voices favored; the AI Director, day arc and jumpscares; Taint and Shaken; ghosts with flicker
 and crow; whistle, flags and the Dawn Report. **Done when** (doc 01): the dead stay engaged, the living
 argue over a static voice, and someone laughs at the Dawn Report. Checked in 2 sessions, one tester who
-hasn't read doc 01, plus log measures (doc 09). **STOP 4** after P3-13.
+hasn't read doc 01, plus log measures (doc 09). **STOP 4** after P3-13: closed by the CEO without human
+sessions (D-068); bodies (Open Issue 4) move to Phase 4.
 
 Carried in: sabotage and the disturbance budget (D-034); the Phase 1 lure walk-toward measure, 30%
 (deferred, CEO 2026-10-08); both Phase 2 measures, unproven (D-057); the P2-08 CEO listen. Flags are
@@ -551,3 +552,33 @@ Written at the end of the previous phase's review. Not started without CEO appro
 Carried notes for those rows:
 - When the creature model is built (3D Artist), the Audio Designer redoes the scare and the thud in
   `cre_jumpscare_hit` to fit its body and voice. The running steps stay (CEO, P3-08 listen 5).
+
+---
+
+## DD Phase 4: Full season, economy and the simulator
+
+Started by the CEO 2026-10-08 (D-069). Source: doc 01 "Build Plan > Phase 4": first the simulator hits
+its targets; then the full 7-day season, crops, economy and Prize Pumpkin; upgrades, roles and
+payments; foreclosure, saving, joining and leaving; the short season and the Harvest Moon. **Done
+when** (doc 01): teams sometimes win and sometimes lose, and the logs land within 15 points of the sim
+(doc 02 s18.5). Checked in human sessions plus log measures (doc 09). **STOP 5** after P4-10.
+
+Carried in: everything D-068 lists as unproven (run `tools/qa/playtest/checklist_p3.md` in the first
+human sessions); the items D-059 held back (`harvest_moon` profile and acts, `pumpkin_gnaw`,
+`broken_fence`, walkie-talkies; spliced clips stay Phase 5 per doc 01); Open Issue 4 bodies (D-068).
+
+Rows are a draft (D-069); P4-01 rewrites them with acceptance. Feature rows wait for P4-02 because doc
+01 puts the simulator first.
+
+| ID | Owner | Task | Status | Depends on |
+|---|---|---|---|---|
+| P4-01 | Director | Between-phase review: OPEN_ISSUES, open questions, settle Phase 4 scope (animals and pen for `broken_fence`?), write acceptance for the rows below | todo | — |
+| P4-02 | Game Designer | Season simulator (doc 02 s18): `tools/sim/sim.py`, median policy, variance, scenarios, s18.4 tests, then tune `sim` and `placeholder` values until the s18.3 targets pass | todo | — |
+| P4-03 | Gameplay | Full 7-day season and dawn cash-in: every crop in `crops.json`, selling, the store, the Prize Pumpkin (doc 02, doc 05) | todo | P4-01, P4-02 |
+| P4-04 | Gameplay | Upgrades, roles, debt and payment dawns (doc 02 s7) | todo | P4-03 |
+| P4-05 | Gameplay, Network & Voice | Foreclosure, saving, joining and leaving mid-season with headcount scaling (doc 02, doc 05, doc 06) | todo | P4-04 |
+| P4-06 | AI Programmer, Gameplay | Short season and the Harvest Moon (`harvest_moon` profile and acts, doc 03 s14) | todo | P4-03 |
+| P4-07 | AI Programmer | Phase 4 sabotage: `pumpkin_gnaw`, `broken_fence` if P4-01 keeps animals (doc 03 s10) | todo | P4-03 |
+| P4-08 | AI Programmer | Creature body per season: host seeded pick, logged, `--body=<id>` dev flag (doc 01 "Bodies", Q-074, D-068) | todo | P4-01 |
+| P4-09 | Network & Voice | Walkie-talkies as store items (doc 06, doc 02 s11) | todo | P4-03 |
+| P4-10 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | todo | all above |

@@ -522,3 +522,21 @@ by IENBA), an exception to CONTRACTS section 11 ("No real person's voice recordi
 recording against section 11 and the CEO chose to keep it ("keep it").
 **How to apply:** this file only. Any other recording of a real voice still needs the CEO first. Player
 voices stay out of the repo as section 11 says.
+
+### D-068 · 2026-10-08 · CEO · DD Phase 3 closed without the STOP 4 human sessions; bodies move to Phase 4
+P3-13 is done on its automated part (task reviews, two 840 s multi-instance runs, `check_logs.py`). The
+STOP 4 human sessions were not run, so the Phase 3 "done when" tests (the dead stay engaged, the living
+argue over a static voice, someone laughs at the Dawn Report) and every carried measure (Phase 1 lure
+30%, both Phase 2 measures, by-ear whistle, the CEO static listen, 4-talker bandwidth) are unproven.
+Doc 01 Open Issue 4 (do the four bodies feel different) and the per-season body pick (Q-074) move to DD
+Phase 4.
+**Why:** CEO call 2026-10-08 ("move creature body to phase 4 and start next phase").
+**How to apply:** the first human sessions of DD Phase 4 run `tools/qa/playtest/checklist_p3.md`
+alongside the Phase 4 measures. P4-08 builds the body pick.
+
+### D-069 · 2026-10-08 · CEO · DD Phase 4 started
+The CEO started DD Phase 4. The Director drafted rows P4-01 to P4-10 in `production/TASKS.md` from doc
+01 "Build Plan > Phase 4", the items D-059 held back, and D-068. P4-01 settles scope and writes the
+acceptance; the simulator (P4-02) needs no settling (doc 02 s18) and runs beside it.
+**Why:** CEO request; doc 01 "Build Plan > Phase 4" is the source. Doc 01: "First: the simulator hits
+its targets", so feature rows wait for P4-02.

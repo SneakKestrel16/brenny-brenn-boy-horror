@@ -134,7 +134,7 @@ session rechecks them (P2-09, D-034).
    per season." `game/creature/creature.gd` has `const BODY := &"body_gaunt"` (Phase 1 placeholder) and
    nothing picks another. Doc 01 Open Issue 4 ("Do the four bodies feel different enough? ... Check after
    Phase 3") cannot be tested until a session can choose the body. Asked the AI Programmer in Q-074.
-   Blocks the doc 09 s3 "Four bodies" row.
+   Blocks the doc 09 s3 "Four bodies" row. **Moved to DD Phase 4 (D-068, P4-08).**
 2. **Headless runs show few scare kinds.** Two 840 s runs logged 3 natural scares: 2 `own_voice` (big,
    private, day 2 third 3) and 1 `fake_out` (public, at dawn, third 0). No natural `jumpscare`.
    Other kinds are covered by dev commands and the P3-05 review, not by a natural run. Inference: bots stay near the farm, so the AI Director rarely picks a
