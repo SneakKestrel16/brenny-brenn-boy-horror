@@ -56,7 +56,7 @@ up. Every shape in it has its coordinates in sections 3 to 7, so it can be check
 | Purple squares | Moonflower bed |
 | Red dashed line | Cart route |
 | Orange dashed circle | 20 m around the Prize Pumpkin; grey dotted circle = 30 m from the farmhouse door |
-| Blue circle | Town stand sanctuary, 10 m |
+| Blue circle | Town stand radius, 10 m (less creature interaction, D-115) |
 | Blue dashed outline | DD Phase 1 area |
 | Black squares (numbered) | Trap spots |
 | Purple triangles (`cNN`) | Creature cover points |
@@ -103,7 +103,7 @@ out.
 | Fuel drum | (-10, 27), beside the shed door | 1 m | | "the drum by the shed is free and infinite; the walk is the cost" ("Nights") |
 | Well | (-25, 10) | 2 m | | "Taint > Cure", "Senses > Hearing" (well pump) |
 | Shipping crate and store | (72, 5) | 2 × 1 m | | "Crops" (field B "by the shipping crate"), "Store" ("Bought by the shipping crate") |
-| Town stand | (120, -5) | 3 × 2 m | | "Core Loop" (sell at the town stand), "AI Director > Sanctuary" |
+| Town stand | (120, -5) | 3 × 2 m | | "Core Loop" (sell at the town stand), "AI Director > Town stand" |
 | Farm gate | (105, -5), in the clearing's east fence | 6 m wide | | "Nights > Length", "Winning and losing" |
 | Animal pen | x -30..-18, z -38..-28; gate (-24, -28) | 12 × 10 m, fenced | | "Daytime Threats > Broken fences", "Roles > Rancher" |
 
@@ -232,12 +232,13 @@ cart counts as out only if it's past the fields" ("Nights > Length").
 - **Farm gate (105, -5)**, in the east fence at the clearing's edge. The road runs east from it
   through the ring in an 8 m lane.
 - **Town stand (120, -5)**, 15 m outside the gate beside the road, with corn on both sides of the
-  lane. Its **10 m sanctuary** (doc 01 "AI Director > Sanctuary") covers x 110..130 of the lane.
+  lane. Its **10 m radius** (doc 01 "AI Director > Town stand", D-115: lures, scares and kills less
+  likely, never impossible) covers x 110..130 of the lane.
   - It never reaches the gate (5 m clear) or any of the cart route (nearest point 15 m), so the
     gate run is never safe ground.
   - It contains no plot, so "nothing grows there" costs nothing that the layout offers.
-  - Corn stands within the circle, so the creature can be near a player there but can't act (doc
-    01: no lures, scares or kills).
+  - Corn stands within the circle, so the creature can be near a player there; it acts there less
+    often (doc 01, D-115).
 - **Selling and the store are in different places** (D-017): the shipping crate is the store only;
   selling is at the town stand and at the dawn cash-in.
 - Field B to the stand is 48 m on foot; the barn door 127.5 m (section 8.7).
@@ -408,7 +409,7 @@ Doc 01 "Who hears a lure": day lures reach a player "only with no teammate withi
   the **barn door and the generator (12.5 m)**. So a teammate at the barn door shields a refueller
   at the generator from day lures, but not at the drum (28.8 m from the barn door). Every other pair
   of work spots is 18.9 m or more apart, so any errand done alone can be lured. (The farm gate and
-  the town stand are 15.0 m apart, and the stand's sanctuary blocks lures anyway.)
+  the town stand are 15.0 m apart, and lures at the stand are less likely anyway, D-115.)
 - A spotter watching a disarm (doc 01 "Night Traps > Spotting") stands within 15 m to block lures,
   and every trap spot has open ground within 15 m to stand on, except the deep spots, which are 10
   to 13 m into the ring (inference: the spotter must enter the corn there).
@@ -448,7 +449,7 @@ lit doorway's light doesn't count"; gnawed "on any night nobody is within 20 m".
   cover_16 (24.5), which watch the guard from the ring. So the guard stands in the open with corn
   and a cover point close by.
 
-### 8.6 The 10 m sanctuary
+### 8.6 The 10 m town stand radius
 
 Covered in section 6.2: the circle holds no plot and none of the cart route, and ends 5 m outside
 the gate.
@@ -513,7 +514,7 @@ coordinates, so nothing moves when DD Phase 2 widens it:
   west edge will be). Both are removed in DD Phase 2.
 - **Phase 1 sell box at (40, 20)** (D-016), a stand-in for the town stand, 44.7 m from the barn
   door and 27.4 m from field A in a straight line. Doc 01's Phase 1 list sells turnips but names no
-  town stand, so the stand and its sanctuary come later.
+  town stand, so the stand and its 10 m radius come later.
 - **Markers in the area** (every marker with x from -32 to 46): trap_01 to _06, _15, _16, _19 and
   _22 (trap_05 and _22 are the deep spots in the north ring); cover_01, _02, _09, _12, _14, _15;
   crow_01, _03, _06, _07, _09; scarecrow_01, _03, _07; escape_01 and _03; all four spatial audio
@@ -535,7 +536,7 @@ coordinates, so nothing moves when DD Phase 2 widens it:
 | Moonflower bed | 5.2 |
 | Prize Pumpkin patch (30 m from doors, between the farmhouse and the first strip) | 5.3, 8.5 |
 | Shipping crate and store | 4, 6.2 |
-| Town stand and its 10 m sanctuary | 6.2, 8.6 |
+| Town stand and its 10 m radius | 6.2, 8.6 |
 | Farm gate and cart route ("past the fields") | 6.1 |
 | Trap spots (bear, pit, bells; deep in the corn) | 7.1 |
 | Creature cover points (lure and stalk from cover) | 7.2 |
@@ -576,7 +577,7 @@ findings are Q-017.
 `game/world/build_farm.py` writes both scenes from this doc's coordinates: `farm_phase1.tscn` (section 9,
 unchanged) and `farm.tscn` (the full farm). `farm.tscn` adds the farmhouse, strips 1 and 3, the full ring
 (layer 5 boxes, road lane left open), field B, the moonflower bed (4 plots, `field = moonflower`), the
-shipping crate (group `store_crate`), 8 headcount plots (`Plot29` to `Plot36`, D-039: 36 `plot_spots` in all, 24 field + 8 headcount + 4 moonflower), the town stand (group `sell_box`) with a `sanctuary` marker (10 m),
+shipping crate (group `store_crate`), 8 headcount plots (`Plot29` to `Plot36`, D-039: 36 `plot_spots` in all, 24 field + 8 headcount + 4 moonflower), the town stand (group `sell_box`) with a `sanctuary` marker (10 m; the group keeps its old name, D-115),
 the farm gate, the Prize Pumpkin marker, `CartRoute` (R0 to R8), all 22 trap spots, 16 cover points, 9 crow
 perches, 7 scarecrow spots, 4 escape spots, 4 audio markers, 6 barn spawns (D-038), the pegboard with
 `pegboard_bear_slots` slot markers (5, read from `data/season.json`), and in the barn a `RecordingSpot`

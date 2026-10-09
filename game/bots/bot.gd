@@ -9,7 +9,7 @@ extends Node
 ## P4-11 (D-085): a damage fix spends scrap, so bots buy scrap when the team has none.
 ## P4-12: on the Harvest Moon a bot lifts the Prize Pumpkin, loads it on the cart and pushes, walking with the cart.
 ## P4-21: from dusk to dawn bots wait in the lit barn (generator jobs aside) and one waits at the town stand
-## sanctuary, so the farm is never unattended; bots keep the first payment before buying
+## (safer, never safe: D-115), so the farm is never unattended; bots keep the first payment before buying
 ## seeds, plant and water the Prize Pumpkin, pry themselves out of a bear trap, and move only on send steps.
 
 const Route := preload("res://game/bots/bot_route.gd")
@@ -130,7 +130,7 @@ func _run() -> void:
 				await get_tree().physics_frame
 			await _wait(1.0)
 			continue
-		if job[0] == &"sentinel":  # 4 m inside the town stand's 10 m sanctuary (farm.tscn `Sanctuary`)
+		if job[0] == &"sentinel":  # 4 m inside the town stand's 10 m radius (farm.tscn `Sanctuary`, D-115)
 			await _walk((get_tree().get_first_node_in_group(&"sanctuary") as Node3D).global_position + Vector3(-4, 0, 0))
 			await _wait(1.0)
 			continue
@@ -228,7 +228,7 @@ func _night_job(st: Dictionary) -> Array:
 	if Clock.phase == &"dusk" and int(st.get("bag", 0)) > 0:
 		return [&"sell", "sell_box"]  # the dead lose what they carry (doc 02 s9 step 1)
 	if not day and _sentinel():
-		return [&"sentinel", "sanctuary"]
+		return [&"sentinel", "town_stand"]
 	var room := int(st.get("bag", 0)) < int(Data.value(&"labor", &"carry", &"capacity"))
 	if not day:
 		for p: Node in _plots(func(p: Node) -> bool: return p.bed and (p.state == &"ripe" or (p.state == &"growing" and p.watered))):
@@ -253,8 +253,8 @@ func _night_job(st: Dictionary) -> Array:
 
 
 ## P4-21 (doc 03 s10 "Unattended farm", s11.5): one bot, the highest living bot peer, spends dusk to dawn outdoors at
-## the town stand, where the creature may not stalk, chase or kill. Someone outdoors all night keeps the dawn trample
-## to its base count (sabotage.json trample), and the scripted night's stalk (doc 03 s18) ends there without a kill.
+## the town stand, where the creature's stalks and kills are less likely but possible (D-115, ai_director.json
+## `town_stand`). Someone outdoors all night keeps the dawn trample to its base count (sabotage.json trample).
 func _sentinel() -> bool:
 	if get_tree().get_first_node_in_group(&"sanctuary") == null:
 		return false

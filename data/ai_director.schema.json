@@ -47,6 +47,7 @@
         {"contains": {"properties": {"id": {"const": "profile_harvest_moon"}}, "required": ["id"]}},
         {"contains": {"properties": {"id": {"const": "day_arc"}}, "required": ["id"]}},
         {"contains": {"properties": {"id": {"const": "scare_rules"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "town_stand"}}, "required": ["id"]}},
         {"contains": {"properties": {"id": {"const": "trap_race"}}, "required": ["id"]}},
         {"contains": {"properties": {"id": {"const": "nudge"}}, "required": ["id"]}},
         {"contains": {"properties": {"id": {"const": "lures"}}, "required": ["id"]}}
