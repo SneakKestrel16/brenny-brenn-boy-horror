@@ -876,6 +876,7 @@ and an Opus QA review passes.
 - While holding interact on `push_cart`, the player is locked to a push slot behind the cart, faces the
   route and moves with it; release, knock-off, death or a creature stall frees them. Host-authoritative,
   mouse look free, bots still push (CEO 2026-10-09).
+- `push_cart` is offered only at the cart's handle; push slots sit along the handle (CEO 2026-10-09).
 - Added to running tasks from the same CEO report: dirt path along the cart route and cart grounded
   while pushed (P4-27); the creature attacks when nobody pushes, so start-stop pushing no longer stops
   attacks (P4-25).
