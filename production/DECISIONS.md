@@ -721,3 +721,15 @@ money is gone either way, and a dawn-only window would need a Dawn Report contro
 line 438 and doc 02 s7.4 say "at any dawn"; the Game Designer rewords both on their next pass.
 **Why:** QA's P4-07 review left these five calls open; none changes the simulator's totals.
 **How to apply:** `Store.seize` clears crops on the relocked plot pair (folded into the P4-07 merge).
+
+### D-087 · 2026-10-09 · CEO · Final art for the scare only before STOP 5
+Before the STOP 5 playtest, only the parts that carry the scare get final art: the four creature
+bodies (with their glimpse parts and smear hulls) and the night look (lighting, fog, darkness, post
+stack, creature materials). Everything else (crops, buildings, props, tools, animals, pumpkins, cart)
+stays gray-box until STOP 5 passes. Kickoff step 5's two stops stay: STOP 5 tests the season with the
+scare art in, and the full art pass follows it.
+**Why:** CEO call 2026-10-09. Testers who have not read the docs react to a real scare, while art on
+systems still in play (rows P4-09 to P4-15, untested Phase 3, Open Issue 4) is not built twice.
+**How to apply:** rows P4-19 (3D Artist) and P4-20 (Technical Artist). P4-18 depends on both. No
+economy number or gameplay rule changes. Night readability (doc 07 s5) still gates: if the art
+changes how far a creature or a trap clue is seen, the logs say so and the Director reviews it.

@@ -596,6 +596,8 @@ no economy number and can start now.
 | P4-15 | Gameplay, Technical Artist | Season Awards and season end screens (doc 03 s17.4, doc 05 s15) | in progress | P4-07 |
 | P4-16 | 3D Artist, Technical Artist | Phase 4 models in Blender 5.2: four bodies, pumpkins, patch, cart, town stand, animals, store items (doc 07 s12) | done (QA PASS; nits for a later pass in handoff) | P4-01 |
 | P4-17 | Audio Designer | Phase 4 sounds: cart, gnaw, flare, radio, animals, signature variants, UI (doc 08 s11) | done (CEO listen pending, doc 08 s14 item 11; per-body cre_jumpscare_hit done, D-081) | P4-01 |
+| P4-19 | 3D Artist | Final art for the four creature bodies, glimpse parts and smear hulls (D-087) | todo | P4-16 |
+| P4-20 | Technical Artist | Final night look: phase lighting, fog, darkness, post stack, creature materials (D-087) | todo | P4-16; creature materials after P4-19 |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | todo | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
@@ -800,3 +802,35 @@ Acceptance:
   both wins and losses (doc 09 s3).
 - The doc 09 Phase 4 gate and the D-068 carried `checklist_p3` items.
 - Q-021 and Q-039 nits.
+
+### P4-19 Creature bodies, final art
+Owner: 3D Artist. Output: `assets/models/creature_*.glb`, `assets/blender/`, `tools/blender/`;
+handoff note.
+Acceptance:
+- Final art for `creature_gaunt`, `creature_scarecrow` (+ `_head`), `creature_boar` (+ `_chain`),
+  `creature_corn_husk` (+ `_heart`) per doc 07 s1, s2, s8 and s11.7: silhouette first, low-poly,
+  flat-shaded, hand-painted feel, no photo textures. Each body reads as itself in silhouette at 25 m.
+- Real scale within doc 07 s11.7 tolerance; front -Z, origin at base; under 5,000 triangles each.
+- Same file names, part names and pivots as P4-16, so creature code needs no change.
+- Smear hulls rebuilt from the new bodies (doc 03 s2, s15).
+- Emissive only on ember eyes and the husk heart (`mat_emissive_ember`); no `Light3D` (doc 07 s8).
+- Built in Blender 5.2, headless and rebuildable from a script; nothing downloaded (D-077).
+- Every other model stays gray-box (D-087).
+
+### P4-20 Night look, final pass
+Owner: Technical Artist. Output: `game/render/`, `assets/materials/`, `assets/textures/`; handoff
+note.
+Acceptance:
+- Phase looks per doc 07 s3 (day, dusk, night, dawn, `harvest_moon`), continuous, a pure function of
+  clock phase and progress so every peer matches.
+- Darkness per doc 07 s5: ambient floor 0.25, no auto exposure, silhouette rule, brightness slider
+  range kept.
+- Fog and post stack per doc 07 s6 in order: filmic tone map, per-phase colour grade, vignette, static
+  grain, Taint overlay; bloom fixed (threshold 1.2, intensity 0.25).
+- Creature materials and textures for the P4-19 bodies; `mat_ghost_rim` on the ghost view (doc 07 s7,
+  s8).
+- The flicker rule holds (doc 07 s4.3, s13): nothing pulses, nothing animates brightness above 0.5 Hz.
+- Low quality setting still turns off grain, fog layer and local-light shadows (doc 07 s6).
+- Headless run with no new errors; day, dusk, night and Harvest Moon screenshots for the CEO
+  (doc 07 s5) from `--look-shot`.
+
