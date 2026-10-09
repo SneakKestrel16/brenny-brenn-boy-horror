@@ -745,7 +745,7 @@ seasons (target 55 to 70) and the Prize Pumpkin size barely mattered (QA-check-2
 **Why:** CEO call 2026-10-09 ("fix the 5-6 player balance").
 **How to apply:** 2 to 4 players are unchanged. A 5p or 6p playtest session checks it (doc 09 s3 DD Phase 4).
 
-### D-089 · 2026-10-09 · CEO · The town stand sanctuary does not count as attending the farm
+### D-089 · 2026-10-09 · CEO · The town stand sanctuary does not count as attending the farm · superseded by D-115
 A living player within the town stand sanctuary (farm.tscn `Sanctuary`, doc 03 s11.5) does not count as
 "outside" for the night "Unattended farm" term (`game/ai_director/sabotage.gd` `_track_night`). Parking
 one player at the stand all night therefore no longer zeroes `nobody_outside_s` (Q-164 item 2, Q-161).
@@ -760,3 +760,14 @@ season"; bots count as ready; `--lobby-start` bypasses it for QA. Not named `req
 already has.
 **Why:** P4-23 menu lobby (CEO session item 4); Q-175.
 **How to apply:** doc 06 s7 lists them beside `request_role` / `apply_roles`.
+
+### D-115 · 2026-10-09 · CEO · The town stand lowers creature interaction instead of being a sanctuary
+Replaces D-089 and the absolute sanctuary (doc 01 "Sanctuary", doc 03 s11.5). Within 10 m of the town
+stand the creature's lures, scares, stalk picks, knock-offs and kills are less likely (data-driven
+multipliers, placeholders) but never impossible. A player there still counts as outside, so the
+"Unattended farm" term does not grow while they stand there: standing guard lowers crop damage but does
+not guarantee their safety. Bots keep their stand job. P4-31 is not merged; P4-34 builds this.
+**Why:** CEO call 2026-10-09: "someone at the stand can still reduce the chances of crops being damaged
+but cant completely guarantee their safety".
+**How to apply:** no code path may treat the stand as fully safe. P4-34 re-runs the bot seasons and the
+sim against the s18.3 targets.
