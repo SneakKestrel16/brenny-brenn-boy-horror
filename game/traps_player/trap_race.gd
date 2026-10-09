@@ -35,6 +35,7 @@ func _ready() -> void:
 			if victims[id] == p:
 				victims.erase(id)
 				races.erase(id)
+				_loosen(id, p, "player_left")
 		_shaken.erase(p)
 		_slowed.erase(p))
 	if not Game.is_host():
@@ -158,10 +159,18 @@ func on_pry_done(id: String, peer: int) -> void:
 	_result(id, r, true, r.deadline - r.t, r.t - maxf(r.hold_t, 0.0))
 	slow(peer)
 	shake(peer)
-	traps[id].state = &"loose"  # P4-29 (CEO): the sprung trap stays at its spot as the Creature's TrapPickup
-	Log.event(&"trap_changed", {"trap_id": id, "state": "loose", "by": peer, "kind": String(traps[id].kind)})
-	_bcast(&"trap_changed", [id, traps[id].kind, &"loose", traps[id].position])
+	_loosen(id, peer, "pried")
 	_creature.force_state(&"retreat" if _night() else &"lurk", &"trap_race_survived", peer)
+
+
+## Host, P4-29 (CEO): the sprung trap stays at its spot as the Creature's TrapPickup once its victim is
+## pried free, dies or leaves; anyone can then hang it back (or the creature takes it at nightfall, D-104).
+func _loosen(id: String, peer: int, cause: String) -> void:
+	if not Game.is_host() or traps.get(id, {}).get("state") != &"sprung":
+		return
+	traps[id].state = &"loose"
+	Log.event(&"trap_changed", {"trap_id": id, "state": "loose", "by": peer, "kind": String(traps[id].kind), "cause": cause})
+	_bcast(&"trap_changed", [id, traps[id].kind, &"loose", traps[id].position])
 
 
 ## Host: `peer` is Shaken (a survived trap race; a jumpscare or disarm lunge, P3-05): sprint time x0.6 for
@@ -248,6 +257,7 @@ func _on_apply(what: StringName, args: Array) -> void:
 				if victims[id] == args[0]:
 					victims.erase(id)
 					races.erase(id)
+					_loosen(id, args[0], "death")
 			_pin(args[0], false)
 
 

@@ -1,7 +1,8 @@
 extends SceneTree
 ## P4-29 end to end on a live host (QA): a bear trap springs on the host player, the pry frees them (slowed),
 ## the sprung trap stays at its spot as a pickup, the player takes it and hangs it on the pegboard (an empty
-## outline fills). A second pried trap left lying is the creature's at nightfall (D-104).
+## outline fills). A second pried trap left lying is the creature's at nightfall (D-104). A trap whose victim
+## leaves or dies mid-race lies loose too (QA follow-up).
 ##   "$GODOT" --headless --audio-driver Dummy --path . -s res://tests/creature/test_p4_29_e2e.gd -- --host --bots=1 --port=24768 --free-mouse
 ## Exits 0 on pass, 1 on any failure.
 
@@ -71,6 +72,8 @@ func _run() -> void:
 	var spots: Array = get_nodes_in_group(&"trap_spots")
 	await _cycle(spots[0])
 	await _theft(spots[spots.size() - 1])
+	await _gone(spots[1], Game.players.keys().filter(func(p: int) -> bool: return p != 1)[0], "player_left")
+	await _gone(spots[2], 1, "death")
 	print("test_p4_29_e2e: ", "FAIL %d" % _fails if _fails else "PASS")
 	quit(1 if _fails else 0)
 
@@ -134,3 +137,25 @@ func _theft(spot: Node3D) -> void:
 
 func _is_pickup(n: Variant) -> bool:
 	return n is Node and n.get_script() != null and n.get_script().resource_path == PICKUP
+
+
+## The victim leaves or dies mid-race: the trap lies loose at its spot (not stuck `sprung`).
+func _gone(spot: Node3D, victim: int, cause: String) -> void:
+	var id := String(spot.name)
+	cr._arm(spot, &"bear", {})
+	cr._traps[id].armed = false  # as a real spring leaves it; the victim is not walked onto the spot
+	_ev.clear()
+	race._on_sprung(id, &"bear", victim, spot.global_position, false)
+	_check(race.races.has(id), "%s: race on %d" % [cause, victim])
+	if cause == "death":
+		main.get_node("Death").die(victim, &"night_chase")
+	else:
+		for b in main.find_children("*", "Node", true, false):  # the bot's brain goes with it, as when a peer quits
+			if b.get_script() and b.get_script().resource_path.ends_with("bots/bot.gd") and b.peer == victim:
+				b.free()
+		Game.apply_roster(Game.players.keys().filter(func(p: int) -> bool: return p != victim))
+	await _wait(0.3)
+	var e: Variant = _last("trap_changed", "loose")
+	_check(e != null and e.trap_id == id and e.cause == cause, "%s: trap_changed loose logged: %s" % [cause, e])
+	_check(not race.races.has(id) and race.traps[id].state == &"loose", "%s: race over, trap loose" % cause)
+	_check(_is_pickup(farm.targets.get(id)) and cr._traps[id].get("loose", false), "%s: the spot holds a TrapPickup" % cause)
