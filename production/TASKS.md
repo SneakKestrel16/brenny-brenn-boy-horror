@@ -595,7 +595,7 @@ no economy number and can start now.
 | P4-14 | Network & Voice | Walkie-talkies as store items (doc 06 s10, doc 02 s10) | todo | P4-06 |
 | P4-15 | Gameplay, Technical Artist | Season Awards and season end screens (doc 03 s17.4, doc 05 s15) | todo | P4-07 |
 | P4-16 | 3D Artist, Technical Artist | Phase 4 models in Blender 5.2: four bodies, pumpkins, patch, cart, town stand, animals, store items (doc 07 s12) | done (QA PASS; nits for a later pass in handoff) | P4-01 |
-| P4-17 | Audio Designer | Phase 4 sounds: cart, gnaw, flare, radio, animals, signature variants, UI (doc 08 s11) | done (CEO listen pending, doc 08 s14 item 11; cre_jumpscare_hit redo waits for P4-16) | P4-01 |
+| P4-17 | Audio Designer | Phase 4 sounds: cart, gnaw, flare, radio, animals, signature variants, UI (doc 08 s11) | done (CEO listen pending, doc 08 s14 item 11; per-body cre_jumpscare_hit done, D-081) | P4-01 |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | todo | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
@@ -726,7 +726,8 @@ Acceptance:
 - Lobby difficulty and the streamer-safe group option (doc 01 "Difficulty and group settings").
 - The ghost flag applies to day and targeted lures too (D-075, Q-068).
 - `scares.gd` plays `cre_jumpscare_hit_<body>` (body id without `body_`), falling back to
-  `cre_jumpscare_hit` (D-081).
+  `cre_jumpscare_hit` when `Soundscape.creature_body` is empty or the file is missing
+  (`ResourceLoader.exists`; `play_2d` fails silently) (D-081).
 
 ### P4-12 Short season and the Harvest Moon
 Owner: AI Programmer; Gameplay for the cart; Technical Artist for the sky and the cart lantern.

@@ -28,6 +28,11 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 	# P3-05 scares (doc 08 section 5.4), played by `scares.gd`; files from P3-08.
 	# CEO listen 1 (2026-10-08): scare sounds redone; db re-matched to the old files' RMS (volume was "good").
 	&"cre_jumpscare_hit": {"n": 0, "bus": &"Creature", "db": -8.0},
+	# P4-17 per-body jumpscare (creature_body without "body_"); same level as the fallback above.
+	&"cre_jumpscare_hit_gaunt": {"n": 0, "bus": &"Creature", "db": -8.0},
+	&"cre_jumpscare_hit_scarecrow": {"n": 0, "bus": &"Creature", "db": -8.0},
+	&"cre_jumpscare_hit_boar": {"n": 0, "bus": &"Creature", "db": -8.0},
+	&"cre_jumpscare_hit_husk": {"n": 0, "bus": &"Creature", "db": -8.0},
 	&"cre_lunge": {"n": 0, "bus": &"Creature", "db": -4.0},
 	&"cre_presence_swell": {"n": 0, "bus": &"Creature", "db": -8.0},
 	&"cre_corn_part": {"n": 2, "bus": &"Creature", "unit": 4.0, "max": 40.0, "db": -12.0},

@@ -663,6 +663,8 @@ P4-10). Game Designer keeps doc 02 s4 and s18.6 in step.
 2. Gameplay adds `Log.event(&"dawn_report_closed")` in `DawnReport._close()` in P4-04, so the
    soundscape stops polling the private `_open`.
 3. Step-sound replays on the Dawn Report go through the SFX low-pass; accepted as built.
+4. Sounds that reuse recorded material may be built in numpy (`tools/audio/gen_jumpscare.py`), as
+   `process_downloads.py` already is; D-015's SuperCollider rule covers pure synthesis.
 **Why:** P4-17 reviews. The four bodies differ too much in size for one hit sound; a log event is the
 documented cross-system hook (CONTRACTS s10).
 **How to apply:** rows P4-04 and P4-11 carry the items.

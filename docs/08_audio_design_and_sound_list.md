@@ -319,7 +319,7 @@ Issue 3).
 | Moment | Sound | Notes |
 |---|---|---|
 | Disarm lunge (doc 01 "Jumpscares") | `cre_corn_part_*` x2 (stalks parting) 0.4 s before `cre_lunge` | the parting is the warning |
-| Day jumpscare | `cre_jumpscare_hit` | plays on `Creature`; the body thud and the running steps are inside the file, so no separate `sfx_ragdoll_thud_*` call |
+| Day jumpscare | `cre_jumpscare_hit` | plays on `Creature`; the body thud and the running steps are inside the file, so no separate `sfx_ragdoll_thud_*` call. Per body (P4-17): `cre_jumpscare_hit_<body>` for gaunt, scarecrow, boar, husk; the old name is the fallback |
 | The trap (looking up) | silence + `cre_presence_swell` low | a "watching" tell, not a hit |
 | The shed | `sfx_door_slam` behind, no creature sound | |
 | Hallucination, stare, wrong count | `cre_presence_swell` (local, private) | no knockdown (doc 01); played only for the target |
@@ -583,7 +583,7 @@ marked. Rows tagged **(real)** are Freesound CC0 recordings since D-066 (section
 | File | Length | RMS | What |
 |---|---|---|---|
 | `sfx_taint_heartbeat` (changed twice) | 3.43 s loop | -19.0 | 70 bpm lub-dub, wet: a resonant low-pass squelch on each thump, low-passed 900 Hz, a stronger knock (CEO listen 1: more body above 100 Hz so small speakers carry it; played at -42, then -32, -26 and now -20 dB) |
-| `cre_jumpscare_hit` **(real running; scare and thud PLACEHOLDER)** | 3.15 s | -9.4 | CEO listen 4 pick (option 03): 0.3 s silence, then a kea and bat scream (0.3 to 0.95 s, the loudest part), a soft body fall at 0.92 s, then 13 running steps on grass that fade and close up (lowpass) to 3.1 s (section 13). The running is approved; **the scare and the thud are placeholders, redo with the creature model**. The thud is part of this file now. Played at -8 dB (unchanged) |
+| `cre_jumpscare_hit` **(real running; scare and thud PLACEHOLDER)** | 3.15 s | -9.4 | CEO listen 4 pick (option 03): 0.3 s silence, then a kea and bat scream (0.3 to 0.95 s, the loudest part), a soft body fall at 0.92 s, then 13 running steps on grass that fade and close up (lowpass) to 3.1 s (section 13). The running is approved; **superseded by the four `cre_jumpscare_hit_<body>` files (section 10.7); this stays as the fallback**. The thud is part of this file now. Played at -8 dB (unchanged) |
 | `cre_lunge` **(real)** | 0.89 s | -13.9 | corn walk + body thud (section 13), liked at listen 3; played at -4 dB |
 | `cre_presence_swell` **(real)** | 5.69 s | -16.6 | CEO listen 4 pick (option B): a sleeping dog's slow heavy breathing, played at 0.85x so it reads bigger, high-pass 40 Hz and low-pass 1.8 kHz, loud breaths ducked so the breaths are even (section 13); peak -2.3 dBFS; played at -8 dB |
 | `cre_corn_part_01`, `_02` (redone) | 1.00 s | -10.2, -10.2 | CEO listen 1: dense leaf and husk crackle, shoulder push, green-wood snaps (no ringing resonators); played at -12 dB (was -6) |
@@ -651,8 +651,17 @@ the catalog rows carry the trims. `unit`/`max` for the new 3D rows are inference
   (slot 1), disabled by default. `Soundscape.set_report_open(on)` toggles them; it turns on at the
   `dawn_report_shown` log line and off when the card's `_open` flag clears (polled in `_process`, because
   `dawn_report.gd` logs no close event; a close event would replace the poll).
-- **Not done:** the `cre_jumpscare_hit` redo (the P4-16 bodies are not in this tree: `assets/models` is
-  missing); no caller wired for any new id (owners above).
+- **Jumpscare redo (P4-16 bodies now exist).** `cre_jumpscare_hit_{gaunt,scarecrow,boar,husk}`, 2D, `Creature`
+  bus, written by `tools/audio/gen_jumpscare.py` (numpy synthesis; the approved running steps are read from
+  the fallback `cre_jumpscare_hit.wav`, 1.27 s on; steps retimed per body). Each: 0.3 s lead
+  silence, synthetic scare from 0.3 s, synthetic body thud at 0.92 s, steps from 1.27 s; RMS -9.4, peak -1.0.
+  Sizes from `assets/models/creature_*.glb` bounds (W x H x L m): gaunt 0.47 x 2.75 x 0.61, scarecrow 0.82 x
+  1.65 x 0.83, boar 1.08 x 1.56 x 2.04, husk 0.93 x 3.21 x 0.97. The old `cre_jumpscare_hit` is kept as the
+  fallback. Measured (`tools/audio/measure_jumpscare.py`): lengths gaunt 3.20 s, scarecrow 3.00 s, boar 3.62 s,
+  husk 3.37 s (boar and husk steps are slower); scare centroid 3707, 1136, 465, 1885 Hz; thud centroid 247, 572,
+  137, 1003 Hz (boar thud 1.1 s long, 38 Hz floor; the others 55 to 95 Hz). **No caller picks the body yet**: `scares.gd` (AI Programmer) plays `cre_jumpscare_hit`; it should
+  play `cre_jumpscare_hit_` + body (`creature_body` without `body_`), see `Soundscape.CATALOG`.
+- Not done: no caller wired for any new id (owners above).
 
 ## 11. Sound list
 
@@ -751,7 +760,8 @@ is generic farm stock and changes without touching the list shape.
 | `cre_husk_sig_01..03` | C | 3D | 1.5 to 2 | no | 1 | dry pulsed rattle |
 | `cre_husk_sig_chase` | C | 3D | 4 | yes | 1 | pulses 14 to 22 per s |
 | `mus_sting_chase` | Mu | St | 3.2 | no | 1 | stacked saws detuned a semitone and tritone (cluster), reversed-swell riser, sub-hit at 0.15 s, short `FreeVerb`; stops dead after 2 s with a tail |
-| `cre_jumpscare_hit` | C | M | 3.2 | no | 3 | **real running steps**; kea/bat scare and body thud are **placeholders, redo with the creature model** (section 13) |
+| `cre_jumpscare_hit` | C | M | 3.2 | no | 3 | fallback: **real running steps**; kea/bat scare and body thud are placeholders, superseded by the four below (section 10.7) |
+| `cre_jumpscare_hit_{gaunt,scarecrow,boar,husk}` | C | M | 3.0 to 3.6 | no | 4 | per-body jumpscare: synthetic scare and thud (**PLACEHOLDER**), approved steps; section 10.7 |
 | `cre_lunge` | C | M | 0.9 | no | 1 | **real** (section 13): corn walk rush, then a body thud |
 | `cre_corn_part_01..03` | C | 3D | 1 | no | 1 | heavy stalks: dense leaf crackle + push + green-wood snaps |
 | `cre_presence_swell` | C | M | 5.7 | no | 3 | **real** (section 13): two slow heavy dog breaths, 0.85x; the private "something's there" |
@@ -932,7 +942,11 @@ because these carry the game:
     `cre_flare_hit`); the cart loop `sfx_cart_squeak_loop`; the five walkie sounds (`vox_radio_*`); the UI set
     (`ui_click`, `ui_confirm`, `ui_deny`, `ui_coins`, `ui_stamp`, `ui_award_reveal`, `ui_shop_bell`); and the
     Dawn Report low-pass (`phase dawn`: wind and SFX dull, the card and the replayed clips clear).
-    The `cre_jumpscare_hit` redo waits for the P4-16 bodies.
+    The `cre_jumpscare_hit_<body>` redo (section 10.7 jumpscare bullet), 4 files in this order: gaunt, scarecrow,
+    boar, husk (`scare jumpscare 2` once a caller picks the body; until then play the wavs). Does the scare fit
+    the body (gaunt thin shriek, scarecrow hoarse and ragged, boar low bellow with chain, husk dry rattle and
+    hollow wail)? Is the boar thud clearly the heaviest, the scarecrow and husk the lightest? Are the running
+    steps (the approved ones, retimed per body) still right? The old `cre_jumpscare_hit` stays as the fallback.
 
 ## 15. Gotchas
 
