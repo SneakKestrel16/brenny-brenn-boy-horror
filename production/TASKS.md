@@ -596,8 +596,8 @@ no economy number and can start now.
 | P4-15 | Gameplay, Technical Artist | Season Awards and season end screens (doc 03 s17.4, doc 05 s15) | in progress | P4-07 |
 | P4-16 | 3D Artist, Technical Artist | Phase 4 models in Blender 5.2: four bodies, pumpkins, patch, cart, town stand, animals, store items (doc 07 s12) | done (QA PASS; nits for a later pass in handoff) | P4-01 |
 | P4-17 | Audio Designer | Phase 4 sounds: cart, gnaw, flare, radio, animals, signature variants, UI (doc 08 s11) | done (CEO listen pending, doc 08 s14 item 11; per-body cre_jumpscare_hit done, D-081) | P4-01 |
-| P4-19 | 3D Artist | Final art for the four creature bodies, glimpse parts and smear hulls (D-087) | todo | P4-16 |
-| P4-20 | Technical Artist | Final night look: phase lighting, fog, darkness, post stack, creature materials (D-087) | todo | P4-16; creature materials after P4-19 |
+| P4-19 | 3D Artist | Final art for the four creature bodies, glimpse parts and smear hulls (D-087) | in progress | P4-16 |
+| P4-20 | Technical Artist | Final night look: phase lighting, fog, darkness, post stack, creature materials (D-087) | in progress | P4-16; creature materials after P4-19 |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | todo | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
