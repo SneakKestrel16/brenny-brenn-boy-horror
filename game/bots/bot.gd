@@ -287,9 +287,15 @@ func _keeps_payment(p: Node) -> bool:
 	if debt == null or debt.short_season() or Clock.day >= dawn:
 		return true
 	var r: Dictionary = Crops.rec(p.crop_for(&"plant"))
-	if Clock.day + int(r.grow_days) < dawn:
+	if Clock.day + int(r.grow_days) < dawn and (int(r.grow_days) > 0 or _pickers() > 1):
 		return true
 	return farm.coins - int(r.seed) >= debt.first_of(debt.owed + debt.paid) - debt.paid
+
+
+## Living bots. Moonflowers (0 grow days) ripen at nightfall and need a bot besides the sentinel to pick them, or
+## they wilt at dawn and their seeds came out of the payment (P4-21 QA: s2p_1, s2p_2 foreclosed).
+func _pickers() -> int:
+	return Game.players.keys().filter(func(p: int) -> bool: return p < 0 and not Game.is_ghost(p)).size()
 
 
 ## D-085: a damage fix needs scrap; with none left the bot buys one (15 coins) if the team can pay.
