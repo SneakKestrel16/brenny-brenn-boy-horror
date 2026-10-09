@@ -101,6 +101,9 @@ class Tests(unittest.TestCase):
     def test_short_season_from_data(self):
         m = model(scn={"name": "short_season", "short_season": True})
         self.assertEqual((m.days, m.first_dawn, m.debt_base, m.crops["pumpkin"]["grow_days"]), (3, None, 360, 1))
+        self.assertEqual(m.debt([], 59, 2), sim.rhu(410 * 59, 100))  # 2p base override (D-082 item 5)
+        self.assertEqual(m.debt([], 101, 4), sim.rhu(360 * 101, 100))
+        self.assertNotIn("pumpkin_grow_days", DATA["difficulty"]["short_season"])  # D-082 item 4: grow time lives in pumpkin.json only
 
     def test_fixed_seed_repeats(self):
         m = model()

@@ -465,7 +465,7 @@ stand and at the dawn cash-in (D-017). `sim` prices are the simulator's starting
 | `walkie_battery` | `transmit_s` 180 |
 | `brighter_lantern` | `light_radius_mult` 1.5 |
 | `scarecrow` | `extra` 1, `max_bought` 3, `creature_avoid_m` 10 |
-| `flare_gun` | `shots` 1, `retreat_s` 30 (`01 Store`), `refill` each dawn, `noise_ref` `creature.json` `noise_flare` |
+| `flare_gun` | `shots` 1, `retreat_s` 30 (`01 Store`), `refill` each dawn, `reload_s` 8 (placeholder; the wait between shots, the base the Warden's `flare_reload_mult` multiplies), `noise_ref` `creature.json` `noise_flare` |
 | `shed_lock` | as above (`doc01`) |
 | `plot_pair` | 2 plots, section 4 |
 
@@ -491,6 +491,7 @@ exists in `Data.TABLES`, so the numbers are `season.json` records (Gameplay may 
 | `round_up_rounding` | `ceil` | placeholder |
 | `animal_out_at_dusk_coins` | 10 per animal still out at dusk | placeholder |
 | `animal_escape_m` | 60 (how far a loose animal wanders; doc 04 section 7.3) | doc 04 |
+| `animal_alert_range_m` | 20 (how close the creature gets before the animals raise an alert; the base the Rancher's `animal_alert_range_mult` multiplies, D-082 item 3) | placeholder |
 
 - **Cost of an animal out at dusk:** at the next dawn, after the medical bill and with the same 4-coin
   bank floor, `animals out x scaled(10, payment pct)` is taken; the shortfall is not carried. The
@@ -611,14 +612,14 @@ Optional, best at 4 players; none required to win (`01 Roles`). All ten doc 01 r
 | Role | Perk | Number (`roles.json` field) | Source |
 |---|---|---|---|
 | `farmer` | +1 crop every 5th harvest | `bonus_crop_every_n_harvests` 5 | 01 Roles |
-| `rancher` | handles animals | `round_up_hold_mult` 0.6; `animal_alert_range_mult` 1.5 | role: 01 Roles; numbers placeholder |
+| `rancher` | handles animals | `round_up_hold_mult` 0.6; `animal_alert_range_mult` 1.5 (x `season.json` `animal_alert_range_m` 20 = 30 m) | role: 01 Roles; numbers placeholder |
 | `mechanic` | repairs and refuels faster | `repair_hold_mult` 0.6; `refuel_hold_mult` 0.6 | role: 01 Roles; numbers placeholder |
 | `tracker` | spots trap clues more easily, disarms faster | `disarm_hold_mult` 0.6; `clue_range_mult` 1.5 | role: 01 Roles; numbers placeholder |
 | `carpenter` | builds and repairs fences cheaper and faster | `build_hold_mult` 0.6; `fence_repair_hold_mult` 0.6; `build_cost_mult` 0.8 | placeholder |
 | `medic` | pries others free faster, cuts the bill | `pry_others_hold_mult` 0.6; `bill_cut_mult` 0.75 within `bill_cut_radius_m` 15 | placeholder |
 | `night_owl` | quieter, harvests moonflowers faster | `noise_mult` 0.7; `moonflower_harvest_hold_mult` 0.6 | placeholder |
 | `radio_operator` | walkies reach further and last longer, stronger lures | `walkie_range_mult` 1.5; `battery_transmit_mult` 1.5; `lure_weight_mult` 2 | placeholder |
-| `warden` | more flare shots, faster refill | `flare_shots_extra` 1; `flare_refill_mult` 0.5 | placeholder |
+| `warden` | more flare shots, faster reload | `flare_shots_extra` 1; `flare_reload_mult` 0.5 (x `store.json` `flare_gun` `reload_s` 8 = 4 s) | placeholder |
 | `medium` | hears less ghost static | `ghost_static_mult` 0.5 | placeholder |
 
 Multipliers on hold seconds round up like every scaled value. Roles are not in the season simulator
@@ -644,13 +645,17 @@ simulator" (`01 Saving`). Record `short_season` in `difficulty.json`:
 |---|---|---|
 | `season_days` | 3 | doc 01 Saving |
 | `no_first_payment` | true (one payment, at the end; there is no mid-season dawn) | placeholder (inference: a 3-day season has no room for two) |
-| `pumpkin_grow_days` | 1 | placeholder (`pumpkin.json` `short_season` carries the same value) |
-| `debt_total_4p` | 360 | `sim` (the old 557 cleared 0 to 1%) |
+| `debt_total_4p` | 360 (3p and 4p) | `sim` (the old 557 cleared 0 to 1%) |
+| `debt_total_4p_by_players` | `{"2": 410}`, the 2p base in place of 360 | `sim` (D-082 item 5) |
+
+The short-season Prize Pumpkin grow time is `pumpkin.json` `short_season` `grow_days` 1 only; the
+copy in `difficulty.json` was dropped (D-082 item 4; nothing in `game/` read it).
 
 Pumpkin thresholds in `pumpkin.json` `short_season` (placeholder): giant needs 3 watered days and 1
 guarded night, large 2, medium 1; fewer is sad. Payouts are the section 6 table.
-The 360 is a step function: 3p and 4p clear about 66%, 2p about 99% (the cause is not
-traced; inference: the 2p payment percentage of 59 makes the same debt far smaller). This is reported by `tools/sim/scenarios/short_season.json`, which has no target.
+The short season has the same spread rule as the full season (at most 10 points across headcounts,
+D-082 item 5) and no clear-rate target. 360 gave 3p/4p about 67% but 2p 99%; 2p now uses 410 (see
+section 18.6). `tools/sim/scenarios/short_season.json` reports it.
 
 ## 17. Economy checks
 
@@ -831,6 +836,15 @@ if live spread exceeds 15 points, widen the sample before touching numbers.
 Only `sim` and `placeholder` values move. One knob per change, the seed fixed, before and after
 summaries kept, and each accepted change recorded in this doc with its result.
 
+**D-082 follow-ups (seeds 1 to 3, 10,000 runs; full-season gate exits 0 after).**
+
+| # | Change | Result |
+|---|---|---|
+| 1 | Sim charges `pumpkin_gnaw` guarding: `pumpkin.json` `rules.guard_s` 60 plus a round trip of `barn_door_to_prize_pumpkin` 57.4 m, as chore time (policy `charge_gnaw_guard`) | Breaks the gate, so it is **off** in `median.json` and awaits the Director. Seed 1 final 2p/3p/4p 63.1/57.9/63.0 to 54.8/52.2/62.1 (2p and 3p fail 55; spread 9.9). Seed 2: 55.6/51.5/61.6, spread 10.1. Seed 3: 55.4/51.3/61.5, spread 10.2. First clear seed 1 87.1/85.3/85.6 to 87.4/85.3/85.6 (gnaw opens day 3, before the first payment). No doc 01 or D-079 value moved |
+| 3 | Base values: `season.json` `animal_alert_range_m` 20; `store.json` `flare_gun` `reload_s` 8; Warden perk renamed `flare_reload_mult` | data only, not in the sim |
+| 4 | `difficulty.json` drops `pumpkin_grow_days` | no change (sim reads `pumpkin.json`) |
+| 5 | Short-season 2p debt base 360 to 410 (`debt_total_4p_by_players`). Sweep, 2p final at seed 1: 400 78.2, 402 75.8, 405 67.2, 408 66.6, 410 65.7, 412 65.0, 415 61.0, 420 47.0, 440 28.4, 460 10.9 | Short season final 2p/3p/4p: seed 1 65.7/67.9/66.6, seed 2 65.1/67.6/67.4, seed 3 65.5/67.4/66.7; spread at most 2.5. 410 sits on the plateau (405 to 412, about 67 to 65 at all three seeds) |
+
 **Log (P4-02 retune under D-078; seed 1, 1,500 to 3,000 runs per count while tuning, 10,000 for
 the final line; first / final clear % at 2p, 3p, 4p).** The first pass (1 death, 13/14 plots, no
 buying, hazards 74/36/90) is withdrawn by D-078. Restart from doc 01's values: 16 plots, 2 deaths,
@@ -933,7 +947,7 @@ blocks below are the Phase 1 proposals and are not kept in step. P4-03 changed t
 `debt` (`scaling_key`, `early_payment`, `early_order`, `pumpkin_unlock_needs_first_payment`,
 `foreclosure_seized_upgrades`, `derived_by_players`); `pumpkin` (a `short_season` record, 6 records);
 `difficulty` (a `short_season` record, 4 records, with `season_days`, `no_first_payment`,
-`pumpkin_grow_days`, `debt_total_4p`); `roles` (new file, the ten ids, `maxItems` 10, A.14);
+`debt_total_4p`, `debt_total_4p_by_players`); `roles` (new file, the ten ids, `maxItems` 10, A.14);
 `ai_director` (a required `profile_harvest_moon`); `dawn_report_templates` (sections `flags`,
 `ledger`, `season_award`); A.3 `labor` gains the `round_up` verb; A.2 `season` gains the animal
 records of section 10.1. See each file for the exact fields.

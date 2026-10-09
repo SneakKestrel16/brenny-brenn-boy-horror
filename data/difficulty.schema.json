@@ -69,9 +69,15 @@
             "type": "integer",
             "minimum": 0
           },
-          "pumpkin_grow_days": {
-            "type": "integer",
-            "minimum": 1
+          "debt_total_4p_by_players": {
+            "type": "object",
+            "patternProperties": {
+              "^[2-6]$": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
           }
         },
         "required": [

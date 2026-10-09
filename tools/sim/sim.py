@@ -57,6 +57,7 @@ class Model:
             scn.setdefault("season_days", ss["season_days"])
             scn.setdefault("no_first_payment", ss["no_first_payment"])
             scn.setdefault("debt_total_4p", ss["debt_total_4p"])
+            scn.setdefault("debt_total_4p_by_players", ss.get("debt_total_4p_by_players", {}))
             scn.setdefault("crops_override", {"pumpkin": {"grow_days": data["pumpkin"]["short_season"]["grow_days"]}})
         self.scn = scn
         self.pct = {int(k): v for k, v in hc["pct_by_players"].items()}
@@ -133,10 +134,11 @@ class Model:
     def payout(self, size: str, hc: int) -> int:
         return scaled(self.pumpkin[size]["payout_4p"], self.pct[hc])
 
-    def debt(self, pcts: list[int], cur: int) -> int:
-        """Total debt: past days at their recorded pct, the rest at the current headcount."""
+    def debt(self, pcts: list[int], cur: int, hc: int = 0) -> int:
+        """Total debt: past days at their recorded pct, the rest at the current headcount. `hc` picks a per-headcount base (short season, D-082 item 5)."""
         s = sum(pcts) + (self.days - len(pcts)) * cur
-        return rhu(self.debt_base * s, self.days * 100)
+        base = self.scn.get("debt_total_4p_by_players", {}).get(str(hc), self.debt_base)
+        return rhu(base * s, self.days * 100)
 
     def first_of(self, total: int) -> int:
         return rhu(self.first_base * total, self.total_4p)
@@ -227,7 +229,7 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
             coins -= lost
             animal_debt = 0
             # 4. payment
-            total = M.debt(pcts, M.pay[hc])
+            total = M.debt(pcts, M.pay[hc], hc)
             if d == M.first_dawn:
                 first_due = M.first_of(total)
                 r["bank_pre4"] = coins
@@ -294,6 +296,8 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
                 hold = s["fix_hold_s"] if s["fix_hold_s"] is not None else M.L.get(s["fix"], {}).get("hold_s", 0)
                 if s["fix"] not in ("plant", "none"):
                     chore_s += hold + 2 * rng.choice(M.layout["trap_walk_m"]) / M.walk_v
+                if s["id"] == "pumpkin_gnaw" and pol.get("charge_gnaw_guard"):  # doc 03 s10.1: no fix; the pumpkin is guarded for guard_s, one walk out and back
+                    chore_s += M.pumpkin["rules"]["guard_s"] + 2 * M.layout["walk_m"]["barn_door_to_prize_pumpkin"] / M.walk_v
                 if s["id"] == "broken_fence":
                     chore_s += M.animals * M.L["round_up"]["hold_s"] + 2 * rng.choice(M.layout["trap_walk_m"]) / M.walk_v  # one herding trip, a hold per animal
                     if rng.random() * 100 < pol.get("animal_out_dusk_pct", 0):

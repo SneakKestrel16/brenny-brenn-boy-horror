@@ -681,3 +681,12 @@ documented cross-system hook (CONTRACTS s10).
 cannot use.
 **How to apply:** one Game Designer follow-up in parallel with P4-04 and P4-08; rerun the sim gate
 after each change. Q-084 item 5 is already in P4-11 scope.
+
+### D-083 · 2026-10-08 · Director · Q-095 answered: gnaw guard charge stays off until measured
+The sim's `charge_gnaw_guard` stays false. P4-05 logs the guarding and repair time per
+`pumpkin_gnaw`; once P4-10 live logs exist, the Game Designer sets the charge from them and retunes one
+P4-03 placeholder at a time if the gate fails.
+**Why:** the 60 s guard and 57.4 m round trip are inference, not data, and turning them on fails 3p
+(final about 52). Retuning other placeholders to absorb a guessed cost would be fitting to a guess.
+**How to apply:** P4-05 acceptance carries the log. Short-season debt is re-checked when the charge
+turns on.

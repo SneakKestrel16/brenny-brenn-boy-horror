@@ -108,11 +108,11 @@
     {
       "id": "warden",
       "source": "placeholder",
-      "cite": "doc 01 Roles (placeholder role); P4-03: more flare shots and a faster refill. A hit only drives the creature into Retreat (store.json flare_gun, creature.json retreat_after_flare_s)",
+      "cite": "doc 01 Roles (placeholder role); P4-03: more flare shots and a faster reload between shots (store.json flare_gun reload_s is the base). A hit only drives the creature into Retreat (store.json flare_gun, creature.json retreat_after_flare_s)",
       "name": "Warden",
       "perks": {
         "flare_shots_extra": 1,
-        "flare_refill_mult": 0.5
+        "flare_reload_mult": 0.5
       },
       "sources": {
         "perks": "placeholder"

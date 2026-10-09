@@ -17,5 +17,7 @@
   "generator_dead_base_pct": 10,
   "generator_dead_tank_factor_pct": 40,
   "generator_kill_unfixed_pct": 50,
-  "animal_out_dusk_pct": 5
+  "animal_out_dusk_pct": 5,
+  "charge_gnaw_guard": false,
+  "charge_gnaw_guard_note": "doc 02 s18.6 D-082 item 1: true breaks the full-season gate (2p 54.8, 3p 52.2); held off until the Director decides"
 }

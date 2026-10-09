@@ -270,6 +270,13 @@
       "cite": "doc 04 section 7.3: escape spots 60 m or more from the pen gate (placeholder there)"
     },
     {
+      "id": "animal_alert_range_m",
+      "value": 20,
+      "unit": "m",
+      "source": "placeholder",
+      "cite": "doc 02 sections 10.2 and 15 (D-082 item 3): how close the creature must be before the animals raise an alert; the base the Rancher's animal_alert_range_mult multiplies"
+    },
+    {
       "id": "round_up_rounding",
       "value": "ceil",
       "unit": "none",

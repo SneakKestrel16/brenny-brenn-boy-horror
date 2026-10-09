@@ -653,6 +653,8 @@ Acceptance:
   s11.5, s12), gray-box until P4-16 lands.
 - Carrying and judging follow doc 02 s6; the result is logged.
 - Pumpkin state saves and loads (P4-10).
+- Each `pumpkin_gnaw` logs the time players spend guarding or repairing it, so P4-10 logs can set the
+  sim's gnaw guard charge (D-083).
 
 ### P4-06 Store and upgrades
 Owner: Gameplay; AI Programmer for the creature-side effects. Output: store code, creature hooks;

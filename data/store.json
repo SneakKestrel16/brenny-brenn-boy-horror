@@ -150,6 +150,7 @@
         "shots": 1,
         "retreat_s": 30,
         "refill": "each_dawn",
+        "reload_s": 8,
         "noise_ref": "creature.json noise_flare"
       },
       "sources": {
