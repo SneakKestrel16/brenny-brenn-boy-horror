@@ -821,3 +821,29 @@ P4-02 retune under D-078. All sim targets pass with doc 01's 16 plots, 2 deaths,
 
 ### Q-078 · 2026-10-08 · Game Designer -> Director · answered D-078
 (Was Q-075 in this worktree; renumbered, main's Q-075 is the Director's.) P4-02: Medium pumpkin at 2p cost 26.7 points not 30, 2 deaths and 13/14 start plots. Answered by D-078: 2 deaths, 16 plots at every headcount, buying on, a drop of about 25 at 2p accepted. After the retune the drop is 36.7/44.3/48.3, so the 30 check passes.
+
+### Q-079 · 2026-10-08 · Game Designer -> Gameplay Programmer · answered D-079
+P4-03 data. Debt, the first payment and the medical bill must read `player_scaling.json` `payment_pct_by_players` (59/85/101, D-079), not `pct_by_players`. `debt.json` `derived_by_players` holds the expected table (2p 767/150/617, 3p 1105/217/888, 4p 1313/258/1055); use it as a test (P4-07).
+
+**Answer (QA, P4-03 review):** already covered by D-079 "How to apply" (Gameplay makes debt and medical bills read `payment_pct_by_players`, P4-10 acceptance). The `derived_by_players` test table stays useful for P4-07/P4-10.
+
+### Q-080 · 2026-10-08 · Game Designer -> Gameplay Programmer · open
+P4-03 animals. No `animals` table is in `Data.TABLES`, so species (chicken, pig, cow), `animals_per_species` 2, `animals_per_fence_break` 2, `animal_out_at_dusk_coins` 10, `animal_escape_m` 60 and `round_up_rounding` are records in `season.json`; the `round_up` hold (4 s) is in `labor.json`. Say if P4-08 wants a separate table. Out-at-dusk cost is billed at dawn after the medical bill with the 4-coin floor (doc 02 s10.1).
+
+### Q-081 · 2026-10-08 · Game Designer -> Technical Artist · open
+Cart speed by pushers is set: 1.0/1.6/2.0/2.4 m/s for 1 to 4 pushers (`ai_director.json` `profile_harvest_moon`, placeholder, doc 02 s9). Doc 05 s13 still says "placeholder until doc 02/03 says"; please update it. At 1 pusher the 147.9 m route takes about 148 s, so the 900 s cap stays reachable.
+
+### Q-082 · 2026-10-08 · Game Designer -> Gameplay Programmer · open
+Q-070 items 2 and 4. Doc 03 s10.1 now has the dawn trample placement rule: weighted pick by closeness (weight 1/(1+d/20)), a previously trampled plot at half weight, and bare plots churned (no coins lost) when crops are fewer than the count. The build differs (nearest crops, bare plot never trampled). Placeholder; change Sabotage if you agree, or say what is unbuildable.
+
+### Q-083 · 2026-10-08 · Game Designer -> Director · open
+FYI, no doc 01 change. Short-season `debt_total_4p` retuned 557 to 360 (`sim`, doc 01 Saving says the sim sets it). 3p/4p clear about 66%, 2p about 99%; report only, no target. Six roles (carpenter, medic, night_owl, radio_operator, warden, medium) carry placeholder perk numbers (D-077); scarecrow, lantern and flare effect numbers are placeholders in `store.json` and doc 03 may overrule.
+
+### Q-084 · 2026-10-08 · QA -> Director · open
+P4-03 review findings (non-blocking; QA PASS). Probes: 4,000 runs, seed 1, one change each from the delivered data; first/final clear 2p, 3p, 4p.
+1. **`pumpkin_gnaw` is free in the sim.** It has no fix, so `sim.py` charges no chore, and the median policy's Large pumpkin ignores gnaw. Enabled, it only dilutes the disturbance pool: gnaw off alone gives final 59.6/55.8/61.1 against 62.9/58.9/62.3 delivered, so gnaw adds about 3 points. Both new disturbances off gives 66.3/60.0/63.8: the net cost of P4-03 is 1 to 3 points, not the 8 to 11 the handoff reports before its placeholder moves. Ask: should the sim charge guarding time for gnaw (doc 03 s10.1 gnaw rule, "no living player within 20 m for the last 60 s")? Suggest Game Designer, P4-10.
+2. **`animal_out_dusk_pct` 5 (policy, placeholder) is the most sensitive new knob.** 0 gives 64.0/60.5/65.0; 25 gives 59.1/51.1/52.3 (3p and 4p fail 55); 50 gives 55.1/42.3/40.1. 3p final sits about 2 points above the 55 floor (56.8 at seed 3). `animals_per_fence_break` 3 instead of 2 costs 1.0 to 1.6 points; `round_up` hold 0 gains under 1 point. P4-10 logs should measure how often animals are still out at dusk.
+3. **Perk multipliers with no base value:** `roles.json` warden `flare_refill_mult` 0.5 (the flare refills "each_dawn", no timer to multiply) and rancher `animal_alert_range_mult` 1.5 (no animal alert range exists). Game Designer to define the base or reword before P4-09.
+4. **Two copies of one number:** `difficulty.json` `short_season.pumpkin_grow_days` and `pumpkin.json` `short_season.grow_days` (both 1); the sim reads only the pumpkin one. Game Designer: keep one.
+5. **Live game:** `sabotage.gd` now sees `broken_fence` and `pumpkin_gnaw` in its pool. `_place` returns false for them, so it falls through to another kind and the `sabotage_plan` log lists them. Harmless (2-instance bot run clean); P4-11 builds them.
+6. **Short season 2p 99.3% vs 3p/4p about 67%** (report only). Inference: 2p plants 14 plots (7 per player) against 16 at 3p/4p, while its debt is 59% against 85/101%. A 2p-specific short-season debt or a target would settle it.

@@ -581,7 +581,7 @@ no economy number and can start now.
 |---|---|---|---|---|
 | P4-01 | Director | Between-phase review: OPEN_ISSUES, open questions, settle Phase 4 scope, write acceptance for the rows below | done (D-070) | — |
 | P4-02 | Game Designer | Season simulator (doc 02 s18): `tools/sim/sim.py`, median policy, variance, scenarios, s18.4 tests, then tune `sim` and `placeholder` values until the s18.3 targets pass | done (QA PASS; D-078, D-079) | — |
-| P4-03 | Game Designer | Phase 4 data: pumpkin, debt, difficulty, roles, store effects, crops, `harvest_moon`, Phase 4 sabotage, animals, season awards, Dawn Report gaps | todo | P4-02 |
+| P4-03 | Game Designer | Phase 4 data: pumpkin, debt, difficulty, roles, store effects, crops, `harvest_moon`, Phase 4 sabotage, animals, season awards, Dawn Report gaps | done (QA PASS; follow-ups D-082) | P4-02 |
 | P4-04 | Gameplay | Full 7-day season: every crop, town stand selling, dawn steps 1, 2, 5 and 7, season end, doc 05 s18 events; carried fixes | todo | P4-02, P4-03 |
 | P4-05 | Gameplay, Technical Artist | Prize Pumpkin: patch, growth, sizes, carrying, judging (doc 02 s6) | todo | P4-04 |
 | P4-06 | Gameplay, AI Programmer | Store and upgrades: every `store.json` item works (doc 02 s10) | todo | P4-04 |

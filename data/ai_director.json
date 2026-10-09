@@ -52,6 +52,27 @@
       "traps": true
     },
     {
+      "id": "profile_harvest_moon",
+      "source": "placeholder",
+      "cite": "doc 03 sections 11.2 and 14; doc 01 Harvest Moon (no timer, 900 s cap in season.json harvest_moon_cap_s). Cart speed by pushers is doc 02 section 9; doc 05 section 13 reads it",
+      "uses_tension": false,
+      "knock_cooldown_s": 15,
+      "gate_run_m": 30,
+      "gate_run_guaranteed_peak": true,
+      "hallucinations": false,
+      "lures": false,
+      "ordinary_traps": false,
+      "cart_speed_1p_mps": 1.0,
+      "cart_speed_2p_mps": 1.6,
+      "cart_speed_3p_mps": 2.0,
+      "cart_speed_4p_mps": 2.4,
+      "knock_stall_s": 5,
+      "sources": {
+        "gate_run_guaranteed_peak": "doc01",
+        "uses_tension": "doc01"
+      }
+    },
+    {
       "id": "day_arc",
       "source": "doc01",
       "cite": "doc 03 section 11.3; doc 01 Day arc: thirds of the day clock, as fractions of season.day_s so a short --length run keeps the arc",

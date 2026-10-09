@@ -27,7 +27,12 @@
       "upgrade": false,
       "consumable": true,
       "per_player": false,
-      "effect": {}
+      "effect": {
+        "repairs": 1
+      },
+      "sources": {
+        "effect": "placeholder"
+      }
     },
     {
       "id": "quiet_watering_can",
@@ -39,7 +44,13 @@
       "upgrade": true,
       "consumable": false,
       "per_player": true,
-      "effect": {}
+      "effect": {
+        "labor": "water_quiet",
+        "noise_ref": "creature.json noise_tool_water (doc 03 section 3.1 halves it for the quiet can)"
+      },
+      "sources": {
+        "effect": "placeholder"
+      }
     },
     {
       "id": "walkie_talkie",
@@ -51,7 +62,12 @@
       "upgrade": true,
       "consumable": false,
       "per_player": true,
-      "effect": {}
+      "effect": {
+        "batteries_included": 1
+      },
+      "sources": {
+        "effect": "placeholder"
+      }
     },
     {
       "id": "walkie_battery",
@@ -80,7 +96,12 @@
       "upgrade": true,
       "consumable": false,
       "per_player": true,
-      "effect": {}
+      "effect": {
+        "light_radius_mult": 1.5
+      },
+      "sources": {
+        "effect": "placeholder"
+      }
     },
     {
       "id": "scarecrow",
@@ -92,7 +113,14 @@
       "upgrade": true,
       "consumable": false,
       "per_player": false,
-      "effect": {}
+      "effect": {
+        "extra": 1,
+        "max_bought": 3,
+        "creature_avoid_m": 10
+      },
+      "sources": {
+        "effect": "placeholder"
+      }
     },
     {
       "id": "plot_pair",
@@ -111,14 +139,22 @@
     {
       "id": "flare_gun",
       "source": "sim",
-      "cite": "doc 01 Store; doc 02 section 10",
+      "cite": "doc 01 Store; doc 02 section 10; Retreat 30 s is creature.json retreat_after_flare_s (doc 03 section 3.1)",
       "name": "Flare gun",
       "price": 50,
       "unlock_day": 1,
       "upgrade": true,
       "consumable": false,
       "per_player": false,
-      "effect": {}
+      "effect": {
+        "shots": 1,
+        "retreat_s": 30,
+        "refill": "each_dawn",
+        "noise_ref": "creature.json noise_flare"
+      },
+      "sources": {
+        "effect": "placeholder"
+      }
     }
   ]
 }

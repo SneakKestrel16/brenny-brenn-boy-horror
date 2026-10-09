@@ -48,9 +48,17 @@ class Model:
     """Everything the season reads, taken from data/ plus one scenario."""
 
     def __init__(self, data: dict, layout: dict, pol: dict, scn: dict):
-        self.pol, self.scn, self.layout = pol, scn, layout
+        self.pol, self.layout = pol, layout
         self.S = {k: v["value"] for k, v in data["season"].items()}
         hc = data["player_scaling"]["headcount"]
+        scn = dict(scn)
+        if scn.get("short_season"):  # doc 02 section 16: the short-season record in difficulty.json plus pumpkin.json short_season
+            ss = data["difficulty"]["short_season"]
+            scn.setdefault("season_days", ss["season_days"])
+            scn.setdefault("no_first_payment", ss["no_first_payment"])
+            scn.setdefault("debt_total_4p", ss["debt_total_4p"])
+            scn.setdefault("crops_override", {"pumpkin": {"grow_days": data["pumpkin"]["short_season"]["grow_days"]}})
+        self.scn = scn
         self.pct = {int(k): v for k, v in hc["pct_by_players"].items()}
         # debt, payments and medical bills may scale differently from traps and payouts (D-078 item 2)
         self.pay = {int(k): v for k, v in hc.get("payment_pct_by_players", hc["pct_by_players"]).items()}
@@ -83,6 +91,9 @@ class Model:
         self.pair_plots = data["store"]["plot_pair"]["effect"]["plots"]
         self.pool = [r for r in data["sabotage"].values() if r["enabled"] and r["budget"]]
         self.end_pct = self.S["end_season_sale_pct"]
+        # doc 02 section 10.2: a broken fence frees animals; each is herded back with round_up, or costs coins if still out at dusk
+        self.animals = self.S["animals_per_fence_break"]
+        self.animal_cost = self.S["animal_out_at_dusk_coins"]
         self.allowed = pol["crops"] or [k for k in self.crops if k != "moonflower"]
         self.t_plot = self._t_plot()
         self.P = self.t_plot[1]
@@ -182,7 +193,7 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
         dead_nights.add(n)
     moon = M.crops["moonflower"]
     changes = {c["dawn"]: c["delta"] for c in M.scn.get("headcount_changes", [])}
-    moon_n, kill_pending, died = 0, False, 0
+    moon_n, kill_pending, died, animal_debt = 0, False, 0, 0
     banks, r = {}, {"bank_pre4": None, "margin4": None, "margin8": None}
     for d in range(1, M.final_dawn + 1):
         # ---- dawn d (d = 1 is the start) ----
@@ -211,6 +222,10 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
                 pay = min(bill, max(0, coins - S["bank_floor"]))
                 coins -= pay
                 deferred += bill - pay
+            # 3b. animals still out at dusk cost coins, never below the floor (placeholder, doc 02 section 10.2)
+            lost = min(animal_debt, max(0, coins - S["bank_floor"]))
+            coins -= lost
+            animal_debt = 0
             # 4. payment
             total = M.debt(pcts, M.pay[hc])
             if d == M.first_dawn:
@@ -279,6 +294,10 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
                 hold = s["fix_hold_s"] if s["fix_hold_s"] is not None else M.L.get(s["fix"], {}).get("hold_s", 0)
                 if s["fix"] not in ("plant", "none"):
                     chore_s += hold + 2 * rng.choice(M.layout["trap_walk_m"]) / M.walk_v
+                if s["id"] == "broken_fence":
+                    chore_s += M.animals * M.L["round_up"]["hold_s"] + 2 * rng.choice(M.layout["trap_walk_m"]) / M.walk_v  # one herding trip, a hold per animal
+                    if rng.random() * 100 < pol.get("animal_out_dusk_pct", 0):
+                        animal_debt += M.animals * scaled(M.animal_cost, M.pay[hc])
         free = owned - len(ground)
         cap = hc * M.per_player
         if pol["labor"]:

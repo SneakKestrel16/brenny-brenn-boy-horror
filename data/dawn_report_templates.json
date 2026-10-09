@@ -4,6 +4,7 @@
   "records": [
     {"id": "best_impression", "source": "doc01", "cite": "doc 03 section 17.1", "section": "headline", "text": "BEST IMPRESSION: the creature as {owner_name} said '{line_text}' and {target_name} walked {moved_m} m toward it."},
     {"id": "most_wanted", "source": "doc01", "cite": "doc 03 section 17.1", "section": "headline", "text": "MOST WANTED: {owner_name}, last seen {place_name}, wanted for questions about {fake_count} calls."},
+    {"id": "most_wanted_one", "source": "placeholder", "cite": "doc 03 section 17.1; singular when fake_count is 1 (Q-066 item 2: the '1 calls' bug)", "section": "headline", "text": "MOST WANTED: {owner_name}, last seen {place_name}, wanted for questions about 1 call."},
     {"id": "hero_of_the_night", "source": "doc01", "cite": "doc 03 section 17.1", "section": "headline", "text": "HERO OF THE NIGHT: {name} {hero_action}."},
     {"id": "no_deaths", "source": "placeholder", "cite": "doc 03 section 17.1", "section": "headline", "text": "No obituaries this morning. The town is suspicious."},
     {"id": "full_wipe", "source": "placeholder", "cite": "doc 03 section 17.1", "section": "headline", "text": "THE FARM WENT QUIET. Four chairs, no farmers."},
@@ -18,6 +19,21 @@
     {"id": "hero_washed", "source": "placeholder", "cite": "doc 03 section 17.3", "section": "hero_action", "text": "pumped the well for {teammate}"},
     {"id": "hero_generator", "source": "placeholder", "cite": "doc 03 section 17.3", "section": "hero_action", "text": "carried the generator through"},
     {"id": "hero_cart", "source": "placeholder", "cite": "doc 03 section 17.3; used from Phase 4 (D-059)", "section": "hero_action", "text": "pushed the cart {m} m alone"},
-    {"id": "hero_stayed_out", "source": "placeholder", "cite": "doc 03 section 17.3", "section": "hero_action", "text": "stayed outside while we hid"}
+    {"id": "hero_freed", "source": "placeholder", "cite": "doc 03 section 17.3; text moved out of dawn_report_logic.gd (Q-066 item 2, D-074)", "section": "hero_action", "text": "pried {teammate} out of a trap"},
+    {"id": "hero_refueled", "source": "placeholder", "cite": "doc 03 section 17.3; moved out of dawn_report_logic.gd (Q-066 item 2, D-074)", "section": "hero_action", "text": "kept the generator fed"},
+    {"id": "hero_stayed_out", "source": "placeholder", "cite": "doc 03 section 17.3", "section": "hero_action", "text": "stayed outside while we hid"},
+    {"id": "flags_line", "source": "placeholder", "cite": "doc 03 section 17.1; Flags Placed card line (Q-066 item 2, D-074)", "section": "flags", "text": "{name} planted {n} flags."},
+    {"id": "flags_line_one", "source": "placeholder", "cite": "doc 03 section 17.1; singular", "section": "flags", "text": "{name} planted 1 flag."},
+    {"id": "flags_none", "source": "placeholder", "cite": "doc 03 section 17.1; empty-flags line (Q-066 item 2, D-074)", "section": "flags", "text": "Nobody marked a trap."},
+    {"id": "ledger_cash_in", "source": "placeholder", "cite": "doc 03 section 17; ledger label (D-074)", "section": "ledger", "text": "Cash-in"},
+    {"id": "ledger_medical_bill", "source": "placeholder", "cite": "doc 03 section 17; ledger label (D-074)", "section": "ledger", "text": "Medical bill"},
+    {"id": "ledger_added_to_final", "source": "placeholder", "cite": "doc 03 section 17; ledger label (D-074)", "section": "ledger", "text": "Added to the final payment"},
+    {"id": "ledger_farm_damage", "source": "placeholder", "cite": "doc 03 section 17; ledger label (D-074)", "section": "ledger", "text": "Farm damage"},
+    {"id": "ledger_balance", "source": "placeholder", "cite": "doc 03 section 17; ledger label (D-074)", "section": "ledger", "text": "Balance"},
+    {"id": "award_traps_disarmed", "source": "doc01", "cite": "doc 03 section 17.4; doc 01 Season Awards: most traps disarmed", "section": "season_award", "text": "{name}: Trap Whisperer. Disarmed {n} traps this season."},
+    {"id": "award_fooled_by_voice", "source": "doc01", "cite": "doc 03 section 17.4; doc 01 Season Awards: most times fooled by a voice", "section": "season_award", "text": "{name}: Easy Mark. Fooled by a voice {n} times."},
+    {"id": "award_most_coins", "source": "doc01", "cite": "doc 03 section 17.4; doc 01 Season Awards: most coins earned", "section": "season_award", "text": "{name}: Cash Crop. Earned {n} coins."},
+    {"id": "award_barn_goblin", "source": "doc01", "cite": "doc 03 section 17.4; doc 01 Season Awards: Barn Goblin, the most inside_at_night seconds", "section": "season_award", "text": "{name}: Barn Goblin. {n} seconds hiding indoors at night."},
+    {"id": "award_participation", "source": "placeholder", "cite": "doc 03 section 17.4; doc 01 Season Awards: every player gets at least one award, so a player who wins none gets this", "section": "season_award", "text": "{name}: Still Here."}
   ]
 }

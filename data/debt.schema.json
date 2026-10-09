@@ -49,6 +49,47 @@
           },
           "rounding": {
             "const": "nearest"
+          },
+          "scaling_key": {
+            "type": "string"
+          },
+          "early_payment": {
+            "type": "boolean"
+          },
+          "early_order": {
+            "enum": [
+              "first_then_final"
+            ]
+          },
+          "pumpkin_unlock_needs_first_payment": {
+            "type": "boolean"
+          },
+          "foreclosure_seized_upgrades": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "derived_by_players": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "total",
+                "first",
+                "final"
+              ],
+              "properties": {
+                "total": {
+                  "type": "integer"
+                },
+                "first": {
+                  "type": "integer"
+                },
+                "final": {
+                  "type": "integer"
+                }
+              }
+            }
           }
         },
         "required": [

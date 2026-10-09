@@ -482,6 +482,24 @@ Every disturbance has a fix; none is fatal on its own. Count per day is doc 02 s
   placeholder).
 - **Trample (rule restated).** One plot at dawn per night; two if no living player spent 30 s outside
   that night; +1 if the generator is dead at dawn (doc 02 section 14, doc 01 "Daytime Threats").
+- **Dawn trample placement (P4-03; resolves Q-070 items 2 and 4; `placeholder`).** The count is the
+  rule above. Which plots:
+  1. Candidates are plots holding a living crop, plus (rule 4) bare plots only when too few crops exist.
+  2. Pick without replacement, weighted by closeness to the creature's dawn position: weight
+     `1 / (1 + d / 20)` where `d` is metres from the plot (20 m, so a plot at 20 m weighs half one
+     under the creature). Nearest is likeliest, never certain.
+  3. A plot trampled at an earlier dawn this season has its weight halved while it is still the
+     same crop, so the same plot is not hit most dawns.
+  4. Bare farm: if fewer living crops exist than the count, the shortfall is trampled bare plots
+     (the plot is churned, nothing is lost: no coins, no replant seed spent) so the dawn report still
+     shows the damage. Farm damage in coins counts crops lost only (doc 02 section 14).
+  5. Never more than the count; a plot is hit once per dawn. The budgeted `trample` disturbance (cost
+     2) uses the same placement but fires by day; the dawn trample fires at dawn only.
+  The current build (nearest crops, bare plot never trampled, same plot most dawns) differs on
+  rules 2 to 4. Gameplay change is flagged in QUESTIONS.md (Q-082).
+- **Animals (P4-03, doc 02 section 10.1).** `broken_fence` lets 2 animals escape (from 6: chicken,
+  pig, cow, 2 each), fixed by `repair_fence`; `pumpkin_gnaw` has no fix. Both are `enabled` in
+  `sabotage.json` from P4-03 (`broken_fence` opens day 2, `pumpkin_gnaw` day 3).
 - **Unattended farm.** Doc 01 "The longer nobody is outside, the more wrecked the farm". The
   trample count is raised by 1 for every 60 s of the night with
   nobody outside after the first 30 s, capped at +3 (placeholder; doc 02 section 14 gives only the
@@ -535,6 +553,12 @@ presence events per player in each phase (tunable, in `ai_director.json`).
 | `harvest_moon` | scripted by act (section 14) | guaranteed peak in the gate run, then release | n/a | n/a | doc 01 "Harvest Moon" |
 
 Event counts per player in the table are `placeholder`s, as doc 01 says only "tunable".
+
+**`harvest_moon` fields (P4-03, `ai_director.json` `profile_harvest_moon`, `placeholder` except where
+doc 01 is cited):** `uses_tension` false (doc 01); `knock_cooldown_s` 15; `knock_stall_s` 5;
+`gate_run_m` 30; `gate_run_guaranteed_peak` true (doc 01); `hallucinations`, `lures` and
+`ordinary_traps` false; cart speed `cart_speed_1p_mps` 1.0, `_2p_` 1.6, `_3p_` 2.0, `_4p_` 2.4
+(doc 02 section 9).
 
 ### 11.3 Day arc
 
@@ -847,7 +871,7 @@ cart counts out only if it is past the fields (x > 78, doc 04 sec 6).
   per 15 s at most (placeholder, `harvest_knock_cooldown_s`).
 - **The gate run** is the final 30 m of the route (R7 to the gate, doc 04 sec 6.1, 3.7 m from corn
   at the pinch), where the creature gives a chase `chase_speed_mps` against a cart speed of
-  `placeholder`s in doc 02. The peak ends when the cart reaches the gate (x > 105) or the cap
+  1.0 to 2.4 m/s by pushers (doc 02 section 9, `profile_harvest_moon`). The peak ends when the cart reaches the gate (x > 105) or the cap
   passes.
 - **Hallucinations, lures and ordinary traps** are off during acts 2 and 3 (placeholder, to keep
   the beat clean).
@@ -946,11 +970,30 @@ Off players appear as text plus sound (doc 06 section 11).
 
 `{hero_action}`: "disarmed {n} traps", "pumped the well for {teammate}", "carried the generator through",
 "pushed the cart {m} m alone", "stayed outside while we hid" (one is picked by score; placeholder).
+P4-03 moves the last two hard-coded lines out of `dawn_report_logic.gd` (Q-066 item 2, D-074):
+`hero_freed` "pried {teammate} out of a trap" and `hero_refueled` "kept the generator fed".
+
+The report also needs `most_wanted_one` ("... wanted for questions about 1 call.", used when
+`fake_count` is 1), the Flags Placed card lines `flags_line` / `flags_line_one` / `flags_none`
+("{name} planted {n} flags." / "... 1 flag." / "Nobody marked a trap."), and the dawn ledger labels
+`ledger_cash_in`, `ledger_medical_bill`, `ledger_added_to_final`, `ledger_farm_damage`,
+`ledger_balance`. All are `placeholder` except doc 01's headlines; sections `flags`, `ledger` and
+`season_award` are new in the schema.
 
 ### 17.4 Season awards
 
 Doc 01 "Season awards": most traps disarmed, most fooled by voice, most coins, "Barn Goblin" (the
-player with the most `inside_at_night` seconds).
+player with the most `inside_at_night` seconds). Templates (`section` `season_award`):
+
+| Id | Template |
+|---|---|
+| `award_traps_disarmed` | "{name}: Trap Whisperer. Disarmed {n} traps this season." |
+| `award_fooled_by_voice` | "{name}: Easy Mark. Fooled by a voice {n} times." |
+| `award_most_coins` | "{name}: Cash Crop. Earned {n} coins." |
+| `award_barn_goblin` | "{name}: Barn Goblin. {n} seconds hiding indoors at night." |
+| `award_participation` | "{name}: Still Here." (placeholder: every player gets at least one award) |
+
+The four doc 01 awards have `source` doc01 for the category; the titles and wording are placeholder.
 
 ### 17.5 Off players
 

@@ -27,7 +27,8 @@
             "enum": [
               "easy",
               "normal",
-              "nightmare"
+              "nightmare",
+              "short_season"
             ]
           },
           "source": {
@@ -56,6 +57,21 @@
           },
           "rounding": {
             "const": "ceil"
+          },
+          "season_days": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "no_first_payment": {
+            "type": "boolean"
+          },
+          "debt_total_4p": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pumpkin_grow_days": {
+            "type": "integer",
+            "minimum": 1
           }
         },
         "required": [
@@ -67,7 +83,7 @@
           "rounding"
         ]
       },
-      "maxItems": 3,
+      "maxItems": 4,
       "allOf": [
         {
           "contains": {

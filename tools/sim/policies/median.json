@@ -16,5 +16,6 @@
   "nobody_outside_pct": 20,
   "generator_dead_base_pct": 10,
   "generator_dead_tank_factor_pct": 40,
-  "generator_kill_unfixed_pct": 50
+  "generator_kill_unfixed_pct": 50,
+  "animal_out_dusk_pct": 5
 }

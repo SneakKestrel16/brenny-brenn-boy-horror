@@ -5,11 +5,29 @@
     {
       "id": "season",
       "source": "doc01",
-      "cite": "doc 01 Debt and payments, Joining and leaving; doc 02 section 7 (rounds to nearest, D-017)",
+      "cite": "doc 01 Debt and payments, Joining and leaving (D-079); doc 02 section 7 (rounds to nearest, D-017). Base is the 1,300 / 255 of the formula; the headcount percentage is player_scaling.json payment_pct_by_players (59 / 85 / 101)",
       "total_4p": 1300,
       "first_payment_4p": 255,
       "days": 7,
-      "rounding": "nearest"
+      "rounding": "nearest",
+      "scaling_key": "payment_pct_by_players",
+      "early_payment": true,
+      "early_order": "first_then_final",
+      "pumpkin_unlock_needs_first_payment": true,
+      "foreclosure_seized_upgrades": 1,
+      "derived_by_players": {
+        "2": {"total": 767, "first": 150, "final": 617},
+        "3": {"total": 1105, "first": 217, "final": 888},
+        "4": {"total": 1313, "first": 258, "final": 1055}
+      },
+      "sources": {
+        "scaling_key": "sim",
+        "early_payment": "doc01",
+        "early_order": "placeholder",
+        "pumpkin_unlock_needs_first_payment": "doc01",
+        "foreclosure_seized_upgrades": "doc01",
+        "derived_by_players": "sim"
+      }
     }
   ]
 }

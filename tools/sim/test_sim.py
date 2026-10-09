@@ -80,6 +80,28 @@ class Tests(unittest.TestCase):
             for p, counts in row.items():
                 self.assertEqual(m.ramp_counts(day, p), counts, f"day {day} {p}p")
 
+    def test_debt_derived_table(self):  # D-079: payment_pct_by_players 59/85/101 -> debt.json derived_by_players
+        m = model()
+        for players, want in DATA["debt"]["season"]["derived_by_players"].items():
+            total = m.debt([], m.pay[int(players)])
+            first = m.first_of(total)
+            self.assertEqual((total, first, total - first), (want["total"], want["first"], want["final"]), f"{players}p")
+        self.assertEqual({p: DATA["debt"]["season"]["derived_by_players"][str(p)]["total"] for p in (2, 3, 4)}, {2: 767, 3: 1105, 4: 1313})
+
+    def test_roles_and_phase4_data(self):  # P4-03: ten roles, the two new disturbances enabled with a fix, animals
+        self.assertEqual(len(DATA["roles"]), 10)
+        for r in DATA["roles"].values():
+            self.assertTrue(r["perks"])
+        for sid in ("broken_fence", "pumpkin_gnaw"):
+            self.assertTrue(DATA["sabotage"][sid]["enabled"])
+            self.assertIn("fix", DATA["sabotage"][sid])
+        self.assertEqual(DATA["season"]["animal_species"]["value"], ["chicken", "pig", "cow"])
+        self.assertIn("round_up", DATA["labor"])
+
+    def test_short_season_from_data(self):
+        m = model(scn={"name": "short_season", "short_season": True})
+        self.assertEqual((m.days, m.first_dawn, m.debt_base, m.crops["pumpkin"]["grow_days"]), (3, None, 360, 1))
+
     def test_fixed_seed_repeats(self):
         m = model()
         a = sim.simulate(m, 3, random.Random("1:3:0"))

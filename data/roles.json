@@ -1,0 +1,134 @@
+{
+  "table": "roles",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "farmer",
+      "source": "doc01",
+      "cite": "doc 01 Roles; doc 02 section 15: +1 crop every 5th harvest, counted per Farmer",
+      "name": "Farmer",
+      "perks": {
+        "bonus_crop_every_n_harvests": 5
+      }
+    },
+    {
+      "id": "rancher",
+      "source": "doc01",
+      "cite": "doc 01 Roles; doc 02 section 15: handles animals, the early warning system. Numbers placeholder (doc 02 section 15)",
+      "name": "Rancher",
+      "perks": {
+        "round_up_hold_mult": 0.6,
+        "animal_alert_range_mult": 1.5
+      },
+      "sources": {
+        "perks": "placeholder"
+      }
+    },
+    {
+      "id": "mechanic",
+      "source": "doc01",
+      "cite": "doc 01 Roles; doc 02 sections 2 and 15: repairs and refuels faster (refuel x0.6)",
+      "name": "Mechanic",
+      "perks": {
+        "repair_hold_mult": 0.6,
+        "refuel_hold_mult": 0.6
+      },
+      "sources": {
+        "perks": "placeholder"
+      }
+    },
+    {
+      "id": "tracker",
+      "source": "doc01",
+      "cite": "doc 01 Roles; doc 02 section 15: disarm x0.6; clue range is a multiplier here, the clue ranges themselves are doc 03",
+      "name": "Tracker",
+      "perks": {
+        "disarm_hold_mult": 0.6,
+        "clue_range_mult": 1.5
+      },
+      "sources": {
+        "perks": "placeholder"
+      }
+    },
+    {
+      "id": "carpenter",
+      "source": "placeholder",
+      "cite": "doc 01 Roles (placeholder role); P4-03: builds fences and scarecrows faster or cheaper, then repairs them; machines stay the Mechanic's",
+      "name": "Carpenter",
+      "perks": {
+        "build_hold_mult": 0.6,
+        "fence_repair_hold_mult": 0.6,
+        "build_cost_mult": 0.8
+      },
+      "sources": {
+        "perks": "placeholder"
+      }
+    },
+    {
+      "id": "medic",
+      "source": "placeholder",
+      "cite": "doc 01 Roles (placeholder role); P4-03: frees a teammate from a bear trap faster; cuts the medical bill for deaths they were near",
+      "name": "Medic",
+      "perks": {
+        "pry_others_hold_mult": 0.6,
+        "bill_cut_mult": 0.75,
+        "bill_cut_radius_m": 15
+      },
+      "sources": {
+        "perks": "placeholder"
+      }
+    },
+    {
+      "id": "night_owl",
+      "source": "placeholder",
+      "cite": "doc 01 Roles (placeholder role); P4-03: quieter at night (steps, tools, crouch) and picks moonflowers faster",
+      "name": "Night Owl",
+      "perks": {
+        "noise_mult": 0.7,
+        "moonflower_harvest_hold_mult": 0.6
+      },
+      "sources": {
+        "perks": "placeholder"
+      }
+    },
+    {
+      "id": "radio_operator",
+      "source": "placeholder",
+      "cite": "doc 01 Roles (placeholder role); P4-03: walkie reaches further, batteries last longer, their voice carries so lures favor them",
+      "name": "Radio Operator",
+      "perks": {
+        "walkie_range_mult": 1.5,
+        "battery_transmit_mult": 1.5,
+        "lure_weight_mult": 2
+      },
+      "sources": {
+        "perks": "placeholder"
+      }
+    },
+    {
+      "id": "warden",
+      "source": "placeholder",
+      "cite": "doc 01 Roles (placeholder role); P4-03: more flare shots and a faster refill. A hit only drives the creature into Retreat (store.json flare_gun, creature.json retreat_after_flare_s)",
+      "name": "Warden",
+      "perks": {
+        "flare_shots_extra": 1,
+        "flare_refill_mult": 0.5
+      },
+      "sources": {
+        "perks": "placeholder"
+      }
+    },
+    {
+      "id": "medium",
+      "source": "placeholder",
+      "cite": "doc 01 Roles (placeholder role); P4-03: hears dead teammates' ghost voices through less static; never tells a real ghost from the creature's fake",
+      "name": "Medium",
+      "perks": {
+        "ghost_static_mult": 0.5
+      },
+      "sources": {
+        "perks": "placeholder"
+      }
+    }
+  ]
+}

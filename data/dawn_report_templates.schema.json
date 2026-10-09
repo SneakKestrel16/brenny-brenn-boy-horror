@@ -19,7 +19,7 @@
           "source": {"$ref": "#/$defs/source"},
           "cite": {"type": "string"},
           "sources": {"$ref": "#/$defs/sources"},
-          "section": {"enum": ["headline", "replay", "obituary", "hero_action"]},
+          "section": {"enum": ["headline", "replay", "obituary", "hero_action", "flags", "ledger", "season_award"]},
           "text": {"type": "string", "minLength": 1}
         },
         "required": ["id", "source", "section", "text"]

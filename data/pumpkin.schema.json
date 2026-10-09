@@ -18,7 +18,7 @@
     },
     "records": {
       "type": "array",
-      "minItems": 5,
+      "minItems": 6,
       "items": {
         "oneOf": [
           {
@@ -75,6 +75,53 @@
               "max_watered_days",
               "guarded_nights_min",
               "payout_4p"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "const": "short_season"
+              },
+              "source": {
+                "$ref": "#/$defs/source"
+              },
+              "cite": {
+                "type": "string"
+              },
+              "sources": {
+                "$ref": "#/$defs/sources"
+              },
+              "grow_days": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "giant_min_watered_days": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "large_min_watered_days": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "medium_min_watered_days": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "giant_guarded_nights_min": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "id",
+              "source",
+              "grow_days",
+              "giant_min_watered_days",
+              "large_min_watered_days",
+              "medium_min_watered_days",
+              "giant_guarded_nights_min"
             ]
           },
           {
@@ -144,7 +191,7 @@
           }
         ]
       },
-      "maxItems": 5,
+      "maxItems": 6,
       "allOf": [
         {
           "contains": {

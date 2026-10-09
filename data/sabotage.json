@@ -109,30 +109,31 @@
     {
       "id": "broken_fence",
       "source": "doc01",
-      "cite": "doc 03 section 10.1; D-059: waits for Phase 4 (no animals or pen)",
+      "cite": "doc 03 section 10.1; enabled in P4-03 (animals and pen exist); fix repair_fence hold in labor.json; loose animals are rounded up with labor.json round_up",
       "cost_points": 3,
       "opens_day": 2,
       "fix": "repair_fence",
       "fix_hold_s": null,
       "clue": "claw_marks",
       "budget": true,
-      "enabled": false,
+      "enabled": true,
       "sources": {
         "cost_points": "placeholder",
-        "opens_day": "placeholder"
+        "opens_day": "placeholder",
+        "fix": "doc01"
       }
     },
     {
       "id": "pumpkin_gnaw",
       "source": "doc01",
-      "cite": "doc 03 section 10.1; D-059: waits for Phase 4 (no Prize Pumpkin); a lost size stays",
+      "cite": "doc 03 section 10.1; enabled in P4-03 (Prize Pumpkin exists); a lost size stays, so there is no fix; guard rules in pumpkin.json rules",
       "cost_points": 3,
       "opens_day": 3,
       "fix": "none",
       "fix_hold_s": null,
       "clue": "teeth_marks",
       "budget": true,
-      "enabled": false,
+      "enabled": true,
       "sources": {
         "cost_points": "placeholder"
       }

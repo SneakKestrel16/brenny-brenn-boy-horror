@@ -137,6 +137,13 @@
       "hold_s": 5
     },
     {
+      "id": "round_up",
+      "source": "placeholder",
+      "cite": "doc 02 section 2.1 and section 10.2: herd one loose animal back through the gate; Rancher uses roles.json round_up_hold_mult",
+      "kind": "hold",
+      "hold_s": 4
+    },
+    {
       "id": "clear_plot",
       "source": "placeholder",
       "cite": "doc 02 2.1; doc 01 The Taint: touching Taints",

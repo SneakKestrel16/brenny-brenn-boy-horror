@@ -1,9 +1,5 @@
 {
   "name": "short_season",
-  "cite": "doc 02 section 16: 3 days, faster Prize Pumpkin; numbers are sim (doc 01 Saving). Report only, no target.",
-  "season_days": 3,
-  "no_first_payment": true,
-  "debt_total_4p": 557,
-  "debt_total_4p_source": "sim: 1300 * 3 / 7 rounded, a placeholder",
-  "crops_override": {"pumpkin": {"grow_days": 1}}
+  "cite": "doc 02 section 16: 3 days, faster Prize Pumpkin; the numbers are read from difficulty.json short_season and pumpkin.json short_season (sim, doc 01 Saving). Report only, no target.",
+  "short_season": true
 }

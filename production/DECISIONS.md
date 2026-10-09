@@ -668,3 +668,16 @@ P4-10). Game Designer keeps doc 02 s4 and s18.6 in step.
 **Why:** P4-17 reviews. The four bodies differ too much in size for one hit sound; a log event is the
 documented cross-system hook (CONTRACTS s10).
 **How to apply:** rows P4-04 and P4-11 carry the items.
+
+### D-082 · 2026-10-08 · Director · Q-084 answered: P4-03 follow-ups
+1. The sim charges guarding time for `pumpkin_gnaw` per doc 03 s10.1; the Game Designer adds it.
+2. The 5% chance an animal is out at dusk stands as a placeholder. P4-10 logs measure the real rate.
+3. The Game Designer gives the Warden's `flare_refill_mult` and the Rancher's `animal_alert_range_mult`
+   a base value to multiply, or rewrites the perk, before P4-09.
+4. Short-season pumpkin grow time lives in `pumpkin.json` only; `difficulty.json` drops its copy.
+5. The short season gets the same spread rule as the full season (at most 10 points across headcounts);
+   the Game Designer tunes 2p short-season debt to meet it. No clear-rate target is added.
+**Why:** QA review of P4-03 (Q-084). Items 1 and 5 keep the sim honest; 3 and 4 remove data the game
+cannot use.
+**How to apply:** one Game Designer follow-up in parallel with P4-04 and P4-08; rerun the sim gate
+after each change. Q-084 item 5 is already in P4-11 scope.

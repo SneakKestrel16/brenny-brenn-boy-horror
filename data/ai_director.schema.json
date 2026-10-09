@@ -44,6 +44,7 @@
         {"contains": {"properties": {"id": {"const": "phases"}}, "required": ["id"]}},
         {"contains": {"properties": {"id": {"const": "profile_day"}}, "required": ["id"]}},
         {"contains": {"properties": {"id": {"const": "profile_night"}}, "required": ["id"]}},
+        {"contains": {"properties": {"id": {"const": "profile_harvest_moon"}}, "required": ["id"]}},
         {"contains": {"properties": {"id": {"const": "day_arc"}}, "required": ["id"]}},
         {"contains": {"properties": {"id": {"const": "scare_rules"}}, "required": ["id"]}},
         {"contains": {"properties": {"id": {"const": "trap_race"}}, "required": ["id"]}},

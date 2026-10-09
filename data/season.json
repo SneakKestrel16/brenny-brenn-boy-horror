@@ -229,6 +229,52 @@
       "unit": "count",
       "source": "placeholder",
       "cite": "doc 02 A.1"
+    },
+    {
+      "id": "animal_species",
+      "value": [
+        "chicken",
+        "pig",
+        "cow"
+      ],
+      "unit": "count",
+      "source": "doc01",
+      "cite": "doc 01 Setting; Q-032 (chicken, pig, cow)"
+    },
+    {
+      "id": "animals_per_species",
+      "value": 2,
+      "unit": "count",
+      "source": "placeholder",
+      "cite": "doc 02 section 10.2; head count per species, 6 animals in all; sim, not in doc 01"
+    },
+    {
+      "id": "animals_per_fence_break",
+      "value": 2,
+      "unit": "count",
+      "source": "placeholder",
+      "cite": "doc 02 section 10.2; how many animals escape when broken_fence fires (doc 03 section 10.1)"
+    },
+    {
+      "id": "animal_out_at_dusk_coins",
+      "value": 10,
+      "unit": "coins",
+      "source": "placeholder",
+      "cite": "doc 02 section 10.2; cost per animal still loose when dusk ends, deducted at dawn after the medical bill; sim"
+    },
+    {
+      "id": "animal_escape_m",
+      "value": 60,
+      "unit": "m",
+      "source": "placeholder",
+      "cite": "doc 04 section 7.3: escape spots 60 m or more from the pen gate (placeholder there)"
+    },
+    {
+      "id": "round_up_rounding",
+      "value": "ceil",
+      "unit": "none",
+      "source": "placeholder",
+      "cite": "doc 02 sections 4 and 10.1: perk hold multipliers round up, like every scaled value (placeholder)"
     }
   ]
 }
