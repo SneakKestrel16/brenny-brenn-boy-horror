@@ -215,3 +215,20 @@ Source: the CEO's own play test at STOP 5 (host and one client on one PC). Route
 3. **No normal-length bot season has won** (13 builder seasons, 2 QA seasons). Final payments come up 358
    to 949 short at 3p and 4p. Q-162 (idle host) and Q-164 (sentinel) decide how far bot seasons can stand
    in for the median team.
+
+## Found at the P4-23 review (QA, 2026-10-09)
+
+Source: `production/handoffs/P4-23.md` "QA review" (PASS). None blocks.
+
+1. **A loaded season's locked roles show only on the host.** `game/ui/lobby.gd:143` reads
+   `Game.season_uids`, which is never synced; clients can click a locked card and get no reason. Gameplay.
+2. **Docs 04, 06 and 07 still describe the barn lobby** (doc 04 lines 98 and 113-114; doc 06 lines 232,
+   800, 839, 862-866; doc 07 line 125), as well as doc 01 (Q-176). Waits on the CEO's Q-176 answer.
+3. **Leftover "barn lobby" wording** in `game/core/game.gd:130`, `game/net/net.gd:380` and `in_barn` at
+   `game/net/net.gd:489`. Gameplay, Network & Voice.
+4. **`Voices` keeps a leaver's Node3D** (`game/ui/lobby.gd:38-44`), so a silent emitter stays. Gameplay.
+5. **Doc 05 s16 lists a `Hard` difficulty**; `data/difficulty.json` has easy, normal, nightmare and
+   short_season. Gameplay.
+6. **Intermittent exit crash 0xC0000005** when the host quits in the lobby with a ready client (1 of 4
+   runs; also in `production/handoffs/P4-06.md:38`). Not attributed to P4-23.
+

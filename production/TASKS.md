@@ -600,7 +600,7 @@ no economy number and can start now.
 | P4-20 | Technical Artist | Final night look: phase lighting, fog, darkness, post stack, creature materials (D-087) | done (QA PASS after QA fixes: HUD below post layers, Harvest Moon disc; Q-150 open) | P4-16; creature materials after P4-19 |
 | P4-21 | AI Programmer | Bot seasons stand in for a median team (Q-157): bots go inside at night, save for the payment, plant the Prize Pumpkin; speed fix under `--time-scale` | done (QA FAIL line 2 fixed by Director: moonflower reserve; 2p still forecloses, labour-bound Q-162; sentinel Q-164 for CEO) | P4-18 fixes |
 | P4-22 | Gameplay | CEO session: store menu lists every item on interact; seed shop with a seed choice that planting uses; hotbar showing held items and how to use them | in progress | P4-06 |
-| P4-23 | Gameplay | CEO session: menu lobby before the match (roles, settings, ready), no spawning in the barn to pick | in progress | P4-09 |
+| P4-23 | Gameplay | CEO session: menu lobby before the match (roles, settings, ready), no spawning in the barn to pick | done (QA PASS; D-092; Q-176 for CEO) | P4-09 |
 | P4-24 | Gameplay | CEO session: minimap in the top right showing the player, buildings, fields, store, well, cart | in progress | — |
 | P4-25 | AI Programmer | CEO session: creature stuck in the barn; at dawn place it back in the corn; fix the cause | in progress | — |
 | P4-26 | Audio Designer | CEO session: new footstep sounds; crickets chirp less often | in progress | — |
