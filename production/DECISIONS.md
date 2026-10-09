@@ -932,3 +932,8 @@ primitives do not tell the roles apart.
 inside centre of the band so it sits on a head at 1.74 m. The lobby's `LineUp._hat` loads them in place of
 the primitives. The hats are role markers, not cosmetics: wider cosmetics (overalls, picked hats) stay
 Phase 5. The D-142 and D-143 numbers are taken by the P4-33 and P4-35 branches still in review.
+### D-145 · 2026-10-09 · CEO · 16:9 is the only supported screen shape; the night owl hat stays
+The game supports 16:9 screens only (1280x720 and up). 4:3 and 16:10 are out of scope, so the menu
+lobby's 3-farmer fit at 1024x768 is not a bug. The night owl hat (P4-36) keeps its tufts as built.
+**Why:** CEO, 2026-10-09: "keep owl hat, and 16by9 is enough", answering the P4-35 and P4-36 QA findings.
+**How to apply:** layout and screenshot checks run at 16:9 resolutions only.

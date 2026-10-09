@@ -324,12 +324,12 @@ Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent bac
 
 ## Found at the P4-35 re-review (QA, 2026-10-09)
 
-1. **4:3 screens** (1024x768) fit only 3 farmers: the camera keeps its height while the side panels stay a fixed pixel width (`game/ui/lobby.gd:220-223`). 1280x720 and 1920x1080 fit all six. Director: which aspect ratios are supported.
+1. **4:3 screens** (1024x768) fit only 3 farmers: the camera keeps its height while the side panels stay a fixed pixel width (`game/ui/lobby.gd:220-223`). 1280x720 and 1920x1080 fit all six. Closed: 16:9 only (D-145).
 2. **The far-right raised tag** sits on the right lantern; its glow washes out the end of the name. Still readable. Gameplay.
 3. **A real `hat_<role>.glb`** loading in `LineUp._hat` (`game/ui/lobby.gd:138`) untested until P4-36 lands. QA.
 
 ## Found at the P4-36 review (QA, 2026-10-09)
 
-1. **Night owl tufts read as cat ears** (two upright 4-sided cones, `tools/blender/build_phase4.py:768-769`). Fallback: the handoff's pompom, or flatter outward-tilted tufts. CEO to look first. 3D Artist.
+1. **Night owl tufts read as cat ears** (two upright 4-sided cones, `tools/blender/build_phase4.py:768-769`). Fallback: the handoff's pompom, or flatter outward-tilted tufts. Closed: the CEO keeps the tufts (D-145).
 2. **The 14-energy lobby spot** (`game/ui/lobby.tscn:16`) washes the local player's hat near-white (navy beanie, straw hat). Technical Artist.
 3. Fixed at merge: lobby farmers faced away, hiding every hat's front (Q-242); `LineUp._farmer` now turns them 180 degrees. Director checked by screenshot.
