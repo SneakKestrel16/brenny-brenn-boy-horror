@@ -244,6 +244,7 @@ func _admit(id: int, rejoin: bool = false) -> void:
 	_pending.erase(id)
 	Game.players[id] = {"rejoin": true} if rejoin else {}
 	to_peers(&"apply_session_state", [Game.session_id, Log.now(), Data.phase1, Data.hash_value, Game.difficulty, Game.in_lobby], [id])
+	to_peers(&"apply_group_settings", [Game.difficulty, Game.streamer_safe], [id])  # P4-11
 	to_peers(&"apply_roster", [Game.players.keys(), profiles])
 	for p in Game.players:  # the newcomer learns everyone's voice setting (P2-10)
 		if p != id:
@@ -346,6 +347,12 @@ func apply_session_state(p_session_id: String, host_t: float, p_phase1: bool, da
 @rpc("authority", "call_remote", "reliable")
 func apply_match_start() -> void:
 	Game.apply_match_start()
+
+
+## P4-11 (doc 01 "Difficulty and group settings"): the host's lobby choice.
+@rpc("authority", "call_remote", "reliable")
+func apply_group_settings(difficulty: StringName, streamer_safe: bool) -> void:
+	Game.apply_group_settings(difficulty, streamer_safe)
 
 
 ## P4-09: pick a role (empty string = none); the host validates and answers with `apply_roles`.

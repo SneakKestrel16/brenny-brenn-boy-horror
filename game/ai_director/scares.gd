@@ -291,6 +291,13 @@ static func _v(p: Vector3) -> Array:
 	return [snappedf(p.x, 0.1), snappedf(p.y, 0.1), snappedf(p.z, 0.1)]
 
 
+## D-081: the body's own hit (`cre_jumpscare_hit_gaunt` for `body_gaunt`), else the shared one when the body
+## is not known yet or its file is missing (`play_2d` would fail silently).
+static func jumpscare_id(body: StringName) -> StringName:
+	var id := "cre_jumpscare_hit_" + String(body).trim_prefix("body_")
+	return StringName(id) if body != &"" and ResourceLoader.exists("res://assets/audio/%s.wav" % id) else &"cre_jumpscare_hit"
+
+
 # --- every peer ---------------------------------------------------------------------------------
 
 func _on_apply(what: StringName, args: Array) -> void:
@@ -309,7 +316,7 @@ func _present(kind: StringName, slot: int, pos: Vector3, extra: String) -> void:
 				Soundscape.play_3d(&"cre_door_bang", _door_of("ToolShed") + Vector3(0.0, 0.0, -3.0))  # a bang outside
 			return
 		&"jumpscare":
-			Soundscape.play_2d(&"cre_jumpscare_hit")  # the file carries the body thud and the running away (CEO, P3-08)
+			Soundscape.play_2d(jumpscare_id(Soundscape.creature_body))  # the file carries the body thud and the running away (CEO, P3-08)
 			if me:
 				me.knockdown_camera(KNOCKDOWN_S)
 				_apparition(me.global_position - me.global_transform.basis.z * 1.5, true, 0.4)

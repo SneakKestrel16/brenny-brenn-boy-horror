@@ -22,7 +22,8 @@ const WORLD_FULL := "res://game/world/farm.tscn"  ## DD Phase 2 full farm (P2-02
 var full_farm := not OS.get_cmdline_user_args().has("--phase1-farm")  ## P2-20: the full farm is the default; `--phase1-farm` opens the gray-box. `--full-farm` is still accepted (no-op)
 var players: Dictionary = {}  ## peer id -> PlayerState (a Dictionary until P1-04)
 var session_id := ""
-var difficulty: StringName = &"normal"
+var difficulty: StringName = &"normal"  ## doc 01 "Difficulty and group settings": easy / normal / nightmare (difficulty.json); host picks in the lobby
+var streamer_safe := OS.get_cmdline_user_args().has("--streamer-safe")  ## group option: no voice replays in the dawn report (P4-11)
 var seed_value := 0
 var debug_view := false
 var bots := 0
@@ -109,6 +110,8 @@ func begin(args: Dictionary) -> void:
 	debug_view = args.has("debug-view")
 	bots = int(args.get("bots", 0))
 	lobby_autostart = int(args.get("lobby-start", 0))
+	if args.has("difficulty"):  # QA: `--difficulty=<id>` (host), the same as picking it in the lobby
+		difficulty = StringName(args["difficulty"])
 	var port := int(args.get("port", Net.DEFAULT_PORT))
 	if args.has("join"):
 		Net.join(str(args["join"]), port)
@@ -170,10 +173,24 @@ func start_match() -> void:
 			match_roster[str(Net.profiles.get(p, {}).get("uid", ""))] = true
 		players[p] = {"voice_setting": voice_setting_of(p)}
 	Clock.start()
-	Log.event(&"match_started", {"players": players.keys()})
+	Log.event(&"match_started", {"players": players.keys(), "difficulty": String(difficulty), "streamer_safe": streamer_safe})
 	Net.to_peers(&"apply_match_start")
 	Roles.sync()  # after the players were rebuilt above (P4-09)
 	_go_main()
+
+
+## Host, lobby only (P4-11): change the group settings; every client gets them (and a late joiner at admit).
+func set_group_settings(p_difficulty: StringName, p_streamer_safe: bool) -> void:
+	if not is_host() or not in_lobby:
+		return
+	apply_group_settings(p_difficulty, p_streamer_safe)
+	Net.to_peers(&"apply_group_settings", [difficulty, streamer_safe])
+
+
+func apply_group_settings(p_difficulty: StringName, p_streamer_safe: bool) -> void:
+	difficulty = p_difficulty
+	streamer_safe = p_streamer_safe
+	Log.event(&"group_settings", {"difficulty": String(difficulty), "streamer_safe": streamer_safe})  # every peer
 
 
 func apply_match_start() -> void:

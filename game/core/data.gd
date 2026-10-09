@@ -146,7 +146,17 @@ func scaled(v: int, kind: StringName, players: int = 0) -> int:
 	# D-079: debt payments and medical bills read `payment_pct_by_players` (59/85/101); traps keep `pct_by_players`.
 	var key := "payment_pct_by_players" if kind in [&"debt", &"bill"] else "pct_by_players"
 	var pct := int(record(&"player_scaling", &"headcount").get(key, {}).get(str(players), 100))
-	return scale_pct(v, pct, kind == &"debt")
+	return difficulty_scaled(scale_pct(v, pct, kind == &"debt"), kind)
+
+
+## Doc 02 s16 (P4-11): the session difficulty's `trap_pct` / `bill_pct` / `generator_tank_pct`, applied after
+## headcount scaling and rounded up. Kinds without a difficulty field pass through.
+func difficulty_scaled(v: int, kind: StringName) -> int:
+	var field: String = {&"traps": "trap_pct", &"bill": "bill_pct", &"generator_tank": "generator_tank_pct"}.get(kind, "")
+	var game := get_node_or_null("/root/Game") if is_inside_tree() else null  # null in unit tests: no difficulty
+	if field == "" or game == null or not _tables.get(&"difficulty", {}).has(game.difficulty):
+		return v
+	return scale_pct(v, int(_tables[&"difficulty"][game.difficulty].get(field, 100)))
 
 
 static func scale_pct(v: int, pct: int, nearest: bool = false) -> int:

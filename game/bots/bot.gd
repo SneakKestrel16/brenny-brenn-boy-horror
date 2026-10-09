@@ -6,6 +6,7 @@ extends Node
 ## DD Phase 1 bots walk and do chores (P1-13). Playing clips waits for voice clips (DD Phase 2+).
 ## P3-06: a Tainted bot washes (Q-061), and bots fix sabotage (sabotage.gd `fix_jobs`). On the full farm
 ## bots stand unless `--bot-chores`: then they walk straight lines (no collision, no route) and do all of it.
+## P4-11 (D-085): a damage fix spends scrap, so bots buy scrap when the team has none.
 
 const Route := preload("res://game/bots/bot_route.gd")
 const Frame := preload("res://game/player/move_frame.gd")
@@ -13,6 +14,7 @@ const Plot := preload("res://game/farming/plot.gd")
 const Interactable := preload("res://game/interaction/interactable.gd")
 
 const REFUEL_BELOW := 0.5  ## refuel when one can (fuel_can_pct 50%, doc 02 section 14) fits in the tank
+const SCRAP_JOBS := [&"repair_generator", &"bury", &"pull_seeds", &"repair_fence"]  ## D-085: each spends 1 scrap
 const HOLD_SLACK_S := 4.0  ## wait past hold_s for the host's answer, as the QA autochore does
 const REFUSED_WAIT_S := 1.0  ## placeholder: pause after a refusal so a bot never spins
 const IDLE_S := Vector2(2.0, 6.0)  ## placeholder: idle pause range between strolls
@@ -91,7 +93,7 @@ func next_job() -> Array:
 		return [&"wash", "well"]  # Q-061: Taint ends with a wash at the well
 	if Clock.phase in [&"dusk", &"night"] and farm.targets.has("generator") and _free("generator"):
 		var gen: Node = farm.targets["generator"].gen
-		if gen.damaged:
+		if gen.damaged and _scrap_ok():
 			return [&"repair_generator", "generator"]
 		if gen.fuel_s < gen.tank_s * REFUEL_BELOW:
 			if st.get("held_kind", &"") != &"fuel":
@@ -99,7 +101,7 @@ func next_job() -> Array:
 			return [&"refuel", "generator"] if bool(st.get("fuel_can", false)) else [&"fill_fuel", "fuel_drum"]
 	var sab := get_tree().get_first_node_in_group(&"sabotage")
 	for job: Array in (sab.fix_jobs() if sab else []):
-		if not _free(job[1]) or not farm.targets.has(job[1]):
+		if not _free(job[1]) or not farm.targets.has(job[1]) or (job[0] in SCRAP_JOBS and not _scrap_ok()):
 			continue
 		if job[0] == &"bury" and not bool(st.get("shovel", false)) and farm.targets.has("pegboard"):
 			return [&"take_shovel", "pegboard"]
@@ -121,6 +123,12 @@ func next_job() -> Array:
 			return _fetch(st, &"water")
 		return [&"water", dry[0].id] if int(st.get("can", 0)) > 0 else [&"fill_can", "well"]
 	return []
+
+
+## D-085: a damage fix needs scrap; with none left the bot buys one (15 coins) if the team can pay.
+# ponytail: buys from anywhere (`near` false) instead of walking to the store crate; add the walk when bots shop.
+func _scrap_ok() -> bool:
+	return farm.store.scrap_total() > 0 or farm.store.buy(peer, &"scrap", false) == &""
 
 
 ## P2-27: the job that gets a can of `kind` into the hands: put down the wrong one, else pick up the nearest free one.

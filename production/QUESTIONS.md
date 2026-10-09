@@ -862,8 +862,10 @@ P4-04. Three wire gaps, all worked around without editing `net.gd`: (1) `apply_p
 
 **Answer (Network & Voice, P4-14, 2026-10-09):** confirmed as built; no new arguments. (1) `ripe:pumpkin` in the state string is one reliable string per plot change, cheaper than a second arg, and late joiners get it from the same parser. (2) Season-over from the final Dawn Report is right: the season ends at that dawn, and the report reaches every peer reliably on channel 0 (P4-12 can add a flag later if the awards screen needs it before the report). (3) `plant:<crop>` keeps the hold verb host-validated like every other hold. Adding args would change your `farm.gd` callers during parallel P4 work for no gain.
 
-### Q-086 · 2026-10-08 · Gameplay Programmer -> AI Programmer · open
+### Q-086 · 2026-10-08 · Gameplay Programmer -> AI Programmer · answered P4-11
 P4-04 (also answers Q-082 for my side). (1) `Death.step_farm_damage` (doc 02 s9 step 5) calls `Sabotage.dawn_trample()` if it exists. Please make `_dawn_trample` public as `dawn_trample()` and drop its own `Clock.phase_changed` dawn connection (sabotage.gd line 74-79); today the trample runs before cash-in, out of doc 02 s9 order. (2) Q-082's placement rule (weighted pick by closeness, half weight for plots trampled last dawn) lives in `sabotage.gd`, not my path, so I did not build it. (3) `farm_damage` (line 325) uses the turnip price per plot; use `Plot.sell_value()` (crop in the ground) instead, so a trampled pumpkin or moonflower costs its own price.
+
+**Answer (AI Programmer, P4-11):** all three done. (1) `dawn_trample()` is public, and the dawn `phase_changed` hook is gone, so only Death step 5 runs it. (2) Doc 03 s10.1 placement is `SabotageLogic.trample_pick`: weight `1/(1+d/20)` from the creature's dawn position, half weight for a plot whose same crop was trampled at an earlier dawn, and bare plots churned with no coins lost. The `trample` log gains `churned` and `full_wipe`. (3) `farm_damage` sums `Plot.sell_value()` of the crops lost.
 
 ### Q-087 · 2026-10-08 · Gameplay Programmer -> Audio Designer · open
 P4-04 / D-081 item 2. `DawnReport._close()` now logs `dawn_report_closed {day}` on every peer. `Soundscape` should listen to `Log.logged` for that name instead of reading `DawnReport._open`. Doc 05 s18 lists the event and the four `audio_*` events.
@@ -874,8 +876,10 @@ P4-04 gaps for later rows, no doc 01 change. (1) `Crops.first_paid` (pumpkin `fi
 ### Q-090 · 2026-10-08 · Gameplay -> Game Designer · open
 P4-08 placeholders in code with no data home: animal alert range base `ALERT_M` 35 m (creature distance for the panic sound; rancher `animal_alert_range_mult` 1.5 multiplies it, Q-084 item 3), animal walk 0.9 m/s and run 3.2 m/s, panic gap 12 s, idle-call gap 25 to 50 s. Say the base alert range and I move all of them to `season.json`. Until then they are consts in `game/farming/animals.gd`.
 
-### Q-091 · 2026-10-08 · Gameplay -> AI Programmer, Level Designer · open
+### Q-091 · 2026-10-08 · Gameplay -> AI Programmer, Level Designer · answered P4-11 (AI side)
 FYI P4-08 edits in your paths, kept minimal. AI: `game/ai_director/sabotage.gd` (`_place(&"broken_fence")`, `fixed()`, `_mark`, `fix_jobs`); `tests/creature/test_director_logic.gd` day 2/3 pool asserts updated (P4-03 enabled broken_fence). Level: `game/world/build_farm.py` pen north/west/east walls split into 6 sections in group `fence_sections`; `farm.tscn` and `farm_phase1.tscn` regenerated. Veto or restyle as you like; the group name and `Animals.fence_points()` are the contract.
+
+**Answer (AI Programmer, P4-11):** accepted as built for my paths. P4-11 adds that `repair_fence` (like every creature-damage fix, D-085) spends 1 scrap.
 
 ### Q-092 · 2026-10-08 · Gameplay -> Network & Voice · open
 FYI P4-08 added RPC `apply_animals(kind, data)` (authority, reliable, 5 Hz snapshot plus events) to `game/net/net.gd`. Check the channel and rate fit your budget.
@@ -883,8 +887,10 @@ FYI P4-08 added RPC `apply_animals(kind, data)` (authority, reliable, 5 Hz snaps
 ### Q-093 · 2026-10-08 · Gameplay -> Gameplay (P4-04, P4-09, P4-10) · open
 P4-04: `Death.dawn()` calls `animals.bill_dusk(farm)` after the medical bill (3 lines); merge with the season dawn work. P4-09: set `Game.players[peer].role` to `&"rancher"` and the round_up hold shortens (ceil 4 x 0.6 = 3 s) with no more code. P4-10: log `animals_out_at_dusk` {day,out,total,breaks_today,fence_still_broken,players} measures Q-084 item 2; `animal_dusk_bill` has the cost.
 
-### Q-089 · 2026-10-09 · QA (P4-08 review) -> AI Programmer · open
+### Q-089 · 2026-10-09 · QA (P4-08 review) -> AI Programmer · answered P4-11
 Pre-existing, not P4-08: with `--no-phase1`, `game/creature/creature.gd:876` `_in_sanctuary` repeatedly errors on key `'sanctuary_m'` because `_num` is never filled without the phase1 table. Also for P4-10 (doc 06 s5): `Animals.bill_dusk` clamps headcount to 2 while `Death.bill_for` does not, so solo play pays 59% animal fee but 100% medical bill.
+
+**Answer (AI Programmer, P4-11):** the first part is fixed. `creature.gd` now fills `_num["sanctuary_m"]` before the Phase 1 table check, so `--no-phase1` runs no longer error. The `bill_dusk` clamp is a Gameplay path, so P4-10 handles it.
 
 ### Q-096 · 2026-10-09 · QA -> Director · answered D-084
 P4-05 review. (1) `lift_prize` works on any day, so players can move the Prize Pumpkin anywhere, for example next to the barn door. Doc 01 "The Prize Pumpkin" places it at least 30 m from any door and only moves it to the barn at Harvest Moon dusk; doc 02 s6 has no carrying rule. Relocation also makes the missing lit-doorway exclusion (guard time inside a doorway's light still counts) matter, since 30 m placement plus a 20 m radius kept doorways out of range. Options: allow lift only on the final day (P4-12's loading), or keep free carrying and build the doorway exclusion. (2) Carrying the pumpkin does not block taking a can, shovel or trap (`held_prize` is checked nowhere else); pick a hands rule with (1). (3) `gnaw()` drops the size at once; doc 03 s10 says "in the morning". P4-11 should call it at dawn. (4) HUD has no text for refusals `carried`, `judged`, `not_holding` on the pumpkin. None blocks P4-05.
@@ -896,8 +902,10 @@ P4-06: `scrap` is bought and counted (`Store.take_scrap()` spends the free scrap
 
 **Answer (Director, D-085):** doc 01 settles it: every fix of creature damage (the sabotage.json fix verbs, generator repair included) costs 1 scrap; no free scrap on day 1, since no damage exists before the first night and dawn step 7 grants one. P4-11 wires `take_scrap()` into those fixes.
 
-### Q-101 · 2026-10-09 · Gameplay Programmer -> AI Programmer · open
+### Q-101 · 2026-10-09 · Gameplay Programmer -> AI Programmer · answered P4-11
 P4-06 made additive edits in `game/creature/creature.gd`: `flare_hit(seconds)` (forces Retreat, reason `flare`, restarts the timer on a second hit), `_flare_retreat_s` (Retreat exit uses the longer of it and `retreat_s`), and `_scarecrow_in_way(dir)` (lurk/lure/stalk will not step closer than `creature_avoid_m` to a node in group `bought_scarecrow`; chase and retreat ignore it). Please review. The flare hit radius reuses `noise_flare` 70 m, an inference; confirm or give a different range.
+
+**Answer (AI Programmer, P4-11):** the three edits are accepted. The 70 m is kept for now, but the inference is weak. Doc 03 s3.1 has `flare` 70 m as a placeholder *hearing* range, and no doc gives a hit range. Q-114 asks the Game Designer for a `flare_gun` hit range; switch to it when it lands.
 
 ### Q-102 · 2026-10-09 · Gameplay Programmer -> Network & Voice · answered (P4-14)
 P4-06 added two rpcs to `game/net/net.gd`: `request_store(op, arg)` (any_peer, reliable) and `apply_store(state)` (authority, reliable). Please review. The 2-instance bot run passes; the join path sends `apply_store` once on `farm_state`.
@@ -917,6 +925,17 @@ P4-07 gaps outside its row. (1) A missed final payment logs `season_lost` and se
 P4-07 review (QA PASS after fixes). (1) QA fixed `Store.seize` (P4-06): a per-player upgrade owned by two players now leaves one owner (the highest peer id loses it, placeholder); before, both kept it. Ruling: one Foreclosure seizure takes one item. (2) QA fixed `Debt.pct_for` to clamp the headcount to 2..max like traps and sabotage; a no-lobby `--host` run recorded dawn 1 at 1 player (pct 100), so 2-instance logs showed 843 total instead of 767. Debt still ignores the farm's `--headcount=` QA override. (3) `apply_debt` was added to `game/net/net.gd` without a review question to Network & Voice (P4-06 filed Q-102 for its rpcs). (4) A seized bought plot pair is relocked with its crop left on it (`Store.seize`); seized starting plots are cleared. Pick one rule. (5) Early payment works any time at the sell box; doc 01 and doc 02 s7.4 say "at any dawn" (Q-108 asks the Game Designer for the numbers; the timing is a doc reading for you).
 
 **Answer (Director, D-086):** (1) and (2) accepted. (3) Network & Voice reviews `apply_debt` with Q-102 in P4-14. (4) Seized plots are cleared, bought or starting. (5) Early payment at the sell box any time stands; doc 02 s7.4 gets the wording on the Game Designer's next pass.
+
+### Q-112 · 2026-10-09 · AI Programmer -> Director · answered
+P4-11 / D-085 scope. Scrap is charged only on fixes of creature damage: `repair_generator`, `bury` (dead crow), `pull_seeds` (strange seeds) and `repair_fence`. Plant (trample), take_can (stolen tool), wash and refuel are not charged. They undo damage with their own cost (a seed, a Taint, a can of fuel from the free drum). D-085 says "the sabotage.json fix verbs". Read literally, that also charges re-planting a trampled plot. Confirm the narrower list, or name the verbs to add. A refusal logs `hold_refused` `no_scrap`. Bots buy one scrap (15 coins) when the team has none. Settles: the `take_scrap()` call sites in `sabotage.gd` and `generator.gd`.
+
+**Answer (Director, 2026-10-09, recorded by QA):** the narrower list stands. Re-planting a trampled plot does not cost scrap. Only the fix verbs `bury`, `pull_seeds`, `repair_fence` and `repair_generator` spend 1 scrap. The P4-11 build matches; QA ran the `no_scrap` refusal and the spend on `repair_generator` and `pull_seeds` (`tests/creature/test_p4_11_e2e.gd`).
+
+### Q-113 · 2026-10-09 · AI Programmer -> Game Designer, Gameplay Programmer · open
+P4-11 / Q-070 item 6. `stolen_tool` still steals only cans (water and fuel). Doc 03 s10 says "wash, buy back (the tool is lost until found)". The other tools give no theft that matters. The shovel is unlimited at the pegboard. Bear traps are already taken by `pegboard_theft` (D-053). The flare gun is a store item that refills at dawn. A buy-back needs a store.json record for each tool (Gameplay path, doc 02 s10 price) and a per-tool count that theft can lower. Ask: (1) which tools a steal may take besides cans, (2) the buy-back price. Today the can fix is pick-up (Taint) plus wash. Settles: the `stolen_tool` branch of `Sabotage._place`.
+
+### Q-114 · 2026-10-09 · AI Programmer -> Game Designer · open
+P4-11 inferences, each a placeholder in code. (1) Full wipe "damage doubles" (doc 02 s14) is read as doubled dawn-trample plots, `season.json` `full_wipe_damage_mult` 2. It is not doubled coins per plot. The extra traps (`full_wipe_extra_traps` 2) alternate bear and pit, from doc 03 s9's "1 bear + 1 pit". (2) The trample distance is measured from the creature's position at dawn, which stands for "where the creature roamed" (doc 01 "Dawn"). (3) Flare hit range: `creature.flare_hit` uses `noise_flare` 70 m (a hearing range, doc 03 s3.1). Give a `flare_gun` hit range (store.json), or confirm 70 m. (4) Nightmare drops voice tells (`tell` none) but keeps the state ambience. Confirm or change doc 03.
 
 ### Q-116 · 2026-10-09 · Network & Voice -> Director, Game Designer · open
 P4-14. `roles.json` `radio_operator` `walkie_range_mult` (1.5) has nothing to multiply: doc 06 s10 gives walkies unlimited range, while doc 01 "Roles" says the Radio Operator's walkie "reaches further". Built: `battery_transmit_mult` (270 s) only; range ignored. Options: give walkies a range (then a placeholder number, and out-of-range frames dropped by the host), or drop the perk and keep unlimited range. Settles: whether `Walkie.transmit` checks distance. Also an inference to confirm: spare `walkie_battery` purchases are a team pool, and the first flat walkie takes one (doc 02 s10 lists them as a team item).

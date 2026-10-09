@@ -30,3 +30,31 @@ static func trample_count(rec: Dictionary, best_out_s: float, nobody_s: float, g
 ## the calm third is "evidence of sabotage only"). Inference: doc 03 does not say when in the day they land.
 static func place_at(i: int, n: int, day_s: float, first_third_end: float) -> float:
 	return day_s * first_third_end * (i + 0.5) / maxf(n, 1)
+
+
+## Doc 03 section 10 "Dawn trample placement" (Q-082, placeholder): up to `want` of `plots`, each
+## `{d: metres from the creature, crop: bool, repeat: bool}`, as indices. Crops first, without replacement,
+## weighted `1 / (1 + d / falloff_m)` and halved when `repeat` (trampled at an earlier dawn, same crop);
+## bare plots fill the shortfall the same way. `roll` returns a float in [0, 1).
+static func trample_pick(plots: Array, want: int, falloff_m: float, roll: Callable) -> Array[int]:
+	var out: Array[int] = []
+	for crops in [true, false]:
+		var pool: Array[int] = []
+		for i in plots.size():
+			if bool(plots[i].crop) == crops:
+				pool.append(i)
+		while out.size() < want and not pool.is_empty():
+			var w: Array[float] = []
+			var total := 0.0
+			for i in pool:
+				var x := 1.0 / (1.0 + float(plots[i].d) / falloff_m) * (0.5 if bool(plots[i].get("repeat", false)) else 1.0)
+				w.append(x)
+				total += x
+			var r := float(roll.call()) * total
+			var k := 0
+			while k < pool.size() - 1 and r >= w[k]:
+				r -= w[k]
+				k += 1
+			out.append(pool[k])
+			pool.remove_at(k)
+	return out

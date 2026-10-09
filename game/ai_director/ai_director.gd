@@ -6,7 +6,8 @@ extends Node
 ## stalk, chase or kill and reports with `spend`. Rules live in director_logic.gd; numbers in
 ## `ai_director.json`. Scares (picking `scare_*`, calling `jumpscare`) live in scares.gd (P3-05); the daily
 ## disturbances in its child `Sabotage` (sabotage.gd, P3-06).
-## Not built: the `harvest_moon` profile (section 14), nightmare trap race numbers (no difficulty yet),
+## Nightmare widens the trap race bend and lowers its floor (doc 03 s7.2, `nightmare_bend_m` / `nightmare_min_spare_s`).
+## Not built: the `harvest_moon` profile (section 14),
 ## deep and earshot day deaths (rolled and logged only, nothing reads them).
 
 const Logic := preload("res://game/ai_director/director_logic.gd")
@@ -236,11 +237,13 @@ func trap_race_m(deep: bool) -> float:
 func _roll(day: int) -> void:
 	var dr: Dictionary = _d.daily_roll
 	var tr: Dictionary = _d.trap_race
-	var floor_m := (Data.hold_s(&"pry") + float(tr.min_spare_s)) * float(Data.value(&"creature", &"trap_race_speed_mps", &"speed_mps"))
+	var nm := Game.difficulty == &"nightmare"
+	var bend_m := float(tr.nightmare_bend_m if nm else tr.bend_m)
+	var floor_m := (Data.hold_s(&"pry") + float(tr.nightmare_min_spare_s if nm else tr.min_spare_s)) * float(Data.value(&"creature", &"trap_race_speed_mps", &"speed_mps"))
 	roll = {"day": day, "deep_m": snappedf(_rng.randf_range(dr.deep_m[0], dr.deep_m[1]), 0.1),
 		"earshot_m": snappedf(_rng.randf_range(dr.earshot_m[0], dr.earshot_m[1]), 0.1),
-		"trap_race_m": snappedf(Logic.race_m(tr.start_distance_m, tr.bend_m, _rng.randf_range(-1.0, 1.0), floor_m), 0.1),
-		"deep_trap_race_m": snappedf(Logic.race_m(tr.deep_start_distance_m, tr.bend_m, _rng.randf_range(-1.0, 1.0), 0.0), 0.1)}
+		"trap_race_m": snappedf(Logic.race_m(tr.start_distance_m, bend_m, _rng.randf_range(-1.0, 1.0), floor_m), 0.1),
+		"deep_trap_race_m": snappedf(Logic.race_m(tr.deep_start_distance_m, bend_m, _rng.randf_range(-1.0, 1.0), 0.0), 0.1)}
 	Log.event(&"daily_roll", roll)
 
 

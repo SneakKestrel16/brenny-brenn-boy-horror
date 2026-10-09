@@ -5,7 +5,7 @@ extends Node
 ## generator emits `generator_dead` once and every building goes dark (game/core/lights.gd); below the
 ## dim threshold the lights dim smoothly. Clients get `apply_generator` and drive their own lights.
 ## One run per night: the tank is full again at each new day (inference, doc 05 section 12 "one
-## generator run"; settled by DD Phase 1 feel). Scrap for repairs is not in Phase 1 (no scrap items yet).
+## generator run"; settled by DD Phase 1 feel). A repair spends 1 scrap (`Store.take_scrap()`, D-085, P4-11).
 
 const Lights := preload("res://game/core/lights.gd")
 const SYNC_EVERY_S := 1.0  ## while burning; changes are sent at once (placeholder)
@@ -49,7 +49,9 @@ class Point extends "res://game/interaction/interactable.gd":
 				if gen.damaged: return &"generator_damaged"
 				if not bool(st.get("fuel_can", false)): return &"no_fuel_can"
 				return &"" if gen.fuel_s < gen.tank_s else &"tank_full"
-			&"repair_generator": return &"" if not drum and gen.damaged else &"not_damaged"
+			&"repair_generator":
+				if drum or not gen.damaged: return &"not_damaged"
+				return &"" if farm.store.scrap_total() > 0 else &"no_scrap"  # D-085: creature damage costs 1 scrap
 		return &"no_such_verb"
 
 	func complete(verb: StringName, peer: int, st: Dictionary) -> void:
@@ -59,12 +61,14 @@ class Point extends "res://game/interaction/interactable.gd":
 				st.fuel_can = false
 				gen.add_fuel(gen.tank_s * float(Data.value(&"season", &"fuel_can_pct")) / 100.0)
 			&"repair_generator":
+				if not farm.store.take_scrap():
+					return  # a second fixer spent the last scrap first (D-085)
 				gen.repair()
 				NoiseBus.emit_kind(&"tool_repair", target_pos(), peer)
 
 
 func _ready() -> void:
-	tank_s = float(Data.value(&"season", &"generator_tank_s"))
+	tank_s = float(Data.difficulty_scaled(int(Data.value(&"season", &"generator_tank_s")), &"generator_tank"))  # Nightmare x0.75 (doc 02 s16)
 	fuel_s = tank_s
 	_farm = get_tree().get_first_node_in_group(&"farm")
 	for g in [[&"generator", "generator", false], [&"fuel_drum", "fuel_drum", true]]:
@@ -170,6 +174,7 @@ func _autogen() -> void:
 		while t.time_left > 0.0 and not (fuel_s > 30.0):
 			await get_tree().physics_frame
 		await get_tree().create_timer(2.0).timeout
+		_farm.free_scrap = maxi(_farm.free_scrap, 1)  # D-085: the client's repair costs a scrap
 		damage()
 		while t.time_left > 0.0 and damaged:
 			await get_tree().physics_frame

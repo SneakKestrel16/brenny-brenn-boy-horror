@@ -112,6 +112,7 @@ var _flare_retreat_s := 0.0  ## P4-06: a flare hit's longer Retreat; 0 means the
 var shed_lock := OS.get_cmdline_user_args().has("--shed-lock")  ## the team owns the pegboard lock (store hook)
 var _plan: Array = []  ## tonight's sets still to come: {t, kind}, sorted by t
 var _work: Array = []  ## heard player noise positions, oldest first: the region players work in
+var wipe_traps := 0  ## host: extra traps for the next night after a full wipe (doc 02 s14, set by Sabotage at dawn)
 var _stash := 0  ## bear traps taken and not yet set: the creature's whole bear supply (D-053)
 var _stolen_night := 0
 var _capped_logged := false
@@ -176,6 +177,7 @@ func _ready() -> void:
 	if not Game.is_host():
 		return
 	_pick_body()
+	_num[&"sanctuary_m"] = float(Data.value(&"ai_director", &"scare_rules", &"sanctuary_m"))  # Q-089: the AI Director asks even without --phase1
 	if not Data.has_table(&"phase1"):
 		push_warning("Creature: Phase 1 creature needs --phase1; idle")
 		return
@@ -183,7 +185,6 @@ func _ready() -> void:
 	_rng.seed = Game.seed_value
 	_dir = get_tree().get_first_node_in_group(&"ai_director")  # main adds it before the Creature
 	_num[&"day_gap_s"] = float(Data.value(&"ai_director", &"lures", &"day_gap_s"))
-	_num[&"sanctuary_m"] = float(Data.value(&"ai_director", &"scare_rules", &"sanctuary_m"))
 	for id in [&"lurk_speed_mps", &"stalk_speed_mps", &"chase_speed_mps"]:
 		_num[id] = float(Data.value(&"creature", id, &"speed_mps"))
 	for id in [&"lure_wait_s", &"stalk_max_s", &"chase_commit_s", &"retreat_s", &"hearing_memory_s", &"chase_lose_quiet_s", &"chase_tell_s"]:
@@ -606,7 +607,9 @@ func _lure_at(p: int, day: bool) -> bool:
 	var tell: StringName = &"none"  # sound lures carry no voice tell (inference: section 12.2 tells are voice giveaways)
 	if v.kind != "sound":
 		tell = TELLS[0] if _rng.randf() < 1.0 / 3.0 else TELLS[_rng.randi_range(1, TELLS.size() - 1)]
-	var ghost := not day and int(v.owner) != 0 and Game.is_ghost(int(v.owner))  # doc 01 "Ghosts": the dead-voice twist
+	if Game.difficulty == &"nightmare":
+		tell = &"none"  # doc 03 s7.2 / doc 02 s16: Nightmare has no voice tells (rolled anyway, so the seed stream matches)
+	var ghost := int(v.owner) != 0 and Game.is_ghost(int(v.owner))  # doc 01 "Ghosts": the dead-voice twist
 	var source := "stranger"
 	match v.kind:
 		"stranger":  # Soundscape plays STRANGER_LINES[hash(lure_id) % 6], the stranger records in voice_lines order
@@ -819,7 +822,8 @@ func clear_trap(id: String) -> void:
 
 ## Full farm, at nightfall: doc 02 section 11 counts for today (`ramp_up.json`, scaled by headcount, 2p
 ## floor) less what is still armed out there (traps stay armed by day, section 9), spread over the night.
-## Disabled kinds (bells, `traps.json` `enabled` false) are skipped. Difficulty and the full-wipe extras wait.
+## Disabled kinds (bells, `traps.json` `enabled` false) are skipped. Difficulty scales the count inside
+## `Data.scaled` (doc 02 s16); after a full wipe `wipe_traps` more are added, bear and pit in turn (doc 03 s9).
 ## The bear sets take their traps now (D-053): `supply` is what the creature holds after the theft.
 func _plan_traps() -> void:
 	_plan.clear()
@@ -835,6 +839,10 @@ func _plan_traps() -> void:
 		var have := _traps.values().filter(func(t: Dictionary) -> bool: return t.kind == kind and t.armed).size()
 		for i in maxi(want - have, 0):
 			kinds.insert(_rng.randi_range(0, kinds.size()), kind)
+	var mix: Array = [&"bear", &"pit"]  # placeholder `full_wipe_extra_mix`: doc 03 s9 says 1 bear + 1 pit for 2
+	for i in wipe_traps:
+		kinds.insert(_rng.randi_range(0, kinds.size()), mix[i % mix.size()])
+	wipe_traps = 0
 	var night: float = _num[&"night_s"] if _test else Clock.length_of(&"night")
 	for i in kinds.size():
 		_plan.append({"t": night * (TRAP_SET_FROM + TRAP_SET_SPAN * (i + 0.5) / kinds.size()), "kind": kinds[i]})

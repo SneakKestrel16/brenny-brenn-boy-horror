@@ -3,10 +3,12 @@ extends Node3D
 ## It loads `Game.world_path()` (the full farm with `--full-farm`) under WorldLook at night (every light goes
 ## through the render layer, doc 07 section 4), the Players node and a text roster. The host starts the match
 ## with Enter or the pause menu; `Game.match_ready()` is the P2-03 clip pre-share hook.
-## Debug: `--lobby-start=<n>` (Game.lobby_autostart) starts when n players are present.
+## P4-11: the host sets the group settings here (F7 difficulty, F8 streamer-safe, doc 01 "Difficulty and group
+## settings"); everyone sees them in the roster. Debug: `--lobby-start=<n>` (Game.lobby_autostart) starts when n players are present.
 
 const DISCORD_LINE := "The creature can't hear Discord, and you can't hear where your friends are."
 const VOICE_NAMES := {"off": "Off", "lobby_lines": "Lobby lines"}
+const DIFFICULTIES: Array[StringName] = [&"easy", &"normal", &"nightmare"]
 
 ## P4-09 role cards (doc 01 "Picking a role"): one per role with its perk, a taken one greyed out, "No role" always open.
 const PERK_TEXT := {&"farmer": "+1 crop every 5th harvest", &"rancher": "faster round-up, hears animals from further",
@@ -118,17 +120,27 @@ func _refresh() -> void:
 	var code := Net.join_code()  # D-049: the fallback when a rejoin prompt fails
 	if code != "":
 		t += "\nJoin code: %s" % code
+	t += "\nDifficulty: %s   Streamer-safe: %s" % [String(Game.difficulty).capitalize(), "on" if Game.streamer_safe else "off"]
 	t += "\n" + DISCORD_LINE + "\n"
 	t += "R: pick a role   "
-	t += "Enter: start the match   Esc: menu" if Game.is_host() else "Waiting for the host to start. Esc: menu"
+	t += "Enter: start the match   F7: difficulty   F8: streamer-safe   Esc: menu" if Game.is_host() else "Waiting for the host to start. Esc: menu"
 	_roster.text = t
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R and not Game.console_open:
 		_cycle()
-	if Game.is_host() and event.is_action_pressed(&"ui_accept"):
+	if not Game.is_host():
+		return
+	if event.is_action_pressed(&"ui_accept"):
 		Game.start_match()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode in [KEY_F7, KEY_F8]:
+		var i := DIFFICULTIES.find(Game.difficulty)
+		if event.keycode == KEY_F7:
+			Game.set_group_settings(DIFFICULTIES[(i + 1) % DIFFICULTIES.size()], Game.streamer_safe)
+		else:
+			Game.set_group_settings(Game.difficulty, not Game.streamer_safe)
+		_refresh()
 
 
 func _process(delta: float) -> void:

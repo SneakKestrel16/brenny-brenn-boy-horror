@@ -5,7 +5,7 @@ extends CanvasLayer
 ## are done, doc 01 "Dawn, in this order") builds the report (dawn_report_logic.gd) and sends
 ## `apply_dawn_report`. Every peer: shows the newspaper card, reveals a section every REVEAL_S or on a
 ## click, replays the lures from its own clips, and applies nothing. Closes on the second click or at dusk.
-## Debug user arg: `--streamer-safe` (host) sets the report's streamer-safe flag: no voice replays.
+## Streamer-safe (no voice replays) is the lobby group option `Game.streamer_safe`; `--streamer-safe` (host) turns it on.
 
 const Logic := preload("res://game/ui/dawn_report_logic.gd")
 const REVEAL_S := 3.0  ## doc 07 section 9: sections fade in on click or every 3 s
@@ -115,7 +115,7 @@ func _build() -> void:
 	for r: Dictionary in Data.records(&"dawn_report_templates"):
 		tpl[r.id] = r.text
 	var ctx := {"names": names, "players": Game.players.keys(), "lines": lines,
-		"streamer_safe": OS.get_cmdline_user_args().has("--streamer-safe")}
+		"streamer_safe": Game.streamer_safe}  # the lobby's group option (P4-11); `--streamer-safe` sets its default
 	var report := Logic.build(_events, ctx, tpl)
 	_events.clear()
 	Net.to_peers(&"apply_dawn_report", [report])

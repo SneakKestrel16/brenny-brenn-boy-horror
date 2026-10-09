@@ -4,14 +4,18 @@ extends Node
 ## scaled by headcount) over the first third of the day, from the pool open that day (sabotage_logic.gd).
 ## Each lands in a region with no living player in it (section 11.6: by region, never at a player; true
 ## positions, placement only), leaves its clue and waits for its fix. Free and daily: one scarecrow moves.
-## Through the night it counts who stayed outside; at dawn it tramples plots (section 10 "Trample" and
-## "Unattended farm") nearest where the creature is, and `farm_damage` is what the Death node's
-## `dawn_summary` reports. Logs `disturbance_placed`, `disturbance_fixed`, `trample`.
+## Through the night it counts who stayed outside; at dawn Death's step 5 calls `dawn_trample()` (section 10
+## "Trample", "Dawn trample placement", "Unattended farm"; doubled after a full wipe, doc 02 section 14, which
+## also hands the Creature `full_wipe_extra_traps`), and `farm_damage` is what the Death node's `dawn_summary`
+## reports. A budgeted `pumpkin_gnaw` waits for dawn: the Prize Pumpkin drops a size only if no living player came
+## within `guard_radius_m` of it that night (section 10 "Gnaw rule", D-084). Logs `disturbance_placed`,
+## `disturbance_fixed`, `trample`, `pumpkin_gnaw_blocked`.
 ## Every peer: the clue marks, the scarecrows and the bury / pull-seeds targets (`apply_disturbance`).
 ## `broken_fence` (P4-08) opens a pen fence section and lets animals out (game/farming/animals.gd).
-## Not built: `pumpkin_gnaw` (D-059, Phase 4), buying a stolen tool back, burying a dead crow
-## by washing, the full-wipe doubling of farm damage (doc 02 section 14), the cost points (the budget is the
-## count, doc 03 section 10 "Budget"; the points are placeholders left for `sim`).
+## D-085: a fix on a FixTarget (bury, pull_seeds, repair_fence) spends 1 scrap, refused `no_scrap` without one.
+## Not built: buying a stolen tool back and stealing tools that are not cans (Q-113), burying a dead crow
+## by washing, the cost points (the budget is the count, doc 03 section 10 "Budget"; the points are
+## placeholders left for `sim`).
 
 const Logic := preload("res://game/ai_director/sabotage_logic.gd")
 const Interactable := preload("res://game/interaction/interactable.gd")
@@ -20,6 +24,7 @@ const Plot := preload("res://game/farming/plot.gd")
 const AWAY_M := 12.0  ## placeholder: never placed nearer a living player than this ("never at a player")
 const BY_TRAP_M := 1.6  ## placeholder: a stolen tool lies beside the armed trap, just past its 1.0 m spring
 const CHECK_S := 0.5  ## host: how often fixes are checked
+const TRAMPLE_FALLOFF_M := 20.0  ## doc 03 section 10 "Dawn trample placement" rule 2 (placeholder): a plot at 20 m weighs half
 const SCARECROWS := ["scarecrow_01", "scarecrow_02"]  ## doc 04: the two field scarecrows' start spots
 
 ## A dead crow or strange seeds: the fix hold on the mark (`bury` needs the shovel in hand, doc 03 section 10.1).
@@ -35,10 +40,13 @@ class FixTarget extends "res://game/interaction/interactable.gd":
 	func can_start(v: StringName, st: Dictionary) -> StringName:
 		if v != verb:
 			return &"no_such_verb"
-		return &"no_shovel" if v == &"bury" and not bool(st.get("shovel", false)) else &""
+		if v == &"bury" and not bool(st.get("shovel", false)):
+			return &"no_shovel"
+		return &"" if farm.store.scrap_total() > 0 else &"no_scrap"  # D-085: creature damage costs 1 scrap
 
 	func complete(_v: StringName, peer: int, _st: Dictionary) -> void:
-		sab.fixed(did, peer, verb)
+		if farm.store.take_scrap():  # false: a second fixer spent the last scrap first
+			sab.fixed(did, peer, verb)
 
 
 var farm_damage := 0  ## host: coins of crops trampled at the last dawn (read by death.gd's `dawn_summary`)
@@ -59,6 +67,9 @@ var _nobody_s := 0.0  ## host, tonight: seconds with no living player outdoors
 var _crows: Array = []  ## every peer: the scarecrow nodes
 var _crow_at: Array = []  ## host: each scarecrow's spot name
 var _marks: Dictionary = {}  ## every peer: id -> mark node
+var _trampled: Dictionary = {}  ## host: plot id -> the crop it held when trampled at an earlier dawn (half weight while the same)
+var _gnaw_pending := false  ## host: the AI Director spent gnaw points today; resolved at the next dawn
+var _pumpkin_near := false  ## host, tonight: a living player came within guard_radius_m of the Prize Pumpkin
 var _rng := RandomNumberGenerator.new()
 
 
@@ -72,12 +83,11 @@ func _ready() -> void:
 	for r in Data.records(&"sabotage"):
 		_recs[StringName(r.id)] = r
 	_rng.seed = Game.seed_value + 6  # its own stream, like the AI Director's (+4) and the scares' (+5)
-	Clock.phase_changed.connect(func(p: StringName) -> void:
+	Clock.phase_changed.connect(func(p: StringName) -> void:  # the dawn trample is Death's step 5 (Q-086)
 		if p == &"night":
 			_out_s.clear()
 			_nobody_s = 0.0
-		elif p == &"dawn":
-			_dawn_trample())
+			_pumpkin_near = false)
 	Net.request_received.connect(func(what: StringName, peer: int, _a: Array) -> void:
 		if what != &"farm_state":
 			return  # a late joiner gets the marks and where the scarecrows stand
@@ -202,6 +212,12 @@ func _place(kind: StringName) -> bool:
 			gen._went_dead(&"sabotage")
 			_hands_on.erase("generator")
 			_add(kind, pos, {})
+		&"pumpkin_gnaw":  # the points are spent now; the gnaw itself waits for dawn (`_dawn_gnaw`)
+			var pk: Node = _farm.targets.get("prize_pumpkin")
+			if pk == null or not pk.planted or pk.judged or _gnaw_pending:
+				return false
+			_gnaw_pending = true
+			Log.event(&"pumpkin_gnaw_spent", {"day": Clock.day})  # `disturbance_placed` follows at dawn if it lands
 		_:
 			return false
 	return true
@@ -317,28 +333,65 @@ func _track_night(delta: float) -> void:
 			anyone = true
 	if not anyone:
 		_nobody_s += delta
+	var pk: Node = _farm.targets.get("prize_pumpkin")
+	if pk and not _pumpkin_near:
+		var at: Vector3 = pk.target_pos()
+		var r := float(pk.rule(&"guard_radius_m"))
+		_pumpkin_near = Game.players.keys().any(func(p: int) -> bool:
+			return _alive(p) and Vector2(Game.players[p].pos.x - at.x, Game.players[p].pos.z - at.z).length() <= r)
 
 
-## Doc 03 section 10 "Trample (rule restated)", "Unattended farm": plots with a crop nearest the creature
-## ("where the creature roamed", doc 01 "Dawn"; inference: its position at dawn stands for the night's roaming).
-## Runs before Death's `dawn` (AiDirector is added first), so `farm_damage` is ready for `dawn_summary`.
-func _dawn_trample() -> void:
+## Host, Death's dawn step 5 (doc 02 s9, Q-086). Doc 03 section 10 "Trample (rule restated)", "Dawn trample
+## placement", "Unattended farm": plots weighted by closeness to the creature ("where the creature roamed",
+## doc 01 "Dawn"; inference: its position at dawn stands for the night's roaming). After a full wipe (every
+## player a ghost; Death respawns them after the steps) the count doubles, so the damage does (doc 02 s14;
+## inference: doubled plots, not doubled coins per plot), and the Creature sets extra traps next night.
+func dawn_trample() -> void:
+	if not _ok or _farm == null:
+		return
 	var best := 0.0
 	for p in _out_s:
 		best = maxf(best, float(_out_s[p]))
 	var gen: Node = _farm.targets["generator"].gen if _farm.targets.has("generator") else null
 	var gen_dead: bool = gen != null and not gen.powered()
 	var want := Logic.trample_count(_recs.trample, best, _nobody_s, gen_dead)
+	var wipe := not Game.players.is_empty() and Game.players.keys().all(func(p: int) -> bool: return Game.is_ghost(p))
+	if wipe:
+		want *= int(Data.value(&"season", &"full_wipe_damage_mult"))
+		if _creature and &"wipe_traps" in _creature:
+			_creature.wipe_traps = int(Data.value(&"season", &"full_wipe_extra_traps"))
 	var from: Vector3 = _creature.global_position if _creature else Vector3.ZERO
-	var crops := _plots(func(p: Plot) -> bool: return p.state != &"empty")
-	crops.sort_custom(func(a: Plot, b: Plot) -> bool: return a.target_pos().distance_squared_to(from) < b.target_pos().distance_squared_to(from))
-	var hit := crops.slice(0, want)
-	for p: Plot in hit:
+	var cands := _plots(func(p: Plot) -> bool: return p.state in [&"growing", &"ripe", &"empty"])
+	var info := cands.map(func(p: Plot) -> Dictionary:
+		return {"d": p.target_pos().distance_to(from), "crop": p.state != &"empty", "repeat": p.state != &"empty" and _trampled.get(p.id, &"") == p.crop})
+	farm_damage = 0
+	var lost := 0
+	for i in Logic.trample_pick(info, want, TRAMPLE_FALLOFF_M, _rng.randf):
+		var p: Plot = cands[i]
+		if info[i].crop:
+			farm_damage += p.sell_value()  # Q-086: the crop's own price; a churned bare plot loses nothing
+			lost += 1
+			_trampled[p.id] = p.crop
 		_trample(p, true)
-	# Inference: damage in coins (the dawn report shows it as a coin row): each lost crop at its sell price.
-	farm_damage = hit.size() * int(Data.value(&"crops", &"turnip", &"sell"))
-	Log.event(&"trample", {"day": Clock.day, "want": want, "trampled": hit.size(), "best_outside_s": snappedf(best, 0.1),
-		"nobody_outside_s": snappedf(_nobody_s, 0.1), "generator_dead": gen_dead, "farm_damage": farm_damage})
+	Log.event(&"trample", {"day": Clock.day, "want": want, "trampled": lost, "churned": mini(want, cands.size()) - lost,
+		"best_outside_s": snappedf(best, 0.1), "nobody_outside_s": snappedf(_nobody_s, 0.1), "generator_dead": gen_dead,
+		"full_wipe": wipe, "farm_damage": farm_damage})
+	_dawn_gnaw()
+
+
+## Doc 03 section 10 "Gnaw rule": a gnaw bought by day lands this dawn unless a living player came within the
+## guard radius at night. One gnaw per night (`PrizePumpkin.gnaw()` refuses a second, and before night 3).
+func _dawn_gnaw() -> void:
+	if not _gnaw_pending:
+		return
+	_gnaw_pending = false
+	var pk: Node = _farm.targets.get("prize_pumpkin")
+	if pk == null:
+		return
+	if _pumpkin_near:
+		Log.event(&"pumpkin_gnaw_blocked", {"day": Clock.day, "reason": "guarded"})
+	elif pk.gnaw():
+		_add(&"pumpkin_gnaw", Vector3(pk.target_pos().x, 0.0, pk.target_pos().z), {})  # teeth marks; no fix, never in fix_jobs
 
 
 ## Doc 03 section 13 "scarecrow moved": free, daily, never dangerous. One scarecrow to a free spot among
@@ -444,6 +497,9 @@ func _mark(id: int, kind: StringName, pos: Vector3) -> Node3D:
 		&"feathers":
 			for k in 6:
 				_box(root, Vector3(0.04, 0.02, 0.18), Vector3(r.randf_range(-0.8, 0.8), 0.01, r.randf_range(-0.8, 0.8)), mat).rotation.y = r.randf() * TAU
+		&"teeth_marks":  # two arcs of dark nicks at the pumpkin's foot (its rind has no decal yet)
+			for k in 8:
+				_box(root, Vector3(0.05, 0.03, 0.12), Vector3(-0.35 + 0.1 * k, 0.02, -0.75 if k < 4 else -0.65), mat)
 	if (rec.get("fix_hold_s") != null or kind == &"broken_fence") and _farm:  # P4-08: the fence's repair_fence hold is labor.json's
 		var t := FixTarget.new()
 		t.verb = StringName(rec.fix)

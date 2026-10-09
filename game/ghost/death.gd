@@ -176,9 +176,7 @@ func step_payment(farm: Node, final: bool) -> void:
 	debt.dawn_payment(farm, final)
 
 
-## Step 5: farm damage. Night crops wilt first (doc 01 Crops); then the creature's trample. The AI Director's
-## Sabotage still tramples on its own dawn hook, before step 1 (Q-086); once it exposes `dawn_trample()` this
-## step calls it and the order is doc 02 s9's.
+## Step 5: farm damage. Night crops wilt first (doc 01 Crops); then the creature's trample (Sabotage, Q-086).
 func step_farm_damage(farm: Node, _final: bool) -> void:
 	for t in farm.targets.values():
 		if t.has_method(&"dawn_wilt") and t.dawn_wilt():
