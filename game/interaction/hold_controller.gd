@@ -338,7 +338,8 @@ func _autopush() -> void:
 		var slot: Vector3 = cart.push_slot(player.peer)
 		var p := player.global_position
 		Log.event(&"autopush_step", {"step": "pushing", "holding": _holding, "offset_m": snappedf(cart.offset, 0.1), "pushers": cart.pushers.size(),
-				"slot_dist_m": snappedf(Vector2(p.x - slot.x, p.z - slot.z).length(), 0.01) if slot != Vector3.INF else -1.0, "hs": str(hold_state())})
+				"slot_dist_m": snappedf(Vector2(p.x - slot.x, p.z - slot.z).length(), 0.01) if slot != Vector3.INF else -1.0, "hs": str(hold_state()),
+				"cart_yaw": snappedf(cart.body.global_rotation.y, 0.01), "yaw_off": snappedf(angle_difference(cart.body.global_rotation.y, player.yaw), 0.01)})
 	_scripted = false
 	cancel()
 	await get_tree().create_timer(1.5).timeout

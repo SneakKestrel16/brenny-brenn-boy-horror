@@ -50,6 +50,7 @@ var _eye := EYE_STAND  ## smoothed eye height; the head bob rides on it
 var _bob := 0.0  ## head bob phase
 var _sprint_on := false  ## toggle_sprint (D-047): sprint stays on until you stop, run dry or crouch
 var _pushing := false  ## P4-32: locked to a festival cart handle slot (cart.push_slot)
+var _cart_yaw := 0.0  ## P4-32: the cart heading last frame, so the pusher turns with the route
 
 
 func _ready() -> void:
@@ -374,8 +375,12 @@ func _local(delta: float) -> void:
 		_set_crouch(Input.is_action_pressed(&"crouch"))
 	var cart := get_tree().get_first_node_in_group(&"cart")
 	var slot: Vector3 = cart.push_slot(peer) if cart else Vector3.INF
-	if slot != Vector3.INF and not _pushing:
-		yaw = cart.body.global_rotation.y  # P4-32: face along the route once; the mouse stays free after
+	if slot != Vector3.INF:
+		# P4-32: face along the route at lock start, then turn with the cart as the route bends; the mouse
+		# look stays free on top of that.
+		var cy: float = cart.body.global_rotation.y
+		yaw = cy if not _pushing else yaw + angle_difference(_cart_yaw, cy)
+		_cart_yaw = cy
 	_pushing = slot != Vector3.INF
 	if still or pinned or _pushing:
 		dir = Vector2.ZERO

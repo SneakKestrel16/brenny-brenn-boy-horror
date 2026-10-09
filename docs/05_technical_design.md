@@ -646,8 +646,8 @@ P4-12: `game/items/cart.gd`, an interactable that `farm.gd` builds under `World`
   in `pushers`, the act is push or gate run and the cart is not stalled, so release, a knock-off, death
   and the end of the run all free the player. The host pins each pusher's received frame to their slot
   in `players.submit` (no speed check for that frame); the client walks its own body to the same slot
-  each frame from the synced cart, turns to face the route once when the lock starts and keeps mouse
-  look free. Clients still own their movement; the host's copy wins as for traps.
+  each frame from the synced cart, faces the route when the lock starts and then turns with the
+  cart's heading as the route bends; mouse look stays free on top of that. Clients still own their movement; the host's copy wins as for traps.
 - The push hold's bar is the route, not a timer (P4-32): `cart.hold_progress(&"push_cart")` returns
   `[offset / length, "N m to the gate"]` from the synced cart, so every peer shows the same value.
   `HoldController.hold_state()` returns `[verb, progress, note]`, using a target's `hold_progress` when

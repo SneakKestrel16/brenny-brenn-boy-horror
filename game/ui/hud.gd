@@ -48,11 +48,10 @@ func _ready() -> void:
 	_banner.offset_right = 420
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint = _label(Vector2.ZERO, 22)
-	_hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_hint.offset_left = -260
-	_hint.offset_right = 260
-	_hint.offset_top = -150
-	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)  # P4-32: left edge, clear of the hold prompt
+	_hint.offset_left = 16
+	_hint.offset_right = 536
+	_hint.offset_top = -190
 	_hint.text = "CONTROLS\n%s  move\n%s  sprint (runs out, and it is loud)\n%s  crouch (quiet)\n%s  stand still (silent)\nHold %s  work the thing you look at (cans: pick up)
 %s  put a can down\nHold %s  plant a flag where you look\n%s  whistle (carries far)\nHold %s  emote (move the mouse, let go)\n%s  free the mouse" % [
 			_move_keys(), _key(&"sprint"), _key(&"crouch"), _key(&"go_still"), _key(&"interact"), _key(&"drop"), _key(&"alt_use"),
