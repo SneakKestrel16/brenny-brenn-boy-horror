@@ -801,9 +801,11 @@ P3-13 (OPEN_ISSUES "Found at the P3-13 review" item 1). Doc 01 "Bodies": the hos
 
 **Answer (Director, P4-01, 2026-10-08):** the body pick row is now P4-13 (D-070).
 
-### Q-075 · 2026-10-08 · Director → CEO · open · FOR CEO
+### Q-075 · 2026-10-08 · Director → CEO · answered D-077 · FOR CEO
 P4-01 (D-070). Three Phase 4 scope calls; the rows proceed as written unless overruled.
 1. **Animals (D-071):** chicken, pig and cow in the pen, `broken_fence`, round-up, gray-box. Keep, or cut and drop the Rancher's perk to nothing?
 2. **Roles (D-072):** only the four doc 02 s15 roles. The six doc 01 placeholder roles wait until their perks are set. Add them to Phase 4?
 3. **Models (P4-16):** gray-box models built in Blender 5.2, no downloaded models. Approve, or name a source and license for downloads?
 Also still open for the CEO: Q-031 item 2 (day music) and Q-054 item 8 (a real-audio listening run).
+
+**Answer (CEO, D-077):** 1 keep animals; 2 build all ten roles; 3 Blender gray-box approved; Q-054 item 8: no, the CEO listens. Q-031 item 2 stays open.

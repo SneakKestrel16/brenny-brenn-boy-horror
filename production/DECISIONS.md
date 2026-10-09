@@ -569,7 +569,7 @@ already exist (doc 04 s7.3). The CEO may overrule (QUESTIONS, FOR CEO).
 `farmer`, `rancher`, `mechanic`, `tracker`. The six placeholder roles of doc 01 "Roles" wait.
 **Why:** doc 01 "Roles": "Placeholder perks are set before roles are built"; no perk numbers exist for
 the six. Roles are optional and none is needed to win (doc 02 s15). FOR CEO: overrule to add them.
-**How to apply:** `roles.json` (P4-03) and P4-09 carry four roles.
+**How to apply:** `roles.json` (P4-03) and P4-09 carry four roles. **Overruled by D-077: all ten.**
 
 ### D-073 · 2026-10-08 · Director · `send_bytes` type byte ranges
 `0x01`-`0x0F` are movement frames, `0x10`-`0x1F` are voice frames. New byte types take the next free
@@ -607,3 +607,13 @@ Network & Voice confirms with walkies in P4-14). CONTRACTS s10 lists `audio_play
 counts coins (D-065), so `farm_damage` in coins matches it.
 **How to apply:** owners keep the edits when they next touch the files. Gameplay adds the audio events
 to doc 05 s18 in P4-04.
+
+### D-077 · 2026-10-08 · CEO · Q-075 answered: animals kept, all ten roles, Blender models, no agent listens
+1. Animals, the pen and `broken_fence` stay in Phase 4, gray-box (D-071 confirmed).
+2. All ten doc 01 roles are built in Phase 4, overruling D-072. P4-03 sets placeholder perk numbers for
+   the six roles doc 01 lists without numbers; P4-09 builds all ten.
+3. Phase 4 models are gray-box, built in Blender 5.2, nothing downloaded (P4-16 as written).
+4. Q-054 item 8: no agent plays audio out loud. Test runs stay on the Dummy driver; the CEO does every
+   listen.
+**Why:** CEO answers to Q-075, 2026-10-08.
+**How to apply:** P4-03 and P4-09 acceptance updated. Q-031 item 2 (day music) stays open.

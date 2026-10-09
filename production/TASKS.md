@@ -570,10 +570,9 @@ human sessions); the items D-059 held back (`harvest_moon` profile and acts, `pu
 P4-01 review (D-070): the eight draft rows became seventeen, so each row is one system a reviewer can
 check. Animals, the pen and `broken_fence` are in, gray-box (D-071): doc 01 "Daytime Threats" names
 broken fences, the Rancher perk needs animals, and the pen, gate and escape spots are already built
-(doc 04 s7.3). Only the four doc 02 s15 roles are built; the six placeholder roles wait (D-072, FOR
-CEO). Models are new work: `assets/` holds only audio, so P4-16 builds the Phase 4 models in Blender
-5.2 (doc 07 s12), gray-box first, no downloads. Waiting past Phase 4 (doc 01): the six placeholder
-roles; Imposter mode, Dev toys and Quirks ("after DD Phase 4"); live and spliced clips, next season
+(doc 04 s7.3). All ten doc 01 roles are built: the CEO overruled D-072 (D-077), so P4-03 sets placeholder perks for
+the six. Models are new work: `assets/` holds only audio, so P4-16 builds the Phase 4 models in Blender
+5.2 (doc 07 s12), gray-box first, no downloads. Waiting past Phase 4 (doc 01): Imposter mode, Dev toys and Quirks ("after DD Phase 4"); live and spliced clips, next season
 and cosmetics (Phase 5). Open questions are answered or routed in D-073 to D-076 and QUESTIONS.md.
 Feature rows wait for P4-02 because doc 01 puts the simulator first; P4-13, P4-16 and P4-17 change
 no economy number and can start now.
@@ -588,7 +587,7 @@ no economy number and can start now.
 | P4-06 | Gameplay, AI Programmer | Store and upgrades: every `store.json` item works (doc 02 s10) | todo | P4-04 |
 | P4-07 | Gameplay | Debt, payment dawns, early payment, Foreclosure (doc 02 s7) | todo | P4-05 |
 | P4-08 | Gameplay, AI Programmer, Level Designer | Animals and `broken_fence`: pen animals, escape, round-up (D-071) | todo | P4-03 |
-| P4-09 | Gameplay | Roles: the four doc 02 s15 roles, lobby pick, locked per season (D-072) | todo | P4-04, P4-08 |
+| P4-09 | Gameplay | Roles: all ten doc 01 roles, lobby pick, locked per season (D-077) | todo | P4-04, P4-08 |
 | P4-10 | Gameplay, Network & Voice | Saving at dawn, loading, host left, joining and leaving mid-season with headcount scaling | todo | P4-07 |
 | P4-11 | AI Programmer, Gameplay | Phase 4 sabotage and difficulty: `pumpkin_gnaw`, full-wipe doubling, difficulty settings | todo | P4-05, P4-06 |
 | P4-12 | AI Programmer, Gameplay, Technical Artist | Short season and the Harvest Moon: festival cart, acts, `harvest_moon` profile (doc 03 s14) | todo | P4-05, P4-07 |
@@ -615,7 +614,9 @@ Acceptance:
 - `debt.json`: debt by headcount, payment dawns, early payment, pumpkin unlock, Foreclosure seizures
   (doc 02 s7, s4), at the values P4-02 tuned to the s18.3 targets.
 - `difficulty.json`: `easy`, `normal`, `nightmare` and the short season (doc 02 s16).
-- `roles.json`: the four doc 02 s15 roles and their numbers; no placeholder roles (D-072).
+- `roles.json`: all ten doc 01 "Roles": the four doc 02 s15 roles and their numbers, plus placeholder
+  perk numbers for the other six, each marked `placeholder` (doc 01: "Placeholder perks are set before
+  roles are built"; D-077).
 - `store.json`: `effect` numbers for every row (doc 02 s10), including the flare gun's 30 s Retreat
   (doc 01 "Store"). Numbers doc 03 owns are cited there, not copied.
 - `sabotage.json`: `pumpkin_gnaw` and `broken_fence` enabled with the doc 03 s10 costs and day gates;
@@ -692,10 +693,9 @@ Acceptance:
 ### P4-09 Roles
 Owner: Gameplay. Output: role code, lobby cards (doc 05 s16); handoff note.
 Acceptance:
-- The four doc 02 s15 roles (`farmer`, `rancher`, `mechanic`, `tracker`) with `roles.json` numbers.
+- All ten doc 01 roles with `roles.json` numbers (D-077).
 - Picked on lobby cards, optional, locked for the season (doc 01 "Roles").
 - A reconnecting player keeps their role.
-- No placeholder role is built (D-072).
 
 ### P4-10 Saving, joining and leaving
 Owner: Gameplay; Network & Voice for host left and joins. Output: save code (doc 05 s17), net
