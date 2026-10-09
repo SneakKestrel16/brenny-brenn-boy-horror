@@ -79,6 +79,10 @@ func _ready() -> void:
 	_dot.offset_bottom = 2
 	_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_dot)
+	var map := Control.new()  # P4-24: top-right minimap (game/ui/minimap.gd)
+	map.set_script(preload("res://game/ui/minimap.gd"))
+	map.player = player
+	add_child(map)
 
 
 ## P3-07 tester text until the black-hands model and the heartbeat land (doc 01 "The Taint" cues are diegetic).

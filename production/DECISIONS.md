@@ -771,3 +771,13 @@ not guarantee their safety. Bots keep their stand job. P4-31 is not merged; P4-3
 but cant completely guarantee their safety".
 **How to apply:** no code path may treat the stand as fully safe. P4-34 re-runs the bot seasons and the
 sim against the s18.3 targets.
+### D-094 · 2026-10-09 · Gameplay Programmer · The minimap is the one HUD map (P4-24)
+The CEO asked for a top-right minimap (OPEN_ISSUES "Found in the CEO's 2-instance session" item 5).
+`game/ui/minimap.gd` is a north-up map of the whole farm, built once from the level's own nodes, so
+layout changes (P4-27) show without code edits. It shows the local player's arrow, living players,
+buildings, fields and plots, the corn ring, the well (W), store crate (S), town stand (T) and cart
+(C). It never shows the creature, a trap, a noise or a whistle. Doc 05 section "No HUD markers" now
+names it as the one exception.
+**Why:** CEO request; TASKS P4-24 lists the content.
+**How to apply:** new map content goes through `minimap.gd`; anything secret (creature, set traps)
+stays off it. Q-180 asks the CEO whether teammate dots stay (doc 01 voice and whistle tells).

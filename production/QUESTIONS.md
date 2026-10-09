@@ -1153,3 +1153,10 @@ the lobby, but no `barn_lantern` marker exists there, so the "lantern_out" step 
 Soundscape still plays the barn room tone in the lobby (Audio's `_in_barn`), which fits either.
 Players still spawn at the six barn spawn markers at match start (doc 04 s13): "players spawn on the
 farm" read as those markers (inference; the CEO can name another spawn area).
+### Q-180 · 2026-10-09 · Gameplay Programmer -> Director · FOR CEO · open
+P4-24. The minimap shows other living players, as the task row asks. That weakens two doc 01 rules:
+"Voice mimicry" says a fake voice "always comes from a place the teammate can't be", and the
+"Whistle" is "placed by 3D audio only, with no HUD marker". With teammate dots on the map, a player
+checks the map instead of listening, so a fake voice is exposed at a glance and the whistle is no
+longer needed to find someone. Built as asked; the dots are one `if` in `_draw_dyn` of
+`game/ui/minimap.gd` to remove. Keep the teammate dots, drop them, or show them by day only?

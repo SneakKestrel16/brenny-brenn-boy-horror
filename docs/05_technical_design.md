@@ -711,7 +711,7 @@ P4-12: `game/items/cart.gd`, an interactable that `farm.gd` builds under `World`
   `placeholder`); the host stamps the position and sends `apply_whistle(slot, position)`; the whistle
   is a world sound everyone hears at their own distance. It emits `whistle` (50 m) to the creature,
   so it can pull the creature, which is the rule in doc 01. **It is the only sanctioned way to find
-  a teammate by sound** (doc 01's whistle rule), so there is no marker on the minimap (none exists).
+  a teammate by sound** (doc 01's whistle rule), so the whistle puts no marker on the minimap (P4-24).
   Its audible range is long (doc 04 section 8.2 suggests at least 171 m; the Audio Designer's number,
   Q-014 item 4 / doc 08).
 - **Emotes** (doc 01 "Emotes and physical comedy"): `wave`, `point`, `shrug`, `scream` (the scream is
@@ -907,8 +907,12 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   (`Easy`, `Normal`, `Hard`, `Nightmare`, `difficulty.json`; "no live clips" and "streamer-safe" are
   flags; doc 01 "Difficulty and group settings"). They go in the save (section 17); the voice
   setting does not.
-- **No HUD markers.** There is no minimap, no objective marker, no player name tag over a head, no
-  health bar. Information is diegetic (doc 01 "Diegetic"): the pegboard shows what tools are out, the
+- **No HUD markers.** There is no objective marker, no player name tag over a head, no
+  health bar. The one exception is the CEO-requested minimap (P4-24, D-094, `game/ui/minimap.gd`,
+  a child of the HUD): a north-up farm map in the top right, read from the level's nodes when the HUD
+  is built (`Ground/Floor`, `Buildings/*`, `Regions/field_*` and `corn_*`, groups `plot_spots`,
+  `well`, `store_crate`, `sell_box`, `cart`), with the local player's arrow and dots for living
+  players. It never reads the `creature` group, and nothing on it marks a trap, a noise or a whistle. Information is diegetic (doc 01 "Diegetic"): the pegboard shows what tools are out, the
   flag shows a trap, a wrinkled leaf shows a thirsty crop, the generator hums lower.
 - **Accessibility** (inference, unscoped in doc 01): there are no voice subtitles at all (D-019): a
   missing speaker name on a creature fake would expose it and defeat the "wrong place" tell. A
