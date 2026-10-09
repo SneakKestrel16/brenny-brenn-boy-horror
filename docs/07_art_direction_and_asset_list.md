@@ -527,10 +527,10 @@ moonflower bed has 4 plots (2 by 2); the Prize Pumpkin patch is 4 m across centr
 | `char_farmer.glb` (rig: idle, walk, run, crouch, interact, emotes wave, point, shrug, scream; 4 tint slots) | 0.5 x 0.3 x 1.8 | P1 |
 | `char_farmer_ragdoll.glb` (physical bones) | 1.8 | P2 |
 | `char_ghost.glb` (translucent shell of the farmer) | 0.5 x 0.3 x 1.8 | P3 |
-| `creature_gaunt.glb` | 0.9 x 0.7 x 2.1 (hunched) | P1 (placeholder) |
+| `creature_gaunt.glb` | 0.9 x 1.06 x 2.1 (hunched; depth as built in P4-19, head and hump forward) | P1 (placeholder) |
 | `creature_scarecrow.glb`, `creature_scarecrow_head.glb` | 1 x 0.6 x 2.2 | P2 |
-| `creature_boar.glb` (with `_chain` part) | 1.2 x 2.2 x 1.4 | P3 |
-| `creature_corn_husk.glb`, `creature_corn_husk_heart.glb` | 1 x 1 x 2.4 | P3 |
+| `creature_boar.glb` (with `_chain` part) | 1.2 x 2.38 x 1.4 (length as built in P4-19) | P3 |
+| `creature_corn_husk.glb`, `creature_corn_husk_heart.glb` | 1 x 1.07 x 2.4 (depth as built in P4-19) | P3 |
 | `creature_smear.glb` (ghost-view silhouette, a hull of the active body) | as body | P3 |
 | `animal_chicken.glb` | 0.3 x 0.4 x 0.4 | P1 |
 | `animal_pig.glb` | 0.6 x 1.2 x 0.8 | P2 |
