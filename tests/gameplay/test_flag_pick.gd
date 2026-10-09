@@ -3,7 +3,7 @@ extends SceneTree
 ## plants the local player's flag on the same spot (the worst case) and someone else's beside it, then casts
 ## HoldController.pick (layer 4, 3 m) at the trap from eight sides at standing eye height: every
 ## ray must find the trap's target (D-142: the pick sees through a flag to the trap). Both flags can be pulled up, so
-## both have a pick body; a ray at the cloth finds the flag. Run windowed:
+## both have a pick body; a ray at the cloth finds the flag. Passes headless too:
 ##   "$GODOT" --audio-driver Dummy --path . -s res://tests/gameplay/test_flag_pick.gd -- --host --port=24866 --free-mouse
 
 var _t := 0.0

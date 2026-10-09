@@ -191,8 +191,9 @@ func _look_target() -> Node:
 
 
 ## The interactable the ray from `from` to `to` hits. A flag does not hide what it stands on: the ray goes
-## on through a flag, and another target within FLAG_SEE_THROUGH_M behind it wins (D-142: a flag on a trap
-## must not stop its disarm, fill or pickup). Anything further back loses to the flag.
+## on through a flag, and another target within FLAG_SEE_THROUGH_M behind it along the ground wins (D-142: a flag
+## on a trap must not stop its disarm, fill or pickup; the pole hit is higher than a trap hit, so 3D distance would
+## overstate the gap). Anything further back loses to the flag.
 static func pick(space: PhysicsDirectSpaceState3D, from: Vector3, to: Vector3) -> Object:
 	var q := PhysicsRayQueryParameters3D.create(from, to, PICK_MASK)
 	var flag: Object = null
@@ -203,7 +204,7 @@ static func pick(space: PhysicsDirectSpaceState3D, from: Vector3, to: Vector3) -
 			return flag
 		var it: Object = hit.collider.get_meta(&"interactable")
 		if it.get_script() != FlagSpot:
-			return it if flag == null or flag_at.distance_to(hit.position) <= FLAG_SEE_THROUGH_M else flag
+			return it if flag == null or Vector2(flag_at.x, flag_at.z).distance_to(Vector2(hit.position.x, hit.position.z)) <= FLAG_SEE_THROUGH_M else flag
 		if flag == null:
 			flag = it
 			flag_at = hit.position
