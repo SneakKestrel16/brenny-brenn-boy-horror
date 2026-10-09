@@ -195,6 +195,8 @@ Source: the CEO's own play test at STOP 5 (host and one client on one PC). Route
    s7.3 scarecrow spots. Nothing tells the player that. Not routed; the CEO decides.
 10. **Would a bigger watering can fix the money gap?** Watering can capacity is 2 plots per fill
     (doc 02 s3, placeholder). P4-28 runs the simulator on it.
+11. **The creature killed a player inside the lit barn** after the player whistled. Doc 01 "Nights" and
+    doc 03 s211/s247 say the creature never enters a lit building. Bug; added to P4-25.
 
 ## Found at the P4-21 review (QA, 2026-10-09)
 
