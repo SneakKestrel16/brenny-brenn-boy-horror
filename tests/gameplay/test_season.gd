@@ -67,6 +67,14 @@ func _process(delta: float) -> bool:
 		p.complete(&"harvest", me, q)
 		_check(int(q.bag_by.get(id, 0)) == 1 and p.state == &"empty", "%s harvested" % id)
 		_check(Crops.bag_value(q) == int(Crops.rec(id).sell), "%s sells for its price" % id)
+	# P4-30: the headcount sell bonus rounds up and reads this session's headcount
+	var bonus_by: Dictionary = root.get_node("Data").record(&"player_scaling", &"headcount").sell_bonus_pct_by_players
+	var hc := str(root.get_node("Game").player_count())
+	var shipped: int = bonus_by.get(hc, 0)
+	_check(Crops.sell_bonus(40) == 0 and shipped == 0, "shipped sell bonus is 0 at %sp (D-106)" % hc)
+	bonus_by[hc] = 5
+	_check(Crops.sell_bonus(40) == 2 and Crops.sell_bonus(41) == 3 and Crops.sell_bonus(0) == 0, "sell bonus 5% rounds up")
+	bonus_by[hc] = shipped
 	# a locked crop and the wrong crop for a plot
 	clock.day = 1
 	p.bed = false

@@ -781,3 +781,27 @@ names it as the one exception.
 **Why:** CEO request; TASKS P4-24 lists the content.
 **How to apply:** new map content goes through `minimap.gd`; anything secret (creature, set traps)
 stays off it. Q-180 asks the CEO whether teammate dots stay (doc 01 voice and whistle tells).
+### D-106 · 2026-10-09 · Game Designer · Headcount sell bonus, shipped at 0
+P4-30 (CEO: "add a sell bonus based on player count to increase money so 2p still makes payments").
+`player_scaling.json` `sell_bonus_pct_by_players` (2 to 6, integer %, `sim`) adds `ceil(v * b / 100)` to
+every crop sale at the current headcount: sell box, dawn moonflower cash-in, final-dawn end-of-season
+sale. Not the Prize Pumpkin payout. The host applies it (`Crops.sell_bonus`) and logs it as `bonus` on
+`sell` (the dawn cash-in now logs a `sell` with `dawn: true`) and `end_of_season_sale`. The sim
+(`Model.sold`) models it. **The table is 0 at every headcount:** the sim's median team already meets
+every doc 02 s18.3 target at 2 to 6 players, the 2p median already pays the first payment, and any 2p
+bonus that rounds to a coin pushes the 2p final clear above 70% (1% gives 76.8, 5% gives 90.8; doc 02
+s18.6 P4-30 log).
+**Why:** the acceptance says no bonus where the sim already meets its targets, and the sim meets them at
+every headcount. The 2p misses in bot seasons come from a 2p team with one worker (Q-162, Q-164) and the
+unattended trample term (Q-161), not from 2p prices.
+**How to apply:** turn the bonus on by data only, after the Director rules on Q-210 and Q-211; re-run
+`tools/sim/sim.py` and record the new table in doc 02 s18.6.
+
+### D-107 · 2026-10-09 · Game Designer · Sim models the Q-161 unattended term, off by default
+`tools/sim/sim.py` adds `min((night_s - 30) // unattended_every_s, unattended_cap)` (3 with the shipped
+`sabotage.json` values) to the trample count on nobody-outside nights when the policy sets
+`unattended_term: true`. `median.json` keeps it `false`, so the s18.3 gate is unchanged.
+**Why:** with it on, final clear falls to about 26 to 33% at every headcount and Large needed fails
+everywhere, with or without a sell bonus (doc 02 s18.6). Turning it on is an economy retune, which the
+Director decides (Q-211).
+**How to apply:** set `unattended_term` true in a policy to measure the D-089 world.

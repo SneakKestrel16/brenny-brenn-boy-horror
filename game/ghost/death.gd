@@ -130,7 +130,9 @@ func step_cash_in(farm: Node, _final: bool) -> void:
 				Log.event(&"carried_lost", {"player": p, "bag": bag})
 			st.fuel_can = false
 		elif bag > 0:
-			farm.add_coins(value, &"dawn_cash_in", p)
+			var bonus := Crops.sell_bonus(value)  # P4-30
+			Log.event(&"sell", {"player": p, "items": bag, "coins": value + bonus, "bonus": bonus, "dawn": true})
+			farm.add_coins(value + bonus, &"dawn_cash_in", p)
 		farm.send_carry(p)
 
 
@@ -154,7 +156,9 @@ func step_final_sale(farm: Node, final: bool) -> void:
 				total += v
 				plots += 1
 	total = Data.scale_pct(total, int(Data.value(&"season", &"end_season_sale_pct")), true)  # nearest coin
-	Log.event(&"end_of_season_sale", {"plots": plots, "coins": total})
+	var bonus := Crops.sell_bonus(total)  # P4-30
+	total += bonus
+	Log.event(&"end_of_season_sale", {"plots": plots, "coins": total, "bonus": bonus})
 	if total > 0:
 		farm.add_coins(total, &"end_of_season_sale", 0)
 

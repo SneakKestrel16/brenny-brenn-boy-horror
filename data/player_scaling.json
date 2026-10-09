@@ -5,7 +5,7 @@
     {
       "id": "headcount",
       "source": "doc01",
-      "cite": "doc 01 Ramp-up (80% at 3 players, 60% at 2, rounded up; 120% at 5 and 140% at 6, D-038); doc 02 section 4; field plots 18/20 start and 26/28 ceiling at 5p/6p, tuned in tools/sim (QA-check-2026-10-09, was 20/24 and 28/32), doc 02 section 4; payment_pct_by_players 6p 138 tuned in tools/sim (QA-check-2026-10-09, was 140)",
+      "cite": "doc 01 Ramp-up (80% at 3 players, 60% at 2, rounded up; 120% at 5 and 140% at 6, D-038); doc 02 section 4; field plots 18/20 start and 26/28 ceiling at 5p/6p, tuned in tools/sim (QA-check-2026-10-09, was 20/24 and 28/32), doc 02 section 4; payment_pct_by_players 6p 138 tuned in tools/sim (QA-check-2026-10-09, was 140); sell_bonus_pct_by_players P4-30, D-106 (doc 02 section 4)",
       "sources": {
         "2": "doc01",
         "3": "doc01",
@@ -13,7 +13,8 @@
         "5": "placeholder",
         "6": "placeholder",
         "field_plots": "placeholder",
-        "payment_pct_by_players": "sim"
+        "payment_pct_by_players": "sim",
+        "sell_bonus_pct_by_players": "sim"
       },
       "pct_by_players": {
         "2": 60,
@@ -28,6 +29,13 @@
         "4": 101,
         "5": 120,
         "6": 138
+      },
+      "sell_bonus_pct_by_players": {
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0
       },
       "rounding": "ceil",
       "min_players": 2,

@@ -1160,3 +1160,28 @@ P4-24. The minimap shows other living players, as the task row asks. That weaken
 checks the map instead of listening, so a fake voice is exposed at a glance and the whistle is no
 longer needed to find someone. Built as asked; the dots are one `if` in `_draw_dyn` of
 `game/ui/minimap.gd` to remove. Keep the teammate dots, drop them, or show them by day only?
+
+### Q-210 · 2026-10-09 · Game Designer -> Director · FOR CEO · open
+P4-30. The CEO's 2p sell bonus conflicts with the doc 02 s18.3 targets (doc 01 "55-70% final"). The sim's
+median 2p team already clears the first payment in 87% of seasons and the final in 63%; any 2p bonus
+rounding to a coin pushes the 2p final above 70% (1%: 76.8; 5%: 90.8, first 91.3). Shipped 0 (D-106).
+Options: (a) keep 0 and fix the 2p bot-season misses at their cause (one worker at 2p: Q-162 idle host,
+Q-164 sentinel, now P4-31); (b) accept a 2p final above 70%, e.g. 5% (doc 01 change, CEO only);
+(c) turn the unattended term on (Q-211) and set an economy-wide bonus of about 5/5/4/4/4, which passes
+first and final at 2p to 4p and 6p but leaves 5p final at 72.1 and Large needed failing at every headcount.
+Settled by: the CEO picking one; the Game Designer then sets the table and re-runs the gate.
+
+### Q-211 · 2026-10-09 · Game Designer -> Director · open
+P4-30, answers Q-161 in part. With the D-089 sanctuary fix a hiding team takes base 1 + dead generator 1 +
+unattended 3 = 5 tramples a night. The sim now has that term (`unattended_term`, D-107). At the median hide
+rate (20% of nights) final clear falls to 32.6/26.7/26.2/26.2/26.5 at 2p to 6p; hiding every night, 2p
+first clear falls to 24.9 and final to 0. `unattended_cap` 1 still gives finals of about 44 to 50; hide rate
+5% with cap 3 almost passes (finals 63.6/58.7/58.8/58.8/57.5, 5p first 77.3). No sell bonus fixes Large
+needed under the term. Which moves: the sim's median hide rate, `unattended_cap` (AI Programmer data), or a
+debt/payout retune? Settled by: a Director ruling, then a P4-21-style bot season after P4-31 to measure the
+real hide rate.
+
+### Q-212 · 2026-10-09 · Game Designer -> Gameplay Programmer · open
+P4-30. Doc 05 s18 event rows need the new fields: `sell` gains `bonus` (coins already include it) and, from
+the dawn moonflower cash-in, `dawn: true`; `end_of_season_sale` gains `bonus`. Doc 05 is yours (CONTRACTS
+s2). Settled by: the doc 05 rows updated.

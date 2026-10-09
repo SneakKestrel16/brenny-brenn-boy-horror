@@ -14,6 +14,8 @@
   "death_night_weight": 3,
   "jitter_pct": 20,
   "nobody_outside_pct": 20,
+  "unattended_term": false,
+  "unattended_term_note": "Q-161, P4-30: true adds sabotage.json's unattended-farm trample (+3 on a nobody-outside night) and fails s18.3 at every headcount (doc 02 s18.6); off until the Director rules",
   "generator_dead_base_pct": 10,
   "generator_dead_tank_factor_pct": 40,
   "generator_kill_unfixed_pct": 50,

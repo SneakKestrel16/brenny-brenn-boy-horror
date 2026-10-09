@@ -75,6 +75,12 @@ static func bag_value(st: Dictionary) -> int:
 	return value_of(by) + maxi(int(st.get("bag", 0)) - n, 0) * sell(default_seed())
 
 
+## Host: the headcount sell bonus on a sale of `v` coins, rounded up (doc 02 s4, P4-30, D-106).
+static func sell_bonus(v: int) -> int:
+	var by: Dictionary = Data.record(&"player_scaling", &"headcount").get("sell_bonus_pct_by_players", {})
+	return Data.scale_pct(v, int(by.get(str(Game.player_count()), 0)))
+
+
 static func bag_add(st: Dictionary, crop: StringName) -> void:
 	var by: Dictionary = st.get("bag_by", {})
 	by[crop] = int(by.get(crop, 0)) + 1
