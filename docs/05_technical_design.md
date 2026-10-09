@@ -800,8 +800,8 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
 
 ## 16. Menus and settings
 
-- **Menus** (`game/ui/`): main menu (Host, Join, Settings, Quit), lobby (the dark barn, roles,
-  difficulty, group options), pause overlay, host-left card, "waiting for a farmhand" card (doc 06
+- **Menus** (`game/ui/`): main menu (Host, Join, Settings, Quit), lobby (a menu screen: roles,
+  difficulty, group options, ready; P4-23), pause overlay, host-left card, "waiting for a farmhand" card (doc 06
   section 5), Dawn Report, Season Awards. The Host and Join screens are doc 06 sections 3 and 4;
   `game/ui/` embeds `game/net/`'s screens.
 - **Settings** live in `user://settings.cfg` (a `ConfigFile`, autoload `Settings`) on **each client's
@@ -853,14 +853,21 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
 - **Flow.** Launching with no arguments in a window opens the main menu (`game/ui/main_menu.tscn`):
   Host (port), Join (a join code, a raw IP or `IP:port`; D-049 brings back doc 06 s4 join codes for rejoining), Settings, Quit. Host and
   Join turn Phase 1 data on and reload it (a bare exe has no `--phase1`; remove when the full farm lands).
-  Both land in the **lobby** (`game/ui/lobby.tscn`): the barn from `Game.world_path()` (the full farm; with `--phase1-farm`, Phase 1's
-  scene otherwise), WorldLook at night (no lights built in the lobby), the `Players` node, and a roster with each
-  player's voice setting and doc 01's Discord line. The host starts the match with Enter or the pause
-  menu: `Game.start_match()` waits for `Game.match_ready()` (P2-03 clip pre-share hook, doc 06 section 12
+  Both land in the **lobby** (`game/ui/lobby.tscn`, P4-23): a menu screen, no world and no player bodies
+  (nobody spawns until the match starts). Left: the role cards (P4-09; a taken role greyed out, all locked
+  when a loaded season keeps its roles). Right: a roster with each player's role, voice setting and ready
+  mark, the join code, doc 01's Discord line, the group settings (difficulty and streamer-safe; host edits,
+  `Game.set_group_settings`, everyone sees them) and one button. A client's button toggles Ready
+  (`request_lobby_ready(on)`; the host logs `lobby_ready {player, on}` and broadcasts
+  `apply_lobby_ready(peers)` into `Game.lobby_ready`; a joiner sends `false` to get everyone's marks). The
+  host's button, "Start the season", is enabled when `Game.all_ready()` (every other human ready; bots
+  count as ready); Enter presses it. `Game.lobby_ready` is cleared at match start and on leave. The
+  `Players` node is a stub (`lobby.gd` `Voices`) holding the AudioListener3D and one bare `Node3D` per peer
+  so Voice still hangs its emitters: lobby voice plays unplaced. `Game.start_match()` waits for `Game.match_ready()` (P2-03 clip pre-share hook, doc 06 section 12
   step 5), clears each player's movement state (the host drops frames with a stale `seq`), starts the
   `Clock`, sends `apply_match_start` and everyone changes to `main.tscn`. A client that joins during
   the lobby gets `p_lobby = true` in `apply_session_state`. The pause menu (`PauseMenu`, `CanvasLayer`
-  120, Esc) does not pause the session: Resume, Settings, Start match (host, lobby), Leave to menu,
+  120, Esc) does not pause the session: Resume, Settings, Leave to menu,
   Quit. While open it sets `Game.console_open` so Player and HoldController ignore game keys. It also
   shows the host-left card (`multiplayer.server_disconnected`) with a way back to the menu.
 - **Joining, rejoining and join codes (P2-16, D-048 to D-050).** `Game.match_roster` (uid -> true, filled by
@@ -892,7 +899,9 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   `application/config/version` (`dev`). `session_start` logs it as `build_id` and the data hash as
   `data_hash` (Q-047).
 - **Debug arguments:** `--menu` (menu even headless), `--lobby` (host through the lobby),
-  `--lobby-start=<n>` (host starts the match when n players are in), `--menu-open=settings`,
+  `--lobby-start=<n>` (host starts the match when n players are in, ready or not), `--lobby-ready` (a
+  client presses Ready after 1 s; the host presses Start once a teammate is in and all are ready),
+  `--role=<id>` (picks a role 1 s into the lobby), `--menu-open=settings`,
   `--settings-tab=<0..3>`, `--pause-open`, `--ui-shot=<png>` (saves the window after 90 frames and quits).
 - **Difficulty and group options** are chosen in the lobby by the host and saved in the season
   (`Easy`, `Normal`, `Hard`, `Nightmare`, `difficulty.json`; "no live clips" and "streamer-safe" are

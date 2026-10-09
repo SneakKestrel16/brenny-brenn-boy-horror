@@ -401,6 +401,17 @@ func apply_roles(table: Dictionary) -> void:
 	Roles.apply(table)
 
 
+## P4-23: mark ready (or not) in the lobby; not `request_ready`, which `Node` already has (section 17).
+@rpc("any_peer", "call_remote", "reliable")
+func request_lobby_ready(on: bool) -> void:
+	Game.on_lobby_ready_request(_sender(), on)
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_lobby_ready(peers: Array) -> void:
+	Game.apply_lobby_ready(peers)
+
+
 ## Doc 06 s11: the owner's voice setting (`off` / `lobby_lines`). Slots are not built, so this names the peer id.
 @rpc("any_peer", "call_remote", "reliable")
 func request_voice_setting(setting: String) -> void:

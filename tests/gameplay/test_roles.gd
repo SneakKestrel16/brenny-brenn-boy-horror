@@ -54,6 +54,7 @@ func _process(_d: float) -> bool:
 		_check(Roles.of(-2) == &"", "second player refused Medic")
 		Roles.on_request(-2, &"warden")
 		_check(Roles.of(-2) == &"warden", "second player takes Warden")
+		_lobby(Game)
 		Game.in_lobby = false  # the match started
 		Roles.on_request(1, &"farmer")
 		_check(Roles.of(1) == &"medic", "role locked once the match starts")
@@ -64,6 +65,19 @@ func _process(_d: float) -> bool:
 		print("test_roles: %s" % ("PASS" if _fails == 0 else "%d FAILED" % _fails))
 		quit(0 if _fails == 0 else 1)
 	return false
+
+
+## P4-23: the lobby is a menu screen with no player bodies; Start waits for every other human's Ready.
+func _lobby(Game: Node) -> void:
+	_check(current_scene is Control and current_scene.get_node("Players").get_child_count() == 1, "lobby is a menu: no bodies, only the voice listener")
+	_check(Game.all_ready(), "host alone (and bots) count as ready")
+	Game.players[2] = {}
+	_check(not Game.all_ready(), "a joined client is not ready yet")
+	Game.on_lobby_ready_request(2, true)
+	_check(Game.all_ready(), "client marked ready")
+	Game.on_lobby_ready_request(2, false)
+	_check(not Game.all_ready(), "client took Ready back")
+	Game.players.erase(2)
 
 
 ## Medic: pries someone else free at x0.6, not themselves; the bill cut counts deaths within 15 m of a living Medic.

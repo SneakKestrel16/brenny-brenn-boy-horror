@@ -1,6 +1,6 @@
 extends Control
 ## P2-10 main menu (doc 05 section 16): Host, Join, Settings, Quit. Join takes a join code (doc 06 s4,
-## D-049) or a raw IP or IP:port (D-024: friends join over Tailscale). Host and Join both land in the barn lobby. A launch that finds
+## D-049) or a raw IP or IP:port (D-024: friends join over Tailscale). Host and Join both land in the lobby screen (P4-23). A launch that finds
 ## `last_session.cfg` offers "Rejoin your last match?" (D-049).
 ## Debug user args: --menu-open=settings, --ui-shot=<png> (SettingsApply).
 

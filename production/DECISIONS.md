@@ -752,3 +752,11 @@ one player at the stand all night therefore no longer zeroes `nobody_outside_s` 
 The bots' sentinel job goes with it (P4-31).
 **Why:** CEO call 2026-10-09 ("close the hole"); doc 01 "Nights": hiding is never fully safe or free.
 **How to apply:** sanctuary still blocks lures, scares and kills; it only stops counting as attending.
+
+### D-092 · 2026-10-09 · Director · Lobby ready messages
+New net messages (CONTRACTS s7): `request_lobby_ready(on: bool)` (client to host, sender from `_sender()`)
+and `apply_lobby_ready(peers: Array)` (host to all). `Game.all_ready()` gates the host's "Start the
+season"; bots count as ready; `--lobby-start` bypasses it for QA. Not named `request_ready`, which `Node`
+already has.
+**Why:** P4-23 menu lobby (CEO session item 4); Q-175.
+**How to apply:** doc 06 s7 lists them beside `request_role` / `apply_roles`.

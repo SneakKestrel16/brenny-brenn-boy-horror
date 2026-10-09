@@ -32,8 +32,9 @@ var seed_value := 0
 var debug_view := false
 var bots := 0
 var in_session := false
-var in_lobby := false  ## the barn before the match: the host's Clock has not started (P2-10)
-var lobby_autostart := 0  ## QA: `--lobby-start=<n>` starts the match when n players are in the barn
+var in_lobby := false  ## the lobby screen before the match: the host's Clock has not started (P2-10, P4-23)
+var lobby_ready: Dictionary = {}  ## P4-23: peer -> true for each player marked ready in the lobby (host decides, clients mirror)
+var lobby_autostart := 0  ## QA: `--lobby-start=<n>` starts the match when n players are in the lobby, ready or not
 var match_roster: Dictionary = {}  ## host: player_uid -> true for everyone in the barn at match start; only they may rejoin (D-048)
 var season_uids: Array = []  ## host: a loaded save sets the season's player uids; the lobby admits only them (D-048). Empty = new game
 var roles: Dictionary = {}  ## host: player_uid -> role id, kept for the season so a rejoiner keeps theirs (P4-09; the save is P4-10)
@@ -56,7 +57,7 @@ func _process(_delta: float) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
-## The level scene Main and the lobby load (the lobby barn is the same scene; spawns lie in the barn).
+## The level scene Main loads (the spawns lie in the barn).
 func world_path() -> String:
 	return WORLD_FULL if full_farm else WORLD_PHASE1
 
@@ -223,6 +224,7 @@ func start_match() -> void:
 	if not is_host() or not in_lobby or not match_ready():
 		return
 	in_lobby = false
+	lobby_ready.clear()
 	match_roster.clear()
 	for p in players:
 		if p > 0:
@@ -251,8 +253,37 @@ func apply_group_settings(p_difficulty: StringName, p_streamer_safe: bool) -> vo
 	Log.event(&"group_settings", {"difficulty": String(difficulty), "streamer_safe": streamer_safe})  # every peer
 
 
+## Host, lobby only (P4-23): `peer` marks itself ready or not; everyone gets the ready list. A client sends
+## `false` when its lobby opens, which also brings it the current list.
+func on_lobby_ready_request(peer: int, on: bool) -> void:
+	if not is_host() or not in_lobby or not players.has(peer):
+		return
+	if on:
+		lobby_ready[peer] = true
+	else:
+		lobby_ready.erase(peer)
+	Log.event(&"lobby_ready", {"player": peer, "on": on})
+	apply_lobby_ready(lobby_ready.keys())
+	Net.to_peers(&"apply_lobby_ready", [lobby_ready.keys()])
+
+
+func apply_lobby_ready(peers: Array) -> void:
+	lobby_ready.clear()
+	for p in peers:
+		lobby_ready[int(p)] = true
+
+
+## Every human but the host is ready (the host's Start is its ready).
+func all_ready() -> bool:
+	for p in players:
+		if p > 1 and not lobby_ready.has(p):
+			return false
+	return true
+
+
 func apply_match_start() -> void:
 	in_lobby = false
+	lobby_ready.clear()
 	Rejoin.save_session(Net.join_target(), session_id)  # D-049: where to come back to after a crash
 	for p in players:
 		players[p] = {"voice_setting": voice_setting_of(p)}
@@ -273,6 +304,7 @@ func leave_session(reason: StringName = &"left") -> void:
 	players.clear()
 	in_session = false
 	in_lobby = false
+	lobby_ready.clear()
 	console_open = false
 	season_id = ""
 	season_uids = []

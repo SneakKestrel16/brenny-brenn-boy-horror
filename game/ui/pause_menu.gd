@@ -2,7 +2,7 @@ class_name PauseMenu
 extends CanvasLayer
 ## P2-10 pause menu (doc 05 section 16), in the lobby and the match. It does not pause the game (it is
 ## a network session); it frees the mouse, tells Player and HoldController to ignore game keys
-## (`Game.console_open`) and offers Resume, Settings, Start match (host, lobby only), Leave and Quit.
+## (`Game.console_open`) and offers Resume, Settings, Leave and Quit (the lobby screen has Start, P4-23).
 ## It also shows the host-left card. Debug user arg: --pause-open.
 
 var _panel: Control
@@ -46,7 +46,7 @@ func set_open(on: bool) -> void:
 	if on:
 		_rebuild()
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif DisplayServer.get_name() != "headless":
+	elif DisplayServer.get_name() != "headless" and not Game.in_lobby:  # the lobby is a menu screen (P4-23)
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
@@ -57,10 +57,8 @@ func _rebuild() -> void:
 		_label("The host left.\nThe season continues from the last dawn save.\nAny farmhand from this season can host it.")
 		_button("Back to menu", Game.leave_session)
 		return
-	_label("Paused" if not Game.in_lobby else "The barn")
+	_label("Paused" if not Game.in_lobby else "The lobby")
 	_button("Resume", set_open.bind(false))
-	if Game.in_lobby and Game.is_host():
-		_button("Start match", Game.start_match)
 	_roster_volumes()
 	_join_code()
 	_button("Settings", _open_settings)

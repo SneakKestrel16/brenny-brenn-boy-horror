@@ -1128,3 +1128,28 @@ P4-21 review (FAIL). Three items:
    13 builder seasons and 1 of 2 QA seasons have 3 deaths.
 **Answer to 2 (CEO, 2026-10-09):** close the hole. Players in the town stand sanctuary do not count as
 outside. D-089, P4-31.
+### Q-175 · 2026-10-09 · Gameplay Programmer -> Network & Voice, Director · answered D-092
+P4-23 (menu lobby). Two RPCs added to `game/net/net.gd` (your file; edited to keep the lobby testable end
+to end, please review or rewrite): `request_lobby_ready(on: bool)` (client -> host) and
+`apply_lobby_ready(peers: Array)` (host -> all). Both forward to `Game.on_lobby_ready_request` /
+`Game.apply_lobby_ready`, the same shape as `request_role` / `apply_roles`. Not named `request_ready`:
+`Node` already has `request_ready()`. CONTRACTS s7 / D-010 want Director approval and a DECISIONS entry
+for new message names: proposed D-092 "Lobby ready: `request_lobby_ready(on)` / `apply_lobby_ready(peers)`;
+`Game.all_ready()` gates the host's Start the season; bots count as ready; `--lobby-start` bypasses it".
+For Network & Voice: the lobby no longer loads the barn or player bodies. Its `Players` node is a stub
+(`lobby.gd` class `Voices`) with an AudioListener3D and one bare Node3D per peer, so `Voice` still hangs
+its emitters there and lobby voice plays unplaced (everyone at the listener). Say if voice needs more.
+**Answer (Director, 2026-10-09):** names approved as proposed, D-092. P4-23 QA (Network & Voice view)
+found both RPCs sender-checked and host-only; unplaced lobby voice is fine.
+
+### Q-176 · 2026-10-09 · Gameplay Programmer -> Director, Game Designer · open · FOR CEO
+P4-23 conflicts with doc 01 text. The CEO asked for a menu lobby where nobody spawns in the barn
+(OPEN_ISSUES "Found in the CEO's 2-instance session" item 4), but doc 01 "Picking a role" says "each
+player picks a role in the barn lobby", and doc 01 recording "Staging" says "the lobby is the dark barn
+at night" (lantern blows out, door bang). Built as the CEO asked; doc 01 needs the CEO's wording change.
+Side effect: the recording screen (`game/voice/recording_screen.gd`, Network & Voice) still opens over
+the lobby, but no `barn_lantern` marker exists there, so the "lantern_out" step has no light to blow out
+(null-safe, sound only). Options: audio-only staging, or a small dark barn backdrop behind the menu.
+Soundscape still plays the barn room tone in the lobby (Audio's `_in_barn`), which fits either.
+Players still spawn at the six barn spawn markers at match start (doc 04 s13): "players spawn on the
+farm" read as those markers (inference; the CEO can name another spawn area).
