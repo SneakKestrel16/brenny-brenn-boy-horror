@@ -13,10 +13,10 @@ var bpm = 70, beats = 4, period = 60 / bpm;
 			var env = EnvGen.ar(Env.perc(0.004, decay, curve: -6), doneAction: 2);
 			var pitch = freq * (1 + (EnvGen.ar(Env.perc(0, 0.04)) * 1.5));
 			var body = SinOsc.ar(pitch) * env;
-			var knock = LPF.ar(WhiteNoise.ar, 900) * EnvGen.ar(Env.perc(0.001, 0.015)) * 0.3;
+			var knock = LPF.ar(WhiteNoise.ar, 1100) * EnvGen.ar(Env.perc(0.001, 0.02)) * 0.45;
 			var squelch = RLPF.ar(BrownNoise.ar, XLine.kr(700, 160, 0.12), 0.08)
 				* EnvGen.ar(Env.perc(0.01, 0.12, curve: -4)) * wet * 0.25;
-			Out.ar(out, LPF.ar(body + knock + squelch, 600) * amp);
+			Out.ar(out, LPF.ar(body + knock + squelch, 900) * amp);
 		})
 	],
 	events: beats.collect { |i|

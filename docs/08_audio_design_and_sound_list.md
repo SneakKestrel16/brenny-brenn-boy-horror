@@ -127,7 +127,7 @@ All `placeholder`. Every WAV is peak-normalised to -1 dBFS (D-015), so the per-s
 | Generator hum | -24 at 5 m | heard across the yard |
 | Creature signature, Chase | -12 | "loud" (doc 01) |
 | Chase sting | -8 peak-ish | the loudest event in the game |
-| Taint heartbeat | -42 | "faint" (doc 01), local only |
+| Taint heartbeat | -32 | "faint" (doc 01), local only |
 
 ## 3. Spatial rules
 
@@ -433,7 +433,7 @@ Pattern generation (cadence, picking variants) is in `game/audio/lure_sounds.gd`
 
 | State | Sound | Rule |
 |---|---|---|
-| **Taint** (doc 01 "The Taint": "a faint wet heartbeat in your audio") | `sfx_taint_heartbeat` (exists, 70 bpm), non-positional, local only, `SFX`; -42 dB; `pitch_scale` follows Taint intensity (1.0 to 1.3; the 4-beat loop is an exact period). As built (P3-08): Taint is on/off, so the pitch stays 1.0; the beat ducks 8 dB while the chase heartbeat (10.5) plays | everyone sees black hands; **only the tainted player hears the heartbeat** (it is "in your audio") |
+| **Taint** (doc 01 "The Taint": "a faint wet heartbeat in your audio") | `sfx_taint_heartbeat` (exists, 70 bpm), non-positional, local only, `SFX`; -32 dB; `pitch_scale` follows Taint intensity (1.0 to 1.3; the 4-beat loop is an exact period). As built (P3-08): Taint is on/off, so the pitch stays 1.0; the beat ducks 8 dB while the chase heartbeat (10.5) plays | everyone sees black hands; **only the tainted player hears the heartbeat** (it is "in your audio") |
 | **Still** (doc 01 "Go still": "while your heartbeat rises") | `sfx_still_heartbeat_loop`, a dry close thump (timbre distinct from the wet Taint beat); `pitch_scale` 1.0 rising to 1.7 and volume -34 to -22 dB over the still time | local only. If Tainted and still, both play and the Taint beat ducks 8 dB |
 | **Shaken** (doc 01 "Shaken": never Taints; doc 07 gives it no visual) | `sfx_shaken_ring`: a thin ~4 kHz ring decaying over 4 s, `Master` low-pass 6 kHz for the first 10 s of the 60 s | local only (inference: doc 01 gives it no cue; doc 07 leaves it to audio) |
 | **Prying** (doc 01 "trap race") | `sfx_pry_strain` for the hold; rising pitch near completion | gives the player feedback for the race |
@@ -577,22 +577,22 @@ marked.
 
 | File | Length | RMS | What |
 |---|---|---|---|
-| `sfx_taint_heartbeat` (changed) | 3.43 s loop | -18.8 | 70 bpm lub-dub, now wet: a resonant low-pass squelch on each thump, low-passed 600 Hz |
-| `cre_jumpscare_hit` | 1.60 s | -17.6 | jumpscare hit: noise slam, sub thump, screech |
-| `cre_lunge` | 0.90 s | -15.9 | the disarm lunge: a fast corn crash and a snarl |
-| `cre_presence_swell` | 6.00 s | -14.5 | wrong count and hallucination: a low swell that rises and stops |
-| `cre_corn_part_01`, `_02` | 1.00 s | -16.2, -16.4 | something heavy pushing through corn (heard before the lunge) |
-| `sfx_ragdoll_thud_01`, `_02` | 0.70 s | -15.2, -14.1 | a body hitting the ground (jumpscare) |
+| `sfx_taint_heartbeat` (changed twice) | 3.43 s loop | -19.0 | 70 bpm lub-dub, wet: a resonant low-pass squelch on each thump, low-passed 900 Hz, a stronger knock (CEO listen 1: more body above 100 Hz so small speakers carry it; played at -32 dB, was -42) |
+| `cre_jumpscare_hit` (redone) | 1.60 s | -11.4 | CEO listen 1: a slam, not a burst: noise crack, saturated 110 to 28 Hz sub drop, a broken FM shriek (stepped pitch glide, tritone pair) over a 55 Hz snarl, dark reverb; played at -8 dB (was -2) to keep the heard level |
+| `cre_lunge` (redone) | 0.90 s | -13.9 | CEO listen 1: a stalk-and-leaf rush with a growl climbing to the cut at 0.4 s, then a saturated sub impact, slam, crash grains and a gasp; played at -4 dB (was -2) |
+| `cre_presence_swell` (redone) | 6.00 s | -16.6 | CEO listen 1: no tone: two huge slow breaths of dark noise, drifting sub pressure, murmuring mouth layer; played at -8 dB (was -10) |
+| `cre_corn_part_01`, `_02` (redone) | 1.00 s | -10.2, -10.2 | CEO listen 1: dense leaf and husk crackle, shoulder push, green-wood snaps (no ringing resonators); played at -12 dB (was -6) |
+| `sfx_ragdoll_thud_01`, `_02` (redone) | 0.70 s | -14.8, -14.4 | CEO listen 1: heavier: saturated sub drop, flesh slap, dirt grains, dull rattles instead of bright ticks |
 | `sfx_door_slam` | 1.20 s | -19.0 | the shed scare: the door slams shut |
-| `sfx_crow_caw_01`, `_02`, `_03` | 0.6, 0.7, 0.9 s | -15.7, -14.7, -14.9 | crow caws (formant synth); the possessed crow (P3-09) |
-| `sfx_crow_burst` | 1.20 s | -17.3 | the fake-out: wing flaps and one caw |
-| `vox_emote_scream` | 1.50 s | -13.3 | the scream emote (Q-064): formant synth, never a person |
+| `sfx_crow_caw_01`, `_02`, `_03` (redone) | 0.6, 0.7, 0.9 s | -16.2, -14.6, -18.1 | CEO listen 1: organic: jittered glottal pulses, shimmer, subharmonic roughness, throat noise, moving formants, uneven pitch; played at -5 dB (was -6) |
+| `sfx_crow_burst` (redone) | 1.20 s | -18.0 | CEO listen 1: feathery uneven wing beats, leaf rustle and two startled organic caws; played at -2.5 dB (was -4, includes the CEO's +0.83 dB) |
+| `vox_emote_scream` (redone) | 1.50 s | -16.4 | CEO listen 1: human-ier: jittered pulses, shimmer, uneven rise with a pitch break, moving vowel formants, breath noise, late roughness; played at -1 dB (was -4). Still synthetic |
 | `sfx_emote_cloth` | 0.70 s | -24.5 | cloth rustle under wave, point and shrug (P3-11) |
-| `ui_paper_slide` | 0.80 s stereo | -19.6 | the Dawn Report card sliding in (P3-12) |
+| `ui_paper_slide` (redone) | 0.80 s stereo | -20.8 | CEO listen 1: paper over wood: broadband friction following sheet speed, no resonant filter, faint fibre ticks; played at -7.3 dB (was -6, includes -2.5 dB) |
 
 - **Taint heartbeat (Q-060).** `Soundscape` polls `Game.players[local].tainted` every frame; no
   `set_local_state` call from `Player` is needed. While Tainted and alive it loops `sfx_taint_heartbeat`
-  (non-positional, `SFX`, -42 dB), local only. Log `audio_taint_heartbeat {on}`.
+  (non-positional, `SFX`, -32 dB), local only. Log `audio_taint_heartbeat {on}`.
 - **Scares (P3-05 wiring in `game/ai_director/scares.gd`, AI Programmer).** Build-up: `hush(seconds)`
   (section 4.4 rule 1), plus `cre_door_bang` for the shed. Jumpscare: `cre_jumpscare_hit` (2D) and
   `sfx_ragdoll_thud` (3D). Disarm lunge: `cre_corn_part` twice, then `cre_lunge`. Shed: `sfx_door_slam`.
@@ -628,8 +628,8 @@ Recipe abbreviations: `noise` = `WhiteNoise`/`PinkNoise`/`BrownNoise`, `BPF`/`LP
 | `sfx_corn_rustle_01..04` | S | 3D | 1 to 2 | no | 1 | the same recipe as a gust: swell + tail |
 | `sfx_bird_01..04` | S | 3D | 0.4 to 1.2 | no | 1 | two-tone glides `SinOsc` 2.8 to 5 kHz with fast vibrato, tweet patterns |
 | `sfx_bird_call_distant_01..02` | S | 3D | 1.5 | no | 1 | a lower, slower warble through `FreeVerb` + LPF (distance) |
-| `sfx_crow_caw_01..03` | S | 3D | 0.5 to 0.9 | no | 3 | `Saw` 400 to 700 Hz with a falling glide, formant `BPF` 900 and 1800 Hz, noise |
-| `sfx_crow_burst` | S | 3D | 1.2 | no | 3 | wing flaps (`LPF` noise bursts at 8 per s) + one caw (fake-out, doc 01 "Jumpscares") |
+| `sfx_crow_caw_01..03` | S | 3D | 0.5 to 0.9 | no | 3 | jittered `Impulse` glottal pulses (shimmer, subharmonic roughness, noise) through three moving `Formlet` formants, `tanh` saturation |
+| `sfx_crow_burst` | S | 3D | 1.2 | no | 3 | uneven feathery wing beats + leaf rustle + two organic caws (fake-out, doc 01 "Jumpscares") |
 | `sfx_crow_flap` | S | 3D | 0.8 | no | 3 | takeoff, ghost possession, perch change |
 | `sfx_animal_chicken_01..03` | S | 3D | 0.4 to 1 | no | 1 | cluck: pitched `Saw` 600 to 900 Hz with fast LFO + BPF 1.5 kHz |
 | `sfx_animal_cow_01..02` | S | 3D | 2 | no | 1 | low moo: `Saw` 110 to 160 Hz with formant glide, noise breath |
@@ -667,7 +667,7 @@ is generic farm stock and changes without touching the list shape.
 | `sfx_lantern_ignite` / `sfx_lantern_blow_out` | S | 3D | 0.6 | 2 | match flare hiss / breath and glass tick (the barn staging, doc 01 "Recording lines") |
 | `sfx_flag_plant` | S | 3D | 0.5 | 3 | soft thud + cloth flap |
 | `sfx_cloth_carry`, `sfx_emote_cloth` | S | 3D | 0.7 | 3 | cloth rustle |
-| `sfx_ragdoll_thud_01..03` | S | 3D | 0.5 | 3 | body fall: low sine drop + noise + rattle of dropped items |
+| `sfx_ragdoll_thud_01..03` | S | 3D | 0.5 | 3 | body fall: saturated sub drop + flesh slap + dirt grains + dull rattles |
 | `sfx_items_drop` | S | 3D | 0.6 | 2 | scatter of tools/produce: several pitched ticks |
 | `sfx_fuel_can_slosh` | S | 3D | 1 | 1 | liquid slosh + can clunk |
 | `sfx_refuel_glug` | S | 3D | 4 | 1 | glug rhythm: bubbles 3 per s, rising pitch as it fills |
@@ -703,10 +703,10 @@ is generic farm stock and changes without touching the list shape.
 | `cre_husk_sig_01..03` | C | 3D | 1.5 to 2 | no | 1 | dry pulsed rattle |
 | `cre_husk_sig_chase` | C | 3D | 4 | yes | 1 | pulses 14 to 22 per s |
 | `mus_sting_chase` | Mu | St | 3.2 | no | 1 | stacked saws detuned a semitone and tritone (cluster), reversed-swell riser, sub-hit at 0.15 s, short `FreeVerb`; stops dead after 2 s with a tail |
-| `cre_jumpscare_hit` | C | M | 1.6 | no | 3 | noise burst + 50 Hz boom + falling screech glide 3 kHz to 400 Hz |
-| `cre_lunge` | C | M | 0.9 | no | 1 | fast whoosh (noise filter sweep up) + low thump |
-| `cre_corn_part_01..03` | C | 3D | 1 | no | 1 | heavy stalks breaking: loud noise swell + wooden cracks |
-| `cre_presence_swell` | C | M | 6 | no | 3 | very low (40 to 70 Hz) swell and a thin high partial; the private "something's there" |
+| `cre_jumpscare_hit` | C | M | 1.6 | no | 3 | noise crack + saturated sub drop + broken FM shriek + 55 Hz growl + dark reverb |
+| `cre_lunge` | C | M | 0.9 | no | 1 | leaf and stalk rush with growl, then saturated sub impact + crash grains + gasp |
+| `cre_corn_part_01..03` | C | 3D | 1 | no | 1 | heavy stalks: dense leaf crackle + push + green-wood snaps |
+| `cre_presence_swell` | C | M | 6 | no | 3 | slow breath of dark noise + drifting sub pressure + murmuring mouth layer (no tone); the private "something's there" |
 | `cre_door_bang_01..03` | C | 3D | 0.9 | no | 1 | heavy thump with wood rattle |
 | `cre_gnaw` | C | 3D | 2.5 | no | 3 | wet crunch bursts |
 | `cre_trap_set_01..02` | C | 3D | 1.2 | no | 1 | scrape of dirt + metal click-clack |
@@ -720,7 +720,7 @@ is generic farm stock and changes without touching the list shape.
 | `sfx_still_heartbeat_loop` | S | M | 3 | yes | 1 | dry close "tum-tum" at 60 bpm x 3, a tighter attack than Taint's |
 | `sfx_shaken_ring` | S | M | 4 | no | 3 | 4 kHz sine with slow decay + faint 8 kHz overtone |
 | `ui_click`, `ui_confirm`, `ui_deny` | U | M | 0.1 to 0.35 | no | 1 | short wood tick, up-chirp, down-chirp (sine) |
-| `ui_paper_slide`, `ui_paper_rustle` | U | St | 0.8 | no | 3 | filtered noise swell / crinkle (`Dust` + BPF) (Dawn Report) |
+| `ui_paper_slide`, `ui_paper_rustle` | U | St | 0.8 | no | 3 | paper over wood: broadband friction noise following sheet speed, no resonant filter (Dawn Report) |
 | `ui_stamp` | U | M | 0.4 | no | 3 | stamp thump + paper |
 | `ui_rec_start`, `ui_rec_stop` | U | M | 0.25 | no | 2 | soft two-tone tally ticks (the recording light's audio, doc 01 "Recording light") |
 
@@ -736,7 +736,7 @@ There is no Phase 1 score: doc 01 mentions only the chase sting (inference, see 
 | `vox_radio_static_loop` | V | M | 4 | yes | 4 | narrow-band noise + hiss + the crackle at louder density |
 | `vox_radio_squelch_on` / `_off` | V | M | 0.2 | no | 4 | noise burst + chirp / reversed |
 | `vox_radio_low_battery`, `vox_radio_dead` | V | M | 0.6 / 0.2 | no | 4 | 2 beeps / click |
-| `vox_emote_scream` | V | 3D | 1.5 | no | 3 | formant-synth scream (a rising `Saw` 600 to 1100 Hz with strong formants), a placeholder for the "scream" emote (doc 05 s16); it emits a Noise of 60 m (doc 05) |
+| `vox_emote_scream` | V | 3D | 1.5 | no | 3 | formant-synth scream (jittered glottal pulses, uneven rise with a pitch break, moving vowel formants, breath noise), a placeholder for the "scream" emote (doc 05 s16); it emits a Noise of 60 m (doc 05) |
 
 ### 11.7 Counts
 

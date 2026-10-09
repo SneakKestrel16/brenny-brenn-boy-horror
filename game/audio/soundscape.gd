@@ -26,24 +26,25 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 	&"sfx_lantern_blow_out": {"n": 0, "bus": &"SFX", "unit": 4.0, "max": 40.0, "db": -6.0},
 	&"mus_sting_chase": {"n": 0, "bus": &"Music", "db": -6.0},
 	# P3-05 scares (doc 08 section 5.4), played by `scares.gd`; files from P3-08.
-	&"cre_jumpscare_hit": {"n": 0, "bus": &"Creature", "db": -2.0},
-	&"cre_lunge": {"n": 0, "bus": &"Creature", "db": -2.0},
-	&"cre_presence_swell": {"n": 0, "bus": &"Creature", "db": -10.0},
-	&"cre_corn_part": {"n": 2, "bus": &"Creature", "unit": 4.0, "max": 40.0, "db": -6.0},
+	# CEO listen 1 (2026-10-08): scare sounds redone; db re-matched to the old files' RMS (volume was "good").
+	&"cre_jumpscare_hit": {"n": 0, "bus": &"Creature", "db": -8.0},
+	&"cre_lunge": {"n": 0, "bus": &"Creature", "db": -4.0},
+	&"cre_presence_swell": {"n": 0, "bus": &"Creature", "db": -8.0},
+	&"cre_corn_part": {"n": 2, "bus": &"Creature", "unit": 4.0, "max": 40.0, "db": -12.0},
 	&"sfx_ragdoll_thud": {"n": 2, "bus": &"SFX", "unit": 4.0, "max": 40.0, "db": -4.0},
 	&"sfx_door_slam": {"n": 0, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": -2.0},
-	&"sfx_crow_burst": {"n": 0, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": -4.0},
+	&"sfx_crow_burst": {"n": 0, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": -2.5},  # +0.83 dB (10 percent amplitude) over the old -4.0, after RMS re-match (-0.7 dB)
 	# P3-11 emote scream (doc 08 section 11.6), file from P3-08.
 	# unit/max are inference: a 60 m Noise, like the tripwire bells row in section 3.2.
-	&"vox_emote_scream": {"n": 0, "bus": &"Voice", "unit": 6.0, "max": 110.0, "db": -4.0},
+	&"vox_emote_scream": {"n": 0, "bus": &"Voice", "unit": 6.0, "max": 110.0, "db": -1.0},
 	# P3-08. Ranges are inference (doc 08 section 3.2 has no row for them): a caw like the door bang,
 	# cloth like a footstep. All placeholder levels.
-	&"sfx_crow_caw": {"n": 3, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": -6.0},  # P3-09 possessed crow
+	&"sfx_crow_caw": {"n": 3, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": -5.0},  # P3-09 possessed crow
 	&"sfx_emote_cloth": {"n": 0, "bus": &"SFX", "unit": 3.0, "max": 30.0, "db": -10.0},  # P3-11 wave, point, shrug
-	&"ui_paper_slide": {"n": 0, "bus": &"UI", "db": -6.0},  # P3-12 Dawn Report card
+	&"ui_paper_slide": {"n": 0, "bus": &"UI", "db": -7.3},  # P3-12 Dawn Report card: -2.5 dB (25 percent amplitude) after RMS re-match (-6.0 before)
 }
 ## Taint heartbeat (doc 08 sections 2.4, 8): "faint", local to the Tainted player only. Placeholder level.
-const TAINT_DB := -42.0
+const TAINT_DB := -32.0  # CEO listen 1: was -42 and barely audible; +10 dB (file also got more 100 to 1000 Hz body)
 ## Doc 08 section 8: the Taint beat ducks 8 dB under the still heartbeat; the chase heartbeat reuses that loop (inference).
 const TAINT_DUCK_DB := 8.0
 ## Ids not written to the `audio_play` log (one per stride would flood it).
