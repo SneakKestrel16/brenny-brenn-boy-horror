@@ -1,8 +1,8 @@
 extends CanvasLayer
 ## P4-22 (CEO session): the shipping crate's menu. `interact` at the crate (nothing else aimed) opens it: every
-## `store.json` row with its price and a Buy button, then one seed row per crops.json crop. Buy sends the same
-## `request_store` the host already validates (store.gd); a seed row only picks `farm.seed_pick`, and the seed is
-## still paid at planting, as the simulator does (D-090). Local player only; built by hud.gd.
+## `store.json` row with its price and a Buy button, then one seed row per crops.json crop with Buy 1 and Buy 5.
+## Every button sends a `request_store` the host validates (store.gd); seeds go into the team's stock and planting
+## uses one (D-093). Local player only; built by hud.gd.
 
 const Crops := preload("res://game/farming/crops.gd")
 
@@ -11,7 +11,7 @@ var _panel: Control
 var _box: VBoxContainer
 var _coins: Label
 var _why: Label
-var _rows: Array = []  ## [id, kind (&"item" or &"seed"), status Label, Button]
+var _rows: Array = []  ## [id, kind (&"item" or &"seed"), status Label, Buttons, counts]
 var _open := false
 
 
@@ -72,17 +72,17 @@ func _rebuild() -> void:
 	_label("The shipping crate", 30)
 	_coins = _label("", 20)
 	for r in farm.store.items():
-		_row(StringName(r.id), &"item", "%s   %d coins" % [r.name, farm.store.price(Game.local_peer(), StringName(r.id))])
-	_label("Seeds (one per plot, paid when you plant)", 22)
+		_row(StringName(r.id), &"item", "%s   %d coins" % [r.name, farm.store.price(Game.local_peer(), StringName(r.id))], [1])
+	_label("Seeds (planting uses one; %s picks which)" % hud._key(&"cycle_seed"), 22)
 	for r in Data.records(&"crops"):
-		_row(StringName(r.id), &"seed", "%s seed   %d coins" % [r.name, int(r.seed)])
+		_row(StringName(r.id), &"seed", "%s seed   %d coins" % [r.name, int(r.seed)], [1, 5])
 	_why = _label("", 18)
 	_why.modulate = Color(1, 0.6, 0.5)
 	_label("%s or %s: close" % [hud._key(&"interact"), hud._key(&"pause")], 16)
 	_process(0.0)
 
 
-func _row(id: StringName, kind: StringName, text: String) -> void:
+func _row(id: StringName, kind: StringName, text: String, counts: Array) -> void:
 	var h := HBoxContainer.new()
 	var n := Label.new()
 	n.text = text
@@ -92,12 +92,16 @@ func _row(id: StringName, kind: StringName, text: String) -> void:
 	s.custom_minimum_size.x = 300
 	s.modulate = Color(0.8, 0.8, 0.8)
 	h.add_child(s)
-	var b := Button.new()
-	b.custom_minimum_size.x = 100
-	b.pressed.connect(_press.bind(id, kind))
-	h.add_child(b)
+	var buttons := []
+	for k in counts:
+		var b := Button.new()
+		b.custom_minimum_size.x = 100
+		b.text = "Buy" if kind == &"item" else "Buy %d" % k
+		b.pressed.connect(_press.bind(id, kind, k))
+		h.add_child(b)
+		buttons.append(b)
 	_box.add_child(h)
-	_rows.append([id, kind, s, b])
+	_rows.append([id, kind, s, buttons, counts])
 
 
 func _label(t: String, size: int) -> Label:
@@ -108,13 +112,9 @@ func _label(t: String, size: int) -> Label:
 	return l
 
 
-func _press(id: StringName, kind: StringName) -> void:
+func _press(id: StringName, kind: StringName, n: int) -> void:
 	_why.text = ""
-	if kind == &"item":
-		Net.to_host(&"request_store", [&"buy", id])
-	else:
-		_farm().seed_pick = id
-		Log.event(&"seed_picked", {"crop": String(id)})
+	Net.to_host(&"request_store", [&"buy", id] if kind == &"item" else [&"seeds", StringName("%s:%d" % [id, n])])
 
 
 func _process(_delta: float) -> void:
@@ -123,28 +123,20 @@ func _process(_delta: float) -> void:
 	var farm := _farm()
 	var me := Game.local_peer()
 	_coins.text = "Coins %d" % farm.coins
-	var pick: StringName = farm.seed_pick if farm.seed_pick != &"" else Crops.default_seed()
-	for row in _rows:
-		var why := &""
-		if row[1] == &"item":
-			why = farm.store.why_not(me, row[0], false)  # the host checks again on Buy
-			row[3].text = "Buy"
-		elif String(Crops.rec(row[0]).harvest_phase) == "night":
-			why = &"bed_only"
-			row[3].text = "Choose"
-		else:
-			why = &"" if Crops.is_unlocked(row[0], Clock.day) else &"locked_crop"
-			why = &"chosen" if why == &"" and row[0] == pick else why
-			row[3].text = "Chosen" if why == &"chosen" else "Choose"
-		row[2].text = _status(row[0], why)
-		row[3].disabled = why != &""
+	for row in _rows:  # the host checks again on Buy
+		for i in row[3].size():
+			var why: StringName = farm.store.why_not(me, row[0], false) if row[1] == &"item" else farm.store.seed_why_not(me, row[0], row[4][i], false)
+			row[3][i].disabled = why != &""
+			if i == 0:
+				row[2].text = _status(row[0], why)
+		if row[1] == &"seed" and (row[2].text == "" or row[2].text == "not enough coins"):
+			var bed := " (moonflower bed)" if String(Crops.rec(row[0]).harvest_phase) == "night" else ""
+			row[2].text = "have %d%s%s" % [farm.store.seed_count(row[0]), bed, "" if row[2].text == "" else ", not enough coins"]
 
 
 func _status(id: StringName, why: StringName) -> String:
 	match why:
 		&"": return ""
-		&"chosen": return "planting this"
-		&"bed_only": return "plants in the moonflower bed"
 		&"locked_item": return "from day %d" % int(Data.record(&"store", id).unlock_day)
 		&"locked_crop":
 			var r := Data.record(&"crops", id)
@@ -157,5 +149,5 @@ func _status(id: StringName, why: StringName) -> String:
 
 ## The host's answer to a Buy: a refusal shows under the list; a buy rebuilds nothing (the rows read live state).
 func _on_apply(what: StringName, args: Array) -> void:
-	if _open and what == &"refused" and args[0] == &"buy":
+	if _open and what == &"refused" and args[0] in [&"buy", &"seeds"]:
 		_why.text = "Not enough coins" if args[1] == &"no_coins" else hud.REFUSED_TEXT.get(args[1], String(args[1]).replace("_", " "))

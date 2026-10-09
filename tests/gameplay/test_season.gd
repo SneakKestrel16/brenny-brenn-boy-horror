@@ -48,11 +48,12 @@ func _process(delta: float) -> bool:
 		clock.phase = &"day"
 		p.state = &"empty"
 		var verb := StringName("plant:" + id)
+		farm.store.team[farm.store.seed_key(id)] = 1  # D-093: planting uses a seed bought at the crate
 		_check(p.can_start(verb, st) == &"", "%s can be planted (got %s)" % [id, p.can_start(verb, st)])
 		var coins: int = farm.coins
 		p.complete(verb, me, st)
 		_check(p.state == &"growing" and p.crop == id, "%s growing" % id)
-		_check(coins - farm.coins == int(Crops.rec(id).seed), "%s seed charged" % id)
+		_check(coins == farm.coins and farm.store.seed_count(id) == 0, "%s seed used, no coins at planting" % id)
 		p.watered = true
 		if night:
 			clock.phase = &"night"

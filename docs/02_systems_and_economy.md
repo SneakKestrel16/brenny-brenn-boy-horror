@@ -490,6 +490,15 @@ stand and at the dawn cash-in (D-017). `sim` prices are the simulator's starting
   store. They are bought; no crafting system exists (D-017).
 - **Plots sold in pairs** because Foreclosure seizes 2 (placeholder).
 - **Upgrades** (what Foreclosure can seize): every bought item except seeds and scrap.
+- **Seeds are bought ahead (P4-22, D-093, CEO ruling on Q-170):** the crate's menu sells seeds into a
+  team stock (`Buy 1`, `Buy 5`, at most 10 per request); planting an empty plot uses one seed of the
+  picked crop and charges nothing. With no seed owned, planting is refused ("Buy seeds at the store").
+  The prices and unlocks are the table above. The total spent per plot is unchanged; the coins leave
+  when the seed is bought instead of when it is planted. The simulator still charges at planting: its
+  step is a day, and a team that buys just before planting spends the same coins the same day
+  (inference; a live season log through `compare.py` would settle it). P4-22 reran the default
+  `sim.py`: every target still passes (first clear 83.8 to 87.1%, final 57.9 to 63.4%).
+  Bots buy one seed at a time, just before planting, so bot seasons keep the simulator's timing.
 
 ### 10.1 Animals
 

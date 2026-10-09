@@ -1242,10 +1242,14 @@ P4-25. Doc 03 section 6 ("Dark buildings ... it always bangs first", `door_bang_
 was in the dark barn, which the rule allows, but without the bang. Needs a task (AI Programmer) and
 two `data/creature.json` rows (`door_bang_s`, `door_bang_radius_m`).
 ### Q-170 · 2026-10-09 · Gameplay Programmer -> Game Designer, FOR CEO · open
+### Q-170 · 2026-10-09 · Gameplay Programmer -> Game Designer, FOR CEO · answered
 P4-22 (D-090). The store menu sells seeds as a choice: the seed is still paid per plot at planting,
 as the simulator models (doc 02 s18). Should players instead buy seed packs ahead and hold them in
 stock? That moves spending earlier in the day and needs a `tools/sim/` rerun. Default until answered:
 choose at the store, pay at planting.
+**Answer (CEO, 2026-10-09):** yes: "can we add the seeds to the shop menu instead of having an on
+screen constant seed purchase menu". Built in P4-22 as D-093 (team seed stock; planting uses a seed).
+The default `sim.py` rerun passes every target.
 
 ### Q-171 · 2026-10-09 · Gameplay Programmer -> Director · open
 P4-22. The store menu now does what the old crate keys did: `cycle_item` R and `buy_item` K

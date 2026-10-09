@@ -1,6 +1,6 @@
 extends SceneTree
-## P4-18: two plant holds started on the last seed's coins. The host rechecks at completion
-## (Interactable.recheck), so the second hold cancels `no_coins` and the bank never goes negative.
+## P4-18: two plant holds started on the last seed. The host rechecks at completion (Interactable.recheck), so
+## the second hold cancels (`no_seeds` since D-093: seeds are bought at the crate) and the stock never goes negative.
 ##   "$GODOT" --headless --audio-driver Dummy --path . -s res://tests/gameplay/test_seed_race.gd -- --host --port=52141 --free-mouse
 
 var _t := 0.0
@@ -34,8 +34,8 @@ func _process(delta: float) -> bool:
 	if empty.size() < 2:
 		quit(1)
 		return false
-	var seed := int(Crops.rec(Crops.default_seed()).seed)
-	farm.coins = seed  # enough for one seed only
+	farm.store.team[farm.store.seed_key(Crops.default_seed())] = 1  # one seed only
+	farm.coins = 0
 	if not game.players.has(-2):
 		game.players[-2] = {}
 	var a := {"verb": &"plant", "target": empty[0], "progress": 1.0, "hold_s": 1.0, "started": 0.0}
@@ -43,11 +43,11 @@ func _process(delta: float) -> bool:
 	reg.holds[1] = a
 	reg.holds[-2] = b
 	reg._complete(1, a)
-	_check(empty[0].state == &"growing" and farm.coins == 0, "first hold plants and spends the seed")
+	_check(empty[0].state == &"growing" and farm.store.seed_count(Crops.default_seed()) == 0, "first hold plants and uses the seed")
 	reg._complete(-2, b)
 	_check(not reg.holds.has(-2), "second hold ended")
 	_check(empty[1].state == &"empty", "second plot stays empty")
-	_check(farm.coins == 0, "bank never below 0 (was %d)" % farm.coins)
+	_check(farm.coins == 0 and farm.store.seed_count(Crops.default_seed()) == 0, "no coins spent, stock never below 0 (coins %d)" % farm.coins)
 	print("test_seed_race: %s" % ("PASS" if _fails == 0 else "FAIL (%d)" % _fails))
 	quit(0 if _fails == 0 else 1)
 	return false

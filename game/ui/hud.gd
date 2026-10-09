@@ -16,7 +16,7 @@ const REFUSED_TEXT := {&"locked": "Locked: needs more players, or buy it at the 
 		&"pegboard_full": "No free hook", &"flag_here": "A flag is already here", &"flag_limit": "All your flags are out: pull one up first",
 		&"not_your_flag": "Not your flag", &"not_armed": "Nothing set here",
 		&"no_can": "You need a watering can", &"no_fuel_can": "You need the fuel can", &"can_taken": "Someone has it", &"has_fuel_can": "The can is full",
-		&"not_tainted": "Your hands are clean", &"no_coins": "Not enough coins for the seed", &"locked_crop": "That seed is not on sale yet",
+		&"not_tainted": "Your hands are clean", &"no_coins": "Not enough coins", &"no_seeds": "Buy seeds at the store", &"locked_crop": "That seed is not on sale yet",
 		&"too_far": "Stand at the shipping crate", &"locked_item": "Not on sale yet", &"owned": "You have that already", &"max_bought": "The crate has no more",
 		&"plots_max": "No more plots can be opened", &"no_flare": "No flare gun", &"flare_empty": "The flare gun is empty", &"flare_reloading": "Reloading",
 		&"no_scarecrow": "No scarecrow to put up", &"too_close": "Too close to another scarecrow"}
@@ -148,6 +148,9 @@ func _process(delta: float) -> void:
 		prompt = ("%s... %d%%  %s" % [_verb_text(hs[0]), int(hs[1] * 100.0), hs[2]]).strip_edges()
 	elif hold.aimed_verb != &"":
 		prompt = "Hold %s: %s" % [_key(&"interact"), _verb_text(hold.aimed_verb)]
+		var plot: Node = hold.aimed_target
+		if farm and String(hold.aimed_verb).begins_with("plant") and plot and plot.has_method(&"crop_for") and not plot.locked and farm.store.seed_count(plot.crop_for(hold.aimed_verb)) == 0:
+			prompt = REFUSED_TEXT[&"no_seeds"]  # P4-22, D-093: planting uses a seed bought at the crate
 	elif hold.held_can_id() >= 0:
 		prompt = "Tap %s: put the can down" % _key(&"drop")
 	if prompt == "" and farm:
@@ -178,11 +181,14 @@ func _slots(farm: Node) -> Array:
 		out.append(["Shovel", "Hold %s on a pit: fill it. Pegboard: hang it back" % _key(&"interact")])
 	if c.get("trap", false):
 		out.append(["Bear trap", "Hold %s on the pegboard: hang it" % _key(&"interact")])
-	if farm.seed_pick != &"" and not Crops.is_unlocked(farm.seed_pick, Clock.day):
-		farm.seed_pick = &""  # P4-22: a pick no longer on sale falls back to the default seed
-	var seed: StringName = farm.seed_pick if farm.seed_pick != &"" else Crops.default_seed()
-	out.append(["%s seed, %d coins" % [Data.record(&"crops", seed).get("name", seed), int(Data.record(&"crops", seed).get("seed", 0))],
-			"Hold %s on an empty plot: plant. %s or the store: change" % [_key(&"interact"), _key(&"cycle_seed")]])
+	var seeds := PackedStringArray()  # D-093: only once the team owns seeds, bought at the crate
+	for crop in Crops.ids():
+		if st.seed_count(crop) > 0:
+			seeds.append("%s %d" % [Data.record(&"crops", crop).get("name", crop), st.seed_count(crop)])
+	if not seeds.is_empty():
+		var sow: StringName = farm.planting_seed()
+		out.append(["Seeds: " + ", ".join(seeds), "Hold %s on an empty plot: plant %s. %s: change" % [
+				_key(&"interact"), Data.record(&"crops", sow).get("name", sow), _key(&"cycle_seed")]])
 	if int(c.get("bag", 0)) > 0:
 		out.append(["Crops %d/%d" % [int(c.bag), int(Data.value(&"labor", &"carry", &"capacity"))], "Hold %s at the town stand: sell" % _key(&"interact")])
 	if int(st.team.get(&"flare_gun", 0)) > 0:

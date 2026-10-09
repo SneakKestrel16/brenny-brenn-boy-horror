@@ -865,6 +865,7 @@ Canopies keep each work spot's doc 04 s8.4 corn distance (pumpkin 20 m), 2 m fro
 so solid obstacles could pin it (Q-196). Sight cover is what the open ground lacked.
 **How to apply:** new world dressing stays visual or layer 5 unless the AI Programmer adds avoidance.
 ### D-090 · 2026-10-09 · Gameplay Programmer · Seeds are chosen at the store, paid at planting
+**Superseded by D-093** (CEO ruling on Q-170: seeds are bought into a stock).
 P4-22 sells seeds at the shipping crate's menu (OPEN_ISSUES CEO session item 2). A seed row sets which crop
 this player's field plots plant (`farm.seed_pick`, the same pick `cycle_seed` T already made); the seed's
 price (doc 02 s10: turnip 4, pumpkin 10 from the first payment, moonflower 25 from day 3, bed only) is still
@@ -881,3 +882,19 @@ teammate, objective, sound or creature, so it breaks neither.
 **Why:** CEO request in the 2-instance session: players could not tell what they held or how to use it.
 **How to apply:** the hotbar shows only the local player's things and the team's shared items. It never
 shows positions, threats or other players. It hides while the player is a ghost.
+
+### D-093 · 2026-10-09 · Gameplay Programmer · Seeds are bought at the store and held in a team stock
+Supersedes D-090. The CEO answered Q-170: "can we add the seeds to the shop menu instead of having an
+on screen constant seed purchase menu". The crate's menu sells seeds (`Buy 1`, `Buy 5`) through
+`request_store` op `seeds`, arg `<crop>:<n>` (the RPC has one argument; at most 10 per request). The
+host checks the crate's reach, ghosts, the unlock and the coins, then adds to `store.team["seed_<crop>"]`.
+That dictionary is already saved and sent with `apply_store`. Planting an empty plot uses one seed of
+the picked crop and charges nothing (`plot.gd`, refusal `no_seeds`, shown as "Buy seeds at the store").
+The hotbar shows a seed slot only while the team owns seeds, with counts; T cycles only among owned day
+crops. Prices and unlocks are unchanged (doc 02 s10). Bots buy one seed just before planting.
+**Why:** the stock is the team's because coins are one shared purse and anyone plants any plot; a stock per
+player would strand seeds when a player dies or leaves. The total spent per plot is the same. Coins leave
+at purchase instead of at planting, within the same day for a team that buys as it plants, so the
+simulator (daily steps) needs no change; the default `sim.py` run still passes every target.
+**How to apply:** planting validates seeds, not coins. Foreclosure never seizes seeds (`seizable()` reads
+only `store.json` rows). Seeds stay out of `store.json`; their prices live in `crops.json`.

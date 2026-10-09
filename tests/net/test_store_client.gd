@@ -1,6 +1,8 @@
 extends SceneTree
 ## P4-22 (QA review): a client walks to the crate, opens the store menu with `interact`, buys scrap (the host
 ## validates and mirrors it), is refused a buy from 12 m away, closes the menu and sees the scrap on its hotbar.
+## D-093: aimed at an empty plot with no seeds it is told to buy seeds; it buys one turnip seed at the crate (the
+## stock is mirrored), walks to the plot and plants it: the host uses the seed and charges nothing.
 ## Run as the client of a 2-instance session (from QA's client_buy.gd):
 ##   uv run tools/qa/multi.py -n 2 --headless --duration 90 \
 ##     --args "-- --host --port=24704 --free-mouse --dev-exec=\"wait 4; coins 300\"" \
@@ -44,10 +46,10 @@ func _run() -> void:
 	var menu: Node = hud.get_child(-1)
 	_check(menu._open and game.console_open, "client: interact opens the menu")
 	var c0: int = farm.coins
-	_row(menu, &"scrap")[3].pressed.emit()
+	_row(menu, &"scrap")[3][0].pressed.emit()
 	for i in 120:
 		await process_frame
-		if farm.coins != c0:
+		if farm.coins != c0 and store.scrap_bought == 1:  # coins and store state are two messages
 			break
 	_check(farm.coins == c0 - 15 and store.scrap_bought == 1, "client buy scrap mirrored (coins %d -> %d, scrap %d)" % [c0, farm.coins, store.scrap_bought])
 	# far away: the host must refuse even though the menu is open
@@ -56,7 +58,7 @@ func _run() -> void:
 		await process_frame
 	var c1: int = farm.coins
 	menu._why.text = ""
-	_row(menu, &"scrap")[3].pressed.emit()
+	_row(menu, &"scrap")[3][0].pressed.emit()
 	for i in 120:
 		await process_frame
 		if menu._why.text != "":
@@ -69,9 +71,62 @@ func _run() -> void:
 	var text := ""
 	for s in hud._hotbar.get_children():
 		text += s.get_child(0).text + " | "
-	_check("Scrap x" in text, "client hotbar: " + text)
+	_check("Scrap x" in text and not "Seeds" in text, "client hotbar: " + text)
+
+	# D-093: no seeds, the aimed empty plot says buy seeds; buy one at the crate, then plant it
+	var plot: Node = null
+	for t in farm.targets.values():
+		if t.has_method(&"crop_for") and not t.locked and not t.bed and t.state == &"empty":
+			plot = t
+			break
+	await _walk(player, plot.target_pos() + Vector3(0.0, 0.0, 1.5))
+	player.yaw = 0.0  # face -z, down at the plot 1.5 m ahead
+	player.pitch = -0.8
+	for i in 60:
+		await physics_frame
+	_check(hud._prompt.text == "Buy seeds at the store", "client: aimed empty plot without seeds (%s, aimed %s)" % [hud._prompt.text, hud.hold.aimed_verb])
+	await _walk(player, crate.global_position + Vector3(1.6, 0.0, 0.0))
+	player.look_at(crate.global_position + Vector3(1.6, 1.0, 6.0))
+	for i in 30:
+		await process_frame
+	_press(&"interact")
+	for i in 3:
+		await process_frame
+	var c2: int = farm.coins
+	_row(menu, &"turnip")[3][0].pressed.emit()
+	for i in 120:
+		await process_frame
+		if store.seed_count(&"turnip") > 0:
+			break
+	_check(store.seed_count(&"turnip") == 1 and farm.coins == c2 - 4, "client buys one turnip seed (stock %d, coins %d -> %d)" % [store.seed_count(&"turnip"), c2, farm.coins])
+	_press(&"pause")
+	for i in 3:
+		await process_frame
+	_check("Seeds: Turnip 1" in _hotbar(hud), "client hotbar shows the seed: " + _hotbar(hud))
+	await _walk(player, plot.target_pos() + Vector3(0.0, 0.0, 1.5))
+	for i in 30:
+		await process_frame
+	var c3: int = farm.coins
+	hud.hold._scripted = true
+	hud.hold.start(plot.verbs_for({})[0], plot)
+	for i in 600:
+		await process_frame
+		if plot.state == &"growing":
+			break
+	hud.hold._scripted = false
+	for i in 30:
+		await process_frame
+	_check(plot.state == &"growing" and plot.crop == &"turnip" and store.seed_count(&"turnip") == 0 and farm.coins == c3,
+			"client plants: seed used, no coins (state %s, stock %d, coins %d -> %d)" % [plot.state, store.seed_count(&"turnip"), c3, farm.coins])
 	print("test_store_client: ", "PASS" if _fails == 0 else "FAIL")
 	quit(1 if _fails > 0 else 0)
+
+
+func _hotbar(hud: Node) -> String:
+	var text := ""
+	for s in hud._hotbar.get_children():
+		text += s.get_child(0).text + " | "
+	return text
 
 
 func _walk(player: Node3D, to: Vector3) -> void:

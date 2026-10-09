@@ -424,14 +424,15 @@ dawn (section 17) from `crops.json` (doc 02 section 5).
 - **Crops (P4-04).** Every number comes from `crops.json` through `game/farming/crops.gd`; no crop name is in
   code. A crop is found by what it does: `harvest_phase` `night` is the bed crop (the plots whose marker
   `field` meta equals that crop id), `day` crops go in field plots. A plot holds `crop` and `state`; verb
-  `plant:<crop>` carries the client's picked seed (`cycle_seed`, key T, client-local `Farm.seed_pick`; plain
+  `plant:<crop>` carries the client's picked seed (`cycle_seed`, key T, client-local `Farm.seed_pick`, cycling
+  only among day crops the team owns seeds of; `Farm.planting_seed()` falls back to the first owned; plain
   `plant` is the first day crop). The host refuses `wrong_crop`, `locked_crop` (`unlock_day`, and
   `first_payment_made` until `Debt.first_made`, set at the first-payment dawn, is true; P4-07) and
-  `no_coins`, and charges `seed` at planting. A day crop grows one day per watered day (`grow_days`); a
+  `no_seeds`, and uses one of the team's seeds at planting (`Store.use_seed`; no coins, D-093). A day crop grows one day per watered day (`grow_days`); a
   bed crop ripens when night falls if watered. At dawn a night crop left unpicked is `dead` (and Taints when
   `dead_plot_taints`), an unripe one `wilted`; `clear_plot` removes either. `plot_changed` has no crop
   argument, so the crop rides in the state string (`ripe:pumpkin`, Q-085).
-- **Plant, water, harvest** are holds (section 7). Planting needs a seed item; watering needs a full
+- **Plant, water, harvest** are holds (section 7). Planting needs a seed in the team's stock (D-093); watering needs a full
   can (capacity from `labor.json` `can`, 2 plots per fill, `placeholder`); harvest puts crops in the
   carry bag (capacity `carry` 4, `placeholder`). A plot's visible state is the information (no HUD).
 - **Carrying** is the player's item slots (`game/items/`): hands (a tool, a lantern, a seed packet,
@@ -472,18 +473,23 @@ dawn (section 17) from `crops.json` (doc 02 section 5).
 
 - `game/items/store.gd` (`Store`, child of `Farm` on every peer, group `store`). Every `store.json` row is
   bought at the `store_crate` (within 3.5 m, placeholder) at its `price`, from its `unlock_day`. Seeds are not
-  `store.json` rows: they are picked in the store menu and charged at planting (plot.gd, P4-04). No crop is sold.
-- Wire: client `request_store(op, arg)` (`buy`, `flare`, `scarecrow`) -> host validates -> `apply_store(state)`
+  `store.json` rows: the store menu buys them at crops.json `seed` into the team stock `team["seed_<crop>"]`
+  (`buy_seeds`, `seed_why_not`, `seed_count`; saved and replicated with `team`), and planting uses one (D-093,
+  superseding D-090). Foreclosure never seizes seeds. No crop is sold.
+- Wire: client `request_store(op, arg)` (`buy`, `flare`, `scarecrow`, `seeds` with arg `<crop>:<n>`, n 1 to 10) ->
+  host validates -> `apply_store(state)`
   carries the whole small state (team counts, per-player ownership, scrap, placed scarecrows, flare shots, opened
   plots) to everyone; a late joiner gets it on `farm_state`. Refusals use `apply_refused` (hud.gd `REFUSED_TEXT`).
 - Keys (placeholders, `project.godot`): `cycle_item` R, `buy_item` K, `fire_flare` H, `place_scarecrow` N. The HUD
   prompt shows only within reach of the crate. Dev console: `buy <item>` (anywhere, host).
 - Store menu (P4-22, `game/ui/store_menu.gd`, built by hud.gd): `interact` at the crate with nothing aimed opens it.
-  One row per `store.json` item (price, Buy sends the same `request_store`) and one per crops.json seed. A seed
-  row only sets the local `farm.seed_pick` (as `cycle_seed` T does); the seed is still paid per plot at planting
-  (D-090). Rows grey from `why_not(peer, id, false)`, which is client-safe; the host checks again on Buy.
+  One row per `store.json` item (price, Buy sends the same `request_store`) and one per crops.json seed with
+  `Buy 1` and `Buy 5` (op `seeds`) and the team's count. Rows grey from `why_not(peer, id, false)` and
+  `seed_why_not(peer, crop, n, false)`, which are client-safe; the host checks again on Buy.
+  Aiming at an empty plot with no seed of its crop, the prompt says "Buy seeds at the store".
 - Hotbar (P4-22, hud.gd `_slots`): bottom-centre slots for what the local player holds or the team owns, each with
-  a one-line use hint. A CEO-requested exception to "No HUD markers" (D-091): it points at nothing.
+  a one-line use hint. A CEO-requested exception to "No HUD markers" (D-091): it points at nothing. The seed
+  slot shows only while the team owns seeds, with counts and the crop T has picked (D-093).
 - Items: `scrap` adds `repairs` to `scrap_bought` (`take_scrap()` spends the free scrap first; nothing calls it yet,
   Q-100). `quiet_watering_can` (per player) offers verb `water_quiet` (5 s, noise x0.5, labor.json).
   `brighter_lantern` is tracked (`lantern_mult(peer)`); no player lantern exists yet. `shed_lock` sets
@@ -1121,11 +1127,11 @@ the QA changes.
 | `audio_chase_cue` | `Soundscape`, on every peer, when the creature state turns `chase` | `body` | Same |
 | `sell` | host, a sell-box hold completes | `player`, `items`, `coins` (per-crop price from `crops.json`) | Selling (P4-04) |
 | `harvest` | host | `player`, `plot`, `crop` | Crop checks (P4-04) |
-| `seed_picked` | client, on `cycle_seed` or the store menu | `crop` | Seed choice is client-local; it rides in the `plant:<crop>` verb (P4-04) |
+| `seed_picked` | client, on `cycle_seed` | `crop` | Seed choice is client-local; it rides in the `plant:<crop>` verb (P4-04) |
 | `dawn_step` | host, before each step of `Death.dawn()` | `step` (`cash_in`, `final_sale`, `medical_bill`, `payment`, `farm_damage`, `save`, `free_scrap`), `day` | Doc 02 section 9 order test (P4-04) |
 | `end_of_season_sale` | host, final dawn step 2 | `plots`, `coins` | Dawn Report ledger row (P4-04) |
 | `free_scrap` | host, dawn step 7 | `scrap` | Doc 02 section 9 step 7 (P4-04) |
-| `store_buy` | host | `item`, `price`, `buyer`, `day`, `coins` | Doc 02 section 10 (P4-06) |
+| `store_buy` | host | `item`, `price`, `buyer`, `day`, `coins`; seeds: `item` `seed_<crop>`, `count`, `price` the total | Doc 02 section 10 (P4-06, D-093) |
 | `store_refused` | host | `item`, `buyer`, `reason` | P4-06 |
 | `store_picked` | local peer | `item`, `price` | P4-06 |
 | `store_menu` | local peer, on opening the crate's menu | `open` | P4-22 |

@@ -2,7 +2,8 @@ extends "res://game/interaction/interactable.gd"
 ## Doc 05 section 9: one plot. States: empty, growing, ripe, wilted, dead. Any crop in crops.json (P4-04,
 ## doc 02 section 5); the crop's numbers come from the table, no crop name lives here. A field plot plants the
 ## crop the player picked (`plant:<crop>`, plain `plant` is the default seed); the night-crop bed (the plot
-## marker's `field` meta equals the night crop's id) plants only that crop. Visible state is the information.
+## marker's `field` meta equals the night crop's id) plants only that crop. Planting uses one of the team's
+## seeds bought at the crate (P4-22, D-093). Visible state is the information.
 
 const Crops := preload("res://game/farming/crops.gd")
 
@@ -31,7 +32,7 @@ func verbs_for(_st: Dictionary) -> Array[StringName]:
 		return refuse
 	match state:
 		&"empty":
-			var pick: StringName = farm.seed_pick if farm and not bed else &""
+			var pick: StringName = farm.planting_seed() if farm and not bed else &""
 			var v: Array[StringName] = [&"plant" if pick == &"" or pick == Crops.default_seed() else StringName("plant:" + pick)]
 			return v
 		&"growing":
@@ -65,7 +66,7 @@ func can_start(verb: StringName, st: Dictionary) -> StringName:
 				return &"wrong_crop"
 			if not Crops.is_unlocked(c, Clock.day):
 				return &"locked_crop"
-			return &"" if farm.coins >= int(r.seed) else &"no_coins"
+			return &"" if farm.store.seed_count(c) > 0 else &"no_seeds"
 		&"water", &"water_quiet":
 			if base(verb) == &"water_quiet" and not farm.store.owns(int(st.get("peer", 0)), &"quiet_watering_can"):
 				return &"no_quiet_can"
@@ -86,7 +87,7 @@ func can_start(verb: StringName, st: Dictionary) -> StringName:
 
 
 func recheck(verb: StringName, st: Dictionary) -> StringName:
-	return can_start(verb, st)  # P4-18/Q-160: another hold spent the coins, or finished first on this plot
+	return can_start(verb, st)  # P4-18/Q-160: another hold used the last seed, or finished first on this plot
 
 
 func complete(verb: StringName, peer: int, st: Dictionary) -> void:
@@ -94,7 +95,7 @@ func complete(verb: StringName, peer: int, st: Dictionary) -> void:
 	match base(verb):
 		&"plant":
 			crop = crop_for(verb)
-			farm.add_coins(-int(Crops.rec(crop).seed), &"seed", peer)  # the seed is bought at planting (tools/sim)
+			farm.store.use_seed(crop)  # D-093: paid for at the crate, not here
 			state = &"growing"
 			watered = false
 			age = 0

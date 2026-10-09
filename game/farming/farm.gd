@@ -135,16 +135,34 @@ func pstate(peer: int) -> Dictionary:
 	return st
 
 
-## Client: `cycle_seed` picks the next day crop on sale today for field plots. Local only; the pick travels
-## inside the `plant:<crop>` hold request and the host re-checks it (plot.gd `can_start`).
+## Client: `cycle_seed` picks the next day crop the team has seeds of, for field plots. Local only; the pick
+## travels inside the `plant:<crop>` hold request and the host re-checks it (plot.gd `can_start`).
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed(&"cycle_seed") or Game.console_open:
 		return
-	var seeds := Crops.seeds(Clock.day)
+	var seeds := owned_seeds()
 	if seeds.is_empty():
 		return
-	seed_pick = seeds[(seeds.find(seed_pick if seed_pick != &"" else Crops.default_seed()) + 1) % seeds.size()]
+	seed_pick = seeds[(seeds.find(planting_seed()) + 1) % seeds.size()]
 	Log.event(&"seed_picked", {"crop": String(seed_pick)})
+
+
+## The day crops the team has seeds of (P4-22, D-093).
+func owned_seeds() -> Array[StringName]:
+	var out: Array[StringName] = []
+	for c in Crops.ids():
+		if String(Crops.rec(c).harvest_phase) == "day" and store.seed_count(c) > 0:
+			out.append(c)
+	return out
+
+
+## What a field plot plants for this machine: the pick while the team has it, else the first day crop in stock,
+## else the default seed (then planting is refused `no_seeds`).
+func planting_seed() -> StringName:
+	if seed_pick != &"" and store.seed_count(seed_pick) > 0:
+		return seed_pick
+	var owned := owned_seeds()
+	return owned[0] if not owned.is_empty() else Crops.default_seed()
 
 
 func advance_day() -> void:

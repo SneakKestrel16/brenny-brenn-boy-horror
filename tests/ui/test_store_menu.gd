@@ -1,6 +1,7 @@
 extends SceneTree
 ## P4-22: `interact` at the shipping crate opens the store menu (every store.json row and every crop's seed), Buy goes
-## through the host's `request_store`, a seed row sets the seed planting uses, and the hotbar lists what is held.
+## through the host's `request_store`, seed rows buy into the team's stock that planting uses (D-093), and the hotbar
+## lists what is held (a seed slot only once seeds are owned).
 ## Windowed with `--shot=<dir>` it saves store_menu.png and hotbar.png there.
 ##   "$GODOT" --headless --audio-driver Dummy --path . -s res://tests/ui/test_store_menu.gd -- --host --phase1 --port=24701 --free-mouse
 
@@ -50,36 +51,44 @@ func _run() -> void:
 	_check(menu._rows.size() == store.items().size() + crops.size(), "one row per store.json item and per crop (%d)" % menu._rows.size())
 
 	# Buy goes through the host's request_store
-	_row(menu, &"scrap")[3].pressed.emit()
+	_row(menu, &"scrap")[3][0].pressed.emit()
 	await process_frame
 	_check(farm.coins == 85 and store.scrap_bought == 1, "Buy scrap: 15 coins, one scrap (coins %d)" % farm.coins)
 	farm.coins = 0
-	_row(menu, &"flare_gun")[3].pressed.emit()
+	_row(menu, &"flare_gun")[3][0].pressed.emit()
 	await process_frame
 	_check(menu._why.text != "", "a refused Buy says why (%s)" % menu._why.text)
 	farm.coins = 100
 
-	# seeds: locked rows are greyed; a chosen seed is what a field plot plants
-	_check(_row(menu, &"pumpkin")[3].disabled, "pumpkin seed locked before the first payment")
-	_check(_row(menu, &"pumpkin")[2].text == "from dawn 4, if the first payment was made", "locked pumpkin says when (%s)" % _row(menu, &"pumpkin")[2].text)
-	root.get_node("Clock").day = 4
-	load("res://game/farming/debt.gd").first_made = true
-	await process_frame
-	_check(not _row(menu, &"pumpkin")[3].disabled, "pumpkin seed on sale after the first payment")
-	_row(menu, &"pumpkin")[3].pressed.emit()
-	await process_frame
-	_check(farm.seed_pick == &"pumpkin" and _row(menu, &"pumpkin")[3].text == "Chosen", "the pumpkin seed is chosen")
+	# seeds: no seeds, no planting and no seed slot; Buy 5 fills the team's stock, planting uses one and no coins
 	var plot: Node = null
 	for t in farm.targets.values():
 		if t.has_method(&"wire_state") and not t.locked and not t.bed and t.state == &"empty":
 			plot = t
 			break
+	var st: Dictionary = farm.pstate(me)
+	_check(plot.can_start(&"plant", st) == &"no_seeds", "no seeds: planting refused no_seeds")
+	_check(not "Seeds" in _hotbar_text(hud), "no seed slot before buying")
+	_row(menu, &"turnip")[3][1].pressed.emit()
+	await process_frame
+	_check(farm.coins == 80 and store.seed_count(&"turnip") == 5, "Buy 5 turnip: 20 coins, 5 seeds (coins %d)" % farm.coins)
+	_check(_row(menu, &"turnip")[2].text == "have 5", "the turnip row says have 5 (%s)" % _row(menu, &"turnip")[2].text)
+	_check(_row(menu, &"pumpkin")[3][0].disabled, "pumpkin seed locked before the first payment")
+	_check(_row(menu, &"pumpkin")[2].text == "from dawn 4, if the first payment was made", "locked pumpkin says when (%s)" % _row(menu, &"pumpkin")[2].text)
+	root.get_node("Clock").day = 4
+	load("res://game/farming/debt.gd").first_made = true
+	await process_frame
+	_check(not _row(menu, &"pumpkin")[3][0].disabled, "pumpkin seed on sale after the first payment")
+	_row(menu, &"pumpkin")[3][0].pressed.emit()
+	await process_frame
+	_check(farm.coins == 70 and store.seed_count(&"pumpkin") == 1, "Buy 1 pumpkin: 10 coins (coins %d)" % farm.coins)
+	farm.seed_pick = &"pumpkin"
 	var verb: StringName = plot.verbs_for({})[0]
 	_check(verb == &"plant:pumpkin", "an empty field plot offers plant:pumpkin (%s)" % verb)
-	var st: Dictionary = farm.pstate(me)
 	_check(plot.can_start(verb, st) == &"", "the host accepts it")
 	plot.complete(verb, me, st)
-	_check(plot.crop == &"pumpkin" and farm.coins == 90, "planted a pumpkin for its 10-coin seed (coins %d)" % farm.coins)
+	_check(plot.crop == &"pumpkin" and farm.coins == 70 and store.seed_count(&"pumpkin") == 0, "planted a pumpkin: one seed used, no coins (coins %d)" % farm.coins)
+	_check(farm.planting_seed() == &"turnip", "the pumpkins ran out: planting falls back to the turnips in stock")
 	if shot != "":
 		await create_timer(0.5).timeout
 		root.get_viewport().get_texture().get_image().save_png(shot.path_join("store_menu.png"))
@@ -89,19 +98,20 @@ func _run() -> void:
 	for i in 3:
 		await process_frame
 	_check(not menu._open and not game.console_open, "Esc closes the menu")
-	var text := ""
-	for s in hud._hotbar.get_children():
-		text += s.get_child(0).text + "\n"
-	_check("Pumpkin seed" in text and "Scrap x" in text, "the hotbar shows the seed and the scrap:\n" + text)
+	var text := _hotbar_text(hud)
+	_check("Seeds: Turnip 5" in text and "plant Turnip" in text and "Scrap x" in text, "the hotbar shows the seeds and the scrap:\n" + text)
 	if shot != "":
 		await create_timer(0.5).timeout
 		root.get_viewport().get_texture().get_image().save_png(shot.path_join("hotbar.png"))
-	# a pick that is no longer on sale falls back to the default seed
-	load("res://game/farming/debt.gd").first_made = false
-	await process_frame
-	_check(farm.seed_pick == &"" and "Turnip seed" in hud._hotbar.get_child(0).get_child(0).text, "a locked pick falls back to turnip")
 	print("test_store_menu: ", "PASS" if _fails == 0 else "FAIL")
 	quit(1 if _fails > 0 else 0)
+
+
+func _hotbar_text(hud: Node) -> String:
+	var text := ""
+	for s in hud._hotbar.get_children():
+		text += s.get_child(0).text + "\n"
+	return text
 
 
 func _press(action: StringName) -> void:

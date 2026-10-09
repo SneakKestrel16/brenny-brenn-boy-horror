@@ -29,6 +29,7 @@ var _pin_t := 0.0
 var refused_reason: StringName = &""  ## HUD: why the host refused the last hold
 var _refused_ms := -REFUSED_SHOW_MS
 var aimed_verb: StringName = &""  ## HUD: first verb of the aimed target, empty if none (set while not holding)
+var aimed_target: Node = null  ## HUD: the target `aimed_verb` belongs to (P4-22: "Buy seeds at the store")
 
 
 func _ready() -> void:
@@ -78,6 +79,7 @@ func _physics_process(delta: float) -> void:
 		var tgt := _look_target()
 		var mine: Dictionary = target_farm.carry.get(player.peer, {}) if target_farm else {}
 		aimed_verb = &""
+		aimed_target = tgt
 		if tgt != null:
 			var vs: Array[StringName] = tgt.verbs_for(mine)
 			aimed_verb = vs[0] if not vs.is_empty() else &""
@@ -236,6 +238,8 @@ func _autochore() -> void:
 	var farm: Node = await _wait_farm()
 	var host := Game.is_host()
 	var mine := "Plot01" if host else "Plot02"
+	if host:  # D-093: planting uses the team's seeds; the host buys both plots' seeds (from anywhere: QA script)
+		farm.store.buy_seeds(player.peer, preload("res://game/farming/crops.gd").default_seed(), 2, false)
 	await get_tree().create_timer(2.0).timeout
 	var out_of_barn := [Vector3(0, 0, -4), Vector3(0, 0, 4), Vector3(22, 0, 4)]  # door at (0, 0), corn strip 2 at x 12..18
 	var front := Vector3(0, 0, 1.5)
