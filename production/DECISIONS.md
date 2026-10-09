@@ -899,16 +899,6 @@ simulator (daily steps) needs no change; the default `sim.py` run still passes e
 **How to apply:** planting validates seeds, not coins. Foreclosure never seizes seeds (`seizable()` reads
 only `store.json` rows). Seeds stay out of `store.json`; their prices live in `crops.json`.
 
-### D-144 · 2026-10-09 · CEO · One distinct hat per role, built now (Q-241)
-The CEO answered Q-241 with "make different hats now". Each of the ten roles in `data/roles.json` gets its
-own low-poly hat model, built in Phase 4 instead of waiting for the DD Phase 5 cosmetics (doc 07 s8).
-**Why:** the menu lobby line-up (D-140, P4-35) shows each player's role on their farmer, and placeholder
-primitives do not tell the roles apart.
-**How to apply:** the 3D Artist builds `assets/models/hat_<role_id>.glb` (P4-36), with the origin at the
-inside centre of the band so it sits on a head at 1.74 m. The lobby's `LineUp._hat` loads them in place of
-the primitives. The hats are role markers, not cosmetics: wider cosmetics (overalls, picked hats) stay
-Phase 5. The D-142 and D-143 numbers are taken by the P4-33 and P4-35 branches still in review.
-
 ### D-142 · 2026-10-09 · CEO · Anyone pulls up any flag; a leaver's flags go with them (P4-33)
 Amends D-120. Any player may pull up any flag (`remove_flag`), not only the one who placed it; the
 owner's slot frees. `not_your_flag` is gone; the host refuses only `no_flag` (nothing there). When a
@@ -931,3 +921,14 @@ loaded a season (`Game.season_uids` not empty), so its roles stay as saved. `Rol
 client's role cards stayed clickable and every pick came back refused with no reason shown.
 **How to apply:** readers of the table iterate only `int` keys. The lobby greys every card and shows "Roles
 are kept from the saved season." when `Roles.locked()` is true.
+
+
+### D-144 · 2026-10-09 · CEO · One distinct hat per role, built now (Q-241)
+The CEO answered Q-241 with "make different hats now". Each of the ten roles in `data/roles.json` gets its
+own low-poly hat model, built in Phase 4 instead of waiting for the DD Phase 5 cosmetics (doc 07 s8).
+**Why:** the menu lobby line-up (D-140, P4-35) shows each player's role on their farmer, and placeholder
+primitives do not tell the roles apart.
+**How to apply:** the 3D Artist builds `assets/models/hat_<role_id>.glb` (P4-36), with the origin at the
+inside centre of the band so it sits on a head at 1.74 m. The lobby's `LineUp._hat` loads them in place of
+the primitives. The hats are role markers, not cosmetics: wider cosmetics (overalls, picked hats) stay
+Phase 5. The D-142 and D-143 numbers are taken by the P4-33 and P4-35 branches still in review.

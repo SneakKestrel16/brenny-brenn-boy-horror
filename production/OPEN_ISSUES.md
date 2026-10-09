@@ -321,3 +321,9 @@ Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent bac
 2. **A dropped flag seen by a third client** not verified; needs 3 instances. QA.
 3. **`game/net/net.gd` `apply_flags(positions)`** name no longer matches what it carries. Gameplay.
 4. **Q-230** still open.
+
+## Found at the P4-35 re-review (QA, 2026-10-09)
+
+1. **4:3 screens** (1024x768) fit only 3 farmers: the camera keeps its height while the side panels stay a fixed pixel width (`game/ui/lobby.gd:220-223`). 1280x720 and 1920x1080 fit all six. Director: which aspect ratios are supported.
+2. **The far-right raised tag** sits on the right lantern; its glow washes out the end of the name. Still readable. Gameplay.
+3. **A real `hat_<role>.glb`** loading in `LineUp._hat` (`game/ui/lobby.gd:138`) untested until P4-36 lands. QA.
