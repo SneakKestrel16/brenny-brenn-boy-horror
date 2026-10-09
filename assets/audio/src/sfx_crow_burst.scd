@@ -41,3 +41,5 @@
 	).sort { |a, b| a[0] <= b[0] }
 )
 )
+
+// SUPERSEDED (D-066): assets/audio/sfx_crow_burst.wav is now a CC0 recording, see doc 08 section 13. Do not render.

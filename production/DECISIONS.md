@@ -503,3 +503,14 @@ the coin value of the crops lost to the dawn trample (crop sell price per plot).
 fit its ledger (inference; Q-069 item 3, Q-070).
 **How to apply:** `game/ai_director/sabotage.gd` and `sabotage_logic.gd`. A point budget, if the Game
 Designer wants one, can use `cost_points`, already in the data.
+
+### D-066 · 2026-10-08 · CEO · Downloaded CC0 and Sonniss GDC sounds are allowed
+Sound effects may come from Freesound.org recordings licensed CC0 and from the Sonniss GameAudioGDC
+bundles (royalty-free, commercial use, no credit). Each downloaded file is listed in doc 08 section 13
+with its source URL, author and license before it is committed. Generated sounds (D-015) stay for
+everything not replaced. Voices of real people stay out (D-005), and music stays out.
+**Why:** CEO listens 1 and 2 of P3-08: the generated jumpscare, lunge, presence, crows, scream and paper
+slide did not sound right after a rework; the CEO asked for a library of real sounds.
+**How to apply:** Audio Designer. Keep the original download unchanged under `assets/audio/src/dl/` with
+the license, process it with SoX into `assets/audio/<sound_id>.wav` (48 kHz, 16-bit, peak -1 dBFS), and
+note the processing in doc 08 section 13. Any other license needs the CEO first.

@@ -22,3 +22,5 @@
 	events: [[0, [\s_new, \slam, -1, 0, 0]]]
 )
 )
+
+// SUPERSEDED (D-066): assets/audio/sfx_door_slam.wav is now a CC0 recording, see doc 08 section 13. Do not render.

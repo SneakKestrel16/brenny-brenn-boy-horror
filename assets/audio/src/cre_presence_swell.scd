@@ -25,3 +25,5 @@
 	events: [[0, [\s_new, \presence, -1, 0, 0]]]
 )
 )
+
+// SUPERSEDED (D-066): assets/audio/cre_presence_swell.wav is now a CC0 recording, see doc 08 section 13. Do not render.

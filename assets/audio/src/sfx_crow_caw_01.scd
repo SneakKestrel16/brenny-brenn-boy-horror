@@ -27,3 +27,5 @@
 	]
 )
 )
+
+// SUPERSEDED (D-066): assets/audio/sfx_crow_caw_01.wav is now a CC0 recording, see doc 08 section 13. Do not render.

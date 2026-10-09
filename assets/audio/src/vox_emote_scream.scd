@@ -31,3 +31,5 @@
 	events: [[0.02, [\s_new, \scream, -1, 0, 0]]]
 )
 )
+
+// SUPERSEDED (D-066): assets/audio/vox_emote_scream.wav is now a CC0 recording, see doc 08 section 13. Do not render.

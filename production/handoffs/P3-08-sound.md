@@ -62,7 +62,8 @@ target `2` is the nth player (the second machine), not a peer id.
 1. `taint 2`: the wet heartbeat on the second machine only (now -32 dB). `taint 2 off` stops it.
 2. `scare jumpscare 2`: the silence, then the hit and a body thud (second machine).
 3. `scare disarm_lunge 2`: corn parting twice, then the lunge.
-4. `scare shed 2`: the target must first walk into the ToolShed, or the command refuses by design.
+4. `scare shed 2`: the target walks into the ToolShed first. The dev console forces past `not_in_shed`, but both
+   sounds play 3D at the shed door, so from the barn (about 37 m away) they are faint.
 5. `scare hallucination 2` and `scare wrong_count 2`: the presence swell.
 6. `scare fake_out`: needs a player outdoors in the field; the crow burst.
 7. `kill 2`, `ghost crow 2`, then `ghost caw 2`: the crow caws (three variants, random). Without the first two
@@ -82,7 +83,8 @@ Files are peak-normalized, so loudness changes were re-matched in `Soundscape` b
    was -17.6); thuds unchanged (RMS within 0.8 dB).
 3. Disarm lunge: `cre_corn_part_01/02` now dense leaf crackle plus green-wood snaps, -6 to -12 dB (RMS -10.2,
    was -16.3); `cre_lunge` now a rush with growl and a saturated impact and a gasp, -2 to -4 dB (RMS -13.9, was -15.9).
-4. Shed: no change; nothing found wrong. The refusal outside the ToolShed is by design.
+4. Shed: no change. The CEO likely heard it from the barn: the dev console forces past `not_in_shed` (no refusal)
+   and the sounds play 3D at the shed door, about 37 m away (QA review of 7e8c30a).
 5. Presence swell: no tone; two slow breaths of dark noise, drifting sub pressure, murmuring mouth layer.
    -10 to -8 dB (RMS -16.6, was -14.5).
 6. Crows: caws (`sfx_crow_caw_01..03`) and the burst rebuilt from jittered glottal pulses with shimmer, roughness,
@@ -105,3 +107,11 @@ plays for all, and the paper slide plays once per peer. All 16 WAVs are 48 kHz, 
 music. Left: `scare fake_out` has not been heard live (needs a player outdoors); doc 08 section 8 says the Taint beat
 ducks under the still heartbeat but the code ducks it under the chase heartbeat (inference, designer to confirm);
 Q-072 and Q-073 stay open; every level waits on the CEO listen above.
+
+## CEO listen 2 (2026-10-08)
+Under D-066, 11 sounds are now real Freesound CC0 recordings (sources, authors and processing in doc 08
+section 13; originals in `assets/audio/src/dl/`): the three crow caws, the crow burst, the scream, the shed door
+slam and bang, the jumpscare hit, the lunge, the presence swell (real breathing) and the paper slide (dry). Each
+was RMS-matched to the file it replaced, so catalog levels hold; the three caws now share one RMS. Levels:
+`TAINT_DB` -32 to -26 (doubled), paper slide -7.3 to -10.4 dB (30 percent quieter). The heartbeat file is unchanged.
+Processing: `tools/audio/decode_downloads.py` and `tools/audio/process_downloads.py`.

@@ -41,10 +41,10 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 	# cloth like a footstep. All placeholder levels.
 	&"sfx_crow_caw": {"n": 3, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": -5.0},  # P3-09 possessed crow
 	&"sfx_emote_cloth": {"n": 0, "bus": &"SFX", "unit": 3.0, "max": 30.0, "db": -10.0},  # P3-11 wave, point, shrug
-	&"ui_paper_slide": {"n": 0, "bus": &"UI", "db": -7.3},  # P3-12 Dawn Report card: -2.5 dB (25 percent amplitude) after RMS re-match (-6.0 before)
+	&"ui_paper_slide": {"n": 0, "bus": &"UI", "db": -10.4},  # P3-12 Dawn Report card: CEO listen 1 -2.5 dB, listen 2 a further -3.1 dB (30 percent amplitude)
 }
 ## Taint heartbeat (doc 08 sections 2.4, 8): "faint", local to the Tainted player only. Placeholder level.
-const TAINT_DB := -32.0  # CEO listen 1: was -42 and barely audible; +10 dB (file also got more 100 to 1000 Hz body)
+const TAINT_DB := -26.0  # CEO listens: -42 barely audible, -32 still too quiet; listen 2 asked double (+6 dB)
 ## Doc 08 section 8: the Taint beat ducks 8 dB under the still heartbeat; the chase heartbeat reuses that loop (inference).
 const TAINT_DUCK_DB := 8.0
 ## Ids not written to the `audio_play` log (one per stride would flood it).

@@ -24,3 +24,5 @@
 	events: [[0.01, [\s_new, \slide, -1, 0, 0]]]
 )
 )
+
+// SUPERSEDED (D-066): assets/audio/ui_paper_slide.wav is now a CC0 recording, see doc 08 section 13. Do not render.

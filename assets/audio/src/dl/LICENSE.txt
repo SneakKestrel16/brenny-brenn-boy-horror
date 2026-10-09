@@ -1,0 +1,16 @@
+Downloaded sounds (D-066). Each file is the unchanged Freesound HQ preview (mp3) of the sound; the page
+shows the license "Creative Commons 0" (public domain dedication, creativecommons.org/publicdomain/zero/1.0/).
+Processed results live in assets/audio/<sound_id>.wav; see docs/08_audio_design_and_sound_list.md section 13.
+
+freesound_813115.mp3  https://freesound.org/people/qubodup/sounds/813115/  qubodup  "Crow Caw"  CC0
+freesound_611150.mp3  https://freesound.org/people/LiftPizzas/sounds/611150/  LiftPizzas  "Crow 02.wav"  CC0
+freesound_361470.mp3  https://freesound.org/people/Jofae/sounds/361470/  Jofae  "Crow Caw"  CC0
+freesound_536732.mp3  https://freesound.org/people/egomassive/sounds/536732/  egomassive  "Caw.ogg"  CC0
+freesound_850699.mp3  https://freesound.org/people/IENBA/sounds/850699/  IENBA  "Female Scream"  CC0
+freesound_413274.mp3  https://freesound.org/people/Timmeh515/sounds/413274/  Timmeh515  "Door Slam"  CC0
+freesound_277165.mp3  https://freesound.org/people/LampEight/sounds/277165/  LampEight  "Shed Door Close"  CC0
+freesound_814884.mp3  https://freesound.org/people/AudioPapkin/sounds/814884/  AudioPapkin  "Sound Design Elements Impact SFX PS 090"  CC0
+freesound_673424.mp3  https://freesound.org/people/courtneyeck/sounds/673424/  courtneyeck  "Falling body hits the floor"  CC0
+freesound_613567.mp3  https://freesound.org/people/zazz.sound.design/sounds/613567/  zazz.sound.design  "VEGEMisc_Walking Through Corn Field_FC_KOKORIN_8040.ORTF.wav"  CC0
+freesound_350414.mp3  https://freesound.org/people/bevibeldesign/sounds/350414/  bevibeldesign  "Animal Heavy Breathing"  CC0
+freesound_464302.mp3  https://freesound.org/people/eyesonlegs/sounds/464302/  eyesonlegs  "PaperSlide.wav"  CC0

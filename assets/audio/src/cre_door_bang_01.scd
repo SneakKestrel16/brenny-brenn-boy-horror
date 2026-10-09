@@ -18,3 +18,5 @@
 	events: [[0, [\s_new, \bang, -1, 0, 0]], [0.2, [\s_new, \bang, -1, 0, 0, \amp, 0.45]]]
 )
 )
+
+// SUPERSEDED (D-066): assets/audio/cre_door_bang_01.wav is now a CC0 recording, see doc 08 section 13. Do not render.
