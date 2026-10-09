@@ -610,6 +610,7 @@ no economy number and can start now.
 | P4-30 | Game Designer, Gameplay | CEO: sell bonus by player count so 2p makes its payments; sim targets still pass | in progress | P4-28 |
 | P4-31 | AI Programmer | CEO: players in the town stand sanctuary do not count as outside at night (D-089); bots drop the sentinel job; re-run bot seasons | in progress | P4-21 |
 | P4-32 | Gameplay | CEO: the Harvest Moon push bar shows the distance left to the gate, not a stuck 0%; pushers lock to the cart while holding interact | in progress | — |
+| P4-33 | Gameplay | CEO: flag limit per player; remove your own placed flag; flags as small icons on the minimap | waiting | P4-24 |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
@@ -880,6 +881,13 @@ and an Opus QA review passes.
 - Added to running tasks from the same CEO report: dirt path along the cart route and cart grounded
   while pushed (P4-27); the creature attacks when nobody pushes, so start-stop pushing no longer stops
   attacks (P4-25).
+
+### P4-33 Flag limit, removal and minimap icons (CEO 2026-10-09)
+- Each player may have a limited number of flags placed at once (data-driven in `data/`, placeholder).
+- A player can remove a flag they placed (an interact on their own flag); the slot frees.
+- Placed flags show as small icons on the P4-24 minimap for every living player.
+- Doc 01 "Flags" rules stay: from day 5 the creature can move one flag a night, and the minimap shows
+  where the flag is now. Host-authoritative, synced, logged. Same done-when line as P4-22 to P4-28.
 
 ### P4-19 Creature bodies, final art
 Owner: 3D Artist. Output: `assets/models/creature_*.glb`, `assets/blender/`, `tools/blender/`;
