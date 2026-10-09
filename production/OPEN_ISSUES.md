@@ -232,3 +232,11 @@ Source: `production/handoffs/P4-23.md` "QA review" (PASS). None blocks.
 6. **Intermittent exit crash 0xC0000005** when the host quits in the lobby with a ready client (1 of 4
    runs; also in `production/handoffs/P4-06.md:38`). Not attributed to P4-23.
 
+
+## Found at the P4-24 review (QA, 2026-10-09)
+
+Source: `production/handoffs/P4-24.md` "QA review" (PASS). None blocks.
+
+1. **The ghost "YOU ARE DEAD" text runs off-screen and under the minimap** (`game/ui/hud.gd:125`). Gameplay.
+2. **`docs/05_technical_design.md` line 906 is not wrapped.** Gameplay.
+3. **Teammate dots on the minimap** may undercut doc 01's voice-mimicry and whistle tells (Q-180, for the CEO).

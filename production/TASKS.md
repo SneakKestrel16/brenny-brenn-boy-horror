@@ -601,7 +601,7 @@ no economy number and can start now.
 | P4-21 | AI Programmer | Bot seasons stand in for a median team (Q-157): bots go inside at night, save for the payment, plant the Prize Pumpkin; speed fix under `--time-scale` | done (QA FAIL line 2 fixed by Director: moonflower reserve; 2p still forecloses, labour-bound Q-162; sentinel Q-164 for CEO) | P4-18 fixes |
 | P4-22 | Gameplay | CEO session: store menu lists every item on interact; seed shop with a seed choice that planting uses; hotbar showing held items and how to use them | in progress | P4-06 |
 | P4-23 | Gameplay | CEO session: menu lobby before the match (roles, settings, ready), no spawning in the barn to pick | done (QA PASS; D-092; Q-176 for CEO) | P4-09 |
-| P4-24 | Gameplay | CEO session: minimap in the top right showing the player, buildings, fields, store, well, cart | in progress | — |
+| P4-24 | Gameplay | CEO session: minimap in the top right showing the player, buildings, fields, store, well, cart | done (QA PASS; Q-180 for CEO) | — |
 | P4-25 | AI Programmer | CEO session: creature stuck in the barn; at dawn place it back in the corn; fix the cause | in progress | — |
 | P4-26 | Audio Designer | CEO session: new footstep sounds; crickets chirp less often | merged on CEO approval 2026-10-09 (QA review still running) | — |
 | P4-27 | Level Designer | CEO session: farm less open (cover, tree lines, landmarks); festival cart rests on the ground in the barn | in progress | — |
