@@ -295,6 +295,8 @@ vertex offsets or UV scroll, which are position or texture changes, not brightne
 - **Farmer.** Same body for all 4 players, tinted overalls per player colour (4 slots). Visible
   sleeves and hands in first person (the Taint stain needs them). Third-person body for other
   players, standing at 1.8 m. Cosmetics (hats, overalls) are DD Phase 5 and out of scope.
+  **Exception (D-144):** one fixed hat per role is in now, as a role marker rather than a cosmetic
+  (`hat_<role_id>.glb`, s11.7). Picked hats and other cosmetics stay Phase 5.
 - **Taint stain on hands and sleeves** (doc 01 "Taint"): black oily stains climbing from fingers
   toward the elbow as a `taint_level` shader parameter on the hand and sleeve material, in steps tied
   to the Taint stages in doc 02. Visible to all (doc 01), so the third-person body uses the same
@@ -527,6 +529,7 @@ moonflower bed has 4 plots (2 by 2); the Prize Pumpkin patch is 4 m across centr
 | `char_farmer.glb` (rig: idle, walk, run, crouch, interact, emotes wave, point, shrug, scream; 4 tint slots) | 0.5 x 0.3 x 1.8 | P1 |
 | `char_farmer_ragdoll.glb` (physical bones) | 1.8 | P2 |
 | `char_ghost.glb` (translucent shell of the farmer) | 0.5 x 0.3 x 1.8 | P3 |
+| `hat_<role_id>.glb`, one per role in `data/roles.json` (D-144): farmer straw hat, rancher cowboy hat, mechanic backwards cap with goggles, tracker hunting cap with ear flaps, carpenter hard hat, medic pillbox with red cross, night owl beanie with owl tufts and headlamp, radio operator cap with headphones and antenna, warden campaign hat, medium bent witch hat. Origin at the centre of the band's bottom edge, sits at 1.74 m on the head; up to 300 tris (small prop); vertex colour, nothing emissive | 0.24 to 0.72 wide, up to 0.5 tall (radio antenna) | P4 |
 | `creature_gaunt.glb` | 0.9 x 1.06 x 2.1 (hunched; depth as built in P4-19, head and hump forward) | P1 (placeholder) |
 | `creature_scarecrow.glb`, `creature_scarecrow_head.glb` | 1 x 0.6 x 2.2 | P2 |
 | `creature_boar.glb` (with `_chain` part) | 1.2 x 2.38 x 1.4 (length as built in P4-19) | P3 |
