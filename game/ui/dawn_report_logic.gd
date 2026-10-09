@@ -31,6 +31,7 @@ static func build(events: Array, ctx: Dictionary, templates: Dictionary) -> Dict
 	var pries: Array = []  # [peer, trap_id]
 	var victims := {}  # trap_id -> victim of a race survived with help
 	var cash := 0
+	var sale := 0  # the final dawn's end-of-season sale (doc 02 s9 step 2)
 	var bill := {}
 	var summary := {}
 	for e: Array in events:
@@ -66,12 +67,14 @@ static func build(events: Array, ctx: Dictionary, templates: Dictionary) -> Dict
 			"money_changed":
 				if d.reason == "dawn_cash_in":
 					cash += int(d.delta)
+				elif d.reason == "end_of_season_sale":
+					sale += int(d.delta)
 			"medical_bill":
 				bill = d
 			"dawn_summary":
 				summary = d
 	var report := {"day": ctx.get("day", summary.get("day", 0)), "streamer_safe": ctx.get("streamer_safe", false),
-		"ledger": _ledger(cash, bill, summary), "sections": []}
+		"ledger": _ledger(cash, bill, summary, sale), "final": bool(summary.get("final", false)), "sections": []}
 	var sections: Array = report.sections
 	# Best Impression: the lure that moved its target furthest (doc 01: "the best lure").
 	var best := ""
@@ -164,8 +167,10 @@ static func build(events: Array, ctx: Dictionary, templates: Dictionary) -> Dict
 
 
 ## Doc 01 "Dawn, in this order": cash-in, medical bill, payment, farm damage. Rows: [label, coins, red ink].
-static func _ledger(cash: int, bill: Dictionary, summary: Dictionary) -> Array:
+static func _ledger(cash: int, bill: Dictionary, summary: Dictionary, sale: int = 0) -> Array:
 	var rows: Array = [["Cash-in", cash, false]]
+	if bool(summary.get("final", false)):
+		rows.append(["Crops left in the ground, half price", sale, false])
 	if not bill.is_empty():
 		rows.append(["Medical bill", -int(bill.paid), true])
 		if int(bill.to_final) > 0:

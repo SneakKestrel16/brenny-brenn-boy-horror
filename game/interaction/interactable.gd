@@ -16,10 +16,16 @@ var farm: Node  ## the Farm that owns this
 ## Hold seconds for a verb: labor.json, or INSTANT_S for the few verbs that are not chores, or a sabotage
 ## fix's `fix_hold_s` (P3-06: bury, pull_seeds; sabotage.json).
 static func hold_seconds(verb: StringName) -> float:
+	verb = base(verb)
 	if INSTANT_S.has(verb):
 		return float(INSTANT_S[verb])
 	var fix := fix_hold_s(verb)
 	return fix if fix > 0.0 else Data.hold_s(verb)
+
+
+## P4-04: a verb may carry an argument after a colon (`plant:<crop>`); the part before it names the chore.
+static func base(verb: StringName) -> StringName:
+	return StringName(String(verb).get_slice(":", 0))
 
 
 ## P3-06: a sabotage.json fix hold for `verb`, 0 when it is not one.

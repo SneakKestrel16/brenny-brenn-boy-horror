@@ -8,11 +8,14 @@ const Plot := preload("res://game/farming/plot.gd")
 const Station := preload("res://game/farming/station.gd")
 const Registry := preload("res://game/interaction/hold_registry.gd")
 const Cans := preload("res://game/items/cans.gd")
+const Crops := preload("res://game/farming/crops.gd")
 
 var targets: Dictionary = {}  ## id -> Interactable
 var carry: Dictionary = {}  ## every peer: peer -> {can, bag, fuel_can}, replicated by `apply_carry`
 var coins := 0 ## authoritative on the host; mirrored elsewhere
 var final_extra := 0  ## host: medical bill the bank floor could not cover, added to the final payment (doc 02 s8)
+var seed_pick: StringName = &""  ## this machine's chosen seed for field plots (`cycle_seed`); empty means the default seed
+var free_scrap := 0  ## host: scrap handed out at the last dawn, spent by the store (P4-05; doc 02 s9 step 7)
 var registry: Node
 var cans: Cans  ## D-054: the physical watering and fuel cans
 var _log_farm := OS.get_cmdline_user_args().has("--log-farm")
@@ -44,7 +47,12 @@ func _ready() -> void:
 		registry.name = "HoldRegistry"
 		add_child(registry)
 		_set_headcount(_headcount_arg if _headcount_arg > 0 else Game.player_count())
+		add_coins(int(Data.value(&"season", &"start_coins")), &"start_coins", 0)  # doc 01 Season and Numbers; seeds cost coins (P4-04)
 		Clock.day_changed.connect(func(_d: int) -> void: advance_day())
+		Clock.phase_changed.connect(func(ph: StringName) -> void:
+			for t in targets.values():
+				if t.has_method(&"on_phase"):
+					t.on_phase(ph))
 		Game.player_left.connect(func(p: int) -> void: registry.cancel(p, &"left", false))
 	else:
 		Net.to_host(&"request_farm_state")
@@ -96,6 +104,18 @@ func pstate(peer: int) -> Dictionary:
 	return st
 
 
+## Client: `cycle_seed` picks the next day crop on sale today for field plots. Local only; the pick travels
+## inside the `plant:<crop>` hold request and the host re-checks it (plot.gd `can_start`).
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed(&"cycle_seed") or Game.console_open:
+		return
+	var seeds := Crops.seeds(Clock.day)
+	if seeds.is_empty():
+		return
+	seed_pick = seeds[(seeds.find(seed_pick if seed_pick != &"" else Crops.default_seed()) + 1) % seeds.size()]
+	Log.event(&"seed_picked", {"crop": String(seed_pick)})
+
+
 func advance_day() -> void:
 	for t in targets.values():
 		if t.has_method(&"advance_day"):
@@ -124,7 +144,7 @@ func send_carry(peer: int) -> void:
 
 
 func plot_changed(p: Node) -> void:
-	_broadcast(&"plot_changed", [p.id, p.state, p.watered, p.age])
+	_broadcast(&"plot_changed", [p.id, p.wire_state(), p.watered, p.age])
 
 
 func _broadcast(what: StringName, args: Array) -> void:
@@ -150,7 +170,7 @@ func _on_request(what: StringName, peer: int, args: Array) -> void:
 				Net.to_peers(&"apply_hands", [p, bool(hs.get("shovel", false)), bool(hs.get("trap", false))], [peer])
 			for t in targets.values():
 				if t is Plot:
-					Net.to_peers(&"apply_plot_changed", [t.id, t.state, t.watered, t.age], [peer])
+					Net.to_peers(&"apply_plot_changed", [t.id, t.wire_state(), t.watered, t.age], [peer])
 
 
 func _on_apply(what: StringName, args: Array) -> void:

@@ -2,6 +2,8 @@ extends "res://game/interaction/interactable.gd"
 ## Doc 05 section 9: the sell box (`sell`, doc 01 stand-in at (40, 20), D-016) and the well (`fill_can`, and
 ## `wash` for a Tainted player, P3-07: doc 01 "The Taint", about 10 s of noisy pumping clears it).
 
+const Crops := preload("res://game/farming/crops.gd")
+
 var kind: StringName = &"sell"  ## `sell` or `well`
 
 
@@ -34,8 +36,10 @@ func on_start(verb: StringName, peer: int) -> void:
 func complete(verb: StringName, peer: int, st: Dictionary) -> void:
 	if verb == &"sell":
 		var n := int(st.bag)
-		st.bag = 0
-		farm.add_coins(n * int(Data.value(&"crops", &"turnip", &"sell")), &"sell", peer)
+		var v := Crops.bag_value(st)
+		Crops.bag_clear(st)
+		Log.event(&"sell", {"player": peer, "items": n, "coins": v})
+		farm.add_coins(v, &"sell", peer)
 	elif verb == &"wash":
 		NoiseBus.emit_kind(&"well_pump", target_pos(), peer)
 		farm.get_tree().get_first_node_in_group(&"taint").set_taint(peer, false, &"well")

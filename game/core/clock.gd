@@ -10,6 +10,7 @@ extends Node
 
 signal phase_changed(phase: StringName)
 signal day_changed(day: int)
+signal season_ended  ## after the final dawn (P4-04)
 
 const DAWN_S := 10.0  ## placeholder: dawn is a pipeline step, not a timed phase, in doc 02 section 9
 const SYNC_EVERY_S := 5.0  ## doc 06 section 7
@@ -18,6 +19,7 @@ var day := 1
 var phase: StringName = &"day"
 var t_phase := 0.0
 var running := false  ## host: ticking; client: set by the first apply_clock
+var season_over := false  ## the final dawn has finished (`start` clears it)
 var _since_sync := 0.0
 var _override: Dictionary = {}  ## phase -> seconds, from the command line (D-030)
 
@@ -61,6 +63,7 @@ func start() -> void:
 	day = 1
 	phase = &"day"
 	t_phase = 0.0
+	season_over = false
 	running = true
 	if not _override.is_empty():
 		Log.event(&"clock_override", {"day_s": length_of(&"day"), "dusk_s": length_of(&"dusk"), "night_s": length_of(&"night")})
@@ -92,6 +95,9 @@ func _advance() -> void:
 		&"dusk": phase = &"night"
 		&"night": phase = &"dawn"
 		_:
+			if day >= int(Data.value(&"season", &"season_days")):  # the season ends after the final dawn (doc 02 s3)
+				end_season()
+				return
 			phase = &"day"
 			day += 1
 			day_changed.emit(day)
@@ -99,6 +105,17 @@ func _advance() -> void:
 	phase_changed.emit(phase)
 	Log.event(&"phase_changed", {"day": day, "phase": phase})
 	_broadcast()
+
+
+## The final dawn is over: the clock stops on the last day's dawn. Host: from `_advance`. Client: from the
+## final Dawn Report (`apply_clock` has no season flag, Q-085). The Season Awards screen listens (not built).
+func end_season() -> void:
+	if season_over:
+		return
+	season_over = true
+	running = false
+	Log.event(&"season_ended", {"day": day})
+	season_ended.emit()
 
 
 func _broadcast() -> void:

@@ -230,7 +230,9 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				if t.has_method(&"advance_day") and t.state != &"empty" and t.state != stage:
 					t.state = stage
 					t.watered = false
-					t.age = 0 if stage != &"ripe" else int(Data.value(&"crops", &"turnip", &"grow_days"))
+					if t.crop == &"":  # an empty plot being grown by hand gets the default seed
+						t.crop = t.crop_for(&"plant")
+					t.age = 0 if stage != &"ripe" else int(Data.value(&"crops", t.crop, &"grow_days"))
 					farm.plot_changed(t)
 					n += 1
 			return "%d plots set to %s" % [n, stage]

@@ -300,19 +300,11 @@ func _forget(id: String) -> void:
 		t.queue_free()
 
 
-## Placeholder art until the Technical Artist's models: a flat disc, red for a bear trap.
+## Placeholder art until the Technical Artist's models (TrapArt).
 func _show(id: String, kind: StringName) -> void:
 	var m := _spot(id)
 	if m == null or m.get_node_or_null(^"Sprung"):
 		return
-	var mesh := MeshInstance3D.new()
-	mesh.name = "Sprung"
-	var c := CylinderMesh.new()
-	c.top_radius = 0.5 if kind == &"bear" else 0.8
-	c.bottom_radius = c.top_radius
-	c.height = 0.06
-	mesh.mesh = c
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.45, 0.08, 0.06) if kind == &"bear" else Color(0.1, 0.07, 0.04)
-	mesh.material_override = mat
-	m.add_child(mesh)
+	var art := TrapArt.of(kind)  # Q-058: the shared placeholder trap art, origin on the ground
+	art.name = "Sprung"
+	m.add_child(art)

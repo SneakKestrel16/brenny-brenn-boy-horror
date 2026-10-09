@@ -90,7 +90,7 @@ func _draw_panel() -> void:
 		var id := String(m.name)
 		if armed.has(id):
 			label = "%s SET (creature)" % armed[id]
-		elif tr and tr.traps.has(id) and tr.traps[id].state in [&"set", &"sprung"]:
+		elif tr and tr.traps.has(id) and tr.traps[id].state in ([&"set", &"sprung"] if Game.is_host() else [&"sprung"]):  # Q-048 (4): a client's `set`/`moved` is the close-range clue, not an open trap
 			tc = Color.RED if tr.traps[id].state == &"sprung" else tc
 			label = "%s %s" % [tr.traps[id].kind, tr.traps[id].state]
 		else:

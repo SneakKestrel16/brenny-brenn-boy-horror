@@ -16,15 +16,15 @@ func _ready() -> void:
 	_check(def_interact == ["E"], "default interact is E, got %s" % [def_interact])
 
 	var ev := InputEventKey.new()
-	ev.physical_keycode = KEY_T
+	ev.physical_keycode = KEY_Y
 	var saved: Dictionary = Settings.get_value(&"keybinds").duplicate()
 	saved["interact"] = [SettingsApply.event_to_dict(ev)]
 	Settings.set_value(&"keybinds", saved)
 	Settings.save()
-	_check(InputMap.action_get_events(&"interact").map(SettingsApply.event_text) == ["T"], "rebind applies to InputMap on change")
+	_check(InputMap.action_get_events(&"interact").map(SettingsApply.event_text) == ["Y"], "rebind applies to InputMap on change")
 
 	var c := SettingsApply.conflicts(&"crouch", ev)
-	_check(c == [&"interact"], "binding T to crouch warns about interact, got %s" % [c])
+	_check(c == [&"interact"], "binding Y to crouch warns about interact, got %s" % [c])
 	_check(SettingsApply.conflicts(&"interact", ev).is_empty(), "rebinding an action to its own key does not warn")
 	var shared := InputEventKey.new()
 	shared.physical_keycode = KEY_E
@@ -33,7 +33,7 @@ func _ready() -> void:
 	var cfg := ConfigFile.new()
 	_check(cfg.load(Settings.PATH) == OK, "user://settings.cfg written")
 	var disk: Dictionary = cfg.get_value("settings", "keybinds", {})
-	_check(disk.has("interact") and int(disk["interact"][0].c) == KEY_T, "saved file holds the rebind")
+	_check(disk.has("interact") and int(disk["interact"][0].c) == KEY_Y, "saved file holds the rebind")
 
 	Settings.set_value(&"keybinds", {})
 	Settings.save()

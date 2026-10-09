@@ -9,11 +9,12 @@ const VERB_TEXT := {&"plant": "Plant", &"water": "Water", &"harvest": "Harvest",
 		&"fill_can": "Fill the watering can", &"pry": "Pry free", &"refuel": "Refuel",
 		&"disarm_bear": "Disarm the bear trap", &"fill_pit": "Fill the pit", &"place_flag": "Plant a flag",
 		&"hang_trap": "Hang the trap on the board", &"take_shovel": "Take the shovel", &"return_shovel": "Hang the shovel back", &"take_trap": "Pick up the trap",
-		&"take_can": "Pick up the can", &"drop_can": "Put the can down", &"wash": "Wash at the well"}
+		&"take_can": "Pick up the can", &"drop_can": "Put the can down", &"wash": "Wash at the well",
+		&"clear_plot": "Clear the dead crop"}
 const REFUSED_TEXT := {&"locked": "Locked: needs more players, or buy it at the store", &"need_shovel": "You need the shovel", &"hands_full": "Your hands are full",
 		&"pegboard_full": "No free hook", &"flag_here": "A flag is already here", &"not_armed": "Nothing set here",
 		&"no_can": "You need a watering can", &"no_fuel_can": "You need the fuel can", &"can_taken": "Someone has it", &"has_fuel_can": "The can is full",
-		&"not_tainted": "Your hands are clean"}
+		&"not_tainted": "Your hands are clean", &"no_coins": "Not enough coins for the seed", &"locked_crop": "That seed is not on sale yet"}
 
 var player: CharacterBody3D
 var hold: Node  ## the player's HoldController
@@ -135,6 +136,9 @@ func _process(delta: float) -> void:
 
 
 func _verb_text(verb: StringName) -> String:
+	if ":" in verb:  # `plant:<crop>` (P4-04): the chore, then the crop's name from crops.json
+		var arg := String(verb).get_slice(":", 1)
+		return "%s %s" % [_verb_text(StringName(String(verb).get_slice(":", 0))), Data.record(&"crops", StringName(arg)).get("name", arg)]
 	return VERB_TEXT.get(verb, String(verb).capitalize().replace("_", " "))
 
 

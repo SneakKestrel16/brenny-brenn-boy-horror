@@ -421,6 +421,16 @@ Host-owned plots (`game/farming/`): each plot is a node with `crop_id`, `watered
 `state` (`empty`, `growing`, `ripe`, `wilted`, `dead`) and `watered_today`. The host advances them at
 dawn (section 17) from `crops.json` (doc 02 section 5).
 
+- **Crops (P4-04).** Every number comes from `crops.json` through `game/farming/crops.gd`; no crop name is in
+  code. A crop is found by what it does: `harvest_phase` `night` is the bed crop (the plots whose marker
+  `field` meta equals that crop id), `day` crops go in field plots. A plot holds `crop` and `state`; verb
+  `plant:<crop>` carries the client's picked seed (`cycle_seed`, key T, client-local `Farm.seed_pick`; plain
+  `plant` is the first day crop). The host refuses `wrong_crop`, `locked_crop` (`unlock_day`, and
+  `first_payment_made` until P4-07 supplies the payment flag; `Crops.first_paid` is the placeholder) and
+  `no_coins`, and charges `seed` at planting. A day crop grows one day per watered day (`grow_days`); a
+  bed crop ripens when night falls if watered. At dawn a night crop left unpicked is `dead` (and Taints when
+  `dead_plot_taints`), an unripe one `wilted`; `clear_plot` removes either. `plot_changed` has no crop
+  argument, so the crop rides in the state string (`ripe:pumpkin`, Q-085).
 - **Plant, water, harvest** are holds (section 7). Planting needs a seed item; watering needs a full
   can (capacity from `labor.json` `can`, 2 plots per fill, `placeholder`); harvest puts crops in the
   carry bag (capacity `carry` 4, `placeholder`). A plot's visible state is the information (no HUD).
@@ -610,14 +620,23 @@ Harvest Moon only (doc 01 "The Harvest Moon", doc 02 section 9). Host-owned `Car
   (a prop, `Items`), spawns a `Ghost` for that peer, and logs `death`. The body can be carried by
   teammates (`request_carry_player`); doc 03 section 15 decides what bodies do to the creature.
 - **Dawn, respawn and the medical bill (P2-06, `game/ghost/death.gd` `dawn()`).** Host only, on
-  `phase_changed(dawn)`, doc 02 section 9 order: (1) cash-in: each living player's bag sells at the turnip
+  `phase_changed(dawn)`, doc 02 section 9 order: (1) cash-in: each living player's bag sells at its crops' prices (P4-04)
   price (`money_changed` reason `dawn_cash_in`); the dead lose bag and fuel can (`carried_lost`); (3) bill:
   `_bill_deaths` (every death since the last dawn, day deaths included) gives `min(first + later * (n-1), cap)`
   from `medical_bill.json`, each scaled by `Data.scaled` to the headcount at that dawn (doc 02 section 8). The
   bank pays down to `season.bank_floor` (4); the rest goes to `Farm.final_extra` (the final payment adds it
-  when payments are built). `money_changed` reason `medical_bill`, `player` null. Steps 2, 4 to 7 are stubs.
+  when payments are built). `money_changed` reason `medical_bill`, `player` null.
   Then every ghost respawns at its own barn spawn slot (`player_spawns[index in Game.players]`), then
-  `dawn_summary` (`debt`, `plots_wilted`, `farm_damage` are 0 until their tasks).
+  `dawn_summary` (`debt` is 0 until P4-07).
+- **Dawn steps, full season (P4-04).** `Death.DAWN_STEPS` is the doc 02 section 9 order and `dawn()` logs
+  `dawn_step` then calls `step_<name>(farm, final)` for each: `cash_in` (each living bag sells at its crops'
+  prices, `Crops.bag_value`), `final_sale` (final day only: crops in the ground sell at `end_season_sale_pct`,
+  nearest coin, wilting crops excluded; the festival payout is P4-09's), `medical_bill` (scaled by
+  `payment_pct_by_players`, D-079), `payment` (stub, P4-07), `farm_damage` (night-crop `dawn_wilt()`, then
+  the Sabotage dawn trample), `save` (stub, P4-10), `free_scrap` (non-stacking). A later task fills a stub
+  in place; `tests/gameplay/test_season.gd` checks the order. `Clock` ends the season after the final
+  dawn (`season_ended`, `season_over`, the clock stops); clients learn it from the final Dawn Report because
+  `apply_clock` has no season flag (Q-085).
 - **Ghosts** (doc 01 "Ghosts"): a spectator camera that flies, passes through everything but cannot
   interact with the world, see `Ghost` in section 3. The ghost's position is its own camera
   position (client-owned like all movement). Ghosts see the world as it is (including a dim glow on
@@ -996,6 +1015,18 @@ the QA changes.
 | `settings_changed` | each peer | `key` (never a voice file path) | Debugging |
 | `save_written` | host | `path_name` (file name only), `day`, `bytes` | Save |
 | `audio_state` | `Soundscape` on every peer, through `Log`, on each creature-state change and every 5 s while the state is not `lurk` | `creature_state`, `body`, `bed_db`, `wind_db`, `last_sounds` (last 8 sound IDs) | Clients report Stalk layer drops; F3 is host-only (Q-035, CONTRACTS section 10) |
+| `audio_play` | `Soundscape`, on the peer that hears it, each one-shot except footsteps | `id` (sound ID) | CONTRACTS section 10 (Q-073, D-076); QA sound checks |
+| `audio_hush` | `Soundscape`, on the hearing peer | `seconds` | Same |
+| `audio_taint_heartbeat` | `Soundscape`, on the hearing peer, when the heartbeat starts or stops | `on` | Same |
+| `audio_chase_cue` | `Soundscape`, on every peer, when the creature state turns `chase` | `body` | Same |
+| `sell` | host, a sell-box hold completes | `player`, `items`, `coins` (per-crop price from `crops.json`) | Selling (P4-04) |
+| `harvest` | host | `player`, `plot`, `crop` | Crop checks (P4-04) |
+| `seed_picked` | client, on `cycle_seed` | `crop` | Seed choice is client-local; it rides in the `plant:<crop>` verb (P4-04) |
+| `dawn_step` | host, before each step of `Death.dawn()` | `step` (`cash_in`, `final_sale`, `medical_bill`, `payment`, `farm_damage`, `save`, `free_scrap`), `day` | Doc 02 section 9 order test (P4-04) |
+| `end_of_season_sale` | host, final dawn step 2 | `plots`, `coins` | Dawn Report ledger row (P4-04) |
+| `free_scrap` | host, dawn step 7 | `scrap` | Doc 02 section 9 step 7 (P4-04) |
+| `season_ended` | each peer (host from the clock, clients from the final Dawn Report) | `day` | Season Awards entry point (P4-04) |
+| `dawn_report_closed` | each peer, `DawnReport._close()` | `day` | `Soundscape` ends the report bed on it (D-081 item 2) |
 | `ghost_action` | host | `kind` (`flicker`, `crow`, `rustle`, `caw`), `peer`, plus `light_id` (flicker), `crow_id` (crow, caw) or `position` `[x, z]` (rustle). As built in P3-09; replaces the proposed `ghost_flicker` row and the `player`/`action`/`target` fields. P3-10 adds `kind` `static_voice` (a ghost starts a talk spurt; `peer` only) | Doc 01 Phase 3 "the dead stay engaged"; QA flicker checks (Q-037); `check_logs.py` tallies it by kind |
 | `ghost_action_refused` | host | `kind`, `peer`, `reason` (`not_ghost`, `cooldown`, `no_light`, `unlit`, `too_far`, `no_living_near`, `not_in_corn`, `used_tonight`, `no_perch`, `taken`, `no_crow`) | QA: non-ghosts and blown-out lanterns refused (P3-09) |
 | `ghost_action_seen` | client, when it applies a ghost result | `what` (`ghost_light`, `ghost_sound`, `crow_possessed`), `args`, `played` | Every peer sees the flicker (P3-09) |

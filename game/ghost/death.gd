@@ -6,6 +6,7 @@ extends Node
 ## Not built yet: the body as a carried thing.
 
 const GhostPowersScript := preload("res://game/ghost/ghost_powers.gd")
+const Crops := preload("res://game/farming/crops.gd")
 const RESPAWN_TEST_S := 10.0  ## `--creature-test` only: nights repeat without a real dawn, so QA respawns after 10 s
 
 var _creature: Node
@@ -80,31 +81,22 @@ func bill_for(deaths: int) -> int:
 	return mini(first + later * (deaths - 1), cap)
 
 
-## Host only, doc 02 s9 in order. Step 1 cash-in: the living sell what they carry, the dead lose it. Step 3
-## medical bill. Steps 2 (final dawn sale), 4 (payment), 5 (farm damage), 6 (save), 7 (free scrap) are stubs
-## until their tasks. Respawn at the barn follows, then `dawn_summary`.
+## Doc 02 s9, the dawn order. Each name runs `step_<name>(farm)` and logs `dawn_step` first. P4-07 fills
+## `payment`, P4-10 fills `save`; they slot in without reordering. tests/gameplay/test_season.gd checks it.
+const DAWN_STEPS: Array[StringName] = [&"cash_in", &"final_sale", &"medical_bill", &"payment", &"farm_damage", &"save", &"free_scrap"]
+
+var _dawn := {}  ## host: this dawn's numbers, gathered by the steps and read by `dawn_summary`
+
+
+## Host only. Runs the steps in order, then the respawn at the barn, then `dawn_summary`.
 func dawn() -> void:
 	var farm: Node = get_parent().get_node("Farm")
-	for p in Game.players.keys():
-		var st: Dictionary = farm.pstate(p)
-		var bag := int(st.bag)
-		st.bag = 0
-		if Game.is_ghost(p):
-			if bag > 0 or st.get("fuel_can", false):
-				Log.event(&"carried_lost", {"player": p, "bag": bag})
-			st.fuel_can = false
-		elif bag > 0:
-			farm.add_coins(bag * int(Data.value(&"crops", &"turnip", &"sell")), &"dawn_cash_in", p)
-		farm.send_carry(p)
-	var deaths := _bill_deaths
+	var final := Clock.day >= int(Data.value(&"season", &"season_days"))
+	_dawn = {"deaths": _bill_deaths, "bill": 0, "wilted": 0}
 	_bill_deaths = 0
-	var bill := bill_for(deaths)
-	var paid := clampi(farm.coins - int(Data.value(&"season", &"bank_floor")), 0, bill)  # the bank never drops below the floor
-	if paid > 0:
-		farm.add_coins(-paid, &"medical_bill", 0)
-	farm.final_extra += bill - paid
-	if bill > 0:
-		Log.event(&"medical_bill", {"deaths": deaths, "bill": bill, "paid": paid, "to_final": bill - paid, "players": Game.player_count()})
+	for s in DAWN_STEPS:
+		Log.event(&"dawn_step", {"step": String(s), "day": Clock.day})
+		call(StringName("step_" + s), farm, final)
 	for p in _dead.keys():
 		respawn(p)
 	var ripe := 0
@@ -112,8 +104,87 @@ func dawn() -> void:
 		if t.get("state") == &"ripe":
 			ripe += 1
 	var sab := get_tree().get_first_node_in_group(&"sabotage")  # P3-06: crops trampled this dawn, in coins
-	Log.event(&"dawn_summary", {"day": Clock.day, "coins": farm.coins, "debt": 0, "plots_ripe": ripe,  # debt, wilting: later tasks
-			"plots_wilted": 0, "farm_damage": sab.farm_damage if sab else 0, "deaths": deaths, "medical_bill": bill, "final_extra": farm.final_extra})
+	Log.event(&"dawn_summary", {"day": Clock.day, "coins": farm.coins, "debt": 0, "plots_ripe": ripe,  # debt: P4-07
+			"plots_wilted": _dawn.wilted, "farm_damage": sab.farm_damage if sab else 0, "deaths": _dawn.deaths,
+			"medical_bill": _dawn.bill, "final_extra": farm.final_extra, "final": final})
+
+
+## Step 1: the living sell what they carry at full price, the dead lose it.
+func step_cash_in(farm: Node, _final: bool) -> void:
+	for p in Game.players.keys():
+		var st: Dictionary = farm.pstate(p)
+		var bag := int(st.bag)
+		var value := Crops.bag_value(st)
+		Crops.bag_clear(st)
+		if Game.is_ghost(p):
+			if bag > 0 or st.get("fuel_can", false):
+				Log.event(&"carried_lost", {"player": p, "bag": bag})
+			st.fuel_can = false
+		elif bag > 0:
+			farm.add_coins(value, &"dawn_cash_in", p)
+		farm.send_carry(p)
+
+
+## Step 2, final dawn only: crops in the ground sell at `end_season_sale_pct` (a crop that wilts at dawn is
+## worth nothing). The festival payout is P4-09's (the cart), added here when it lands.
+func step_final_sale(farm: Node, final: bool) -> void:
+	if not final:
+		return
+	var total := 0
+	var plots := 0
+	for t in farm.targets.values():
+		if t.has_method(&"sell_value") and t.sell_value() > 0 and not bool(Crops.rec(t.crop).get("wilts_at_dawn", false)):
+			var v: int = t.sell_value()
+			if v > 0:
+				total += v
+				plots += 1
+	total = Data.scale_pct(total, int(Data.value(&"season", &"end_season_sale_pct")), true)  # nearest coin
+	Log.event(&"end_of_season_sale", {"plots": plots, "coins": total})
+	if total > 0:
+		farm.add_coins(total, &"end_of_season_sale", 0)
+
+
+## Step 3: the medical bill (doc 02 s8).
+func step_medical_bill(farm: Node, _final: bool) -> void:
+	var deaths: int = _dawn.deaths
+	var bill := bill_for(deaths)
+	var paid := clampi(farm.coins - int(Data.value(&"season", &"bank_floor")), 0, bill)  # the bank never drops below the floor
+	if paid > 0:
+		farm.add_coins(-paid, &"medical_bill", 0)
+	farm.final_extra += bill - paid
+	_dawn.bill = bill
+	if bill > 0:
+		Log.event(&"medical_bill", {"deaths": deaths, "bill": bill, "paid": paid, "to_final": bill - paid, "players": Game.player_count()})
+
+
+## Step 4: payment due and early payment (doc 02 s7). P4-07.
+func step_payment(_farm: Node, _final: bool) -> void:
+	pass
+
+
+## Step 5: farm damage. Night crops wilt first (doc 01 Crops); then the creature's trample. The AI Director's
+## Sabotage still tramples on its own dawn hook, before step 1 (Q-086); once it exposes `dawn_trample()` this
+## step calls it and the order is doc 02 s9's.
+func step_farm_damage(farm: Node, _final: bool) -> void:
+	for t in farm.targets.values():
+		if t.has_method(&"dawn_wilt") and t.dawn_wilt():
+			_dawn.wilted += 1
+	var sab := get_tree().get_first_node_in_group(&"sabotage")
+	if sab and sab.has_method(&"dawn_trample"):
+		sab.dawn_trample()
+
+
+## Step 6: save (doc 01 Saving). P4-10.
+func step_save(_farm: Node, _final: bool) -> void:
+	pass
+
+
+## Step 7: the free scrap each dawn (doc 02 s10): it does not stack unless `free_scrap_stacks`. The store (P4-05)
+## spends it; the flare gun refill (P4-09) joins here.
+func step_free_scrap(farm: Node, _final: bool) -> void:
+	var n := int(Data.value(&"season", &"free_scrap_per_dawn"))
+	farm.free_scrap = farm.free_scrap + n if bool(Data.value(&"season", &"free_scrap_stacks")) else maxi(farm.free_scrap, n)
+	Log.event(&"free_scrap", {"scrap": farm.free_scrap})
 
 
 ## Host only: the ghost walks again at its barn spawn (the same slot as at the start).

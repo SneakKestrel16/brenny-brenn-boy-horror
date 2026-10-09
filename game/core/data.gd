@@ -18,8 +18,7 @@ const REQUIRED_IDS := {
 			&"hang_trap", &"place_flag", &"fill_fuel", &"refuel", &"repair_generator", &"repair_fence",
 			&"clear_plot", &"place_scarecrow", &"walk", &"crouch", &"sprint", &"can", &"carry"],
 	&"season": [&"day_s", &"dusk_s", &"night_s", &"harvest_moon_cap_s"],
-	&"crops": [&"turnip"],
-}
+}  # P4-04: no crop id is required here; crops.gd finds crops by what they do (no crop name in code)
 const SOURCES := ["doc01", "sim", "placeholder"]
 
 var ok := false
@@ -144,7 +143,9 @@ func speed(move: StringName) -> float:
 func scaled(v: int, kind: StringName, players: int = 0) -> int:
 	if players == 0:
 		players = get_node("/root/Game").player_count()
-	var pct := int(record(&"player_scaling", &"headcount").get("pct_by_players", {}).get(str(players), 100))
+	# D-079: debt payments and medical bills read `payment_pct_by_players` (59/85/101); traps keep `pct_by_players`.
+	var key := "payment_pct_by_players" if kind in [&"debt", &"bill"] else "pct_by_players"
+	var pct := int(record(&"player_scaling", &"headcount").get(key, {}).get(str(players), 100))
 	return scale_pct(v, pct, kind == &"debt")
 
 

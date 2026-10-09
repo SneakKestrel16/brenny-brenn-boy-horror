@@ -165,6 +165,10 @@ func _show(report: Dictionary) -> void:
 				_label(r.off_text, 15, Color(INK, 0.7), HORIZONTAL_ALIGNMENT_LEFT, v)  # doc 01: text for Off players
 		_pending.append([v, s.replays])
 		replays += s.replays.size()
+	if report.get("final", false):  # the last dawn: the season is over (the Season Awards screen is not built)
+		_label("THE SEASON IS OVER", 20, RED_INK, HORIZONTAL_ALIGNMENT_CENTER)
+		if not Game.is_host():
+			Clock.end_season()  # a client learns it here (apply_clock has no season flag); the host's clock ends it after DAWN_S
 	_label("Click to read on", 12, Color(INK, 0.5), HORIZONTAL_ALIGNMENT_CENTER)
 	_open = true
 	_root.visible = true
@@ -209,6 +213,7 @@ func _reveal(play: bool) -> void:
 
 
 func _close() -> void:
+	Log.event(&"dawn_report_closed", {"day": int(_report.get("day", 0))})  # D-081 item 2: the soundscape listens
 	_open = false
 	_pending.clear()
 	_stop_replays()

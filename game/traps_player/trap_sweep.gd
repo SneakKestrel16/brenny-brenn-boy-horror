@@ -156,17 +156,22 @@ func _make_slot(marker: Node) -> MeshInstance3D:
 	b.size = Vector3(0.6, 0.6, 0.12)
 	mi.mesh = b
 	mi.position = Vector3(0, 0, -0.1)  # the board faces local -Z
+	var art := TrapArt.bear()  # Q-058: a hung trap is the bear trap hanging flat on the board (a hung trap is always a bear)
+	art.rotation.x = -PI / 2.0
+	art.scale = Vector3.ONE * 0.5
+	mi.add_child(art)
 	marker.add_child(mi)
 	return mi
 
 
-## A hung trap is a dark iron block; an empty slot is a pale outline-ish slab (no art yet).
+## A hung trap is the bear trap on its hook; an empty slot is a pale outline-ish slab.
 func _paint() -> void:
 	for i in _slot_mesh.size():
 		var full: bool = filled[i] if i < filled.size() else false
 		var m := _slot_mesh[i] as MeshInstance3D
-		m.material_override = _mat(Color(0.12, 0.12, 0.14) if full else Color(0.75, 0.7, 0.6, 0.35), not full)
-		(m.mesh as BoxMesh).size = Vector3(0.6, 0.6, 0.18) if full else Vector3(0.6, 0.6, 0.02)
+		m.get_child(0).visible = full
+		m.material_override = _mat(Color(0.2, 0.17, 0.14) if full else Color(0.75, 0.7, 0.6, 0.35), not full)
+		(m.mesh as BoxMesh).size = Vector3(0.6, 0.6, 0.02)
 
 
 func _mat(c: Color, alpha: bool = false) -> StandardMaterial3D:
