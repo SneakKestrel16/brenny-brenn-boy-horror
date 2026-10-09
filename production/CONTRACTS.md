@@ -270,6 +270,15 @@ Added by P2-21 (P2-09 finding C; doc 06 s14 already lists it):
 |---|---|---|
 | `net_rtt` | every peer, every 10 s with `net_bandwidth`, one per ENet peer (a client logs only the host) | `to` (peer id), `rtt_ms` (ENet round-trip time), `enet_loss` (ENet's reliable-packet loss, 0 to 1) |
 
+Added by D-076 (Q-073; built in P2-08 and P3-08); Gameplay adds them to doc 05 section 18 in P4-04:
+
+| Event | Written by | `data` |
+|---|---|---|
+| `audio_play` | `Soundscape` on the peer that hears it, each one-shot except footsteps | `id` (sound ID) |
+| `audio_hush` | `Soundscape` on the hearing peer | `seconds` |
+| `audio_taint_heartbeat` | `Soundscape` on the hearing peer, when the heartbeat starts or stops | `on` |
+| `audio_chase_cue` | `Soundscape` on every peer, when the creature state turns `chase` | `body` |
+
 ## 11. Voice and recordings
 
 - No real person's voice recording is ever committed. Test voices are synthetic or CEO-approved

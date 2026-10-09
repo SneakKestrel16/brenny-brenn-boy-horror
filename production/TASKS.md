@@ -561,24 +561,228 @@ Started by the CEO 2026-10-08 (D-069). Source: doc 01 "Build Plan > Phase 4": fi
 its targets; then the full 7-day season, crops, economy and Prize Pumpkin; upgrades, roles and
 payments; foreclosure, saving, joining and leaving; the short season and the Harvest Moon. **Done
 when** (doc 01): teams sometimes win and sometimes lose, and the logs land within 15 points of the sim
-(doc 02 s18.5). Checked in human sessions plus log measures (doc 09). **STOP 5** after P4-10.
+(doc 02 s18.5). Checked in human sessions plus log measures (doc 09). **STOP 5** after P4-18.
 
 Carried in: everything D-068 lists as unproven (run `tools/qa/playtest/checklist_p3.md` in the first
 human sessions); the items D-059 held back (`harvest_moon` profile and acts, `pumpkin_gnaw`,
 `broken_fence`, walkie-talkies; spliced clips stay Phase 5 per doc 01); Open Issue 4 bodies (D-068).
 
-Rows are a draft (D-069); P4-01 rewrites them with acceptance. Feature rows wait for P4-02 because doc
-01 puts the simulator first.
+P4-01 review (D-070): the eight draft rows became seventeen, so each row is one system a reviewer can
+check. Animals, the pen and `broken_fence` are in, gray-box (D-071): doc 01 "Daytime Threats" names
+broken fences, the Rancher perk needs animals, and the pen, gate and escape spots are already built
+(doc 04 s7.3). Only the four doc 02 s15 roles are built; the six placeholder roles wait (D-072, FOR
+CEO). Models are new work: `assets/` holds only audio, so P4-16 builds the Phase 4 models in Blender
+5.2 (doc 07 s12), gray-box first, no downloads. Waiting past Phase 4 (doc 01): the six placeholder
+roles; Imposter mode, Dev toys and Quirks ("after DD Phase 4"); live and spliced clips, next season
+and cosmetics (Phase 5). Open questions are answered or routed in D-073 to D-076 and QUESTIONS.md.
+Feature rows wait for P4-02 because doc 01 puts the simulator first; P4-13, P4-16 and P4-17 change
+no economy number and can start now.
 
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
-| P4-01 | Director | Between-phase review: OPEN_ISSUES, open questions, settle Phase 4 scope (animals and pen for `broken_fence`?), write acceptance for the rows below | todo | — |
+| P4-01 | Director | Between-phase review: OPEN_ISSUES, open questions, settle Phase 4 scope, write acceptance for the rows below | done (D-070) | — |
 | P4-02 | Game Designer | Season simulator (doc 02 s18): `tools/sim/sim.py`, median policy, variance, scenarios, s18.4 tests, then tune `sim` and `placeholder` values until the s18.3 targets pass | todo | — |
-| P4-03 | Gameplay | Full 7-day season and dawn cash-in: every crop in `crops.json`, selling, the store, the Prize Pumpkin (doc 02, doc 05) | todo | P4-01, P4-02 |
-| P4-04 | Gameplay | Upgrades, roles, debt and payment dawns (doc 02 s7) | todo | P4-03 |
-| P4-05 | Gameplay, Network & Voice | Foreclosure, saving, joining and leaving mid-season with headcount scaling (doc 02, doc 05, doc 06) | todo | P4-04 |
-| P4-06 | AI Programmer, Gameplay | Short season and the Harvest Moon (`harvest_moon` profile and acts, doc 03 s14) | todo | P4-03 |
-| P4-07 | AI Programmer | Phase 4 sabotage: `pumpkin_gnaw`, `broken_fence` if P4-01 keeps animals (doc 03 s10) | todo | P4-03 |
-| P4-08 | AI Programmer | Creature body per season: host seeded pick, logged, `--body=<id>` dev flag (doc 01 "Bodies", Q-074, D-068) | todo | P4-01 |
-| P4-09 | Network & Voice | Walkie-talkies as store items (doc 06, doc 02 s11) | todo | P4-03 |
-| P4-10 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | todo | all above |
+| P4-03 | Game Designer | Phase 4 data: pumpkin, debt, difficulty, roles, store effects, crops, `harvest_moon`, Phase 4 sabotage, animals, season awards, Dawn Report gaps | todo | P4-02 |
+| P4-04 | Gameplay | Full 7-day season: every crop, town stand selling, dawn steps 1, 2, 5 and 7, season end, doc 05 s18 events; carried fixes | todo | P4-02, P4-03 |
+| P4-05 | Gameplay, Technical Artist | Prize Pumpkin: patch, growth, sizes, carrying, judging (doc 02 s6) | todo | P4-04 |
+| P4-06 | Gameplay, AI Programmer | Store and upgrades: every `store.json` item works (doc 02 s10) | todo | P4-04 |
+| P4-07 | Gameplay | Debt, payment dawns, early payment, Foreclosure (doc 02 s7) | todo | P4-05 |
+| P4-08 | Gameplay, AI Programmer, Level Designer | Animals and `broken_fence`: pen animals, escape, round-up (D-071) | todo | P4-03 |
+| P4-09 | Gameplay | Roles: the four doc 02 s15 roles, lobby pick, locked per season (D-072) | todo | P4-04, P4-08 |
+| P4-10 | Gameplay, Network & Voice | Saving at dawn, loading, host left, joining and leaving mid-season with headcount scaling | todo | P4-07 |
+| P4-11 | AI Programmer, Gameplay | Phase 4 sabotage and difficulty: `pumpkin_gnaw`, full-wipe doubling, difficulty settings | todo | P4-05, P4-06 |
+| P4-12 | AI Programmer, Gameplay, Technical Artist | Short season and the Harvest Moon: festival cart, acts, `harvest_moon` profile (doc 03 s14) | todo | P4-05, P4-07 |
+| P4-13 | AI Programmer | Creature body per season: host seeded pick, logged, `--body=<id>` dev flag (doc 01 "Bodies", Q-074, D-068) | todo | P4-01 |
+| P4-14 | Network & Voice | Walkie-talkies as store items (doc 06 s10, doc 02 s10) | todo | P4-06 |
+| P4-15 | Gameplay, Technical Artist | Season Awards and season end screens (doc 03 s17.4, doc 05 s15) | todo | P4-07 |
+| P4-16 | 3D Artist, Technical Artist | Phase 4 models in Blender 5.2: four bodies, pumpkins, patch, cart, town stand, animals, store items (doc 07 s12) | todo | P4-01 |
+| P4-17 | Audio Designer | Phase 4 sounds: cart, gnaw, flare, radio, animals, signature variants, UI (doc 08 s11) | todo | P4-01 |
+| P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | todo | all above |
+
+Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
+s3 "DD Phase 4" reads, and leaves a handoff note. Placeholders cite doc 01, doc 02 `sim` or say
+`placeholder`. Numbers live in the data files the simulator reads, not in code.
+
+### P4-03 Phase 4 data
+Owner: Game Designer. Output: `data/pumpkin.json`, `debt.json`, `difficulty.json`, `roles.json`
+(doc 02 A.5, A.6, A.9, A.14), new rows in `crops.json`, `store.json`, `sabotage.json`,
+`ai_director.json` and `dawn_report_templates.json`, approved in CONTRACTS s6. Reuse what P4-02
+already wrote; the simulator and the game read the same files (doc 02 s18).
+Acceptance:
+- `crops.json`: pumpkin and moonflower records (doc 02 s5); moonflower seed from day 3, pumpkin seed
+  from dawn 4 (doc 02 s10).
+- `pumpkin.json`: growth, size thresholds, short-season growth, judging (doc 02 s6, s16).
+- `debt.json`: debt by headcount, payment dawns, early payment, pumpkin unlock, Foreclosure seizures
+  (doc 02 s7, s4), at the values P4-02 tuned to the s18.3 targets.
+- `difficulty.json`: `easy`, `normal`, `nightmare` and the short season (doc 02 s16).
+- `roles.json`: the four doc 02 s15 roles and their numbers; no placeholder roles (D-072).
+- `store.json`: `effect` numbers for every row (doc 02 s10), including the flare gun's 30 s Retreat
+  (doc 01 "Store"). Numbers doc 03 owns are cited there, not copied.
+- `sabotage.json`: `pumpkin_gnaw` and `broken_fence` enabled with the doc 03 s10 costs and day gates;
+  each keeps a `fix`.
+- Animals: chicken, pig, cow (Q-032); head count, round-up hold, and the cost of an animal still out
+  at dusk. Doc 01 is silent on that cost: mark it `placeholder` and run it in the sim.
+- `ai_director.json`: the `harvest_moon` profile (doc 03 s11.2, s14).
+- `dawn_report_templates.json`: season award templates (doc 03 s17.4) and the copy Q-066 item 2
+  lists as missing.
+- Q-070 items 2 and 4: write the dawn trample placement rule into doc 03 s10.
+- Cart speed by number of pushers (doc 05 s13); the doc 03 s14 cap of 900 s stays reachable.
+
+### P4-04 Full 7-day season
+Owner: Gameplay. Output: farm, season and dawn code (doc 05 s9, s15); handoff note.
+Acceptance:
+- A season runs 7 days and ends after the final dawn (doc 02 s3). The short season is P4-12.
+- Every crop in `crops.json` plants, grows and harvests (doc 05 s9); no crop name in code.
+- Crops sell at the town stand `sell_box` (D-017, doc 07 s11.8) and at the dawn cash-in.
+- Dawn runs doc 02 s9 in order. This row builds steps 1, 2, 5 and 7; step 3 is built, step 4 is P4-07
+  and step 6 is P4-10, and they slot in without reordering. A test checks the order.
+- Doc 05 s18 events for selling, dawn steps and season end; `audio_*` events per CONTRACTS s10
+  (Q-073).
+- Carried fixes: `TrapArt` for the pegboard and the sprung trap (Q-058); client debug filter (Q-048
+  item 4); remove the `voice_spike` main-scene override (Q-047 item 2).
+
+### P4-05 Prize Pumpkin
+Owner: Gameplay; Technical Artist for size steps and the gnawed look. Output: pumpkin code; handoff
+note.
+Acceptance:
+- Pumpkin plots use the `pumpkin_patch` group (doc 04); seed from dawn 4 (doc 02 s10).
+- Growth and size thresholds come from `pumpkin.json` (doc 02 s6). Size shows in the world (doc 07
+  s11.5, s12), gray-box until P4-16 lands.
+- Carrying and judging follow doc 02 s6; the result is logged.
+- Pumpkin state saves and loads (P4-10).
+
+### P4-06 Store and upgrades
+Owner: Gameplay; AI Programmer for the creature-side effects. Output: store code, creature hooks;
+handoff note.
+Acceptance:
+- The shipping crate (`store_crate`) sells every `store.json` row at its price and gate (doc 02 s10,
+  D-017). No crop is sold at the crate.
+- Seeds, scrap (one free each dawn, not stacking), `quiet_watering_can`, `brighter_lantern`,
+  `scarecrow`, `plot_pair` and `flare_gun` each do what doc 02 s10 and doc 03 say. Walkie rows are
+  stocked; P4-14 builds the radio.
+- `flare_gun`: one shot, refilled at dawn step 7, puts the creature in Retreat for 30 s (doc 01
+  "Store").
+- `plot_pair` adds plots within the doc 02 s4 ceilings.
+- Upgrades are tracked as seizable for P4-07 (doc 02 s10).
+- Every purchase is logged with item, price and buyer.
+
+### P4-07 Debt and Foreclosure
+Owner: Gameplay. Output: debt code; handoff note.
+Acceptance:
+- Debt is set by headcount from `debt.json` (doc 02 s7, s4).
+- Payment due runs at dawn step 4; early payment works (doc 02 s7).
+- The pumpkin unlock rule follows doc 02 s7.
+- A missed payment forecloses and seizes per doc 02 s7 (plots in pairs, upgrades); the season is lost
+  per doc 02 s7.
+- Logs `payment_made` and the Foreclosure events (doc 09 s3 "DD Phase 4").
+
+### P4-08 Animals and broken fence
+Owner: Gameplay; AI Programmer for `broken_fence`; Level Designer for the fence. Output: animal code,
+sabotage hook, pen edit in `game/world/`; handoff note.
+Acceptance:
+- Gray-box chicken, pig and cow live in the pen (doc 04 s7.3, Q-032); count from P4-03.
+- `broken_fence` (doc 03 s10, cost 3, from day 2) breaks a fence section; animals escape toward
+  `animal_escape_spots` (at least 60 m from the gate, doc 04 s7.3).
+- Round-up is a hold verb that walks an animal back; the Rancher is faster (×0.6, doc 02 s15).
+- The fence is fixed with the sabotage `fix` rule (doc 03 s10.1).
+- Animals react before the creature arrives (doc 01 "Daytime Threats") with a P4-17 sound.
+- An animal still out at dusk costs what P4-03 set.
+- The Level Designer adds a breakable fence section if the pen has none.
+
+### P4-09 Roles
+Owner: Gameplay. Output: role code, lobby cards (doc 05 s16); handoff note.
+Acceptance:
+- The four doc 02 s15 roles (`farmer`, `rancher`, `mechanic`, `tracker`) with `roles.json` numbers.
+- Picked on lobby cards, optional, locked for the season (doc 01 "Roles").
+- A reconnecting player keeps their role.
+- No placeholder role is built (D-072).
+
+### P4-10 Saving, joining and leaving
+Owner: Gameplay; Network & Voice for host left and joins. Output: save code (doc 05 s17), net
+changes; handoff note.
+Acceptance:
+- Saves at dawn step 6 only (doc 01 "Saving", doc 05 s17); the menu loads a saved season.
+- Host left: the season resumes from the last dawn save (doc 06 s5).
+- Mid-season joins and leaves recompute headcount scaling and debt (doc 02 s4). The doc 09 s3 case
+  passes: 4 players, one drops before dawn 2, total 1,077, first payment 211.
+- One player left: the game follows doc 06 s5.
+- Refused peers no longer get position sends (QUESTIONS, "QA to Director: refused peer gets position
+  sends").
+- Logs `save_written`, `net_peer_left`, `net_host_left`, `session_end`.
+
+### P4-11 Phase 4 sabotage and difficulty
+Owner: AI Programmer; Gameplay for settings. Output: AI Director changes, lobby settings; handoff
+note.
+Acceptance:
+- `pumpkin_gnaw` (doc 03 s10: from day 3, within 20 m) damages the pumpkin; P4-05 shows it.
+- After a full wipe, farm damage doubles and 2 extra traps appear (doc 02 s14).
+- `stolen_tool` covers every tool with the doc 03 s10 fix (Q-070 item 6).
+- Difficulty multipliers apply after headcount scaling (doc 02 s16); Nightmare has no voice tells
+  (doc 03).
+- Lobby difficulty and the streamer-safe group option (doc 01 "Difficulty and group settings").
+- The ghost flag applies to day and targeted lures too (D-075, Q-068).
+
+### P4-12 Short season and the Harvest Moon
+Owner: AI Programmer; Gameplay for the cart; Technical Artist for the sky and the cart lantern.
+Output: Harvest Moon acts, cart code, render changes; handoff note.
+Acceptance:
+- Short season: 3 days, faster pumpkin (doc 02 s16).
+- The festival cart follows `CartRoute` R0..R8 (doc 04 s6.1, doc 05 s13); pushers set speed (P4-03).
+- Harvest Moon acts per doc 03 s14: cap 900 s, out at x>78, gate at x>105, knock-off 15 s, at most
+  2 bites.
+- The cart lantern flickers through `LightRig` (doc 07).
+- Festival payout at the final dawn (doc 02 s9 step 2).
+- Harvest Moon sky (doc 07).
+
+### P4-13 Creature body per season
+Owner: AI Programmer. Output: body pick in creature code; handoff note.
+Acceptance:
+- The host picks one body per season from a seed (doc 01 "Bodies", doc 03 s2); clients agree.
+- The pick is logged once per season; `--body=<id>` forces it.
+- The pick survives save and load once P4-10 lands.
+- Until P4-16, bodies differ by sound signature only (doc 08 s6).
+
+### P4-14 Walkie-talkies
+Owner: Network & Voice. Output: radio code in `game/voice/`; handoff note.
+Acceptance:
+- Bought walkies transmit per doc 06 s10; a battery lasts 180 s (`store.json`, placeholder).
+- Radio sound per doc 08 s7.2 with the P4-17 sounds.
+- Confirm Q-065: the peer-id RPCs hold with walkies.
+
+### P4-15 Season Awards and season end
+Owner: Gameplay; Technical Artist for the card style. Output: awards screen (doc 05 s15); handoff
+note.
+Acceptance:
+- Awards come from the P4-03 templates (doc 03 s17.4); every player gets at least one.
+- Shown after the final dawn or a Foreclosure loss (doc 01 "Season Awards").
+- Win and loss screens lead back to the menu.
+
+### P4-16 Phase 4 models
+Owner: 3D Artist; Technical Artist for materials and light review. Output: `assets/models/`,
+`assets/blender/`; handoff note.
+Acceptance:
+- Built in Blender 5.2, gray-box acceptable, low-poly, real scale (doc 07). No downloaded models.
+- Four creature bodies and the smear hull (doc 03 s2, s15); pumpkin sizes and gnawed; patch; cart
+  with lantern and slot; town stand; chicken, pig, cow; store items (doc 07 s12).
+- Starts with the Q-027 asset list review.
+- The Technical Artist closes Q-036 and Q-054 item 5 (`LightRig` review).
+
+### P4-17 Phase 4 sounds
+Owner: Audio Designer. Output: `assets/audio/`, `game/audio/`; handoff note.
+Acceptance:
+- Doc 08 s11 Phase 4 rows: `sfx_cart_squeak_loop`, `cre_gnaw`, `sfx_flare_shot`, `sfx_flare_hiss_loop`,
+  `cre_flare_hit`, `vox_radio_*`, animal sounds, body signature variants `_01`..`_03` (doc 08 s6),
+  store and awards UI.
+- Dawn Report low-pass on Ambience and SFX only (D-074, Q-072).
+- Redo `cre_jumpscare_hit` once the P4-16 bodies exist.
+- CEO listening per D-066 and doc 08 s14. Never reuse the Phase 1 day music.
+
+### P4-18 Phase 4 review
+Owner: QA. Output: `tools/qa/playtest/checklist_p4.md`, review notes; handoff note.
+Acceptance:
+- Reviews each P4 task against its block.
+- 4-instance run over ENet; headless with no new errors.
+- Sim `compare` on full-season logs within 15 points (doc 02 s18.5); at least 6 logged seasons with
+  both wins and losses (doc 09 s3).
+- The doc 09 Phase 4 gate and the D-068 carried `checklist_p3` items.
+- Q-021 and Q-039 nits.

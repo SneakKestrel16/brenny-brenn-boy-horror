@@ -540,3 +540,70 @@ The CEO started DD Phase 4. The Director drafted rows P4-01 to P4-10 in `product
 acceptance; the simulator (P4-02) needs no settling (doc 02 s18) and runs beside it.
 **Why:** CEO request; doc 01 "Build Plan > Phase 4" is the source. Doc 01: "First: the simulator hits
 its targets", so feature rows wait for P4-02.
+
+### D-070 · 2026-10-08 · Director · Phase 4 scope settled at the P4-01 review
+The D-069 draft rows P4-03 to P4-10 are replaced by P4-03 to P4-18 in `production/TASKS.md`, each with an
+acceptance block: data (P4-03), full season (P4-04), Prize Pumpkin (P4-05), store (P4-06), debt and
+Foreclosure (P4-07), animals (P4-08), roles (P4-09), saving and joining (P4-10), Phase 4 sabotage and
+difficulty (P4-11), short season and Harvest Moon (P4-12), body pick (P4-13, was P4-08 in D-068),
+walkies (P4-14), Season Awards (P4-15), models (P4-16), sounds (P4-17), QA review (P4-18). P4-02 is
+unchanged. STOP 5 follows P4-18. Waiting past Phase 4 (doc 01): the six placeholder roles (D-072),
+Imposter mode, Dev toys and Quirks ("after DD Phase 4"); live and spliced clips, next season and
+cosmetics (Phase 5). Models: `assets/` holds no models, so P4-16 builds gray-box models in Blender 5.2;
+no downloaded models without CEO approval.
+**Why:** doc 01 "Build Plan > Phase 4" lists more systems than eight rows can review one at a time.
+Doc 01 puts the simulator first, so rows that set or read economy numbers depend on P4-02; the body
+pick, models and sounds touch no economy number.
+**How to apply:** owners work from the P4 acceptance blocks. Feature rows start after P4-02 is done.
+
+### D-071 · 2026-10-08 · Director · Animals and `broken_fence` are in Phase 4, gray-box
+Chicken, pig and cow (Q-032) live in the pen. `broken_fence` lets them escape toward
+`animal_escape_spots`; players round them up. P4-03 sets the numbers, including the cost of an animal
+still out at dusk, which doc 01 does not give (placeholder, run in the sim). P4-08 builds it.
+**Why:** doc 01 "Daytime Threats" names broken fences and animals rounded up far from the group; the
+Rancher perk (doc 01 "Roles", doc 02 s15) does nothing without animals. The pen, gate and escape spots
+already exist (doc 04 s7.3). The CEO may overrule (QUESTIONS, FOR CEO).
+**How to apply:** P4-08; the Rancher in P4-09 depends on it.
+
+### D-072 · 2026-10-08 · Director · Only the four doc 02 s15 roles are built in Phase 4
+`farmer`, `rancher`, `mechanic`, `tracker`. The six placeholder roles of doc 01 "Roles" wait.
+**Why:** doc 01 "Roles": "Placeholder perks are set before roles are built"; no perk numbers exist for
+the six. Roles are optional and none is needed to win (doc 02 s15). FOR CEO: overrule to add them.
+**How to apply:** `roles.json` (P4-03) and P4-09 carry four roles.
+
+### D-073 · 2026-10-08 · Director · `send_bytes` type byte ranges
+`0x01`-`0x0F` are movement frames, `0x10`-`0x1F` are voice frames. New byte types take the next free
+number in their range.
+**Why:** Q-042 item 1. Voice `0x01`/`0x02` collided with `MOVE = 1` and `MOVES = 2`; P1-06 moved voice
+to `0x10`/`0x11`. CONTRACTS changes shared formats only with a DECISIONS entry.
+**How to apply:** Network & Voice owns the table in doc 06 s8; walkies (P4-14) use the voice range.
+
+### D-074 · 2026-10-08 · Director · Dawn Report rulings (Q-066, Q-072)
+1. Most Wanted is the player with the most `chase_started`; ties and a chase-free day go to the owner
+   voiced in most lures, as built in P3-12. Doc 01 "who was chased most" is the primary measure.
+2. Streamer-safe never replays any voice in the Dawn Report, as built (stricter than doc 01 "never
+   replays live clips").
+3. Skip stays per peer. Doc 01 asks for no host "skip for all".
+4. The Dawn Report low-passes `Ambience` and `SFX` only, so replays stay clear. The pause menu keeps
+   the doc 08 s2.3 `Master` low-pass.
+The missing copy (Q-066 item 2) goes to P4-03.
+**Why:** the built choices match doc 01's intent; a `Master` low-pass would muffle the replays
+(Q-072).
+**How to apply:** Audio Designer edits doc 08 s2.3 and builds the low-pass in P4-17; Gameplay updates
+doc 05 s15 if wording differs.
+
+### D-075 · 2026-10-08 · Director · Ghost flag on day and targeted lures
+The logged `ghost` flag in `apply_lure` is set for a dead owner's lure by day too; drop `not day`.
+Network & Voice's `_hear_lure` edit in `creature.gd` stays.
+**Why:** doc 01 "The dead-voice twist": "including in targeted lures" (Q-068 item 1).
+**How to apply:** AI Programmer in P4-11.
+
+### D-076 · 2026-10-08 · Director · Phase 3 out-of-path edits accepted; audio log events listed
+Accepted as built: Q-068 item 2 (`player.gd` ghost emitter), Q-069 items 1 to 4 (`apply_disturbance`,
+`fix_hold_s`, `farm_damage` in coins, bots on the full farm), Q-065 (peer-id whistle and emote RPCs;
+Network & Voice confirms with walkies in P4-14). CONTRACTS s10 lists `audio_play`, `audio_hush`,
+`audio_taint_heartbeat` and `audio_chase_cue` (Q-073).
+**Why:** each edit was small, logged in its handoff, and needed for the feature to land. The ledger
+counts coins (D-065), so `farm_damage` in coins matches it.
+**How to apply:** owners keep the edits when they next touch the files. Gameplay adds the audio events
+to doc 05 s18 in P4-04.

@@ -163,7 +163,7 @@ session `voice_spike_20261006T212323`; the friend sent only their console `godot
 **Answer to 2 (CEO, 2026-10-06):** no. Neither bug is reported upstream; the workarounds in doc 06
 stay.
 
-### Q-010 · 2026-10-06 · Network & Voice → QA · open
+### Q-010 · 2026-10-06 · Network & Voice → QA · closed
 **A cleaner workaround for the first-import crash (Q-008) in `smoke.py`.** Writing
 `.godot/extension_list.cfg` with the single line `res://addons/twovoip/twovoip.gdextension` before
 a clean import avoided the crash in every run (it registers the extension at startup instead of
@@ -177,6 +177,8 @@ reproduces the crash. Also found: the dev tree's untracked `logs/qa/` (310 files
 scan enough to hide the crash (dev tree 4 of 4 clean unseeded, fresh copies 3 of 3 segfault), so
 the harness now writes `logs/qa/.gdignore`. Verified: unseeded in-repo clean import fails (exit
 0xC0000005), seeded passes 4 of 4. Director: close when convenient.
+
+**Answer (Director, P4-01, 2026-10-08):** closed; QA's `smoke.py` seeding fix is in.
 
 ### Q-011 · 2026-10-06 · Network & Voice → Director · answered
 **Two small requests from PP-02.**
@@ -472,10 +474,12 @@ inside-at-night events. `docs/README.md` row 05 updated by me (your file): rever
 doc 05 and closed. Q-014 item 6 is answered (3 m clearance); the rest of Q-014 is unchanged.
 CONTRACTS sections 2, 8 and 10 updated (section 2 holds the autoload list, not section 4).
 
-### Q-021 · 2026-10-07 · Gameplay Programmer → QA · open
+### Q-021 · 2026-10-07 · Gameplay Programmer → QA · routed to P4-18
 `tools/qa/check_logs.py` needs no required change for the doc 05 field choices (section 18). Optional:
 drop the "provisional" comments; tally `angle_error_deg`, `close_call` results (OPEN_ISSUES 1) and
 `window_s`. Host-written `trap_race_result` and `inside_at_night` carry `data.player`.
+
+**Answer (Director, P4-01, 2026-10-08):** optional `check_logs.py` tidy-up goes to P4-18 (QA).
 
 ### Q-022 · 2026-10-07 · Gameplay Programmer → Level Designer · answered
 Doc 05 sections 11 and 13 need the cart route as a `Path3D` named `CartRoute` (waypoints R0 to R8,
@@ -510,8 +514,10 @@ Doc 07 sets the lit doorway light at 6 m (answers doc 04 s4 "doc 07 sets it"; ke
 
 **Answer (Level Designer, 2026-10-07):** Accepted. 6 m for light, decal and trap exclusion. `LightRig` at every door and window; layer 5 blockers are coarse `StaticBody3D` strips under `CornBlockers`, separate from the MultiMesh corn. Built with the gray-box scene. Doc 04 s6.1 notes it.
 
-### Q-027 · 2026-10-07 · Technical Artist → 3D Artist · open
+### Q-027 · 2026-10-07 · Technical Artist → 3D Artist · routed to P4-16
 Please review the doc 07 section 11 asset list: names, dimensions, triangle budgets (section 2), gray-box-first plan for Phase 1. Flag any model you want split or merged.
+
+**Answer (Director, P4-01, 2026-10-08):** P4-16 (3D Artist) starts with this review, before the Phase 4 models.
 
 ### Q-028 · 2026-10-07 · Technical Artist → QA · answered (doc 09 s9, s10)
 For doc 09: the three grep rules in doc 07 section 4.4 (`flicker`, `energy_override`, `light_energy`) and the 4-instance corn profile in section 10.3 (`tools/qa/multi.py -n 4`, 60 fps, no frame over 33 ms, record the GPU adapter).
@@ -530,6 +536,8 @@ Doc 08 s7.4, s13. (1) Generic stranger voice lines (`vox_stranger_*`): default i
 **Answer to 2 (CEO, 2026-10-07):** menu music yes. Day music undecided; stays open, not needed before DD Phase 1.
 
 **Answer to 3 (CEO, 2026-10-07):** accepted: whistle `max_distance` 220 m, `unit_size` 20 m. DD Phase 1 spatial test may retune.
+
+**Answer (Director, P4-01, 2026-10-08):** item 2 day music stays open and FOR CEO. Until the CEO decides, Phase 4 adds no day music, and the Phase 1 day music is never reused (CEO).
 
 ### Q-032 · 2026-10-07 · Audio Designer → Gameplay Programmer · answered
 Doc 08 s10. Please add autoload `Soundscape` (`game/audio/soundscape.gd`, mine) to `project.godot`; call `set_creature_state(state, body)` from the `apply_creature_state` handler, `set_phase` from `Clock`, `set_local_state` from Player/Generator. Settings sliders for Master, Music, SFX, Ambience, Voice, UI plus `reduce_scares`. Also: pen animal species (Game Designer, doc 08 s11.1 assumes chicken, cow, sheep) and a playtest switch `stalk_scope` global|near (doc 08 s4.3, default global).
@@ -551,8 +559,10 @@ From Q-034 (answered; see PP-09 handoff follow-up). (a) Gameplay: please add log
 
 **Gameplay answer:** (a) `audio_state` added to doc 05 s18 with the listed fields.
 
-### Q-036 · 2026-10-07 · QA → Technical Artist · open
+### Q-036 · 2026-10-07 · QA → Technical Artist · routed to P4-16
 Doc 07 s4.4 rule 3 greps `game/` for `light_energy` outside `game/render/`. A light's static energy set in a `.tscn` or `.tres` also matches. `tools/qa/grep_rules.py` fails a `.gd` hit and only warns on a scene hit (inference, doc 09 section 9). Should scene-authored energies count as violations (then every light is made by `LightRig`), or are they allowed? Also: rule 1 counts comments, so "flicker" in any comment outside `game/ghost/` fails; keep comments to "steady" or "dim". Answer closes Q-028's open point.
+
+**Answer (Director, P4-01, 2026-10-08):** the Technical Artist answers this in P4-16 with the `LightRig` review.
 
 ### Q-037 · 2026-10-07 · QA → Gameplay Programmer · answered D-020 (Gameplay: all four events plus `perf_sample` added to doc 05 s18)
 Doc 09 measures need events doc 05 s18 does not list: `ghost_flicker` and ghost crow/rustle/static-voice actions (DD Phase 3 "the dead stay engaged"), a "fooled" signal for recorded-line lures (DD Phase 2), and a debug-only `perf_sample` (avg/max frame ms, draw calls, `RenderingServer.get_video_adapter_name()`) for the doc 07 s10.3 four-instance corn profile. Add them to doc 05 s18, or say the observer's notes cover them.
@@ -564,19 +574,23 @@ Doc 09 DD Phase 4 needs the `tools/sim/` `compare` command doc 05 s18 names. Whi
 
 Note on Q-028: answered by doc 09 (PP-10): three flicker greps in section 9 and `tools/qa/grep_rules.py`; four-instance corn profile in section 10. Director to close.
 
-### Q-039 · 2026-10-07 · QA reviewer → QA · open
+### Q-039 · 2026-10-07 · QA reviewer → QA · routed to P4-18
 PP-10 passed with three nits (production/handoffs/PP-10.md "QA review"): (1) `grep_rules.py` `rpc_outside_net` misses bare `rpc_id(` calls and `@rpc` outside `game/net/`; (2) the voice-file extension rule is QA's, not CONTRACTS s11's, so mark it inference, and decide a `spikes/` exception for WAV test input; (3) doc 09 s9 hand grep 1 is looser than the script, say the script rules.
 
-### Q-040 · 2026-10-07 · Gameplay → QA · open
+**Answer (Director, P4-01, 2026-10-08):** the three nits go to P4-18 (QA).
+
+### Q-040 · 2026-10-07 · Gameplay → QA · closed
 `tools/qa/smoke.py` step `parse_check` runs `tests/qa/parse_check.gd` as a `-s` SceneTree script. In that mode the autoload names (`Game`, `Data`, `Log`, `Clock`, `Settings`, from P1-02) are not registered, so every script that uses one fails with "Identifier not found" and smoke reports FAIL though the game is fine (import and run steps pass). Checked: the same script run as a scene (`Node` with `_ready`, `get_tree().quit(...)`, run as `godot --headless --path . res://tests/qa/<scene>.tscn`) loads all scripts with `failed=0`. Please switch `parse_check` to a scene run. P1-02 is in review with this one failing smoke step.
 **Answer (QA, 2026-10-07):** fixed. `parse_check` is now a scene run (`tests/qa/parse_check.tscn`, script extends `Node`, quits from `_ready`); `smoke.py` and `tools/qa/README.md` updated. Smoke on P1-02: PASS, 0 errors. Director to close.
+
+**Answer (Director, P4-01, 2026-10-08):** closed; `parse_check` runs as a scene.
 
 ### Q-041 · 2026-10-07 · Gameplay → Director, AI Programmer · answered
 The autoload `Noise` (CONTRACTS section 8, doc 05 section 8) shares its name with Godot's native `Noise` class (FastNoiseLite's base). In GDScript the identifier resolves to the class: `Noise.noise_emitted` and `Noise.emit_kind()` fail to parse ("Cannot find member ... in base Noise"), and smoke fails. P1-04 works around it with `get_node("/root/Noise")` (cached in a variable). The AI Programmer's consumer needs the same. Choose: keep the name and use the `get_node` form everywhere, or rename the autoload (for example `NoiseBus`; `project.godot`, CONTRACTS section 8, docs 03/05 and the `emit_*` call sites change). I recommend the rename, before P1-06 and P1-08 add more call sites.
 
 **Answer (Director, 2026-10-07):** renamed to `NoiseBus` (D-025). Done in P1-04: file, autoload, call sites, docs 03/05/06/08, CONTRACTS section 8.
 
-### Q-042 · 2026-10-07 · Network & Voice → Director, Gameplay Programmer · open
+### Q-042 · 2026-10-07 · Network & Voice → Director, Gameplay Programmer · answered (D-073)
 1. **Director: voice type bytes collide with movement.** Doc 06 section 8 gave voice frames type
    `0x01` (client to host) and `0x02` (relay), but `game/player/move_frame.gd` (P1-04) already sends
    `MOVE = 1` and `MOVES = 2` through the same `Net.bytes_received` signal, so the host would read
@@ -591,6 +605,8 @@ The autoload `Noise` (CONTRACTS section 8, doc 05 section 8) shares its name wit
 
 **Answer (Gameplay, P2-10):** (2) done: `push_to_talk` was already in `Settings.DEFAULTS`; the Audio tab of the settings screen (main menu and pause menu) has the toggle, and `Voice` reads it live via `Settings.changed`. (3) confirmed: `Voice` is in `project.godot` after `NoiseBus`. (1) is the Director's.
 
+**Answer (Director, P4-01, 2026-10-08):** item 1: D-073 records the ranges, `0x01`-`0x0F` movement and `0x10`-`0x1F` voice. Items 2 and 3 were answered by Gameplay. Closed.
+
 ### Q-043 · 2026-10-07 · AI Programmer → Gameplay · answered
 P1-13 (bots, doc 05 s19) touched two Gameplay files; please confirm or redo them your way. (1) `game/core/main.gd`: adds the `Bots` node after `Players`. (2) `game/interaction/hold_registry.gd` `_reply`: `else:` became `elif peer > 1:`, because bots use negative peer ids and have no connection (they poll `holds` instead). Three asks: (a) a public `Players.submit(peer, frame)` so `game/bots/bot.gd` stops calling the private `_ingest`; (b) `players.gd` line 134 sends `apply_teleport` to any `peer != 1`, so a bot speed violation errors "unknown peer ID -1"; guard it `peer > 1` (bots now resync to the host's kept position, so it no longer fires in runs); (c) existing bug, not mine (inference from reading, not seen in a log): `player_left` makes the registry cancel a hold and `_reply` to the disconnected peer. (d) Debug view (P1-12): tag bots, they are `peer < 0` and `Game.players[peer].bot == true` (doc 05 s19).
 **Answer (Gameplay, P1-09):** (a) done: `Players.submit(peer, f)` is public, `bot.gd` calls it. (b) done: `apply_teleport` guarded `peer > 1`. (c) done: `HoldRegistry.cancel(peer, reason, notify)`; the `player_left` path passes `notify=false`. (d) done: debug view tags bots (`bot`, `peer < 0`). Your `main.gd` Bots block and the `_reply` `elif peer > 1` are kept.
@@ -599,17 +615,21 @@ P1-13 (bots, doc 05 s19) touched two Gameplay files; please confirm or redo them
 P1-08 added one block to `game/core/main.gd`: a `Creature` node (`game/creature/creature.gd`) after `Bots`, before the debug view. Please confirm or move it. P1-09 needs the trap state on clients: the Creature keeps traps host-only and logs `trap_changed`/`trap_sprung`; say if you want an `apply_trap_changed` RPC from me or will add it in net.gd yourself.
 **Answer (Gameplay, P1-09):** Creature block in `main.gd` confirmed (kept before `Death`, `TrapRace`). I added `apply_trap_changed` (and `apply_trap_race`, `apply_shaken`, `apply_death`, `apply_respawn`) in net.gd. Please review three small edits I made in `creature.gd`: signals `caught(peer)` (before both 'reached' retreats) and `trap_sprung(trap_id, kind, peer, position, deep)` (in `_check_traps`), plus public `force_state(s, reason, target)` used by the trap race (chase while pinned, retreat or lurk after). Your `trap_changed` / `trap_sprung` logs are unchanged. Open for you: after a kill the creature goes to retreat (night) or lurk (day) from `force_state`; refine if doc 03 wants otherwise.
 
-### Q-045 · 2026-10-07 · Audio Designer → Gameplay · open
+### Q-045 · 2026-10-07 · Audio Designer → Gameplay · closed
 P1-10 added one line to `project.godot` (your file): `Soundscape="*res://game/audio/soundscape.gd"` after `Voice`. Please confirm. Hooks: `Soundscape` already plays `sfx_beartrap_snap`/`sfx_pit_fall` from `Net.apply_received` `trap_changed` (state `sprung`), so no extra call is needed. `sfx_whistle` exists but nothing in gameplay plays it yet: when the whistle mechanic lands, call `Soundscape.play_3d(&"sfx_whistle", pos)` on each peer when the host's result arrives. The 3D whistle range class (unit 20 m, max 220 m) is in doc 08 s9.3.
 
-### Q-046 · 2026-10-07 · QA → Director (for Gameplay) · open
+**Answer (Director, P4-01, 2026-10-08):** closed. `Soundscape` stays in `project.godot` after `Voice` (CONTRACTS s8 load order); the whistle sound landed with P3-11.
+
+### Q-046 · 2026-10-07 · QA → Director (for Gameplay) · closed
 P1-14 findings, each wants a task. (1) `speed_violation` on `autowalk`: probable stamina flicker at 0 in `player.gd` (OPEN_ISSUES P1-14 entry). A human who holds Shift past 6 s likely logs violations, and doc 09 s3 says no `speed_violation` on a normal client. Gameplay: refill threshold or hysteresis, then rerun `--autowalk` and expect 0. (2) Corn budget wording (Technical Artist / Director): doc 07 s10.2 "corn stalk instances 25,000 or fewer"; `look_stats` reports `stalks=55704` for the whole field (53 cells). Say if the budget means total or in view (instances within the 30 m MultiMesh range). Frame time, draws and triangles are far inside budget either way (handoff P1-14). (3) No HUD or menu exists (`game/ui/` absent): a first-time tester sees no prompt text beyond the placeholder ring; doc 01 "Onboarding" (one intro per verb) is not met. Out of P1 scope per TASKS, but a tester who has not read doc 01 will be lost; Director decides whether STOP 2 needs a minimal prompt layer. (4) Doc 09 s3 needs 20 lure results over 2 sessions; creature in `--creature-test` produced 4 lures in 1500 s of 2-instance runs (lone-player condition). Two humans in a real session may produce few; Game Designer/AI Programmer: say whether a lone-player rule leaves 30% measurable in 5 minutes of night.
 
 **Answer (Director, P2-02):** (2) in view. Doc 07 s10.2's row reads "Corn stalk instances drawn", so the
 budget counts stalks inside the camera frustum and the 30 m MultiMesh range. P2-02 measured 926 to 4,820
 drawn on the full farm (100,164 total) with 4 instances, inside the 25,000 budget.
 
-### Q-047 · 2026-10-08 · QA → Gameplay Programmer · open
+**Answer (Director, P4-01, 2026-10-08):** closed. Item 1: resolved in P1-16 (OPEN_ISSUES). Item 3: the main menu (P2-10) and `game/ui/hud.gd` exist. Item 4: answered in Q-048 item 1 (`trap_lure_m`).
+
+### Q-047 · 2026-10-08 · QA → Gameplay Programmer · closed (item 2 to P4-04)
 P1-17 (D-029). (1) `session_start.build_id` is `str(Data.hash_value)`, a data hash, not a build. `package_playtest.py`
 names a build `git describe --always --dirty` and writes it to `BUILD.txt`. Proposal: the export step writes it to
 `application/config/version` and `Game` logs that as `build_id` (keep the data hash as its own field). (2) Doc 05 s3:
@@ -619,7 +639,9 @@ menu (or `--phase1` as the default in an export) removes the need.
 
 **Answer (Gameplay, P2-10):** (1) done your way: `Game.build_id()` reads `res://build_id.txt`, else `application/config/version` (now `dev`); `session_start` logs `build_id` plus `data_hash`. `package_playtest.py` writes `build_id.txt` from `git describe` for the export only and deletes it after (try/finally; the file is in `.gitignore`); the "Playtest (Windows)" preset `include_filter` now has `build_id.txt`. I edited `tools/qa/package_playtest.py` and `export_presets.cfg` for that: please review. Not run: a full export (needs a clean tree). (2) left as is: `run/main_scene.voice_spike` is a feature-tag override of the Phase 1 spike; say if you want it removed. (3) done: a bare launch with a window opens the main menu (Host / Join / Settings / Quit); Host and Join turn Phase 1 data on. `Host.bat`/`Join.bat` still work and can stay.
 
-### Q-048 · 2026-10-08 · AI Programmer → Game Designer, Audio Designer, Network & Voice, Gameplay · open
+**Answer (Director, P4-01, 2026-10-08):** items 1 and 3 done. Item 2: remove the `run/main_scene.voice_spike` override in P4-04.
+
+### Q-048 · 2026-10-08 · AI Programmer → Game Designer, Audio Designer, Network & Voice, Gameplay · closed (item 4 to P4-04)
 P1-20 (OPEN_ISSUES playtest 6, 7, 8; handoff `production/handoffs/P1-20.md`).
 1. **Game Designer: three placeholders in `game/creature/creature.gd`.** (a) `CHASE_TELL_S = 2.0`: no
    kill in a chase's first 2 s, so the chase tell (doc 03 s4) always comes before a lunge. The playtest
@@ -649,12 +671,14 @@ P1-20 (OPEN_ISSUES playtest 6, 7, 8; handoff `production/handoffs/P1-20.md`).
 
 **Answer to Q-048 (3), Network & Voice, P2-03, 2026-10-08.** Done: the `apply_trap_changed` comment in `net.gd` now lists `set` and `moved` and says why they are sent.
 
+**Answer (Director, P4-01, 2026-10-08):** items 1 to 3 done. Item 4: the client debug filter goes to P4-04.
+
 ### Q-053 · 2026-10-08 · Level Designer → Gameplay Programmer · answered (P2-11)
 P2-02 (handoff `production/handoffs/P2-02.md`). `res://game/world/farm.tscn` (full farm) is built; `Main.FARM` still loads `farm_phase1.tscn`. (1) Please add a flag (or make full farm the default and `--phase1` the Phase 1 scene) so `Main` loads `farm.tscn`. (2) New groups in `farm.tscn` for your code: `store_crate` (shipping crate = store only, D-017), `sell_box` now sits on the town stand (120, -5), `sanctuary` (Marker3D, meta `radius_m` 10), `farm_gate`, `pumpkin_patch`, `moonflower_bed`, `pegboard_slots` (5 children of the pegboard, count from `season.json`), `recording_spots`, `barn_lantern` (both in the barn). Plots: 28 `plot_spots`, meta `field` = `a`, `b` or `moonflower`; `upgrade` true on the south row of each field (8), so 16 field plots start open plus 4 moonflower. `CartRoute` is a `Path3D` with R0..R8. (3) `farm.gd` and `bot_route.gd` assume Phase 1 (field A only; hand-made bot route); check both before the switch. Director: add the new groups to CONTRACTS s4.
 
 **Answer (Gameplay Programmer, P2-11).** (1) New launch flag `--full-farm`: `Game.world_path()` returns `res://game/world/farm.tscn` with it and `farm_phase1.tscn` otherwise; `Main` and the lobby both call it (`Game.LOBBY_WORLD` is gone). `--phase1` still loads the Phase 1 scene and all other flags work. Every peer must pass `--full-farm` (the handshake does not check it yet). `--full-farm` does not turn Phase 1 data on, so use `--phase1 --full-farm` for the creature. The main menu still forces Phase 1 data and the Phase 1 world; making the full farm the default waits for P2-05/P2-06. (2) The new groups are read where used (`pegboard_spots`, `pegboard_slots`, `trap_spots`, `plot_spots`); the others are unused so far. `farm.gd` now locks the `upgrade` plots only under `--full-farm` (Phase 1 keeps all open). Adding the groups to CONTRACTS s4 is the Director's. (3) `farm.gd` loads the 28 plots and field-A-only logic is unchanged: the moonflower plots accept turnips (unchecked). `game/bots/bot_route.gd` is a hand-made Phase 1 route and is not usable on the full farm: bots there are unsupported and unverified.
 
-### Q-054 · 2026-10-08 · Network & Voice → Gameplay, Level Designer, Render, Audio Designer, AI Programmer, QA, Director · items 1-3 answered (Gameplay, P2-06); 4-8 open
+### Q-054 · 2026-10-08 · Network & Voice → Gameplay, Level Designer, Render, Audio Designer, AI Programmer, QA, Director · items 1-4, 6, 7 answered; 5 to P4-16; 8 FOR CEO
 P2-03 (handoff `production/handoffs/P2-03.md`).
 1. **Gameplay: one-line edit in your `game/core/game.gd`.** `match_ready()` now returns `Voice.clips.ready_to_start()` (the P2-10 hook). Please keep it when you next edit the file.
 2. **Gameplay: the Off confirm.** Doc 01 "Voice settings > Off" deletes the lines; the settings menu should ask "This deletes your recorded lines" before setting `off` when `Settings.get_value("lines_recorded")` is true. `Voice.clips` deletes on `Settings.changed`, so the prompt is the only missing part.
@@ -668,8 +692,12 @@ P2-03 (handoff `production/handoffs/P2-03.md`).
 7. **AI Programmer / P2-04: lures.** Play a clip with `Voice.clips.play_packets(owner, clip_id, emitter)` (or `packets()`), check the owner's current setting at play time, and stop on `Voice.clips.clip_freed(owner, clip_id)`: Off frees every clip of that owner on every peer.
 8. **QA / FOR CEO: listening to a kept take.** `--clip-wav-out` writes nothing under `--audio-driver Dummy` (the silent-test rule). A listening check of "help me" needs one run with a real audio driver; it plays only into a muted bus, so nothing reaches the headphones (inference: the bus is muted; unverified with a real driver after that change). Director/CEO decide whether that run is allowed.
 
+**Answer (Director, P4-01, 2026-10-08):** item 5: the Technical Artist reviews `stage_blown` in P4-16. Item 7 was used in P2-04. Item 8 stays FOR CEO: a real-audio listening run of a kept take. It needs a real audio driver, which the silent-test rule bars without CEO approval.
+
 ## QA to Director: refused peer gets position sends (found in P2-17 review)
 Host logs ~18 `ERROR: Unable to send packet on channel 2, max channels: 0` (`net.gd:170 send_bytes` from `players.gd:71`) in the 0.5 s after `join_refused` (match_in_progress, running match). Skip peers in `Net._refused` in the send loop. Owner: Gameplay (`players.gd`) or Network & Voice (`send_bytes`). Verify: host with `--lobby --lobby-start=1`, then a refused `--join`; expect 0 host ERROR.
+
+**Answer (Director, P4-01, 2026-10-08):** routed to P4-10 (Gameplay or Network & Voice). Verify as written above.
 
 ### Q-055 · 2026-10-08 · AI Programmer → Director, Game Designer · answered (D-053)
 P2-05 (handoff `production/handoffs/P2-05.md`, doc 03 s9.1).
@@ -677,19 +705,23 @@ P2-05 (handoff `production/handoffs/P2-05.md`, doc 03 s9.1).
 2. **Game Designer: lit building.** Doc 03 s9 table row "Trap kept in a building" says a trap in a building lit all night turns up in the corn at dawn; the P2-05 acceptance says it stays. I followed the acceptance (it stays). Which one?
 3. **Director: new log events** for CONTRACTS s10 / doc 05 s18: `trap_plan`, `trap_stolen`, `trap_theft_capped`, `trap_skipped`, and new `trap_changed set` fields `region`, `work_m`, `stolen`. Difficulty scaling and full-wipe extras (doc 03 s9) are not applied yet: no difficulty table in the plan path.
 
-### Q-056 · 2026-10-08 · AI Programmer → Gameplay, Game Designer, Network & Voice · open
+### Q-056 · 2026-10-08 · AI Programmer → Gameplay, Game Designer, Network & Voice · closed
 P2-05 rework (D-053 (3), handoff `production/handoffs/P2-05.md`).
 1. **Gameplay / Game Designer: pick-up verb.** A trap kept in a lit building turns up at dawn as a loose, unarmed pickup (`game/creature/trap_pickup.gd`). No pick-up verb exists, so it borrows `disarm_bear` (5 s labor) and refuses `hands_full`. Proposal: an instant `take_trap` verb (Gameplay's `Interactable.INSTANT_S`, about 1 s like hanging, doc 02 s2.1) plus its HUD label; I then swap the one verb in `trap_pickup.gd`.
 2. **Network & Voice (FYI):** `apply_trap_changed` carries two new `state` values, `loose` and `picked_up` (args unchanged: id, kind, state, position). Late joiners get loose traps from trap_race's `farm_state` resend, which stores the state as-is.
 
 **Answer (Gameplay, P2-19, 2026-10-08), Q-056 item 1:** done. `take_trap` is an instant verb (`Interactable.INSTANT_S`, 1.0 s placeholder, about 1 s like hanging, doc 02 s2.1), HUD label "Pick up the trap". `trap_pickup.gd` offers only `take_trap`, still refuses `hands_full`. `trap_changed` `picked_up` and wire state unchanged. Item 2 noted. Handoff `production/handoffs/P2-19.md`.
 
+**Answer (Director, P4-01, 2026-10-08):** closed; item 1 built in P2-19, item 2 noted.
+
 ### Q-057 · 2026-10-08 · QA → Director · answered (P2-23)
 P2-22 review. `tests/net/test_voice.gd` (`-s` run) does not run: `game/voice/voice_emitter.gd:45` has `Settings`, which does not resolve in script mode ("Identifier not found: Settings"), so the preload fails and the process then hangs without quitting (a Godot process stays up until killed). Not caused by P2-20 or P2-21 (neither touches voice or the test). Owner: Network & Voice. Fix idea: run it as a scene like `tests/ui/test_settings_binds.tscn`, or load `Settings` through the tree. Also: `tests/ui/test_settings_binds.gd` is a scene test (`.tscn`), not an `-s` script; it passes as a scene.
 **Answer (P2-23, 2026-10-08):** the test preloaded `voice_emitter.gd`, which compiles before autoloads exist under `-s`; the compile error skipped `quit()`, so Godot idled. The test now `load()`s the emitter after a frame, as it already did for `voice.gd`. It prints `test_voice: PASS` and exits 0.
 
-### Q-058 · 2026-10-08 · AI Programmer → Gameplay · open
+### Q-058 · 2026-10-08 · AI Programmer → Gameplay · routed to P4-04
 D-055 follow-up. `game/creature/trap_art.gd` (`class_name TrapArt`) builds the placeholder trap meshes: `TrapArt.bear()`, `TrapArt.pit()`, `TrapArt.of(kind)`, each a `Node3D` with its origin on the ground. Set traps (`creature.gd` `_show_clue`) and loose traps (`_show_loose`) use it now. Ask: use it for the pegboard hung trap (`trap_sweep.gd` `_make_slot`, now a 0.6 m box) and the sprung trap (`trap_race.gd` "Sprung" cylinder), so a trap looks the same everywhere. For the pegboard, rotate the bear 90 degrees on x so it hangs flat on the board.
+
+**Answer (Director, P4-01, 2026-10-08):** yes: use `TrapArt` for the pegboard slot and the sprung trap in P4-04.
 
 ### Q-059 · 2026-10-08 · AI Programmer → Audio Designer, Director · answered (P3-08)
 P3-05 (handoff `production/handoffs/P3-05.md`, doc 03 s13.1). A scare's build-up calls `Soundscape.hush(seconds)`: the insect bed off and the wind 12 dB down, then the layers return unless the creature is stalking or chasing. Doc 08 s4.4 rule 1 lets only creature state lower layers. Ask: amend doc 08 s4.4 to allow `hush` as a second layer-lowering path (P3-08), or say which path the build-up should use instead.
@@ -701,15 +733,19 @@ P3-11 (handoff `production/handoffs/P3-11.md`). The scream emote plays `vox_emot
 
 **Answer (Audio Designer, P3-08):** rendered `assets/audio/vox_emote_scream.wav` from `src/vox_emote_scream.scd` (1.5 s, formant synth, no recorded voice). Your CATALOG row is kept. Tested: `emote scream 2` logs `audio_play {vox_emote_scream}` on both peers. Also added `sfx_emote_cloth` for wave, point and shrug.
 
-### Q-065 · 2026-10-08 · Gameplay Programmer → Network & Voice · open
+### Q-065 · 2026-10-08 · Gameplay Programmer → Network & Voice · accepted (D-076); confirm in P4-14
 P3-11 (handoff `production/handoffs/P3-11.md`). I added four RPCs to `game/net/net.gd` (your path), in a section marked P3-11, following the request/apply pattern already there: `request_whistle()`, `request_emote(emote_id: StringName)`, `apply_whistle(peer, position)`, `apply_emote(peer, emote_id, position)`. Doc 05 s14 and doc 06 s7 name a voice slot as the first argument of the applies; I send the ENet peer id because slots are not built (logs use peer ids too, D-012). Ask: confirm the RPCs, or move them; when slots exist, say whether the applies should switch to slots.
 
-### Q-066 · 2026-10-08 · Gameplay → Director, Game Designer · open
+**Answer (Director, P4-01, 2026-10-08):** accepted as built (D-076): peer ids until slots exist. Network & Voice confirms or moves them in P4-14.
+
+### Q-066 · 2026-10-08 · Gameplay → Director, Game Designer · answered (D-074)
 P3-12 Dawn Report (handoff `production/handoffs/P3-12.md`, doc 05 s15 "As built (P3-12)").
 1. **Most Wanted:** doc 01 "Dawn Report" says "who was chased most"; the `most_wanted` template prints `{fake_count}` calls. Built: most `chase_started`, ties and a chase-free day go to the owner voiced in most lures. Confirm, or pick one measure.
 2. **Missing copy:** no templates for the Hero actions "freed a teammate" and "refueled", the Flags Placed lines, the empty-flags line, or the ledger labels. Placeholders live in `game/ui/dawn_report_logic.gd` (`HERO_FREED`, `HERO_REFUELED`, `FLAGS_LINE`, `NO_FLAGS`). Also `most_wanted` reads "1 calls" for one call: needs a singular.
 3. **Streamer-safe:** doc 01 says the mode "never replays live clips"; doc 05 s15 and the P3-12 criteria say it never replays voice. Built the stricter rule (no voice replay at all). Confirm.
 4. **Skip:** each peer closes its own card; there is no host "skip for all". Say if doc 01 wants one.
+
+**Answer (Director, P4-01, 2026-10-08):** D-074: (1) Most Wanted as built, most `chase_started`, ties to lures. (2) the missing copy and the singular go to P4-03. (3) the stricter rule stands: no voice replay. (4) skip stays per peer.
 
 ### Q-060 · 2026-10-08 · Gameplay → Audio Designer · answered (P3-08)
 P3-07 (handoff `production/handoffs/P3-07.md`). Doc 01 "The Taint" cues a Tainted player with a wet heartbeat. Ask: in `game/audio/soundscape.gd`, play `sfx_taint_heartbeat` (doc 08 level, about -42 dB, local only) while the local player is Tainted. The flag is `Game.players[Game.local_peer()].tainted`; it changes in `Net.apply_taint_changed(peer, on, cause)` (host and the Tainted client), so a poll or that RPC both work. Doc 08 s10.1 plans `Soundscape.set_local_state(tainted, still, shaken, fuel_fraction)` called by `Player`; it does not exist yet. Build it and I add the call from `player.gd`, or poll the flag. Until then the HUD prints tester text "Tainted: wash at the well".
@@ -721,25 +757,33 @@ P3-07 (handoff `production/handoffs/P3-07.md`).
 1. **Bots never wash.** A Tainted bot keeps its Taint until dawn. Ask: in `game/bots/bot.gd` `next_job`, return `[&"wash", "well"]` when `Game.players[peer].tainted` (tested as a one-line temporary edit on the Phase 1 farm: the 10 s hold completed and logged `taint_changed` cause `well`).
 2. **P3-06 sabotage:** place dead crows and strange seeds with `get_tree().get_first_node_in_group(&"taint").add_source(&"dead_crow" or &"strange_seeds", pos)` and clear them with `remove_source(id)` (host; it logs `taint_source` and mirrors to clients). A stolen tool that is a can: `farm.cans.taint_can(id, &"stolen_tool")`; `creature_move_cans` already does this.
 
-### Q-068 · 2026-10-08 · Network & Voice → AI Programmer, Gameplay · open
+### Q-068 · 2026-10-08 · Network & Voice → AI Programmer, Gameplay · answered (D-075, D-076)
 P3-10 (handoff `production/handoffs/P3-10.md`, doc 06 s9 "As built (P3-10)"). I made two one-line edits outside my paths, because the ghost voice could not land without them.
 1. **AI Programmer:** `game/creature/creature.gd` `_hear_lure` now picks the bus with `bus_for(tell, Voice.hears_static(owner))`, so a dead owner's clip lure plays through the ghost static, the same as their real voice. The listener decides this, not the `ghost` flag in `apply_lure`. That flag is set only for night lures (`not day`, doc 03 s12), but doc 01 "The dead-voice twist" says "including in targeted lures". Ask: keep the edit, and drop `not day` from the logged `ghost` flag (or say why day lures differ).
 2. **Gameplay:** `game/player/player.gd` no longer sets a ghost's `VoiceEmitter` to -80 dB for living listeners (playtest issue 9's stopgap). It applies only the per-player volume. `Voice` now puts the emitter on the ghost static bus. Ask: confirm.
 
-### Q-072 · 2026-10-08 · Audio Designer → Director, Game Designer · open
+**Answer (Director, P4-01, 2026-10-08):** (1) keep the edit; drop `not day` from the `ghost` flag (D-075, P4-11). (2) confirmed (D-076).
+
+### Q-072 · 2026-10-08 · Audio Designer → Director, Game Designer · answered (D-074)
 P3-08 (handoff `production/handoffs/P3-08-sound.md`). Doc 08 s2.3 rule 5 low-passes `Master` at 1.2 kHz and drops `SFX` 10 dB while the Dawn Report is open. The P3-12 report replays lures (voice clips and sound lures) while open, so a `Master` low-pass would muffle the replays. Not built. Proposal: no low-pass for the Dawn Report (keep it for the pause menu), or low-pass `Ambience` and `SFX` only. Pick one; until then the card only plays `ui_paper_slide`.
 
-### Q-073 · 2026-10-08 · Audio Designer → Director, QA · open
+**Answer (Director, P4-01, 2026-10-08):** low-pass `Ambience` and `SFX` only while the Dawn Report is open; the pause menu keeps the `Master` low-pass (D-074, P4-17).
+
+### Q-073 · 2026-10-08 · Audio Designer → Director, QA · answered (D-076)
 P3-08. `Soundscape` now logs `audio_play {id}` (each one-shot but footsteps), `audio_hush {seconds}` and `audio_taint_heartbeat {on}`, on the peer that hears them. Ask: list them in CONTRACTS s10 and doc 05 s18 with `audio_state` (the Phase 2 `audio_chase_cue` is also unlisted). `check_logs.py` already counts them.
 
-### Q-069 · 2026-10-08 · AI Programmer → Network & Voice, Gameplay · open
+**Answer (Director, P4-01, 2026-10-08):** the four events are in CONTRACTS s10 (D-076); Gameplay adds them to doc 05 s18 in P4-04.
+
+### Q-069 · 2026-10-08 · AI Programmer → Network & Voice, Gameplay · answered (D-076)
 P3-06 Sabotage (handoff `production/handoffs/P3-06.md`). I made small edits outside my paths so sabotage could land. Ask: confirm each, or move it.
 1. **Network & Voice:** `game/net/net.gd` has one new apply RPC after `apply_taint_source`: `apply_disturbance(id: int, kind: StringName, position: Vector3, yaw: float, on: bool)`. The host sends it to show or clear a disturbance mark (footprints, claw marks, feathers) and to move a scarecrow (negative `id`). Late joiners get the live set on `farm_state`.
 2. **Gameplay:** `game/interaction/interactable.gd` has a new static `fix_hold_s(verb)` that reads `sabotage.json` `fix_hold_s` (`bury` 4 s, `pull_seeds` 3 s), and `hold_seconds` falls back to it. `game/interaction/hold_registry.gd` `_validate` accepts a verb with `fix_hold_s > 0` before the `labor.json` check (else `Data.record` logs an error for `bury`). Fix targets are `FixTarget` nodes in `farm.targets["dist_<id>"]`; `bury` needs a held shovel (refusal `no_shovel`).
 3. **Gameplay:** `game/ghost/death.gd` `dawn_summary.farm_damage` reads the `Sabotage` node's `farm_damage`: coins of crops lost to the dawn trample (each plot at `crops.turnip.sell`). Inference: doc 03 section 10 gives no unit; coins match the dawn report ledger (D-065). Say if the ledger wants a plot count.
 4. **Gameplay:** bots started with `--bot-chores` now also run on the full farm (straight-line walk, no `bot_route.gd`), so the multi-day sabotage check has teammates that fix things. A run without the flag is unchanged.
 
-### Q-070 · 2026-10-08 · AI Programmer → Game Designer · open
+**Answer (Director, P4-01, 2026-10-08):** items 1 to 4 accepted as built (D-076). Item 3: the ledger counts coins (D-065), so coins stay.
+
+### Q-070 · 2026-10-08 · AI Programmer → Game Designer · routed (P4-03, P4-11)
 P3-06 Sabotage. Doc 03 section 10 leaves these open; each is built as an inference. Ask: confirm, or change doc 03.
 1. **When:** budgeted disturbances land at even times through the first third of the day (doc 03 section 11.3: "evidence of sabotage only"). Doc 03 gives no time.
 2. **Where at dawn:** the dawn trample hits the crops nearest the creature at dawn. A plot with no crop is never trampled, so on a bare farm the dawn trample does nothing (`trample` log: `want` 2, `trampled` 0).
@@ -748,7 +792,18 @@ P3-06 Sabotage. Doc 03 section 10 leaves these open; each is built as an inferen
 5. **Scarecrow moved:** "never the one closest to a player" is read as one spot, the one nearest any living player.
 6. **Not built:** the full-wipe doubling of the next day's budget, the wash and buy-back fixes for a stolen tool that is not a can, and `broken_fence` / `pumpkin_gnaw` (Phase 4, D-059).
 
+**Answer (Director, P4-01, 2026-10-08):** items 1, 3 and 5 accepted as built. Items 2 and 4: the Game Designer writes the dawn trample placement rule (spread, bare farm) into doc 03 s10 in P4-03. Item 6 is P4-11.
+
 ### Q-074 · 2026-10-08 · QA → AI Programmer · answered D-068
 P3-13 (OPEN_ISSUES "Found at the P3-13 review" item 1). Doc 01 "Bodies": the host's game picks one of four bodies per season. `game/creature/creature.gd` fixes `const BODY := &"body_gaunt"`, so doc 01 Open Issue 4 (do the four bodies feel different) cannot be played at STOP 4. Ask: add the season pick (host, seeded, logged in `session_start` or a `creature_body` event), plus a `--body=<id>` dev flag so the two STOP 4 sessions can use different bodies. Is this Phase 3 scope, or should the Director move Open Issue 4 to Phase 4?
 
 **Answer (CEO, D-068):** not Phase 3. Open Issue 4 and the season body pick move to DD Phase 4 (P4-08).
+
+**Answer (Director, P4-01, 2026-10-08):** the body pick row is now P4-13 (D-070).
+
+### Q-075 · 2026-10-08 · Director → CEO · open · FOR CEO
+P4-01 (D-070). Three Phase 4 scope calls; the rows proceed as written unless overruled.
+1. **Animals (D-071):** chicken, pig and cow in the pen, `broken_fence`, round-up, gray-box. Keep, or cut and drop the Rancher's perk to nothing?
+2. **Roles (D-072):** only the four doc 02 s15 roles. The six doc 01 placeholder roles wait until their perks are set. Add them to Phase 4?
+3. **Models (P4-16):** gray-box models built in Blender 5.2, no downloaded models. Approve, or name a source and license for downloads?
+Also still open for the CEO: Q-031 item 2 (day music) and Q-054 item 8 (a real-audio listening run).
