@@ -262,3 +262,9 @@ Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent bac
 2. **A leaver's flags can never be pulled up** (owner keyed by peer id); they clear only by a disarm or fill.
 3. **Dawn report flag count** (`game/ui/dawn_report_logic.gd:54`) is inflated by placing and pulling up.
 4. **`apply_flags(positions)` in `game/net/net.gd`** still names a list that now holds `{pos, by}`. Network & Voice.
+
+## Found at the P4-32 review (QA, 2026-10-09)
+
+1. **Pusher facing is set once at lock start** (`game/player/player.gd:177`); after the route turns about 8 m in, the pusher faces off the cart. Gameplay.
+2. **The controls hint covers the push prompt** for the first 20 s. Gameplay.
+3. **Only the client checks that a push starts at the handle.** Harmless: the host moves the pusher to the push spot.

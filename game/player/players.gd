@@ -170,7 +170,7 @@ func submit(peer: int, f: Dictionary) -> void:
 	var ghost := Game.is_ghost(peer)
 	var cart := get_tree().get_first_node_in_group(&"cart")
 	var slot: Vector3 = cart.push_slot(peer) if cart else Vector3.INF
-	if slot != Vector3.INF:
+	if slot != Vector3.INF and not st.get("pinned", false):
 		f.pos = Vector3(slot.x, f.pos.y, slot.z)  # P4-32: a pusher stands at their handle slot (the host's cart decides)
 	var pos: Vector3 = f.pos
 	if st.has("pos"):
