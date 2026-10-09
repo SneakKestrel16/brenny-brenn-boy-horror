@@ -206,6 +206,16 @@ Computed in integers (`(v * pct + 99) // 100`), never with `0.8` or `0.6` as flo
 float `ceil(n * 0.6)` and `ceil(n * 0.8)` agree with the integer form for every n up to 2,000, so
 this is a precaution, not a known bug.
 
+**Tuned payment scaling (P4-02; CEO, D-079 revised).** Payments, the debt and medical bills
+use `player_scaling.json` `payment_pct_by_players` (`sim`): **59 at 2p, 85 at 3p, 101 at 4p**, 120 at
+5p, 140 at 6p. Traps, disturbances and payouts keep `pct_by_players` (60/80/100). Resulting figures
+(debt, first payment, final payment before the payout): 2p 767, 150, 617; 3p 1,105, 217, 888; 4p
+1,313, 258, 1,055 (doc 01: 780/153/627, 1,040/204/836, 1,300/255/1,045). The 4p example (one drop
+before dawn 2) becomes 187.6 + 6 x 157.9 = 1,135 total, first payment 223. **The values are tuned to 1%
+steps (the final clear moves about 6 points per 1% of debt) and get retuned from the P4-10 live logs.**
+The tables in 7.1 and 8 below are the doc 01 columns; the sim multiplies by the tuned percentages. The
+game still reads only `pct_by_players` until Gameplay reads the new key.
+
 **Exception: the debt.** Its total and the first-payment split round to the **nearest** coin
 (section 7). Rounding up there breaks doc 01's worked example.
 
@@ -221,11 +231,11 @@ team's 4) and every `store.json` `per_player` row grow with the head count by de
 **field grows with the head count above 4** (CEO follow-up to D-038, `placeholder`): 4 plots per
 player, so the starting field is 16 at 2 to 4 players, 20 at 5p and 24 at 6p, and the bought-plot
 ceiling is the start plus 8 (the 8 of doc 01's 16 to 24): 24 at 2 to 4 players, 28 at 5p, 32 at 6p.
-Below 4 nothing changes (the ceiling stays 24). Data: `player_scaling.json`
+Below 4 nothing changes (the ceiling stays 24; D-078 item 2 keeps 16 plots at every headcount). Data: `player_scaling.json`
 `field_plots_start_by_players` and `field_plots_max_by_players`; `season.json` `field_plots_start`
 and `field_plots_max` stay doc 01's 4-player values. Without this the field was 16 plots at 5p and
-6p, planting 20 and 24 plots' worth of labor into 16 (section 17.2 finding). `plot_pair` stays 40
-coins for 2 plots, and the number of pairs the store sells is `(max - start) / 2` (4 at 2 to 4p,
+6p, planting 20 and 24 plots' worth of labor into 16 (section 17.2 finding). `plot_pair` costs 22
+coins for 2 plots (retuned from 40, section 18.6), and the number of pairs the store sells is `(max - start) / 2` (4 at 2 to 4p,
 4 at 5p and 6p); the 5p and 6p plots simply start open, so 5p and 6p have 4 pairs to buy, the same as 4p. Roles (section 15) are optional and have no headcount
 rule; 5 and 6 players just have more of them in play. Nothing else reads headcount.
 
@@ -423,7 +433,7 @@ stand and at the dawn cash-in (D-017). `sim` prices are the simulator's starting
 | `walkie_battery` | 10 | sim | 180 s of transmitting (placeholder) |
 | `brighter_lantern` | 25 | sim | light radius in doc 03 |
 | `scarecrow` | 20 | sim | effect in doc 03 |
-| `plot_pair` | 40 | sim | 2 field plots, start to ceiling: 16 to 24 (2 to 4p), 20 to 28 (5p), 24 to 32 (6p) (section 4) |
+| `plot_pair` | 22 | sim | 2 field plots, start to ceiling: 16 to 24 (2 to 4p), 20 to 28 (5p), 24 to 32 (6p) (section 4) |
 | `flare_gun` | 50 | sim | one shot, refilled each dawn; scares the creature off for 30 s (`01 Store`) |
 
 - **Pegboard lock (P2-12):** `data/store.json` `shed_lock`, price 40 (`doc01`), effect
@@ -658,8 +668,11 @@ Findings, inference until the simulator runs:
 
 ## 18. Season simulator design
 
-Building it is a later task; this is the design. The simulator gates DD Phase 4 (`01 Season
-simulator`).
+**Status (P4-02): built.** `tools/sim/sim.py`, `test_sim.py` (the 18.4 tests, one file),
+`layout.json`, `policies/{median,perfect_start}.json`, `scenarios/*.json`. Run
+`uv run --no-project python -I tools/sim/sim.py --players 2,3,4 --runs 10000 --seed 1`. The
+`compare` command (18.5) is a stub: no live full-season logs exist yet (P4-10 supplies them).
+The simulator gates DD Phase 4 (`01 Season simulator`).
 
 ### 18.1 Shape
 
@@ -679,13 +692,14 @@ simulator`).
     dawn 8, or sells at 50% in the ground if better; moonflowers on every bed plot from day 3;
   - keeps a third of its time for chores: plants `ceil(2/3 × P)` plots per player, P from section 2;
   - takes scheduled sabotage (doc 03's `sabotage.json`) plus the trample rule;
-  - one death on each of 3 nights, the nights drawn at random from 1 to 7 (placeholder);
-  - delivers a Large pumpkin;
+  - two deaths, one on each of 2 nights (doc 01 Season simulator, D-078). The nights are drawn
+    without repeats, weighted by the night's 4p disturbance count to the power
+    `death_night_weight` (3, placeholder; the creature ramps up, doc 01 Ramp-up, so deaths bunch late);
+  - delivers a Large pumpkin; buys plots (`buy_plots` true, only from day 4 so dawn 4 is not starved);
   - buys by a rule (placeholder): scrap when the generator is damaged, a `plot_pair` only when its
     planting cap (`ceil(2/3 × P)` × headcount) exceeds the plots it owns and the pair pays back
-    before dawn 8, nothing else unless a scenario says so; pays only what is due. At P = 6 the cap
-    never exceeds 16, so the median team never buys plots; a P above 6 (section 2.4) makes plots
-    matter at 4p first.
+    before dawn 8 at turnip returns (two plots' turnip chain from that day, the last day at the 50% sale), nothing else unless a scenario says so; pays only what is due. The cap
+    is 14 at 2p (never buys), 21 at 3p and 28 at 4p, so buying matters at 3p and 4p.
 - **Variance sources** (all placeholder distributions, logged per run). Without them the median
   team is deterministic and every target reads 0% or 100%, so these shape the result as much as
   any price:
@@ -741,6 +755,46 @@ if live spread exceeds 15 points, widen the sample before touching numbers.
 Only `sim` and `placeholder` values move. One knob per change, the seed fixed, before and after
 summaries kept, and each accepted change recorded in this doc with its result.
 
+**Log (P4-02 retune under D-078; seed 1, 1,500 to 3,000 runs per count while tuning, 10,000 for
+the final line; first / final clear % at 2p, 3p, 4p).** The first pass (1 death, 13/14 plots, no
+buying, hazards 74/36/90) is withdrawn by D-078. Restart from doc 01's values: 16 plots, 2 deaths,
+buying on at 40 coins, original hazards (nobody outside 20, generator dead 10, kill unfixed 50),
+deaths on uniform nights. Doc 01 numbers never moved, except the proposed payment scaling (Q-077).
+
+| # | Knob (type) | Change | Result (first; final) |
+|---|---|---|---|
+| 0 | Start | D-078 restart, all of the above | 72.0/72.6/66.9; 59.6/63.0/18.9 |
+| 1 | Sabotage `trample` | Not counted as an extra plot on top of the base (model fix kept from the first pass) | in 0 |
+| 2 | Buy test and `plot_pair` price (sim) | The payback test used the pumpkin value (28 a plot) but the team plants turnips for cash: 2 plots return about 26 to 38 after dawn 4, so 40 never paid and 4p final fell 44 to 19. Test now uses turnip returns; price 40 to 22 (20: 4p 75; 24: 65; 28 and up: 24, the pair is unaffordable on day 5) | 72.3/72.2/66.8; 59.9/71.8/57.5 at 20 |
+| 3 | `death_night_weight` (placeholder policy) | 0 to 3. Uniform nights put a death on night 3 (moonflower cash and the bill land just before dawn 4) in 29% of runs, which fails the first payment; weights 1, 2, 3 gave first 74.5, 80.7, 86.8 (2p). Hazards do not move the first clear (all zero: 73.5) | 87.0/85.1/84.5; 54.7/84.5/70.3 |
+| 4 | `payment_pct_by_players` 3p 80 to 85 (sim, CEO-approved, D-079) | 3p final fell with each point: 82 80.7, 84 69.0, 85 about 59, 86 47.4, 88 24.1 (the final clear moves about 6 points per 1% of debt) | 87.0/85.1/84.5; 54.7/58.7/70.3 |
+| 5 | `payment_pct_by_players` 2p 60 to 59 (sim, CEO-approved) | 58 gave 2p 73.9, 59 gave 65.7 | 87.1/85.1/84.5; 65.7/58.7/70.3 |
+| 6 | `payment_pct_by_players` 4p 100 to 101 (sim, CEO-approved) | pulls 4p final from 70.3 to 63.7; kept so the final spread is 6.4, not 16 (D-079 revised: the spread rule wins) | 87.1/85.1/84.3; 65.7/58.7/63.7 |
+
+**Hazards were not moved.** Probes one at a time from row 6's neighbour (price 22, weight 3, before the
+payment percentages): `nobody_outside_pct` 20 to 40 gave final 41.9/81.3/58.6, to 74 gave 19.3/70.7/28.1;
+`generator_dead_base_pct` 10 to 36 gave 37.6/81.3/54.7; `generator_kill_unfixed_pct` 50 to 90 gave
+48.4/83.5/66.4. All three hit 2p hardest and 3p least, the wrong way for the 2p/3p gap, and none moves the
+first clear. Left at 20/10/50.
+
+**Final (10,000 runs, seeds 1, 2, 3; `payment_pct_by_players` 59/85/101; the gate exits 0):**
+
+| Seed | First clear 2p/3p/4p | Final clear 2p/3p/4p | Spread first / final | Medium drop 2p/3p/4p |
+|---|---|---|---|---|
+| 1 | 87.1/85.3/85.7 | 65.3/58.9/63.9 | 1.8 / 6.4 | 36.7/44.3/48.3 |
+| 2 | 86.8/85.4/85.2 | 65.5/59.5/63.6 | 1.6 / 6.0 | 37.3/44.3/48.5 |
+| 3 | 86.7/85.4/85.3 | 65.7/58.7/64.4 | 1.4 / 7.0 | 36.5/44.2/49.6 |
+
+All targets pass. (Run with 60/85/100 first: final 55/59/71, spread 16, gate FAIL; D-079 revised
+chose 59/85/101.)
+
+**Assumptions to check against P4-10.** The first clear of about 85% assumes deaths bunch late
+(`death_night_weight` 3, QA finding 2); uniform nights give 72%. Check the per-night death logs.
+The 4p `plot_pair` price sits near a cliff: 22 works, 24 fails (4p final 65 to 24 between 24 and 28
+in the sweep), and 26 collapses, because the day-5 pair stops being affordable.
+D-078 item 4's Medium drop (about 25 at 2p) is accepted; the sim gives 37/44/48, so the 30 check passes.
+`unlock_rule` both ways is in the summary (`scenarios/unlock_day.json`).
+
 ## 19. Gotchas
 
 - **The debt rounds to nearest; everything else scaled rounds up.** Rounding the debt up gives
@@ -753,10 +807,16 @@ summaries kept, and each accepted change recorded in this doc with its result.
 - **Dawn-4 money hides the 2p gap**: 60 unscaled starting coins are a bigger share at 2p. Look at
   dawn 8.
 - **Labor is the 2p balance lever,** not the field: 16 plots at every headcount.
-- **Bought plots do nothing for a team that plants 4 a player** at P = 6; only a higher P makes
-  them pay.
+- **Bought plots help 3p and 4p only:** the 2p planting cap (14) is under the 16 it owns.
 - **A projection without written rules can't be checked.** 17.2's first version wasn't
   reproducible; its rules now sit beside the numbers and the script is kept.
+- **Sabotage `trample` is the base trample,** not an extra plot on top of it (double counting cost
+  the 4p final about 10 points).
+- **Buying plots before the first payment starves it.** Buying after pays only if the pair price is
+  under about 26 coins: a pair bought on day 5 returns 2 turnip plots (log row 2).
+- **Death timing sets the first clear.** A death on night 3 fails the first payment; uniform nights
+  give 72%, weighting nights by the ramp gives 85% (log row 3).
+- **The final clear is knife-edge in the debt:** 1% of debt is about 6 points of final clear.
 - **Each multiplier lives in one file** (taint pry in `taint.json`, role perks in `roles.json`);
   a copy in `labor.json` would drift.
 

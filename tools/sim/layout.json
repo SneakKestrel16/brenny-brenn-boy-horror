@@ -1,0 +1,26 @@
+{
+  "cite": "Distances in metres copied from doc 04 section 8.7 (farm layout walks). Plot split and d_step are doc 02 section 2.3 placeholders.",
+  "source": "doc04",
+  "d_step_m": 3.0,
+  "d_step_source": "placeholder",
+  "fields": {
+    "A": {"share": 0.5, "d_well_m": 58.5, "trade_loop_m": [94.2, 49.0, 54.6], "share_source": "placeholder"},
+    "B": {"share": 0.5, "d_well_m": 106.5, "trade_loop_m": [48.0, 49.0, 10.5], "share_source": "placeholder"}
+  },
+  "moonflower_bed": {"d_well_m": 123.4},
+  "prize_pumpkin": {"d_well_m": 31.8},
+  "walk_m": {
+    "barn_door_to_field_a": 33.3,
+    "barn_door_to_field_b": 81.3,
+    "barn_door_to_moonflower_bed": 98.2,
+    "barn_door_to_town_stand": 127.5,
+    "barn_door_to_prize_pumpkin": 57.4,
+    "field_a_to_field_b": 48.0,
+    "field_b_to_moonflower_bed": 30.0,
+    "fuel_drum_to_generator": 33.0,
+    "well_to_barn_door": 26.9,
+    "barn_door_to_shed": 30.0
+  },
+  "trap_walk_m": [33.3, 81.3, 98.2, 57.4, 48.0, 30.0],
+  "trap_walk_source": "placeholder: one walk from the barn door to a trap site, drawn from the barn-door walks; doc 03 sets real trap sites"
+}

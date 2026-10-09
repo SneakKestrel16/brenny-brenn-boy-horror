@@ -580,7 +580,7 @@ no economy number and can start now.
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
 | P4-01 | Director | Between-phase review: OPEN_ISSUES, open questions, settle Phase 4 scope, write acceptance for the rows below | done (D-070) | — |
-| P4-02 | Game Designer | Season simulator (doc 02 s18): `tools/sim/sim.py`, median policy, variance, scenarios, s18.4 tests, then tune `sim` and `placeholder` values until the s18.3 targets pass | todo | — |
+| P4-02 | Game Designer | Season simulator (doc 02 s18): `tools/sim/sim.py`, median policy, variance, scenarios, s18.4 tests, then tune `sim` and `placeholder` values until the s18.3 targets pass | done (QA PASS; D-078, D-079) | — |
 | P4-03 | Game Designer | Phase 4 data: pumpkin, debt, difficulty, roles, store effects, crops, `harvest_moon`, Phase 4 sabotage, animals, season awards, Dawn Report gaps | todo | P4-02 |
 | P4-04 | Gameplay | Full 7-day season: every crop, town stand selling, dawn steps 1, 2, 5 and 7, season end, doc 05 s18 events; carried fixes | todo | P4-02, P4-03 |
 | P4-05 | Gameplay, Technical Artist | Prize Pumpkin: patch, growth, sizes, carrying, judging (doc 02 s6) | todo | P4-04 |
@@ -704,10 +704,12 @@ Acceptance:
 - Saves at dawn step 6 only (doc 01 "Saving", doc 05 s17); the menu loads a saved season.
 - Host left: the season resumes from the last dawn save (doc 06 s5).
 - Mid-season joins and leaves recompute headcount scaling and debt (doc 02 s4). The doc 09 s3 case
-  passes: 4 players, one drops before dawn 2, total 1,077, first payment 211.
+  passes: 4 players, one drops before dawn 2, total 1,135, first payment 223 (D-079).
 - One player left: the game follows doc 06 s5.
 - Refused peers no longer get position sends (QUESTIONS, "QA to Director: refused peer gets position
   sends").
+- Debt payments and medical bills read `payment_pct_by_players` from `data/player_scaling.json`;
+  traps and disturbances keep `pct_by_players` (D-079).
 - Logs `save_written`, `net_peer_left`, `net_host_left`, `session_end`.
 
 ### P4-11 Phase 4 sabotage and difficulty

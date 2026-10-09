@@ -431,9 +431,9 @@ One giant pumpkin gives the season a face; friends will name it.
 
 | Players | Total debt | First payment (dawn after night 3) | Final payment (dawn after Harvest Moon) |
 |---|---|---|---|
-| 4 | 1,300 | 255 | 1,045 |
-| 3 | 1,040 | 204 | 836 |
-| 2 | 780 | 153 | 627 |
+| 4 | 1,313 | 258 | 1,055 |
+| 3 | 1,105 | 217 | 888 |
+| 2 | 767 | 150 | 617 |
 
 - **Early payment:** allowed at any dawn.
 - **Final payment:** the festival payout counts toward it. Foreclosure penalties and deferred medical bills are added to it.
@@ -481,7 +481,7 @@ Phase 4 is gated on the simulator. It runs 2p, 3p and 4p with every rule here, i
 
 ### Ramp-up (4 players)
 
-Payments, medical bills, trap counts and the disturbance budget scale to 80% at 3 players and 60% at 2, rounded up. Above 4 they scale up the same way, 120% at 5 and 140% at 6 (placeholder until the season simulator sets them).
+Trap counts and the disturbance budget scale to 80% at 3 players and 60% at 2, rounded up. Payments and medical bills scale to 85% at 3 players, 59% at 2 and 101% at 4 (season simulator, D-079; retuned from live logs). Above 4 everything scales up the same way, 120% at 5 and 140% at 6 (placeholder until the season simulator sets them).
 
 | Day | Disturbances | Traps that night | Voice | New |
 |---|---|---|---|---|
@@ -505,13 +505,13 @@ Payments, medical bills, trap counts and the disturbance budget scale to 80% at 
 - **Leaving:** a player who drops counts as absent from the next dawn. Their character stays as an idle farmhand that doesn't count.
 
 **Debt formula:**
-1. Each of the 7 days carries 1/7 of 1,300, scaled by that dawn's headcount (100/80/60%) and fixed once the dawn begins.
+1. Each of the 7 days carries 1/7 of 1,300, scaled by that dawn's headcount (payments: 101/85/59%, D-079) and fixed once the dawn begins.
 2. **Total debt** is the sum of all 7 shares. Past days use recorded headcount; future days use the current headcount.
 3. **Still owed** is the total debt, minus payments made, plus foreclosure penalties and deferred bills. Those additions never rescale.
 4. **Split:** if the first payment is still ahead, it takes 255/1,300 of the total debt (rounded); the final takes the rest.
 5. **Everything else scales too:** the moonflower bed, bills, traps and disturbances follow headcount.
 
-**Example:** 4p with one drop before dawn 2 gives 185.7 + 6 × 148.6 = 1,077 total, so a first payment of 211.
+**Example:** 4p with one drop before dawn 2 gives 187.6 + 6 × 157.9 = 1,135 total, so a first payment of 223.
 
 **Rules:**
 - Payments lock when their dawn begins, so quitting saves nothing.

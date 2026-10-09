@@ -1,0 +1,20 @@
+{
+  "name": "median",
+  "cite": "doc 02 section 18.2; every number here is a placeholder unless it says otherwise",
+  "plots_per_player": "derived",
+  "crops": null,
+  "deaths": 2,
+  "deaths_source": "doc 01 Season simulator: one death on each of 2 nights (D-078 item 1)",
+  "pumpkin_size": "large",
+  "sabotage": true,
+  "labor": true,
+  "trample": true,
+  "buy_plots": true,
+  "buy_plots_from_day": 4,
+  "death_night_weight": 3,
+  "jitter_pct": 20,
+  "nobody_outside_pct": 20,
+  "generator_dead_base_pct": 10,
+  "generator_dead_tank_factor_pct": 40,
+  "generator_kill_unfixed_pct": 50
+}

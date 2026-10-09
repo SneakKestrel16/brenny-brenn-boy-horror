@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/pumpkin.schema.json",
+  "title": "Prize Pumpkin sizes and rules (doc 02 section 6)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "table",
+    "schema_version",
+    "records"
+  ],
+  "properties": {
+    "table": {
+      "const": "pumpkin"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "records": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "enum": [
+                  "giant",
+                  "large",
+                  "medium",
+                  "sad"
+                ]
+              },
+              "source": {
+                "$ref": "#/$defs/source"
+              },
+              "cite": {
+                "type": "string"
+              },
+              "sources": {
+                "$ref": "#/$defs/sources"
+              },
+              "rank": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "min_watered_days": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 7
+              },
+              "max_watered_days": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 7
+              },
+              "guarded_nights_min": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 6
+              },
+              "payout_4p": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "id",
+              "source",
+              "rank",
+              "min_watered_days",
+              "max_watered_days",
+              "guarded_nights_min",
+              "payout_4p"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "const": "rules"
+              },
+              "source": {
+                "$ref": "#/$defs/source"
+              },
+              "cite": {
+                "type": "string"
+              },
+              "sources": {
+                "$ref": "#/$defs/sources"
+              },
+              "guard_radius_m": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "guard_s": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "guard_first_night": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 7
+              },
+              "guard_last_night": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 7
+              },
+              "gnaw_from_night": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 7
+              },
+              "max_escort_bites": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "min_door_distance_m": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "seed": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "id",
+              "source",
+              "guard_radius_m",
+              "guard_s",
+              "guard_first_night",
+              "guard_last_night",
+              "gnaw_from_night",
+              "max_escort_bites",
+              "min_door_distance_m",
+              "seed"
+            ]
+          }
+        ]
+      },
+      "maxItems": 5,
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "id": {
+                "const": "giant"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "id": {
+                "const": "large"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "id": {
+                "const": "medium"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "id": {
+                "const": "sad"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "properties": {
+              "id": {
+                "const": "rules"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "source": {
+      "enum": [
+        "doc01",
+        "sim",
+        "placeholder"
+      ]
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "doc01",
+          "sim",
+          "placeholder"
+        ]
+      }
+    }
+  }
+}

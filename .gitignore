@@ -29,6 +29,7 @@ logs/
 # Tools
 .serena/
 __pycache__/
+tools/sim/out/
 *.blend1
 build_id.txt
 .claude/worktrees/

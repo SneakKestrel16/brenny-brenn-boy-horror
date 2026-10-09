@@ -1,0 +1,23 @@
+{
+  "table": "pumpkin",
+  "schema_version": 1,
+  "records": [
+    {"id": "giant", "source": "doc01", "cite": "doc 01 Prize Pumpkin payout; doc 02 section 6", "rank": 3, "min_watered_days": 7, "max_watered_days": 7, "guarded_nights_min": 2, "payout_4p": 250},
+    {"id": "large", "source": "doc01", "cite": "doc 01 Prize Pumpkin payout; doc 02 section 6", "rank": 2, "min_watered_days": 5, "max_watered_days": 7, "guarded_nights_min": 0, "payout_4p": 150},
+    {"id": "medium", "source": "doc01", "cite": "doc 01 Prize Pumpkin payout; doc 02 section 6", "rank": 1, "min_watered_days": 3, "max_watered_days": 4, "guarded_nights_min": 0, "payout_4p": 75},
+    {"id": "sad", "source": "doc01", "cite": "doc 01 Prize Pumpkin payout; doc 02 section 6", "rank": 0, "min_watered_days": 0, "max_watered_days": 2, "guarded_nights_min": 0, "payout_4p": 20},
+    {
+      "id": "rules",
+      "source": "doc01",
+      "cite": "doc 01 The Prize Pumpkin; doc 02 section 6; seed is free (D-017)",
+      "guard_radius_m": 20,
+      "guard_s": 60,
+      "guard_first_night": 1,
+      "guard_last_night": 6,
+      "gnaw_from_night": 3,
+      "max_escort_bites": 2,
+      "min_door_distance_m": 30,
+      "seed": 0
+    }
+  ]
+}

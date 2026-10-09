@@ -5,7 +5,7 @@
     {
       "id": "turnip",
       "source": "doc01",
-      "cite": "doc 01 Crops; doc 02 section 5 (Phase 1: turnip only)",
+      "cite": "doc 01 Crops; doc 02 section 5",
       "name": "Turnip",
       "grow_days": 1,
       "seed": 4,
@@ -20,6 +20,46 @@
         "harvest_phase": "placeholder",
         "wilts_at_dawn": "placeholder",
         "dead_plot_taints": "placeholder"
+      }
+    },
+    {
+      "id": "pumpkin",
+      "source": "doc01",
+      "cite": "doc 01 Crops; doc 02 section 5; seed is free for the Prize Pumpkin (D-017)",
+      "name": "Pumpkin",
+      "grow_days": 2,
+      "seed": 10,
+      "sell": 28,
+      "unlock_day": 4,
+      "unlock_rule": "first_payment_made",
+      "harvest_phase": "day",
+      "wilts_at_dawn": false,
+      "dead_plot_taints": false,
+      "sources": {
+        "unlock_rule": "doc01",
+        "harvest_phase": "placeholder",
+        "wilts_at_dawn": "placeholder",
+        "dead_plot_taints": "placeholder"
+      }
+    },
+    {
+      "id": "moonflower",
+      "source": "doc01",
+      "cite": "doc 01 Crops; doc 02 section 5",
+      "name": "Moonflower",
+      "grow_days": 0,
+      "seed": 25,
+      "sell": 60,
+      "unlock_day": 3,
+      "unlock_rule": "day",
+      "harvest_phase": "night",
+      "wilts_at_dawn": true,
+      "dead_plot_taints": true,
+      "sources": {
+        "unlock_rule": "placeholder",
+        "harvest_phase": "doc01",
+        "wilts_at_dawn": "doc01",
+        "dead_plot_taints": "doc01"
       }
     }
   ]

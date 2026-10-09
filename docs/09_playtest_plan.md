@@ -108,7 +108,7 @@ Director).
 | First: the simulator hits its targets | `tools/sim/` run for 2p, 3p, 4p (Game Designer) | the sim's output | Median team clears the first payment in about 85% of runs and the final in 55 to 70%; spread across player counts at most 10 points (doc 01 "Season simulator") |
 | Teams sometimes win and sometimes lose | At least 6 full seasons (`placeholder`; fewer can't show both outcomes) | `payment_made`, `session_end` | At least one win and one loss across the seasons |
 | Logs land within 15 points of the sim | Compare playtest logs to the sim | `dawn_summary`, `money_changed`, `payment_made`, `death` | First-payment clear rate and final-payment clear rate each within 15 points of the sim (doc 01 "Playtest check"). *Inference:* a handful of seasons is a loose test; per-dawn coin and debt trajectories from `dawn_summary` against the sim's are the tighter comparison, and doc 01 does not say which. Settled by the Game Designer's `compare` command (doc 05 section 18 names it) |
-| Saving, joining and leaving | A drop mid-season; a late join; a host left | `net_peer_left`, `net_host_left`, `save_written` | Debt recomputed per doc 01's example (4p, one drop before dawn 2: 1,077 total, first payment 211); resume from the last dawn save |
+| Saving, joining and leaving | A drop mid-season; a late join; a host left | `net_peer_left`, `net_host_left`, `save_written` | Debt recomputed per doc 01's example (4p, one drop before dawn 2: 1,135 total, first payment 223); resume from the last dawn save |
 
 ## 4. Log measures and what proves them
 

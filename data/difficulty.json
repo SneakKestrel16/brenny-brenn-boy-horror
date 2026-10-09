@@ -1,0 +1,9 @@
+{
+  "table": "difficulty",
+  "schema_version": 1,
+  "records": [
+    {"id": "easy", "source": "placeholder", "cite": "doc 02 section 16; doc 01 Difficulty and group settings: fewer traps, gentler bills", "trap_pct": 75, "bill_pct": 50, "generator_tank_pct": 100, "rounding": "ceil"},
+    {"id": "normal", "source": "doc01", "cite": "doc 02 section 16", "trap_pct": 100, "bill_pct": 100, "generator_tank_pct": 100, "rounding": "ceil"},
+    {"id": "nightmare", "source": "placeholder", "cite": "doc 02 section 16; doc 01 Difficulty and group settings: less fuel", "trap_pct": 100, "bill_pct": 100, "generator_tank_pct": 75, "rounding": "ceil"}
+  ]
+}

@@ -812,3 +812,12 @@ Also still open for the CEO: Q-031 item 2 (day music) and Q-054 item 8 (a real-a
 
 ### Q-076 · 2026-10-08 · AI Programmer → Gameplay Programmer · open
 P4-13. The body pick logs a new event `creature_body` on every peer, once per season: host `{body, seed, forced}`, client `{body}` on the first `apply_creature_state`. Please add it to the doc 05 section 10 event table (owner: Gameplay Programmer). P4-10: save `Creature.body` with the season and pass it back on load as the forced id (`Creature._pick_body`, the `--body=<id>` path; AI Programmer wires it once P4-10 names the save field), so the pick survives a reload (P4-13 acceptance item 3).
+
+### Q-077 · 2026-10-08 · Game Designer -> Director · answered D-079
+
+P4-02 retune under D-078. All sim targets pass with doc 01's 16 plots, 2 deaths, buying on and the original hazards (nobody outside 20, generator dead 10, kill unfixed 50), but only if payments and medical bills scale a little off doc 01 Ramp-up's 80% / 60%: `payment_pct_by_players` 2p 59, 3p 85, 4p 101 (new `player_scaling.json` key, source `sim`; traps, disturbances and payouts keep 80/60/100). Reason: at doc 01's scaling 3p clears the final 85% and 2p 55%, and the final clear moves about 6 points per 1% of debt, so no other placeholder closes the gap (hazards hit 2p hardest; plot buying only helps 3p/4p). The 4p 101 and 2p 59 are rounding-scale nudges; the real move is 3p 80 to 85, which turns doc 02 7.1 3p debt 1,040 to 1,105 (first payment 217). The game reads only `pct_by_players` today, so live and sim differ until you decide. Options: (a) accept `payment_pct_by_players` and have Gameplay read it for debt and bills (doc 01 Ramp-up wording changes), (b) keep 80/60 and accept a 20 to 30 point 2p/3p spread, (c) another lever you name. Settle with: first live full-season logs (P4-10).
+
+**Answer (CEO, D-079, revised):** `payment_pct_by_players` 59/85/101, the spread rule wins (60/85/100 gave a final spread of 16). Medium drop 37/44/48 accepted, revisit with P4-10 logs.
+
+### Q-078 · 2026-10-08 · Game Designer -> Director · answered D-078
+(Was Q-075 in this worktree; renumbered, main's Q-075 is the Director's.) P4-02: Medium pumpkin at 2p cost 26.7 points not 30, 2 deaths and 13/14 start plots. Answered by D-078: 2 deaths, 16 plots at every headcount, buying on, a drop of about 25 at 2p accepted. After the retune the drop is 36.7/44.3/48.3, so the 30 check passes.

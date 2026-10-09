@@ -1,0 +1,15 @@
+{
+  "table": "debt",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "season",
+      "source": "doc01",
+      "cite": "doc 01 Debt and payments, Joining and leaving; doc 02 section 7 (rounds to nearest, D-017)",
+      "total_4p": 1300,
+      "first_payment_4p": 255,
+      "days": 7,
+      "rounding": "nearest"
+    }
+  ]
+}

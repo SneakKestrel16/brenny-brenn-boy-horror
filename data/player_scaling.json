@@ -12,12 +12,20 @@
         "4": "doc01",
         "5": "placeholder",
         "6": "placeholder",
-        "field_plots": "placeholder"
+        "field_plots": "placeholder",
+        "payment_pct_by_players": "sim"
       },
       "pct_by_players": {
         "2": 60,
         "3": 80,
         "4": 100,
+        "5": 120,
+        "6": 140
+      },
+      "payment_pct_by_players": {
+        "2": 59,
+        "3": 85,
+        "4": 101,
         "5": 120,
         "6": 140
       },

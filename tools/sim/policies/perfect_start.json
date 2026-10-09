@@ -1,0 +1,18 @@
+{
+  "name": "perfect_start",
+  "cite": "doc 02 section 17.1 and 18.4: 4 planted plots a player, turnips only, no deaths, no damage, no purchases",
+  "plots_per_player": 4,
+  "crops": ["turnip"],
+  "deaths": 0,
+  "pumpkin_size": "large",
+  "sabotage": false,
+  "labor": false,
+  "trample": false,
+  "buy_plots": false,
+  "buy_plots_from_day": 4,
+  "jitter_pct": 0,
+  "nobody_outside_pct": 0,
+  "generator_dead_base_pct": 0,
+  "generator_dead_tank_factor_pct": 0,
+  "generator_kill_unfixed_pct": 0
+}

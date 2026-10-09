@@ -643,3 +643,16 @@ raised as a question, not edited.
 **How to apply:** owners above. Nits (cart and flare gun float 0.03 m, flare gun 0.14 m vs 0.18,
 lantern glass always emissive, rebuilds not byte-stable, manual `import_script/path`) are listed in
 the P4-16 handoff for a later 3D Artist pass.
+
+### D-079 · 2026-10-08 · CEO · Q-077 answered: payment and bill scaling 59/85/101
+1. Debt payments and medical bills scale by `payment_pct_by_players` in `data/player_scaling.json`:
+   59% at 2p, 85% at 3p, 101% at 4p. Traps and disturbances keep `pct_by_players` 60/80/100. Doc 01
+   "Ramp-up" edited.
+2. The Medium-pumpkin drop of 35 to 48 points (2p to 4p) is accepted; revisit with P4-10 logs.
+3. First clear near 85% assumes deaths bunch late (`death_night_weight` 3). P4-10's per-night death
+   log checks it.
+**Why:** CEO first chose 60/85/100; that gave a 16-point final-clear spread against doc 01's 10, so
+the CEO switched to 59/85/101 (final 66/59/64, spread 6). The values are tuned to 1% steps and get
+retuned from live logs.
+**How to apply:** Gameplay makes debt and medical bills read `payment_pct_by_players` (added to
+P4-10). Game Designer keeps doc 02 s4 and s18.6 in step.

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/debt.schema.json",
+  "title": "Season debt (doc 02 section 7)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "table",
+    "schema_version",
+    "records"
+  ],
+  "properties": {
+    "table": {
+      "const": "debt"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "const": "season"
+          },
+          "source": {
+            "$ref": "#/$defs/source"
+          },
+          "cite": {
+            "type": "string"
+          },
+          "sources": {
+            "$ref": "#/$defs/sources"
+          },
+          "total_4p": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "first_payment_4p": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "days": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "rounding": {
+            "const": "nearest"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "total_4p",
+          "first_payment_4p",
+          "days",
+          "rounding"
+        ]
+      },
+      "maxItems": 1
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "source": {
+      "enum": [
+        "doc01",
+        "sim",
+        "placeholder"
+      ]
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "doc01",
+          "sim",
+          "placeholder"
+        ]
+      }
+    }
+  }
+}
