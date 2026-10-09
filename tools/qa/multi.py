@@ -51,7 +51,7 @@ def split_args(text: str) -> tuple[list[str], list[str]]:
     return parts, []
 
 
-def build_command(godot: str, index: int, common: str, own: str, headless: bool, frames: int | None, tile: bool, sound: bool = False) -> list[str]:
+def build_command(godot: str, index: int, common: str, own: str, headless: bool, frames: int | None, tile: bool, sound: bool = False, grab: bool = False) -> list[str]:
     engine: list[str] = []
     game: list[str] = []
     for text in (common, own):
@@ -69,7 +69,8 @@ def build_command(godot: str, index: int, common: str, own: str, headless: bool,
     if frames:
         cmd += ["--quit-after", str(frames)]
     cmd += engine
-    game.append("--free-mouse")  # test windows never capture the developer's mouse
+    if not grab:
+        game.append("--free-mouse")  # test windows never capture the developer's mouse
     cmd += ["--", *game]
     return cmd
 
@@ -84,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-n", "--instances", type=int, default=2, choices=(2, 3, 4, 5, 6), help="number of instances (2 to 6)")
     parser.add_argument("--args", action="append", default=[], metavar="ARGS", help="one instance's arguments; repeat in instance order")
+    parser.add_argument("--grab-host", action="store_true", help="manual sessions: the first instance captures the mouse, the rest stay free")
     parser.add_argument("--common", default="", metavar="ARGS", help="arguments for every instance")
     parser.add_argument("--headless", action="store_true", help="no windows (bots, automated runs)")
     parser.add_argument("--sound", action="store_true", help="play audio; default is the Dummy driver, silent")
@@ -114,7 +116,7 @@ def main(argv: list[str] | None = None) -> int:
     start = time.time()
     for i in range(1, args.instances + 1):
         own = args.args[i - 1] if i <= len(args.args) else ""
-        cmd = build_command(godot, i, args.common, own, args.headless, args.frames, not args.no_tile, args.sound)
+        cmd = build_command(godot, i, args.common, own, args.headless, args.frames, not args.no_tile, args.sound, args.grab_host and i == 1)
         log_path = out_dir / f"instance_{i}.log"
         handle = log_path.open("wb")
         handles.append(handle)
