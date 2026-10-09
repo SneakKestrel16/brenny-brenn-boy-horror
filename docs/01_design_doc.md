@@ -467,7 +467,8 @@ Phase 4 is gated on the simulator. It runs 2p, 3p and 4p with every rule here, i
 **The median team:**
 - plays greedily, keeping a third of its time for chores;
 - takes scheduled sabotage plus the trample rule;
-- has one death on each of 3 nights;
+- has one death on each of 2 nights;
+- buys plots when the store offers them;
 - delivers a Large pumpkin.
 
 | Target | Value |

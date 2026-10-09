@@ -617,3 +617,16 @@ to doc 05 s18 in P4-04.
    listen.
 **Why:** CEO answers to Q-075, 2026-10-08.
 **How to apply:** P4-03 and P4-09 acceptance updated. Q-031 item 2 (day music) stays open.
+
+### D-078 · 2026-10-08 · CEO · P4-02 simulator retune rules
+1. The median team dies on 2 nights a season, not 3 (doc 01 "Season simulator" edited).
+2. The field stays 16 plots at every headcount (doc 02 s4). The 2p/3p gap closes through headcount
+   scaling of bills or debt, not fewer plots.
+3. Plot buying stays in the sim; the median team buys. The Game Designer tunes plot price and payback
+   so buying pays.
+4. A drop of about 25 points in Medium-pumpkin rate at 2p is accepted.
+5. Hazard knobs move one at a time, each move noted in the P4-02 handoff with its effect.
+**Why:** CEO answers to the P4-02 QA FAIL, 2026-10-08. The first sim pass cut deaths to 1, cut 2p/3p
+plots to 13/14 and turned buying off, which broke doc 01 and doc 02 s4.
+**How to apply:** Game Designer retunes P4-02 in its worktree; any other doc 01 number it must move is
+raised as a question, not edited.
