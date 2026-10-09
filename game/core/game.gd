@@ -22,6 +22,8 @@ const WORLD_FULL := "res://game/world/farm.tscn"  ## DD Phase 2 full farm (P2-02
 var full_farm := not OS.get_cmdline_user_args().has("--phase1-farm")  ## P2-20: the full farm is the default; `--phase1-farm` opens the gray-box. `--full-farm` is still accepted (no-op)
 var players: Dictionary = {}  ## peer id -> PlayerState (a Dictionary until P1-04)
 var session_id := ""
+var season_id := ""  ## P4-10: names the save folder; a new game uses its session id, a loaded save keeps its own (doc 05 s17)
+var _leaving := false
 var difficulty: StringName = &"normal"  ## doc 01 "Difficulty and group settings": easy / normal / nightmare (difficulty.json); host picks in the lobby
 var streamer_safe := OS.get_cmdline_user_args().has("--streamer-safe")  ## group option: no voice replays in the dawn report (P4-11)
 var seed_value := 0
@@ -35,6 +37,15 @@ var season_uids: Array = []  ## host: a loaded save sets the season's player uid
 var roles: Dictionary = {}  ## host: player_uid -> role id, kept for the season so a rejoiner keeps theirs (P4-09; the save is P4-10)
 var console_open := false  ## the dev console or a menu has the keyboard (D-031); Player and HoldController ignore game input
 var free_mouse := OS.get_cmdline_user_args().has("--free-mouse")  ## test runs never capture the mouse (multi.py passes it)
+
+
+func _ready() -> void:
+	get_tree().auto_accept_quit = false  # P4-10: closing the window goes through `quit()`, which tells the clients first
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		quit()
 
 
 ## `--free-mouse`: undo any capture (Player, pause menu, recording screen) so a test window never holds the mouse.
@@ -113,7 +124,11 @@ func begin(args: Dictionary) -> void:
 	if args.has("difficulty"):  # QA: `--difficulty=<id>` (host), the same as picking it in the lobby
 		difficulty = StringName(args["difficulty"])
 	var port := int(args.get("port", Net.DEFAULT_PORT))
-	if args.has("join"):
+	if args.has("load"):  # P4-10 debug: `--load=<season_id|path>` hosts that saved season in the barn
+		var err := load_season(str(args["load"]), port)
+		if err != OK:
+			push_error("Game: could not load season '%s': %s" % [args["load"], error_string(err)])
+	elif args.has("join"):
 		Net.join(str(args["join"]), port)
 	else:
 		start_host(port, args.has("lobby"))  # Boot shows the main menu instead when launched with no flags
@@ -132,19 +147,58 @@ func start_host(port: int = Net.DEFAULT_PORT, lobby: bool = false) -> Error:
 		return err
 	session_id = "%s_%04x" % [Time.get_datetime_string_from_system().replace(":", "").replace("-", "").replace("T", "_"),
 			randi() & 0xFFFF]
+	if season_id == "":
+		season_id = session_id
 	Log.open(session_id, 1)
 	players[1] = {"voice_setting": wire_voice_setting()}
 	in_session = true
 	in_lobby = lobby
 	Log.event(&"net_hosting", {"port": Net.port})
 	Log.event(&"session_start", {"session_id": session_id, "build_id": build_id(), "data_hash": Data.hash_value,
-			"players": players.keys(), "season_id": "season", "difficulty": String(difficulty),
-			"phase1": Data.phase1, "bots": bots, "lobby": lobby})
+			"players": players.keys(), "season_id": season_id, "difficulty": String(difficulty),
+			"phase1": Data.phase1, "bots": bots, "lobby": lobby, "loaded": not Save.pending.is_empty()})
 	if not lobby:
-		Clock.start()
+		_start_clock()
 	session_started.emit()
 	_go_main()
 	return OK
+
+
+## Host: a new season starts at day 1; a loaded one resumes at the dawn it was saved in (P4-10).
+func _start_clock() -> void:
+	if Save.pending.is_empty():
+		Clock.start()
+	else:
+		Clock.start(int(Save.pending.get("day", 1)), &"dawn")
+
+
+## P4-10 (doc 05 s17): host a saved season. `ref` is a path to a save file or a season id under `<Net.user_dir()>/saves/`.
+## The lobby then admits only that season's players (D-048); the host must be one of them (doc 06 s5: "any farmhand
+## from this season can host it"). The old season id stays, the session id is new.
+func load_season(ref: String, port: int = Net.DEFAULT_PORT) -> Error:
+	var path := ref if ref.ends_with(".json") else Save.root() + ref + "/latest.json"
+	var env := Save.read(path)
+	if env.is_empty():
+		return ERR_FILE_CORRUPT
+	var s: Dictionary = env.state
+	if bool(s.get("over", false)):
+		return ERR_UNAVAILABLE
+	if not Net.player_uid() in s.get("uids", []):
+		return ERR_UNAUTHORIZED
+	season_id = str(env.season_id)
+	season_uids = s.uids.duplicate()
+	roles = s.get("roles", {}).duplicate()
+	difficulty = StringName(str(s.get("difficulty", "normal")))
+	for k in s.get("game", {}):  # group options (streamer-safe) before the lobby opens, so joiners get them at admit
+		if get(k) != null:
+			set(k, s.game[k])
+	Save.pending = s
+	var err := start_host(port, true)
+	if err != OK:
+		Save.pending = {}
+		season_id = ""
+		season_uids = []
+	return err
 
 
 func _go_main() -> void:
@@ -172,7 +226,9 @@ func start_match() -> void:
 		if p > 0:
 			match_roster[str(Net.profiles.get(p, {}).get("uid", ""))] = true
 		players[p] = {"voice_setting": voice_setting_of(p)}
-	Clock.start()
+	for u in season_uids:  # a loaded season: its absent farmhands may still rejoin (they count by uid, not while away)
+		match_roster[str(u)] = true
+	_start_clock()
 	Log.event(&"match_started", {"players": players.keys(), "difficulty": String(difficulty), "streamer_safe": streamer_safe})
 	Net.to_peers(&"apply_match_start")
 	Roles.sync()  # after the players were rebuilt above (P4-09)
@@ -202,17 +258,67 @@ func apply_match_start() -> void:
 
 
 ## Back to the main menu (pause menu "Leave", host-left card).
-func leave_session() -> void:
+func leave_session(reason: StringName = &"left") -> void:
+	if _leaving:
+		return
+	_leaving = true
+	await _farewell()
 	Rejoin.clear_session()  # D-049: a clean Leave forgets the match
 	Log.event(&"session_left", {})
+	_log_session_end(reason)
 	Log.close()
 	multiplayer.multiplayer_peer = null
 	players.clear()
 	in_session = false
 	in_lobby = false
 	console_open = false
+	season_id = ""
+	season_uids = []
+	match_roster.clear()
+	roles.clear()
+	Save.pending = {}
+	Save.own_by_uid = {}
+	Save.battery_by_uid = {}
+	Save.tally_left = {}
+	Save.peer_uid = {}
 	Clock.stop()
+	_leaving = false
 	get_tree().change_scene_to_file.call_deferred(MENU_SCENE)
+
+
+## Quit the game (window close, pause menu, main menu). A host tells its clients first (doc 06 s5 "Host left").
+func quit() -> void:
+	if _leaving:
+		return
+	_leaving = true
+	await _farewell()
+	_log_session_end(&"quit")
+	get_tree().quit()
+
+
+## Host: `apply_host_leaving`; client: `request_leaving`. Audio stops and the sends get about 0.1 s to flush
+## (doc 06 s5 "Host left" 6: otherwise Godot reports leaked playbacks at exit).
+func _farewell() -> void:
+	_stop_audio(get_tree().root)
+	if in_session and multiplayer.has_multiplayer_peer() and not multiplayer.get_peers().is_empty():
+		if is_host():
+			Net.to_peers(&"apply_host_leaving")
+		else:
+			Net.to_host(&"request_leaving")
+		await get_tree().create_timer(0.1).timeout
+
+
+func _stop_audio(n: Node) -> void:
+	if n is AudioStreamPlayer or n is AudioStreamPlayer3D or n is AudioStreamPlayer2D:
+		n.call(&"stop")
+	for c in n.get_children():
+		_stop_audio(c)
+
+
+func _log_session_end(reason: StringName) -> void:
+	if in_session:
+		Log.event(&"session_end", {"reason": String(reason), "day": Clock.day, "phase": String(Clock.phase), "players": players.size(),
+				"season_id": season_id, "host": is_host()})
 
 
 # --- Voice setting (doc 06 s11 "Setting IDs"; the owner's machine is the authority) --------------

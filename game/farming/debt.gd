@@ -72,7 +72,11 @@ func _ready() -> void:
 	Net.apply_received.connect(_on_apply)
 	if not Game.is_host():
 		return
-	_pcts.append(pct_for(Game.player_count()))  # dawn 1 starts the season
+	if Save.pending.is_empty():  # a loaded season brings its own record (Save.apply_pending)
+		_pcts.append(pct_for(Game.player_count()))  # dawn 1 starts the season
+	# P4-10 (doc 02 s4): a join or leave changes what is still owed at once; the pct locked for each dawn stays.
+	Game.player_joined.connect(func(_p: int) -> void: _headcount_changed())
+	Game.player_left.connect(func(_p: int) -> void: _headcount_changed())
 	Net.request_received.connect(func(what: StringName, peer: int, _a: Array) -> void:
 		if what == &"farm_state":
 			Net.to_peers(&"apply_debt", _wire(), [peer]))
@@ -99,6 +103,14 @@ func _send() -> void:
 
 func _farm() -> Node:
 	return get_tree().get_first_node_in_group(&"farm")
+
+
+func _headcount_changed() -> void:
+	if _farm() == null:
+		return
+	_refresh_owed()
+	_send()
+	Log.event(&"debt_rescaled", {"players": Game.player_count(), "owed": owed, "pct": pct_for(Game.player_count())})
 
 
 ## Host: what is still owed if the headcount stays as it is now.

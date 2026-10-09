@@ -54,8 +54,10 @@ func _ready() -> void:
 		registry.farm = self
 		registry.name = "HoldRegistry"
 		add_child(registry)
-		_set_headcount(_headcount_arg if _headcount_arg > 0 else Game.player_count())
-		add_coins(int(Data.value(&"season", &"start_coins")), &"start_coins", 0)  # doc 01 Season and Numbers; seeds cost coins (P4-04)
+		var loaded := not Save.pending.is_empty()  # P4-10: a saved season keeps its match-start headcount and its coins
+		_set_headcount(int(Save.pending.headcount) if loaded else (_headcount_arg if _headcount_arg > 0 else Game.player_count()))
+		if not loaded:
+			add_coins(int(Data.value(&"season", &"start_coins")), &"start_coins", 0)  # doc 01 Season and Numbers; seeds cost coins (P4-04)
 		Clock.day_changed.connect(func(_d: int) -> void: advance_day())
 		Clock.phase_changed.connect(func(ph: StringName) -> void:
 			for t in targets.values():

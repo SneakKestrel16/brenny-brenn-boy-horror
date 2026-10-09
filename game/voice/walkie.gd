@@ -168,7 +168,7 @@ func apply(peer: int, has: bool, battery_s: int) -> void:
 
 
 func _on_player_left(peer: int) -> void:
-	battery.erase(peer)
+	# `battery` keeps the leaver's charge: the dawn save keeps it by uid and a rejoiner gets it back (P4-10, Q-121)
 	state.erase(peer)
 	_sent.erase(peer)
 	_tx_at.erase(peer)

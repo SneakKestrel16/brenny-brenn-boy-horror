@@ -145,6 +145,8 @@ func scaled(v: int, kind: StringName, players: int = 0) -> int:
 		players = get_node("/root/Game").player_count()
 	# D-079: debt payments and medical bills read `payment_pct_by_players` (59/85/101); traps keep `pct_by_players`.
 	var key := "payment_pct_by_players" if kind in [&"debt", &"bill"] else "pct_by_players"
+	if kind in [&"debt", &"bill"]:  # Q-089: no solo play (doc 01 "One player left"); same clamp as Debt.pct_for and Animals.bill_dusk
+		players = clampi(players, 2, get_node("/root/Game").max_players())
 	var pct := int(record(&"player_scaling", &"headcount").get(key, {}).get(str(players), 100))
 	return difficulty_scaled(scale_pct(v, pct, kind == &"debt"), kind)
 

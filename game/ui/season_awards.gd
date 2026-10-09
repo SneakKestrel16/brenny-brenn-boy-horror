@@ -24,6 +24,7 @@ var _pending: Array = []
 var _t := 0.0
 var _open := false
 var _hm_wipe := false  ## host: everyone died on the Harvest Moon before the cart was out
+var save_key := "season_awards"  ## P4-10 (Q-123): the dawn save keeps `_tally` and `_hm_wipe` (group `saveable`, host)
 
 
 func _ready() -> void:
@@ -60,8 +61,19 @@ func _ready() -> void:
 	card.add_child(_box)
 	Net.apply_received.connect(_on_apply)
 	if Game.is_host():
+		add_to_group(&"saveable")
 		Log.logged.connect(_on_log)
 		Clock.season_ended.connect(_host_end)
+
+
+## P4-10 (Q-123): the tally by player uid, so a loaded season counts every night, not only those since the load.
+func save_state() -> Dictionary:
+	return {"tally": Save.tally_state(_tally), "hm_wipe": _hm_wipe}
+
+
+func load_state(d: Dictionary) -> void:
+	_hm_wipe = bool(d.get("hm_wipe", false))
+	Save.tally_load(_tally, d.get("tally", {}))
 
 
 func _on_log(n: StringName, d: Dictionary) -> void:

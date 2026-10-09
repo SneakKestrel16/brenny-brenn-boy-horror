@@ -20,6 +20,8 @@ const CONNECT_TIMEOUT_S := 10.0  ## placeholder
 signal bytes_received(from_peer: int, packet: PackedByteArray)
 ## The host sent `apply_teleport` (doc 06 section 7). Added in P1-04.
 signal teleport_received(position: Vector3)
+## P4-10 (doc 06 s5 "Host left"): the host quit (`how` quit) or went silent (`timeout`). The pause menu shows the card.
+signal host_left(how: StringName)
 
 const PROTOCOL_VERSION := 1  ## doc 06 section 5 `request_join`; a joiner with another one (or another build id) is refused
 const BANDWIDTH_S := 10.0  ## doc 06 s14: `net_bandwidth` interval
@@ -33,6 +35,8 @@ var _bw_t := 0.0
 var _refused := {}  ## host: peers sent away because the farm was full; their disconnect is not a player leaving
 var _code := ""  ## join_code() cache; the lobby asks twice a second
 var _pending := {}  ## host, match running: peers connected but not yet identified; admitted or refused by `request_join` (D-048)
+var _quitters := {}  ## host: peers that said `request_leaving` just before they closed (a clean quit, not a timeout)
+var _host_left_logged := false
 var refusal := ""  ## client: why the last join was refused (`full`, `match_in_progress`, ...); the main menu shows it
 
 
@@ -133,6 +137,7 @@ func join(address: String, default_port: int = DEFAULT_PORT) -> Error:
 	if address.count(":") == 1:
 		ip = address.get_slice(":", 0)
 		port = int(address.get_slice(":", 1))
+	_host_left_logged = false
 	var peer := ENetMultiplayerPeer.new()
 	var err := peer.create_client(ip, port, CHANNELS)
 	if err != OK:
@@ -264,6 +269,7 @@ func _on_peer_disconnected(id: int) -> void:
 	profiles.erase(id)
 	to_peers(&"apply_roster", [Game.players.keys(), profiles])
 	Log.event(&"player_left", {"player": id})
+	Log.event(&"net_peer_left", {"peer": id, "how": "quit" if _quitters.erase(id) else "timeout", "players": Game.players.size()})
 	Game.player_left.emit(id)
 
 
@@ -315,8 +321,18 @@ func _on_connection_failed() -> void:
 
 func _on_server_disconnected() -> void:
 	Log.event(&"net_server_disconnected")
+	_log_host_left(&"timeout")  # no `apply_host_leaving` came first: the host crashed or the link died
 	Game.in_session = false
 	multiplayer.multiplayer_peer = null
+
+
+## Client: show the "host left" card once. `how` is `quit` (the host said so) or `timeout`.
+func _log_host_left(how: StringName) -> void:
+	if _host_left_logged:  # only clients get here (no is_host check: the peer is already gone on a timeout)
+		return
+	_host_left_logged = true
+	Log.event(&"net_host_left", {"how": String(how)})
+	host_left.emit(how)
 
 
 # --- RPCs (doc 06 section 7); handlers live in the owning autoload -------------------------------
@@ -336,6 +352,25 @@ func apply_join_refused(reason: StringName) -> void:
 		Game.leave_session()
 	else:
 		get_tree().change_scene_to_file.call_deferred(Game.MENU_SCENE)
+
+
+## P4-10 (doc 06 s5 "Host left"): the host is quitting. Clients show the card at once.
+@rpc("authority", "call_remote", "reliable")
+func apply_host_leaving() -> void:
+	_log_host_left(&"quit")
+
+
+## P4-10: a client is leaving on purpose (a clean Leave or Quit), so the host logs `net_peer_left` with `how: quit`.
+@rpc("any_peer", "call_remote", "reliable")
+func request_leaving() -> void:
+	if Game.is_host():
+		_quitters[_sender()] = true
+
+
+## P4-10 (doc 05 s17, doc 06 s5 "Host left" 4): one chunk of the host's dawn save, kept under `<user dir>/saves/<season_id>/`.
+@rpc("authority", "call_remote", "reliable", 3)
+func apply_dawn_save(season_id: String, fname: String, index: int, count: int, bytes: PackedByteArray) -> void:
+	Save.receive(season_id, fname, index, count, bytes)
 
 
 @rpc("authority", "call_remote", "reliable")

@@ -111,7 +111,7 @@ static func on_request(peer: int, role: StringName) -> void:
 	if not Game.is_host() or not Game.players.has(peer):
 		return
 	var uid := _uid(peer)
-	var why: StringName = &"" if Game.in_lobby else &"locked"
+	var why: StringName = &"" if Game.in_lobby and Game.season_uids.is_empty() else &"locked"  # a loaded season keeps its roles
 	if why == &"" and uid == "":
 		why = &"no_identity"
 	if why == &"":

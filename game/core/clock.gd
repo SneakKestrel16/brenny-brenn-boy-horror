@@ -58,10 +58,10 @@ func dev_advance() -> void:
 	_advance()
 
 
-## Host only.
-func start() -> void:
-	day = 1
-	phase = &"day"
+## Host only. A loaded save resumes at its dawn (P4-10): `start(day, &"dawn")`; the dawn then runs out and day + 1 begins.
+func start(p_day: int = 1, p_phase: StringName = &"day") -> void:
+	day = p_day
+	phase = p_phase
 	t_phase = 0.0
 	season_over = false
 	running = true

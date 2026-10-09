@@ -187,8 +187,9 @@ func step_farm_damage(farm: Node, _final: bool) -> void:
 
 
 ## Step 6: save (doc 01 Saving). P4-10.
-func step_save(_farm: Node, _final: bool) -> void:
-	pass
+func step_save(_farm: Node, final: bool) -> void:
+	if Save.enabled():  # P4-10 (doc 05 s17): the dawn save, after every other step has settled
+		Save.write(get_tree(), final)
 
 
 ## Step 7: the free scrap each dawn (doc 02 s10): it does not stack unless `free_scrap_stacks`. The store (P4-06)

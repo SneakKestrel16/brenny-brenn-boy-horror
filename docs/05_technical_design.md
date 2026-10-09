@@ -904,9 +904,9 @@ can host it. Never voice.
 
 - **When:** at the end of the dawn pipeline (doc 02 section 9: after farm damage; before the free
   scrap and flare refill, which are part of the next day's start, so a reload does not duplicate
-  them). The host writes `user://saves/<season_id>/dawn_<NN>.json` (day number `NN`), keeping the last
+  them). The host writes `<user dir>/saves/<season_id>/dawn_<NN>.json` (day number `NN`), keeping the last
   three plus `latest.json` copy (`placeholder`), then sends it to all clients (`apply_dawn_save`
-  chunks on channel 3, doc 06 section 5) which store the same under `user://saves/<season_id>/`.
+  chunks on channel 3, doc 06 section 5) which store the same under `<user dir>/saves/<season_id>/`.
 - **Format:** JSON, `{"schema_version": 1, "game_build": ..., "season_id": ..., "saved_at": ..., "state": {...}}`.
   JSON (not a `Resource`) so a `Resource` can never drag a clip or script into the file (doc 06
   section 11 forbids voice in the save), and so QA and the simulator can read it. Written to a temp
@@ -929,7 +929,24 @@ can host it. Never voice.
   kind, settings, logs, the recording state, network ids (peer ids and slots), the Noise memory and
   anything audio. A dawn save is checked by QA's checklist for any `voice`, `clip`, `lobby` key
   (doc 09).
-- **Loading:** the host picks a season from the local `user://saves/` (the player who hosts need not
+- **As built (P4-10, `game/core/save.gd`):** the folder is `Net.user_dir() + "saves/<season_id>/"`
+  (per profile, so two instances on one machine do not share saves). Saves are written only when the
+  match started from a lobby or `--save` is passed. The dawn pipeline (`Death.step_save`) calls
+  `Save.write`. Nodes that own cross-day state join group `saveable` with `save_key`, `save_state()` and
+  `load_state(d)`: their data goes under `state.extras[save_key]`. `Game` properties named in
+  `Save.GAME_FLAGS` (`streamer_safe`, `no_live_clips`) are saved if they exist. The generator is found by
+  group `generator_logic` (group `generator` is the world mesh). Per-player data is keyed by `player_uid`
+  (store ownership, walkie battery, awards tally). Not saved, by inference: bags and inventory (the
+  dawn cash-in empties bags), the animal pen (animals return at dawn), the Taint id. The final dawn's
+  save is marked `over` and is not loadable. `--load=<season_id|path>` hosts a save from the command line.
+  The Load Season list in the main menu shows saves of this profile; a uid not in the save is refused
+  with "You were not in that season.". Roles lock once a season has uids (`Game.season_uids`).
+- **Host left:** a client gets `net_host_left` (`quit` from `apply_host_leaving`, else `timeout`) and the
+  pause menu shows the card. Everyone who was in the season has the latest dawn save.
+- **Waiting card:** at a dawn with a 2+ player roster but fewer than 2 humans, `WaitingCard` stops
+  the `Clock` and shows "Waiting for a farmhand" until another human joins. The debt re-scales on
+  every join and leave (`Debt._headcount_changed`).
+- **Loading:** the host picks a season from the local `saves/` folder (the player who hosts need not
   be the original host: the save came to them at every dawn). On loading it creates the session with
   a new `session_id` and keeps the old `season_id`. The "host left" card (doc 06 section 5) leads back
   to the menu, from which Load Season is one click. **Players who were in the save but are absent**
@@ -1035,6 +1052,15 @@ the QA changes.
 | `net_*`, `voice_stats` | each peer | doc 06 section 14 (including `net_join_code_rejected` with `reason` `typo` or `length`) | Network |
 | `settings_changed` | each peer | `key` (never a voice file path) | Debugging |
 | `save_written` | host | `path_name` (file name only), `day`, `bytes` | Save |
+| `save_received` | client | `path_name`, `day`, `bytes` | Save (P4-10) |
+| `save_refused` | any | `reason` (`not_json`, `schema`, `shape`) | Save (P4-10) |
+| `save_loaded` | host | `season_id`, `day`, `coins`, `debt_paid`, `players` | Save (P4-10) |
+| `creature_body` | host and each peer | `body`, `forced` (`save` when a loaded save sets it), `seed` | Save, Creature |
+| `net_peer_left` | host | `peer`, `how` | Joining and leaving (P4-10) |
+| `net_host_left` | client | `how` (`quit`, `timeout`) | Host left (P4-10) |
+| `session_end` | each peer | `how` | Joining and leaving (P4-10) |
+| `waiting_for_farmhand` / `farmhand_returned` | host | `day` | Waiting card (P4-10) |
+| `debt_rescaled` | host | `players`, `owed`, `pct` | Joining and leaving (P4-10) |
 | `audio_state` | `Soundscape` on every peer, through `Log`, on each creature-state change and every 5 s while the state is not `lurk` | `creature_state`, `body`, `bed_db`, `wind_db`, `last_sounds` (last 8 sound IDs) | Clients report Stalk layer drops; F3 is host-only (Q-035, CONTRACTS section 10) |
 | `audio_play` | `Soundscape`, on the peer that hears it, each one-shot except footsteps | `id` (sound ID) | CONTRACTS section 10 (Q-073, D-076); QA sound checks |
 | `audio_hush` | `Soundscape`, on the hearing peer | `seconds` | Same |

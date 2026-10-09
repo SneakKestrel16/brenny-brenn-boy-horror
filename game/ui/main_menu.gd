@@ -52,8 +52,9 @@ func _ready() -> void:
 	_ip.text_submitted.connect(func(_t: String) -> void: _join())
 	v.add_child(_ip)
 	_buttons.append(_button(v, "Join", _join))
+	_load_list(v)
 	_buttons.append(_button(v, "Settings", _open_settings))
-	_buttons.append(_button(v, "Quit", func() -> void: get_tree().quit()))
+	_buttons.append(_button(v, "Quit", Game.quit))
 	_status = Label.new()
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_status)
@@ -102,6 +103,33 @@ func _join() -> void:
 		_status.text = r.error
 		return
 	_connect(r.address)
+
+
+## P4-10 (doc 05 s17): "Load Season" lists the saved seasons, newest first. A season that ended cannot be loaded.
+func _load_list(parent: Control) -> void:
+	var seasons := Save.list()
+	if seasons.is_empty():
+		return
+	var l := Label.new()
+	l.text = "Load a season (host it from the last dawn save)"
+	parent.add_child(l)
+	for s: Dictionary in seasons:
+		var b := _button(parent, "Day %d  |  %d players  |  %s%s" % [s.day, s.players, str(s.saved_at).replace("T", " ").left(16),
+				"  (ended)" if s.over else ""], _load.bind(str(s.path)))
+		b.disabled = s.over
+		_buttons.append(b)
+
+
+func _load(path: String) -> void:
+	if not _data():
+		return
+	var err := Game.load_season(path, int(_port.text) if _port.text.is_valid_int() else Net.DEFAULT_PORT)
+	match err:
+		OK: pass
+		ERR_UNAUTHORIZED: _status.text = "You were not in that season."
+		ERR_UNAVAILABLE: _status.text = "That season has ended."
+		ERR_FILE_CORRUPT: _status.text = "That save could not be read."
+		_: _status.text = "Could not open the port (%s). Is another copy running?" % error_string(err)
 
 
 ## D-049: "Rejoin your last match?" Connects in one click; Not now forgets the match.

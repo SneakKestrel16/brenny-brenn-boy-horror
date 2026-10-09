@@ -68,6 +68,7 @@ class Point extends "res://game/interaction/interactable.gd":
 
 
 func _ready() -> void:
+	add_to_group(&"generator_logic")  # P4-10: the dawn save finds this node (group `generator` is the world mesh)
 	tank_s = float(Data.difficulty_scaled(int(Data.value(&"season", &"generator_tank_s")), &"generator_tank"))  # Nightmare x0.75 (doc 02 s16)
 	fuel_s = tank_s
 	_farm = get_tree().get_first_node_in_group(&"farm")

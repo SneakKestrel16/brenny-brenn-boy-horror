@@ -28,7 +28,7 @@ func _ready() -> void:
 	_box = VBoxContainer.new()
 	_box.custom_minimum_size.x = 260
 	center.add_child(_box)
-	multiplayer.server_disconnected.connect(_on_host_left)
+	Net.host_left.connect(func(_how: StringName) -> void: _on_host_left())  # P4-10: clean quit or timeout, once
 	if OS.get_cmdline_user_args().has("--pause-open"):
 		set_open.call_deferred(true)
 
@@ -54,7 +54,7 @@ func _rebuild() -> void:
 	for c in _box.get_children():
 		c.queue_free()
 	if _host_left:
-		_label("The host left the farm.")
+		_label("The host left.\nThe season continues from the last dawn save.\nAny farmhand from this season can host it.")
 		_button("Back to menu", Game.leave_session)
 		return
 	_label("Paused" if not Game.in_lobby else "The barn")
@@ -65,7 +65,7 @@ func _rebuild() -> void:
 	_join_code()
 	_button("Settings", _open_settings)
 	_button("Leave to menu", Game.leave_session)
-	_button("Quit game", func() -> void: get_tree().quit())
+	_button("Quit game", Game.quit)
 
 
 ## D-049: the host's join code with a Copy button, for a dropped player who cannot use the rejoin prompt.

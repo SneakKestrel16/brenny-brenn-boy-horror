@@ -68,4 +68,6 @@ func _ready() -> void:
 	add_child(DebugView.new())  # P1-12: hidden unless --debug-view or F3 (host)
 	if DevConsole.enabled():  # D-031: ` opens it in debug runs or with --dev
 		add_child(DevConsole.new())
+	add_child(WaitingCard.new())  # P4-10: a season never plays on with one human
+	Save.apply_pending(self)  # P4-10: a loaded season's state goes into the live nodes (host)
 	Log.event(&"main_ready", {"players": Game.players.keys()})

@@ -588,7 +588,7 @@ no economy number and can start now.
 | P4-07 | Gameplay | Debt, payment dawns, early payment, Foreclosure (doc 02 s7) | done (QA PASS; D-086) | P4-05 |
 | P4-08 | Gameplay, AI Programmer, Level Designer | Animals and `broken_fence`: pen animals, escape, round-up (D-071) | done (QA PASS after QA fixes) | P4-03 |
 | P4-09 | Gameplay | Roles: all ten doc 01 roles, lobby pick, locked per season (D-077) | done (QA PASS after QA fixes) | P4-04, P4-08 |
-| P4-10 | Gameplay, Network & Voice | Saving at dawn, loading, host left, joining and leaving mid-season with headcount scaling | in progress | P4-07 |
+| P4-10 | Gameplay, Network & Voice | Saving at dawn, loading, host left, joining and leaving mid-season with headcount scaling | done (QA PASS 2026-10-09; Q-145 refusal flake, Q-122 AI Director state unsaved) | P4-07 |
 | P4-11 | AI Programmer, Gameplay | Phase 4 sabotage and difficulty: `pumpkin_gnaw`, full-wipe doubling, difficulty settings | done (QA PASS; `stolen_tool` beyond cans deferred to Q-113) | P4-05, P4-06 |
 | P4-12 | AI Programmer, Gameplay, Technical Artist | Short season and the Harvest Moon: festival cart, acts, `harvest_moon` profile (doc 03 s14) | in progress | P4-05, P4-07 |
 | P4-13 | AI Programmer | Creature body per season: host seeded pick, logged, `--body=<id>` dev flag (doc 01 "Bodies", Q-074, D-068) | done (save and load waits for P4-10, Q-076) | P4-01 |
