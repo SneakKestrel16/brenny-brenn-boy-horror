@@ -570,6 +570,12 @@ func apply_dawn_report(report: Dictionary) -> void:
 	apply_received.emit(&"dawn_report", [report])
 
 
+## Host to all after the final dawn (P4-15): the Season Awards, text only.
+@rpc("authority", "call_remote", "reliable")
+func apply_season_awards(result: Dictionary) -> void:
+	apply_received.emit(&"season_awards", [result])
+
+
 ## Host to a peer pulling `farm_state`: the headcount that fixed the open field plots at match start (P2-14).
 @rpc("authority", "call_remote", "reliable")
 func apply_headcount(n: int) -> void:

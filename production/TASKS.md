@@ -593,7 +593,7 @@ no economy number and can start now.
 | P4-12 | AI Programmer, Gameplay, Technical Artist | Short season and the Harvest Moon: festival cart, acts, `harvest_moon` profile (doc 03 s14) | in progress | P4-05, P4-07 |
 | P4-13 | AI Programmer | Creature body per season: host seeded pick, logged, `--body=<id>` dev flag (doc 01 "Bodies", Q-074, D-068) | done (save and load waits for P4-10, Q-076) | P4-01 |
 | P4-14 | Network & Voice | Walkie-talkies as store items (doc 06 s10, doc 02 s10) | done (QA PASS after QA fixes; range Q-116) | P4-06 |
-| P4-15 | Gameplay, Technical Artist | Season Awards and season end screens (doc 03 s17.4, doc 05 s15) | in progress | P4-07 |
+| P4-15 | Gameplay, Technical Artist | Season Awards and season end screens (doc 03 s17.4, doc 05 s15) | done (QA PASS after QA fixes; Q-130 win rule wired, cart_out via Q-131) | P4-07 |
 | P4-16 | 3D Artist, Technical Artist | Phase 4 models in Blender 5.2: four bodies, pumpkins, patch, cart, town stand, animals, store items (doc 07 s12) | done (QA PASS; nits for a later pass in handoff) | P4-01 |
 | P4-17 | Audio Designer | Phase 4 sounds: cart, gnaw, flare, radio, animals, signature variants, UI (doc 08 s11) | done (CEO listen pending, doc 08 s14 item 11; per-body cre_jumpscare_hit done, D-081) | P4-01 |
 | P4-19 | 3D Artist | Final art for the four creature bodies, glimpse parts and smear hulls (D-087) | in progress | P4-16 |
