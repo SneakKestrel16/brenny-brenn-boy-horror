@@ -449,7 +449,8 @@ def main(argv=None) -> int:
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "compare":
-        # ponytail: doc 02 18.5 needs live full-season money_changed logs; none exist yet (P4-10 adds them).
-        print("compare: not built. No live full-season logs exist yet; P4-10 supplies them (doc 02 18.5).")
-        sys.exit(2)
+        sys.path.insert(0, str(HERE))  # -I drops the script folder from the path
+        import compare  # doc 02 18.5
+
+        sys.exit(compare.main(sys.argv[2:]))
     sys.exit(main())

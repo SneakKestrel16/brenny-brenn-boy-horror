@@ -112,5 +112,12 @@ class Tests(unittest.TestCase):
         self.assertEqual(a, b)
 
 
+class TestCompare(unittest.TestCase):
+    def test_self_test(self):
+        import compare
+
+        compare.self_test()
+
+
 if __name__ == "__main__":
     unittest.main()

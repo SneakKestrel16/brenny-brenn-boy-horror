@@ -755,7 +755,8 @@ Findings, inference until the simulator runs:
 **Status (P4-02): built.** `tools/sim/sim.py`, `test_sim.py` (the 18.4 tests, one file),
 `layout.json`, `policies/{median,perfect_start}.json`, `scenarios/*.json`. Run
 `uv run --no-project python -I tools/sim/sim.py --players 2,3,4,5,6 --runs 10000 --seed 1`. The
-`compare` command (18.5) is a stub: no live full-season logs exist yet (P4-10 supplies them).
+`compare` command (18.5) is built (`tools/sim/compare.py`, from QA's P4-18 `tools/qa/sim_compare.py`):
+`uv run --no-project python -I tools/sim/sim.py compare <peer_1.jsonl ...> [--runs 2000] [--seed 1]`.
 The simulator gates DD Phase 4 (`01 Season simulator`).
 
 ### 18.1 Shape
@@ -822,7 +823,7 @@ only "spread across player counts"; checking both is the stricter reading).
 
 ### 18.5 Checking it against playtests
 
-A `compare` command reads the host's `money_changed` events (CONTRACTS section 10) by dawn and
+A `compare` command reads the host's `dawn_summary` (`coins` by dawn) and `payment_made` events (CONTRACTS section 10) and
 places each live season inside the simulated distribution. Doc 01: logs must land within 15 points
 of the sim before the numbers freeze (`01 Season simulator`).
 
@@ -833,6 +834,12 @@ reported beside it but do not gate: with 6 seasons one rate has a confidence ban
 points. **Seasons:** at least 6 full live seasons, 2 per player count (placeholder, QA's proposal
 accepted); the simulator side runs 1,000 or more seasons per count. Settle with the first real logs:
 if live spread exceeds 15 points, widen the sample before touching numbers.
+
+**Denominator (Q-156 ruling; inference, same as the metric):** "next payment due" is the scheduled
+payment with no penalty or deferred bill: the first payment for dawns before the first-payment
+dawn, the final payment (total minus first) from it on, per headcount (18.1's `debt()`). Banks are
+after the dawn's payment, except the final dawn, which is the bank before the final payment.
+`compare` also fails if fewer than 6 seasons are given or none is a win or none a loss (doc 09 s3).
 
 ### 18.6 Tuning
 

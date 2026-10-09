@@ -122,8 +122,12 @@ func _mults(peer: int, h: Dictionary) -> Array:
 
 
 func _complete(peer: int, h: Dictionary) -> void:
-	holds.erase(peer)
 	var t = h.target
+	var late: StringName = t.recheck(h.verb, farm.pstate(peer)) if t.has_method(&"recheck") else &""
+	if late != &"":
+		cancel(peer, late)
+		return
+	holds.erase(peer)
 	var tid: String = t.id  # a flag spot is freed by _release below
 	var elapsed := Log.now() - float(h.started)
 	t.complete(h.verb, peer, farm.pstate(peer))

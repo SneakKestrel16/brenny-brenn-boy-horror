@@ -107,7 +107,7 @@ Director).
 |---|---|---|---|
 | First: the simulator hits its targets | `tools/sim/` run for 2p, 3p, 4p (Game Designer) | the sim's output | Median team clears the first payment in about 85% of runs and the final in 55 to 70%; spread across player counts at most 10 points (doc 01 "Season simulator") |
 | Teams sometimes win and sometimes lose | At least 6 full seasons (`placeholder`; fewer can't show both outcomes) | `payment_made`, `session_end` | At least one win and one loss across the seasons |
-| Logs land within 15 points of the sim | Compare playtest logs to the sim | `dawn_summary`, `money_changed`, `payment_made`, `death` | First-payment clear rate and final-payment clear rate each within 15 points of the sim (doc 01 "Playtest check"). *Inference:* a handful of seasons is a loose test; per-dawn coin and debt trajectories from `dawn_summary` against the sim's are the tighter comparison, and doc 01 does not say which. Settled by the Game Designer's `compare` command (doc 05 section 18 names it) |
+| Logs land within 15 points of the sim | `tools/sim/sim.py compare` on the host logs of the full seasons (section 4) | `dawn_summary`, `money_changed`, `payment_made`, `death` | Doc 02 s18.5 metric (Q-038): per dawn 2 to 8 the live median bank as % of the next payment within 15 points of the sim median for the same player count; clear rates reported, not gated (doc 01 "Playtest check") |
 | Saving, joining and leaving | A drop mid-season; a late join; a host left | `net_peer_left`, `net_host_left`, `save_written` | Debt recomputed per doc 01's example (4p, one drop before dawn 2: 1,135 total, first payment 223); resume from the last dawn save |
 
 ## 4. Log measures and what proves them
@@ -119,7 +119,7 @@ three doc 01 measures plus tallies.
 |---|---|---|---|
 | Lure success | `lure_result` | worked when `moved_m > 10` and `within_s <= 8`; recomputed, mismatches with the logged `worked` listed; gate 30% | Done (PP-03); fields fixed by doc 05 section 18 |
 | Trap race | `trap_race_result` | survival overall and for `solo` and not `tainted` and `pried_at_once`; deaths in that case listed; minimum and mean `seconds_spare` | Done (PP-03) |
-| Spatial audio | `spatial_audio_trial` | correct by `sound` and `distance_m`, overall and per tester; read from every peer's file (the tester's client writes it); untested cells listed | Done (PP-03, per-tester and client files P1-17). `angle_error_deg` is logged but not tallied yet |
+| Spatial audio | `spatial_audio_trial` | correct by `sound` and `distance_m`, overall and per tester; read from every peer's file (the tester's client writes it); untested cells listed | Done (PP-03, per-tester and client files P1-17); mean `angle_error_deg` per cell (P4-18) |
 | Hold times | `hold_completed` | mean seconds by verb | Done |
 | Time inside at night | `inside_at_night` | seconds by player | Done |
 | Deaths, traps, money | `death`, `trap_sprung`, `money_changed` | counts | Done |
@@ -131,8 +131,8 @@ three doc 01 measures plus tallies.
 | Taint and Shaken | `taint_changed`, `shaken` | Taints by cause, cures by cause, Shaken lengths; Taint within 2 s after Shaken flagged (*inference*: the window) | Done (P3-13) |
 | Sabotage | `sabotage_plan`, `disturbance_placed`, `disturbance_fixed`, `trample` | plans, kinds by day, fixes by verb, dawn trample; kinds placed before their `opens_day` listed | Done (P3-13) |
 | Dawn Report shown | `dawn_report_shown` | count | Done (P3-13) |
-| Sim comparison | `dawn_summary`, `payment_made` | not built | DD Phase 4 (section 13) |
-| Close calls missed for timeout vs disagreement, per RTT | `close_call` | not built | OPEN_ISSUES "A laggy player is hard to kill"; DD Phase 1 logs settle it |
+| Sim comparison (doc 02 s18.5) | `dawn_summary`, `payment_made`, `season_lost`, `season_awards_shown` | `uv run --no-project python -I tools/sim/sim.py compare <host logs>`: per dawn 2 to 8, live median bank as % of the next scheduled payment against the sim median (same player count and difficulty), each within 15 points; first and final clear reported, not gated. *Inference:* the denominator is the scheduled payment with no penalty or deferred bill (the sim logs no per-run `owed`) | Done (P4-18; moved into `tools/sim/compare.py`, Q-156) |
+| Close calls missed for timeout vs disagreement, per RTT | `close_call` | tally by `kind:result` | Tally done (P4-18); the per-RTT split waits for real `close_call` logs (OPEN_ISSUES "A laggy player is hard to kill") |
 
 Check-your-checker rule: the first time a measure is read from real logs, compare the checker's number
 with a hand count of five lines from the same file.
@@ -519,8 +519,9 @@ Filed in `production/QUESTIONS.md` (see the PP-10 handoff for the IDs):
 3. **Game Designer:** is `tools/sim/` getting the `compare` command doc 05 section 18 names, and which
    metric does "within 15 points" mean (clear rates, or the coin trajectory)? How many seasons does the
    comparison need?
-4. **QA (mine, next task, not asked of anyone):** extend `check_logs.py` with `angle_error_deg` tally, the host-only events in client
-   files check, and the sim comparison once the format exists.
+4. **QA (mine):** `angle_error_deg`, `close_call` and `window_s` tallies and the sim comparison
+   (`tools/sim/sim.py compare`) are done (P4-18). The host-only events in client files check is still
+   open.
 
 5. **AI Programmer (P3-13, Q in QUESTIONS):** the creature body is fixed at `body_gaunt`
    (`game/creature/creature.gd` `BODY`); doc 01 "Bodies" has the host pick one of four per season. DD

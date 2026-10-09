@@ -155,7 +155,7 @@ func advance_day() -> void:
 
 func add_coins(n: int, reason: StringName, peer: int) -> void:  # peer 0: the team (bill), logged as null
 	coins += n
-	Log.event(&"money_changed", {"coins": coins, "balance": coins, "delta": n, "reason": String(reason), "player": peer if peer > 0 else null})
+	Log.event(&"money_changed", {"coins": coins, "balance": coins, "delta": n, "reason": String(reason), "player": peer if peer != 0 else null})  # bots are negative (P4-18)
 	_broadcast(&"money_changed", [coins])
 
 

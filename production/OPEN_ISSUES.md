@@ -150,3 +150,26 @@ session rechecks them (P2-09, D-034).
    (`money_changed seed`) after the season ends. Human sessions must plant the pumpkin to test D-084.
 2. **The short season has no lobby pick.** Only `--short-season` or `--difficulty=short_season` choose it
    (Q-155). STOP sessions that test the Harvest Moon must launch the host with the flag.
+
+## Found at the P4-18 review (QA, 2026-10-09)
+
+1. **Bot seasons cannot stand in for a median team.** 14 headless bot seasons (12 full at 2p, 3p and
+   4p, seeds 1 and 2; 2 short) were all lost: every full season missed the first payment (foreclosure)
+   and the final one. Bots die nearly every night (5 to 15 deaths per season), pay 56 to 451 coins in
+   medical bills, and plant with every coin, so the bank is 0 to 5 coins at most dawns. `sim_compare.py` (now `sim.py compare`)
+   failed 15 of 21 dawns in both batches (worst gaps at dawn 3, 5 to 7 and 8). The Phase 4 win/loss and
+   15-point rows need human seasons (`tools/qa/playtest/checklist_p4.md`). Asked about bot night
+   behaviour in Q-157.
+2. **Fixed in P4-18: bots spun on a trampled plot with no coins.** `sab.fix_jobs()` ranks a trample
+   re-plant above harvest; a broke bot at 2p retried `plant` on Plot16 4,003 times and never harvested.
+   `bot.gd` now skips a fix-job plant that `can_start` refuses, and its empty-plot pick filters the same
+   way. 2p sales went from 0 to 390 and 480 coins per season.
+3. **Fixed in P4-18: two plant holds could spend the same last coins.** `can_start` checked the seed
+   price at hold start only; three bots starting together drove the bank to -4. `HoldRegistry._complete`
+   now calls the target's `recheck` (new on `Interactable`, `Plot` checks the seed price) and cancels
+   with that reason. `tests/gameplay/test_seed_race.gd` fails without the fix.
+4. **Bots trip `speed_violation` under `--time-scale`.** Inference from code, not yet run: `bot.gd`
+   moves `walk * delta` every physics step, but `_seq` advances by `floori(_send_t * SEND_HZ)`, so the
+   host (`players.gd:177`) can see 0.4 m in 0.1 s (4.0 > 3.6 m/s). Likely fix: move only on send steps,
+   by `walk * ticks / SEND_HZ`. A time-scale 8 bot season with 0 violations after the fix would settle
+   it. Use `--fixed-fps 60` for bot seasons meanwhile.

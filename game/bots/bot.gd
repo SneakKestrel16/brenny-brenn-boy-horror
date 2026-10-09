@@ -115,6 +115,8 @@ func next_job() -> Array:
 	for job: Array in (sab.fix_jobs() if sab else []):
 		if not _free(job[1]) or not farm.targets.has(job[1]) or (job[0] in SCRAP_JOBS and not _scrap_ok()):
 			continue
+		if job[0] == &"plant" and farm.targets[job[1]].can_start(&"plant", st) != &"":
+			continue  # P4-18: a trampled plot with no coins for the seed; spinning on it starved the harvest
 		if job[0] == &"bury" and not bool(st.get("shovel", false)) and farm.targets.has("pegboard"):
 			return [&"take_shovel", "pegboard"]
 		if job[0] == &"take_can" and int(st.get("held_can", -1)) >= 0:
@@ -126,7 +128,7 @@ func next_job() -> Array:
 		return [&"sell", "sell_box"]
 	if not ripe.is_empty():
 		return [&"harvest", ripe[0].id]
-	var empty := _plots(func(p: Node) -> bool: return p.state == &"empty")
+	var empty := _plots(func(p: Node) -> bool: return p.state == &"empty" and p.can_start(&"plant", st) == &"")  # P4-18: never spin on no_coins or locked_crop
 	if not empty.is_empty():
 		return [&"plant", empty[0].id]
 	var dry := _plots(func(p: Node) -> bool: return p.state == &"growing" and not p.watered)

@@ -1030,3 +1030,46 @@ P4-12 Harvest Moon rules built by inference, please settle in doc 03 s14: (1) kn
 
 ### Q-155 · 2026-10-09 · QA -> Director, Gameplay Programmer · open
 P4-12 review. (1) The short season is the difficulty id `short_season` (`--short-season`, `--difficulty=short_season`). The lobby F7 list (easy, normal, nightmare) cannot pick it, and it cannot combine with Easy or Nightmare. Doc 01 lists the short season under "Saving", not "Difficulty" (inference: it is a separate group option). Decide: separate lobby toggle, or a fourth difficulty entry. (2) `World/CartRoute` ends at x = 105 exactly; P4-12 acceptance and doc 03 s14 say "gate at x > 105". The cart counts out at the route end, so behaviour is right; confirm the wording or move the route end past 105.
+
+### Q-156 · 2026-10-09 · QA -> Game Designer · answered (doc 02 s18.5; compare moved to `tools/sim/compare.py`)
+P4-18. `tools/qa/sim_compare.py` is QA's stand-in for the `compare` command doc 05 s18 names. It reads
+host logs (jsonl or console), and per dawn 2 to 8 compares the live median bank as % of the next
+scheduled payment with the sim median at the same player count and difficulty (doc 02 s18.5, 15
+points). *Inference:* the denominator is the scheduled payment with no penalty or deferred bill (the sim
+logs no per-run `owed`); dawn 8 uses the bank before the final payment. Live `due` matched the sim
+denominators at 2p, 3p and 4p (150/617, 217/888, 258/1055). Please confirm the denominator in doc 02
+s18.5, or build `tools/sim/sim.py compare` and QA will switch to it.
+
+### Q-157 · 2026-10-09 · QA -> AI Programmer · open
+P4-18. Bots never go inside at night and die nearly every night (OPEN_ISSUES "Found at the P4-18
+review" item 1); they also never plant the Prize Pumpkin (OPEN_ISSUES "Found at the P4-12 review" item
+1). So headless seasons cannot reach a win and cannot be compared with the sim. Not a Phase 4 gate item
+(humans run the seasons), but a bot that hides at night and saves for the payment would let QA test the
+economy in hours instead of evenings. Decide if it is worth a task.
+
+### Q-158 · 2026-10-09 · QA -> Gameplay Programmer · open
+P4-18. With `--bots=N`, `plots_open` logs `headcount 1`: `Farm._set_headcount` runs before the bots
+join and is not called again, so `plot_ceiling()` uses the 2p row at 3p and 4p. Debt does rescale
+(`debt_rescaled`). Humans who join in the lobby are counted at match start, so this is bot-only
+(inference: the lobby start reads `Game.player_count()` after joins). The QA override `--headcount=<n>`
+exists; P4-18's bot seasons did not pass it, which only changes the store's plot ceiling at 2p to 4p
+(no extra plots open below 5p). Should `--bots=N` set the headcount itself?
+
+### Q-159 · 2026-10-09 · QA -> Gameplay Programmer · open
+P4-18. `hold_completed.elapsed` is `Log.now() - started`, wall-clock time. Under `--fixed-fps 60`
+(30x real time) a 3 s plant logs `elapsed 0.09`. Only headless speed runs are affected; the `t` field of
+every log line is wall clock too. Use game time (sum of physics deltas) if speed runs should read true,
+or leave it and QA ignores `elapsed` in those runs.
+
+### Q-160 · 2026-10-09 · QA -> Gameplay Programmer · fixed (P4-18 merge: `Plot.recheck` returns `can_start`); late-cancel HUD reason still open
+P4-18 code-fix review. `Plot.recheck` checks only the seed price, so two holds on the *same* plot still
+both complete: `_validate` has no per-target lock, and each passes `can_start` at its start. Measured
+in a throwaway host script (two `plant` holds on Plot01, bank 100): both completed, bank 92, the seed
+bought twice for one crop. The same gap lets a second `harvest` complete on a plot the first just
+reset (bag gets crop `""`) and a second `water` spend a can charge on a watered plot. Proposed fix, one
+line in `game/farming/plot.gd`: `recheck` returns `can_start(verb, st)` (it already holds the price
+check, plus `not_empty`, `not_ripe`, `already_watered`, `locked`). The other Interactables keep the
+default `""`; their paid paths recheck inside `complete` already (`Debt.pay_early` via
+`early_blocked`, `Store.take_scrap` returns false, `Store.buy` via `why_not`). Also: a late cancel ends
+the client's hold with `hold_cancelled` and no reason, so the HUD never shows "Not enough coins for the
+seed"; a `refused_reason` on cancel would explain it (UI, optional).

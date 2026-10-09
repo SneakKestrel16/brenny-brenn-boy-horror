@@ -59,6 +59,12 @@ func on_start(_verb: StringName, _peer: int) -> void:
 	pass
 
 
+## Host only: checked again just before `complete`; a reason cancels the hold. Plots use it for the seed
+## price, because two holds started on the last coins would both pass `can_start` (P4-18).
+func recheck(_verb: StringName, _st: Dictionary) -> StringName:
+	return &""
+
+
 ## Host only: apply the effect (the registry has already logged and will log `hold_completed`).
 func complete(_verb: StringName, _peer: int, _st: Dictionary) -> void:
 	pass

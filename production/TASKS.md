@@ -598,7 +598,7 @@ no economy number and can start now.
 | P4-17 | Audio Designer | Phase 4 sounds: cart, gnaw, flare, radio, animals, signature variants, UI (doc 08 s11) | done (CEO listen pending, doc 08 s14 item 11; per-body cre_jumpscare_hit done, D-081) | P4-01 |
 | P4-19 | 3D Artist | Final art for the four creature bodies, glimpse parts and smear hulls (D-087) | done (QA PASS after QA fix: husk heart visible) | P4-16 |
 | P4-20 | Technical Artist | Final night look: phase lighting, fog, darkness, post stack, creature materials (D-087) | done (QA PASS after QA fixes: HUD below post layers, Harvest Moon disc; Q-150 open) | P4-16; creature materials after P4-19 |
-| P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | todo | all above |
+| P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
 s3 "DD Phase 4" reads, and leaves a handoff note. Placeholders cite doc 01, doc 02 `sim` or say

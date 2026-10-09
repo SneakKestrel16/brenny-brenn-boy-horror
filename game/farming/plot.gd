@@ -85,6 +85,10 @@ func can_start(verb: StringName, st: Dictionary) -> StringName:
 	return &"no_such_verb"
 
 
+func recheck(verb: StringName, st: Dictionary) -> StringName:
+	return can_start(verb, st)  # P4-18/Q-160: another hold spent the coins, or finished first on this plot
+
+
 func complete(verb: StringName, peer: int, st: Dictionary) -> void:
 	var pos := target_pos()
 	match base(verb):
