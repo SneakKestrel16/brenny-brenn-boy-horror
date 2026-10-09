@@ -8,7 +8,15 @@ extends Node3D
 const DISCORD_LINE := "The creature can't hear Discord, and you can't hear where your friends are."
 const VOICE_NAMES := {"off": "Off", "lobby_lines": "Lobby lines"}
 
+## P4-09 role cards (doc 01 "Picking a role"): one per role with its perk, a taken one greyed out, "No role" always open.
+const PERK_TEXT := {&"farmer": "+1 crop every 5th harvest", &"rancher": "faster round-up, hears animals from further",
+		&"mechanic": "repairs and refuels faster", &"tracker": "disarms faster, spots clues further",
+		&"carpenter": "builds and fixes fences faster, builds cheaper", &"medic": "frees teammates faster, cheaper bills",
+		&"night_owl": "quieter at night, picks moonflowers faster", &"radio_operator": "walkie reaches further, voice carries",
+		&"warden": "more flare shots, faster reload", &"medium": "ghost voices through less static"}
+
 var _roster: Label
+var _cards: VBoxContainer
 var _autostart_t := 0.0
 
 
@@ -34,6 +42,11 @@ func _ready() -> void:
 	_roster.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_roster.add_theme_color_override(&"font_shadow_color", Color.BLACK)
 	layer.add_child(_roster)
+	_cards = VBoxContainer.new()
+	_cards.position = Vector2(24, 60)
+	layer.add_child(_cards)
+	Game.roles_changed.connect(_refresh_cards)
+	_refresh_cards()
 	add_child(layer)
 	var pause := PauseMenu.new()
 	pause.name = "PauseMenu"
@@ -42,6 +55,56 @@ func _ready() -> void:
 	Game.player_left.connect(func(_p: int) -> void: _refresh())
 	Game.voice_setting_changed.connect(func(_p: int) -> void: _refresh())
 	_refresh()
+	for a in OS.get_cmdline_user_args():  # QA: `--role=<id>` picks a role once the barn is up
+		if a.begins_with("--role="):
+			get_tree().create_timer(1.0).timeout.connect(pick.bind(StringName(a.get_slice("=", 1))))
+
+
+func _refresh_cards() -> void:
+	for c in _cards.get_children():
+		c.queue_free()
+	var mine := Roles.of(Game.local_peer())
+	var taken := {}  # role -> true when someone else holds it
+	for p in Game.players:
+		if p != Game.local_peer() and Roles.of(p) != &"":
+			taken[Roles.of(p)] = true
+	_card(&"", "No role", "", mine == &"", false)
+	for id in Roles.ids():
+		_card(id, str(Data.record(&"roles", id).name), PERK_TEXT.get(id, ""), mine == id, taken.has(id))
+
+
+func _card(id: StringName, title: String, perk: String, mine: bool, taken: bool) -> void:
+	var b := Button.new()
+	b.text = "%s%s%s" % ["> " if mine else "  ", title, ("  -  " + perk) if perk != "" else ""] + ("  (taken)" if taken else "")
+	b.disabled = taken
+	b.flat = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.pressed.connect(pick.bind(id))
+	_cards.add_child(b)
+
+
+## Ask the host for `id` (empty = no role); the host refuses a taken role or a started match.
+func pick(id: StringName) -> void:
+	if Game.is_host():
+		Roles.on_request(1, id)
+	else:
+		Net.to_host(&"request_role", [String(id)])
+
+
+## R cycles through the free roles and back to none (the mouse belongs to the camera in the barn).
+func _cycle() -> void:
+	var order: Array[StringName] = [&""]
+	order.append_array(Roles.ids())
+	var i := order.find(Roles.of(Game.local_peer()))
+	for k in range(1, order.size() + 1):
+		var cand := order[(i + k) % order.size()]
+		var free := true
+		for p in Game.players:
+			free = free and (p == Game.local_peer() or cand == &"" or Roles.of(p) != cand)
+		if free:
+			pick(cand)
+			return
 
 
 func _refresh() -> void:
@@ -56,11 +119,14 @@ func _refresh() -> void:
 	if code != "":
 		t += "\nJoin code: %s" % code
 	t += "\n" + DISCORD_LINE + "\n"
+	t += "R: pick a role   "
 	t += "Enter: start the match   Esc: menu" if Game.is_host() else "Waiting for the host to start. Esc: menu"
 	_roster.text = t
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R and not Game.console_open:
+		_cycle()
 	if Game.is_host() and event.is_action_pressed(&"ui_accept"):
 		Game.start_match()
 

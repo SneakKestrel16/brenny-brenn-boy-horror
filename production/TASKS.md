@@ -587,7 +587,7 @@ no economy number and can start now.
 | P4-06 | Gameplay, AI Programmer | Store and upgrades: every `store.json` item works (doc 02 s10) | done (QA PASS; scrap D-085) | P4-04 |
 | P4-07 | Gameplay | Debt, payment dawns, early payment, Foreclosure (doc 02 s7) | done (QA PASS; D-086) | P4-05 |
 | P4-08 | Gameplay, AI Programmer, Level Designer | Animals and `broken_fence`: pen animals, escape, round-up (D-071) | done (QA PASS after QA fixes) | P4-03 |
-| P4-09 | Gameplay | Roles: all ten doc 01 roles, lobby pick, locked per season (D-077) | todo | P4-04, P4-08 |
+| P4-09 | Gameplay | Roles: all ten doc 01 roles, lobby pick, locked per season (D-077) | done (QA PASS after QA fixes) | P4-04, P4-08 |
 | P4-10 | Gameplay, Network & Voice | Saving at dawn, loading, host left, joining and leaving mid-season with headcount scaling | todo | P4-07 |
 | P4-11 | AI Programmer, Gameplay | Phase 4 sabotage and difficulty: `pumpkin_gnaw`, full-wipe doubling, difficulty settings | todo | P4-05, P4-06 |
 | P4-12 | AI Programmer, Gameplay, Technical Artist | Short season and the Harvest Moon: festival cart, acts, `harvest_moon` profile (doc 03 s14) | todo | P4-05, P4-07 |

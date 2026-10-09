@@ -21,7 +21,7 @@ func request(peer: int, verb: StringName, id: String) -> void:
 		_reply(peer, &"refused", [verb, reason])
 		return
 	var target := _resolve(id)
-	holds[peer] = {"verb": verb, "target": target, "progress": 0.0, "hold_s": Interactable.hold_seconds(verb, StringName(st_role(peer))),
+	holds[peer] = {"verb": verb, "target": target, "progress": 0.0, "hold_s": Interactable.hold_seconds(verb, StringName(st_role(peer)), target),
 			"started": Log.now()}
 	target.on_start(verb, peer)
 
@@ -104,6 +104,10 @@ func _mults(peer: int, h: Dictionary) -> Array:
 	if h.verb != &"pry":
 		return []
 	var out := []
+	if Roles.of(peer) == &"medic":  # P4-09: a Medic frees someone else faster
+		var race = h.target.get(&"race")
+		if race != null and race.races.has(h.target.id) and race.races[h.target.id].victim != peer:
+			out.append(float(Roles.perks(&"medic").pry_others_hold_mult))
 	if bool(Game.players[peer].get("tainted", false)):
 		out.append(float(Data.value(&"taint", &"taint", &"pry_mult")))
 	for p in holds:

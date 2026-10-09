@@ -102,6 +102,8 @@ func complete(verb: StringName, peer: int, st: Dictionary) -> void:
 			_ripen_at_night()
 		&"harvest":
 			Crops.bag_add(st, crop)
+			if Roles.harvest_bonus(st):  # P4-09 Farmer: +1 crop every 5th harvest (may pass bag capacity by one)
+				Crops.bag_add(st, crop)
 			Log.event(&"harvest", {"player": peer, "plot": id, "crop": String(crop)})
 			_reset()
 			NoiseBus.emit_kind(&"tool_harvest", pos, peer)

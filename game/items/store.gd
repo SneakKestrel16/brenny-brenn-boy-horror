@@ -46,6 +46,22 @@ func lantern_mult(peer: int) -> float:  ## the player lantern's light radius mul
 	return float(rec(&"brighter_lantern").effect.light_radius_mult) if owns(peer, &"brighter_lantern") else 1.0
 
 
+## What `peer` pays for `id`: a Carpenter builds scarecrows at `build_cost_mult` (P4-09, doc 02 s15, rounded up).
+func price(peer: int, id: StringName) -> int:
+	var p := int(rec(id).get("price", 0))
+	return Roles.build_cost(p, Roles.of(peer)) if id == &"scarecrow" else p
+
+
+## Shots a full flare gun holds: one more while a Warden is on the team (P4-09, doc 02 s15). Inference: the gun is
+## the team's, so the Warden's extra shot loads it for everyone; doc 01 only says "more flare shots".
+func flare_capacity() -> int:
+	var n := int(rec(&"flare_gun").effect.shots)
+	for p in Game.players:
+		if Roles.of(p) == &"warden":
+			return n + int(Roles.perks(&"warden").flare_shots_extra)
+	return n
+
+
 func scrap_total() -> int:
 	return farm.free_scrap + scrap_bought
 
@@ -66,7 +82,7 @@ func take_scrap() -> bool:
 ## Host, dawn step 7 (doc 01 Store): the flare gun is loaded again.
 func refill_flare() -> void:
 	if int(team.get(&"flare_gun", 0)) > 0:
-		flare_shots = int(rec(&"flare_gun").effect.shots)
+		flare_shots = flare_capacity()
 		_send()
 
 
@@ -91,7 +107,7 @@ func why_not(peer: int, id: StringName, near: bool = true) -> StringName:
 		return &"too_far"
 	if Clock.day < int(r.unlock_day):
 		return &"locked_item"
-	if farm.coins < int(r.price):
+	if farm.coins < price(peer, id):
 		return &"no_coins"
 	var e: Dictionary = r.get("effect", {})
 	if bool(r.per_player):
@@ -113,7 +129,8 @@ func buy(peer: int, id: StringName, near: bool = true) -> StringName:
 		return why
 	var r := rec(id)
 	var e: Dictionary = r.get("effect", {})
-	farm.add_coins(-int(r.price), &"store", peer)
+	var paid := price(peer, id)
+	farm.add_coins(-paid, &"store", peer)
 	if bool(r.per_player):
 		var mine: Dictionary = own.get(peer, {})
 		mine[id] = true
@@ -126,14 +143,14 @@ func buy(peer: int, id: StringName, near: bool = true) -> StringName:
 			if cr:
 				cr.shed_lock = true
 		&"walkie_talkie": team[&"walkie_battery"] = int(team.get(&"walkie_battery", 0)) + int(e.batteries_included)  # P4-14 builds the radio
-		&"flare_gun": flare_shots = int(e.shots)
+		&"flare_gun": flare_shots = flare_capacity()
 		&"plot_pair":
 			for p in _locked_plots().slice(0, int(e.plots)):
 				plots.append(p.id)
 				p.locked = false
 				p._refresh()
 				farm.plot_changed(p)
-	Log.event(&"store_buy", {"item": String(id), "price": int(r.price), "buyer": peer, "day": Clock.day, "coins": farm.coins})
+	Log.event(&"store_buy", {"item": String(id), "price": paid, "buyer": peer, "day": Clock.day, "coins": farm.coins})
 	_send()
 	return &""
 
@@ -160,7 +177,8 @@ func fire_flare(peer: int) -> StringName:
 	if Time.get_ticks_msec() < _flare_ready_ms:
 		return &"flare_reloading"
 	flare_shots -= 1
-	_flare_ready_ms = Time.get_ticks_msec() + int(float(e.reload_s) * 1000.0)
+	var reload := ceilf(float(e.reload_s) * (float(Roles.perks(&"warden").flare_reload_mult) if Roles.of(peer) == &"warden" else 1.0) - 0.0001)
+	_flare_ready_ms = Time.get_ticks_msec() + int(reload * 1000.0)  # P4-09: the Warden reloads faster
 	NoiseBus.emit_kind(&"flare", st.pos, peer)
 	var cr := get_tree().get_first_node_in_group(&"creature")
 	var hit: bool = cr != null and cr.global_position.distance_to(st.pos) <= float(Data.value(&"creature", &"noise_flare", &"radius_m")) and cr.flare_hit(float(e.retreat_s))
@@ -320,7 +338,7 @@ func prompt_text() -> String:
 	if crate == null or not me.has("pos") or Vector2(me.pos.x - crate.global_position.x, me.pos.z - crate.global_position.z).length() > REACH_M:
 		return ""
 	var r := items()[pick]
-	return "Store: %s, %d coins (day %d)   %s next   %s buy" % [r.name, int(r.price), int(r.unlock_day), _key(&"cycle_item"), _key(&"buy_item")]
+	return "Store: %s, %d coins (day %d)   %s next   %s buy" % [r.name, price(Game.local_peer(), StringName(r.id)), int(r.unlock_day), _key(&"cycle_item"), _key(&"buy_item")]
 
 
 func _key(action: StringName) -> String:

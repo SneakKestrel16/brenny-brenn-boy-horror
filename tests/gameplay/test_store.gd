@@ -100,6 +100,20 @@ func _process(delta: float) -> bool:
 	store.refill_flare()
 	_check(store.flare_shots == 1, "dawn refills the shot")
 	_check(_log.any(func(e: Array) -> bool: return e[0] == "flare_fired"), "flare_fired logged")
+
+	# P4-09 roles: the Carpenter builds cheaper, the Warden gets a shot more and reloads in half the time
+	var players: Dictionary = root.get_node("Game").players
+	players[me].role = &"carpenter"
+	_check(store.price(me, &"scarecrow") == 16 and store.price(me, &"flare_gun") == 50, "Carpenter: scarecrow 20 x0.8 = 16, other items full price")
+	players[me].role = &"warden"
+	store.refill_flare()
+	_check(store.flare_shots == 2, "a Warden on the team: the gun holds 2 shots")
+	cr.global_position = st.pos + Vector3(200, 0, 0)
+	store._flare_ready_ms = 0  # the first shot's 8 s reload is not over yet
+	_check(store.fire_flare(me) == &"" and store.fire_flare(me) == &"flare_reloading", "second shot waits for the reload")
+	var wait: int = store._flare_ready_ms - Time.get_ticks_msec()
+	_check(wait > 3000 and wait <= 4000, "Warden reload 8 s x0.5 = 4 s (%d ms)" % wait)
+	players[me].role = &""
 	print("test_store: ", "PASS" if _fails == 0 else "FAIL")
 	quit(1 if _fails > 0 else 0)
 	return false

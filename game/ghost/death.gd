@@ -14,6 +14,7 @@ var _creature: Node
 var _dead: Dictionary = {}  ## every peer: peer -> {cause, position, body}
 var _test := OS.get_cmdline_user_args().has("--creature-test")
 var _respawn_at: Dictionary = {}  ## host: peer -> msec
+var _bill_medic := 0  ## host: of those, deaths with a living Medic near (P4-09)
 var _bill_deaths := 0  ## host: deaths since the last dawn bill
 var debt: Node  ## P4-07: the debt, on every peer (mirrors the flags)
 
@@ -56,6 +57,8 @@ func die(peer: int, cause: StringName) -> void:
 	var rejoin := cause == &"reconnect"  # D-048: not a death: no medical bill, and the body waits at the barn spawn
 	if not rejoin:
 		_bill_deaths += 1  # day deaths count toward the next dawn (doc 02 s8)
+		if Roles.medic_near(st.get("pos", Vector3.ZERO), peer):
+			_bill_medic += 1
 	var pos: Vector3 = _spawn_pos(peer) if rejoin else st.get("pos", Vector3.ZERO)
 	get_parent().get_node("Farm").registry.cancel(peer, &"dead")
 	Log.event(&"death", {"player": peer, "cause": String(cause), "position": [snappedf(pos.x, 0.1), snappedf(pos.z, 0.1)],
@@ -97,8 +100,9 @@ var _dawn := {}  ## host: this dawn's numbers, gathered by the steps and read by
 func dawn() -> void:
 	var farm: Node = get_parent().get_node("Farm")
 	var final := Clock.day >= int(Data.value(&"season", &"season_days"))
-	_dawn = {"deaths": _bill_deaths, "bill": 0, "wilted": 0}
+	_dawn = {"deaths": _bill_deaths, "medic_deaths": _bill_medic, "bill": 0, "wilted": 0}
 	_bill_deaths = 0
+	_bill_medic = 0
 	for s in DAWN_STEPS:
 		Log.event(&"dawn_step", {"step": String(s), "day": Clock.day})
 		call(StringName("step_" + s), farm, final)
@@ -154,7 +158,7 @@ func step_final_sale(farm: Node, final: bool) -> void:
 ## Step 3: the medical bill (doc 02 s8).
 func step_medical_bill(farm: Node, _final: bool) -> void:
 	var deaths: int = _dawn.deaths
-	var bill := bill_for(deaths)
+	var bill := Roles.cut_bill(bill_for(deaths), deaths, int(_dawn.get("medic_deaths", 0)))  # P4-09 Medic
 	var paid := clampi(farm.coins - int(Data.value(&"season", &"bank_floor")), 0, bill)  # the bank never drops below the floor
 	if paid > 0:
 		farm.add_coins(-paid, &"medical_bill", 0)

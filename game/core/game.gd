@@ -10,6 +10,8 @@ signal player_left(peer: int)
 signal voice_setting_changed(peer: int)
 ## The player pressed "Record lines" / "Re-record" (doc 06 s11). The recording screen is P2-03's: connect here.
 signal recording_requested
+## P4-09: the role table changed (a pick, a match start, a rejoin).
+signal roles_changed
 
 const MAIN_SCENE := "res://game/core/main.tscn"
 const MENU_SCENE := "res://game/ui/main_menu.tscn"
@@ -29,6 +31,7 @@ var in_lobby := false  ## the barn before the match: the host's Clock has not st
 var lobby_autostart := 0  ## QA: `--lobby-start=<n>` starts the match when n players are in the barn
 var match_roster: Dictionary = {}  ## host: player_uid -> true for everyone in the barn at match start; only they may rejoin (D-048)
 var season_uids: Array = []  ## host: a loaded save sets the season's player uids; the lobby admits only them (D-048). Empty = new game
+var roles: Dictionary = {}  ## host: player_uid -> role id, kept for the season so a rejoiner keeps theirs (P4-09; the save is P4-10)
 var console_open := false  ## the dev console or a menu has the keyboard (D-031); Player and HoldController ignore game input
 var free_mouse := OS.get_cmdline_user_args().has("--free-mouse")  ## test runs never capture the mouse (multi.py passes it)
 
@@ -169,6 +172,7 @@ func start_match() -> void:
 	Clock.start()
 	Log.event(&"match_started", {"players": players.keys()})
 	Net.to_peers(&"apply_match_start")
+	Roles.sync()  # after the players were rebuilt above (P4-09)
 	_go_main()
 
 

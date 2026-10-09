@@ -249,6 +249,7 @@ func _admit(id: int, rejoin: bool = false) -> void:
 		if p != id:
 			to_peers(&"apply_voice_setting", [p, Game.voice_setting_of(p)], [id])
 	to_peers(&"apply_clock", [Clock.day, Clock.phase, Clock.t_phase], [id])
+	Roles.sync()  # P4-09: a rejoiner gets their role back
 	Log.event(&"player_joined", {"player": id})
 	Game.player_joined.emit(id)
 
@@ -347,6 +348,17 @@ func apply_match_start() -> void:
 	Game.apply_match_start()
 
 
+## P4-09: pick a role (empty string = none); the host validates and answers with `apply_roles`.
+@rpc("any_peer", "call_remote", "reliable")
+func request_role(role: String) -> void:
+	Roles.on_request(_sender(), StringName(role))
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_roles(table: Dictionary) -> void:
+	Roles.apply(table)
+
+
 ## Doc 06 s11: the owner's voice setting (`off` / `lobby_lines`). Slots are not built, so this names the peer id.
 @rpc("any_peer", "call_remote", "reliable")
 func request_voice_setting(setting: String) -> void:
@@ -431,6 +443,7 @@ func request_join(protocol_version: int, build_id: String, uid: String, display_
 		_admit(peer, true)
 		return
 	to_peers(&"apply_roster", [Game.players.keys(), profiles])
+	Roles.sync()  # P4-09: the joiner learns the picks
 
 
 ## `p_profiles`: peer -> {uid, name} (P2-03). The names are for the recording screen's lines and lists.

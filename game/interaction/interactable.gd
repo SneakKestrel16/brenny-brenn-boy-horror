@@ -16,15 +16,15 @@ var farm: Node  ## the Farm that owns this
 
 ## Hold seconds for a verb: labor.json, or INSTANT_S for the few verbs that are not chores, or a sabotage
 ## fix's `fix_hold_s` (P3-06: bury, pull_seeds; sabotage.json).
-static func hold_seconds(verb: StringName, role: StringName = &"") -> float:
+static func hold_seconds(verb: StringName, role: StringName = &"", target: Object = null) -> float:
 	verb = base(verb)
 	if INSTANT_S.has(verb):
 		return float(INSTANT_S[verb])
 	var fix := fix_hold_s(verb)
 	var s := fix if fix > 0.0 else Data.hold_s(verb)
-	if verb == &"round_up" and role == &"rancher":  # P4-08: roles.json perk, rounded up (doc 02 section 4)
-		s = AnimalLogic.round_up_s(s, float(Data.record(&"roles", &"rancher").perks.round_up_hold_mult))
-	return s
+	var night: bool = verb == &"harvest" and target != null and target.get(&"crop") != null and target.crop != &"" and String(load("res://game/farming/crops.gd").rec(target.crop).get("harvest_phase", "")) == "night"
+	var m := Roles.hold_mult(verb, role, night)  # P4-08/P4-09: roles.json perks, rounded up (doc 02 section 4)
+	return AnimalLogic.round_up_s(s, m) if m != 1.0 else s
 
 
 ## P4-04: a verb may carry an argument after a colon (`plant:<crop>`); the part before it names the chore.
