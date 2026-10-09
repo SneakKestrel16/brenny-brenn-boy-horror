@@ -637,6 +637,23 @@ P4-12: `game/items/cart.gd`, an interactable that `farm.gd` builds under `World`
   (`profile_harvest_moon`); then done.
 - Pushing is the `push_cart` hold that never completes. Each tick the host counts the living players
   holding it; the count sets the speed (`profile_harvest_moon`, doc 02 section 9).
+- Push at the handle (P4-32). `cart.gd` adds a `Handle` marker at the model's push bar (back of the cart,
+  1.45 m behind its centre, 1.05 m up; `tools/blender/build_phase4.py` `cart()`). `push_cart` is offered
+  only to a player standing within 1.5 m (flat) of it; `load_cart` is unchanged. The host does not
+  gate the request on the handle, so bots asking from their usual spot still push.
+- Lock while pushing (P4-32). `cart.push_slot(peer)` gives each pusher a slot 0.4 m behind the handle,
+  pushers side by side 0.7 m apart in `pushers` order. It is `Vector3.INF` (no lock) unless the peer is
+  in `pushers`, the act is push or gate run and the cart is not stalled, so release, a knock-off, death
+  and the end of the run all free the player. The host pins each pusher's received frame to their slot
+  in `players.submit` (no speed check for that frame); the client walks its own body to the same slot
+  each frame from the synced cart, turns to face the route once when the lock starts and keeps mouse
+  look free. Clients still own their movement; the host's copy wins as for traps.
+- The push hold's bar is the route, not a timer (P4-32): `cart.hold_progress(&"push_cart")` returns
+  `[offset / length, "N m to the gate"]` from the synced cart, so every peer shows the same value.
+  `HoldController.hold_state()` returns `[verb, progress, note]`, using a target's `hold_progress` when
+  it has one; the HUD prompt reads e.g. "Push Cart... 3%  143 m to the gate".
+- QA: `-- --autopush` (client or host) walks to the handle on the Harvest Moon, pushes 12 s and logs
+  `autopush_step` (slot distance, hold state) each second, then lets go and logs that the lock is gone.
 - The creature knocks a pusher off (`knock`): the hold is cancelled, the cart stalls `knock_stall_s`,
   and the next knock waits `knock_cooldown_s` (act 2 only). Each stall allows one `bite` of the
   pumpkin; the pumpkin caps bites at `max_escort_bites`.

@@ -50,6 +50,8 @@ func _ready() -> void:
 		_autotap.call_deferred()
 	if OS.get_cmdline_user_args().has("--autosweep"):
 		_autosweep.call_deferred()
+	if OS.get_cmdline_user_args().has("--autopush"):
+		_autopush.call_deferred()
 
 
 func _physics_process(delta: float) -> void:
@@ -99,7 +101,7 @@ func _physics_process(delta: float) -> void:
 				start(verbs[0], tgt)
 		return
 	_t += delta
-	_ring.scale = Vector3.ONE * clampf(_t / _hold_s, 0.01, 1.0)
+	_ring.scale = Vector3.ONE * maxf(hold_state()[1], 0.01)
 	if is_instance_valid(_target):  # freed mid-hold (trap filled or disarmed by this hold): ring stays put
 		_ring.global_position = _target.target_pos() + Vector3(0, 1.4, 0)
 	if _scripted or _verb in [&"drop_can", &"set_down_prize"]:  # drop_can: one tap, the host times it (releasing G must not cancel)
@@ -118,9 +120,13 @@ var _scripted := false
 var _armed := false  ## toggle_holds: the starting press has been released, the next press stops
 
 
-## HUD: the verb being held and its progress 0..1, or an empty verb.
+## HUD: the verb being held, its progress 0..1 and a note, or an empty verb. A target with `hold_progress`
+## (the cart's push, P4-32) supplies its own progress and note; otherwise the hold timer, no note.
 func hold_state() -> Array:
-	return [_verb, clampf(_t / maxf(_hold_s, 0.01), 0.0, 1.0)] if _holding else [&"", 0.0]
+	if not _holding:
+		return [&"", 0.0, ""]
+	var own: Array = _target.hold_progress(_verb) if is_instance_valid(_target) and _target.has_method(&"hold_progress") else []
+	return [_verb] + (own if not own.is_empty() else [clampf(_t / maxf(_hold_s, 0.01), 0.0, 1.0), ""])
 
 
 ## The id of the can this player carries, or -1.
@@ -314,6 +320,29 @@ func _autosweep() -> void:
 	_flag = spot
 	await _sweep_go(&"place_flag", spot, at_board)
 	Log.event(&"autosweep_done", {})
+
+
+## QA (`-- --autopush`, P4-32): on the Harvest Moon walk to the cart's handle, hold `push_cart` for 12 s and log,
+## once a second, where this body is against its handle slot; then let go and log that the lock is gone.
+func _autopush() -> void:
+	await _wait_farm()
+	while Clock.phase != &"harvest_moon":
+		await get_tree().create_timer(0.5).timeout
+	var cart: Node = get_tree().get_first_node_in_group(&"cart")
+	await _walk([Vector3(0, 0, -4), Vector3(0, 0, 4), cart.handle_pos() + cart.body.global_basis.z * 0.6])
+	Log.event(&"autopush_step", {"step": "at_handle", "verbs": str(cart.verbs_for({}))})
+	_scripted = true
+	start(&"push_cart", cart)
+	for i in 12:
+		await get_tree().create_timer(1.0).timeout
+		var slot: Vector3 = cart.push_slot(player.peer)
+		var p := player.global_position
+		Log.event(&"autopush_step", {"step": "pushing", "holding": _holding, "offset_m": snappedf(cart.offset, 0.1), "pushers": cart.pushers.size(),
+				"slot_dist_m": snappedf(Vector2(p.x - slot.x, p.z - slot.z).length(), 0.01) if slot != Vector3.INF else -1.0, "hs": str(hold_state())})
+	_scripted = false
+	cancel()
+	await get_tree().create_timer(1.5).timeout
+	Log.event(&"autopush_step", {"step": "released", "locked": cart.push_slot(player.peer) != Vector3.INF, "offset_m": snappedf(cart.offset, 0.1)})
 
 
 ## QA scripts start in the barn lobby, where no Farm exists yet (P2-20): wait for the match scene's Farm.

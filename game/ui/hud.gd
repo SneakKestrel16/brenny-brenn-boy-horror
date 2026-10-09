@@ -132,7 +132,7 @@ func _process(delta: float) -> void:
 	var hs: Array = hold.hold_state()
 	var prompt := ""
 	if hs[0] != &"":
-		prompt = "%s... %d%%" % [_verb_text(hs[0]), int(hs[1] * 100.0)]
+		prompt = ("%s... %d%%  %s" % [_verb_text(hs[0]), int(hs[1] * 100.0), hs[2]]).strip_edges()
 	elif hold.aimed_verb != &"":
 		prompt = "Hold %s: %s" % [_key(&"interact"), _verb_text(hold.aimed_verb)]
 	elif hold.held_can_id() >= 0:

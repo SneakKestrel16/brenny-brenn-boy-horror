@@ -168,6 +168,10 @@ func submit(peer: int, f: Dictionary) -> void:
 	if st.get("pinned", false) and st.has("pos"):
 		f.pos = st.pos  # pinned in a trap (doc 03 section 7): the host keeps them put
 	var ghost := Game.is_ghost(peer)
+	var cart := get_tree().get_first_node_in_group(&"cart")
+	var slot: Vector3 = cart.push_slot(peer) if cart else Vector3.INF
+	if slot != Vector3.INF:
+		f.pos = Vector3(slot.x, f.pos.y, slot.z)  # P4-32: a pusher stands at their handle slot (the host's cart decides)
 	var pos: Vector3 = f.pos
 	if st.has("pos"):
 		if f.seq <= st.seq:
@@ -177,8 +181,8 @@ func submit(peer: int, f: Dictionary) -> void:
 		var dt := maxf((now - st.t_ms) / 1000.0, (f.seq - st.seq) / SEND_HZ)
 		var mode := &"crouch" if f.crouch else (&"sprint" if f.sprint else &"walk")
 		var max_speed := Data.speed(mode) * float(st.get("speed_mult", 1.0))
-		if ghost or _qa_free:
-			max_speed = 1000.0  # ponytail: ghosts fly free until Phase 3 gives them a ghost speed
+		if ghost or _qa_free or slot != Vector3.INF:
+			max_speed = 1000.0  # ponytail: ghosts fly free until Phase 3 gives them a ghost speed; a pusher's slot is host-set
 		var r := SpeedCheck.check(st.pos, f.pos, dt, max_speed)
 		if r.violation:
 			Log.event(&"speed_violation", {"peer": peer, "speed": snappedf(st.pos.distance_to(f.pos) / dt, 0.1),
