@@ -595,7 +595,7 @@ no economy number and can start now.
 | P4-14 | Network & Voice | Walkie-talkies as store items (doc 06 s10, doc 02 s10) | todo | P4-06 |
 | P4-15 | Gameplay, Technical Artist | Season Awards and season end screens (doc 03 s17.4, doc 05 s15) | todo | P4-07 |
 | P4-16 | 3D Artist, Technical Artist | Phase 4 models in Blender 5.2: four bodies, pumpkins, patch, cart, town stand, animals, store items (doc 07 s12) | todo | P4-01 |
-| P4-17 | Audio Designer | Phase 4 sounds: cart, gnaw, flare, radio, animals, signature variants, UI (doc 08 s11) | todo | P4-01 |
+| P4-17 | Audio Designer | Phase 4 sounds: cart, gnaw, flare, radio, animals, signature variants, UI (doc 08 s11) | done (CEO listen pending, doc 08 s14 item 11; cre_jumpscare_hit redo waits for P4-16) | P4-01 |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | todo | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09

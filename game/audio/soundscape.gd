@@ -42,6 +42,36 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 	&"sfx_crow_caw": {"n": 3, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": -5.0},  # P3-09 possessed crow
 	&"sfx_emote_cloth": {"n": 0, "bus": &"SFX", "unit": 3.0, "max": 30.0, "db": -10.0},  # P3-11 wave, point, shrug
 	&"ui_paper_slide": {"n": 0, "bus": &"UI", "db": -10.4},  # P3-12 Dawn Report card: CEO listen 1 -2.5 dB, listen 2 a further -3.1 dB (30 percent amplitude)
+	# P4-17 (doc 08 sections 6, 11). Callers belong to P4-06, P4-08, P4-14, P4-15 and the Creature owner. All placeholder
+	# levels, trimmed by measured RMS toward the doc 08 section 2.4 targets; unit/max are inference (like the rows above).
+	# Lurk signature variants: Creature plays `play_3d(&"cre_<body>_sig", pos)` (doc 08 section 6, n = 3 per body).
+	&"cre_gaunt_sig": {"n": 3, "bus": &"Creature", "unit": 4.0, "max": 40.0, "db": 0.0},  # quiet file (-35 dB RMS), so no cut
+	&"cre_scarecrow_sig": {"n": 3, "bus": &"Creature", "unit": 4.0, "max": 40.0, "db": -6.0},
+	&"cre_boar_sig": {"n": 3, "bus": &"Creature", "unit": 5.0, "max": 50.0, "db": -9.0},
+	&"cre_husk_sig": {"n": 3, "bus": &"Creature", "unit": 4.0, "max": 40.0, "db": -9.0},
+	&"sfx_cart_squeak_loop": {"n": 0, "bus": &"SFX", "unit": 5.0, "max": 60.0, "db": -14.0},  # loop; pitch_scale follows pushers
+	&"cre_gnaw": {"n": 0, "bus": &"Creature", "unit": 3.0, "max": 30.0, "db": -8.0},
+	&"sfx_flare_shot": {"n": 0, "bus": &"SFX", "unit": 20.0, "max": 220.0, "db": -4.0},  # the loudest noise on the farm
+	&"sfx_flare_hiss_loop": {"n": 0, "bus": &"SFX", "unit": 6.0, "max": 70.0, "db": -12.0},  # loop
+	&"cre_flare_hit": {"n": 0, "bus": &"Creature", "unit": 8.0, "max": 90.0, "db": -6.0},
+	&"vox_radio_squelch_on": {"n": 0, "bus": &"Voice", "db": -10.0},
+	&"vox_radio_squelch_off": {"n": 0, "bus": &"Voice", "db": -10.0},
+	&"vox_radio_low_battery": {"n": 0, "bus": &"Voice", "db": -18.0},
+	&"vox_radio_dead": {"n": 0, "bus": &"Voice", "db": -10.0},
+	&"vox_radio_static_loop": {"n": 0, "bus": &"Voice", "db": -22.0},  # loop; level follows creature proximity
+	&"sfx_animal_chicken": {"n": 3, "bus": &"SFX", "unit": 4.0, "max": 45.0, "db": -8.0},
+	&"sfx_animal_pig": {"n": 2, "bus": &"SFX", "unit": 4.0, "max": 45.0, "db": -8.0},
+	&"sfx_animal_cow": {"n": 2, "bus": &"SFX", "unit": 5.0, "max": 55.0, "db": -8.0},
+	&"sfx_animal_panic_01": {"n": 0, "bus": &"SFX", "unit": 5.0, "max": 60.0, "db": -6.0},  # chicken
+	&"sfx_animal_panic_02": {"n": 0, "bus": &"SFX", "unit": 5.0, "max": 60.0, "db": -6.0},  # pig
+	&"sfx_animal_panic_03": {"n": 0, "bus": &"SFX", "unit": 5.0, "max": 60.0, "db": -6.0},  # cow
+	&"ui_click": {"n": 0, "bus": &"UI", "db": -8.0},
+	&"ui_confirm": {"n": 0, "bus": &"UI", "db": -14.0},
+	&"ui_deny": {"n": 0, "bus": &"UI", "db": -16.0},
+	&"ui_coins": {"n": 0, "bus": &"UI", "db": -4.0},
+	&"ui_stamp": {"n": 0, "bus": &"UI", "db": -10.0},
+	&"ui_award_reveal": {"n": 0, "bus": &"UI", "db": -8.0},
+	&"ui_shop_bell": {"n": 0, "bus": &"UI", "db": -4.0},
 }
 ## Taint heartbeat (doc 08 sections 2.4, 8): "faint", local to the Tainted player only. Placeholder level.
 const TAINT_DB := -20.0  # CEO listens: -42 barely audible, then double (+6 dB) at listens 2 and 3
@@ -85,6 +115,8 @@ var _players: Dictionary = {}  ## layer -> AudioStreamPlayer
 var _night := 0.0  ## 0 day bed, 1 night bed; equal-power crossfade
 var _night_target := 0.0
 var _barn := 0.0  ## 1 while in the lobby or recording (the barn bed)
+var _report: DawnReport  ## the Dawn Report card, found when it is shown (set_report_open)
+var _report_on := false
 var _sig: AudioStreamPlayer3D  ## chase signature, a child of the creature node
 var _heart: AudioStreamPlayer
 var _taint: AudioStreamPlayer  ## the Taint heartbeat, alive only while the local player is Tainted
@@ -184,6 +216,22 @@ func _on_apply(what: StringName, args: Array) -> void:
 func _on_logged(event: StringName, _data: Dictionary) -> void:
 	if event == &"dawn_report_shown":
 		play_2d(&"ui_paper_slide")
+		for n in get_tree().root.find_children("*", "CanvasLayer", true, false):
+			if n is DawnReport:
+				_report = n
+		set_report_open(true)
+
+
+## D-074 / Q-072: while the Dawn Report is up, a 1.2 kHz low-pass on Ambience and SFX only (the `Report`
+## effects in default_bus_layout.tres); Voice, Creature and UI stay clear. `dawn_report.gd` logs no close
+## event, so `_process` watches its `_open` flag (placeholder coupling: a close event would replace it).
+func set_report_open(on: bool) -> void:
+	for bus in [&"SFX", &"Ambience"]:
+		var b := AudioServer.get_bus_index(bus)
+		for i in AudioServer.get_bus_effect_count(b):
+			if AudioServer.get_bus_effect(b, i).resource_name == "Report":
+				AudioServer.set_bus_effect_enabled(b, i, on)
+	_report_on = on
 
 
 ## Doc 08 section 4.3. `snap` skips the fade (late join).
@@ -284,6 +332,8 @@ func set_phase(phase: StringName, snap: bool = false) -> void:
 
 func _process(delta: float) -> void:
 	_barn = move_toward(_barn, 1.0 if _in_barn() else 0.0, delta / BARN_FADE_S)
+	if _report_on and (not is_instance_valid(_report) or not _report._open):
+		set_report_open(false)
 	if is_instance_valid(_heart):
 		_chase_t += delta
 		var k := clampf(_chase_t / HEART_RAMP_S, 0.0, 1.0)

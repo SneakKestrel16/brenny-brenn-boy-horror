@@ -102,9 +102,13 @@ move is mechanical.
    sound (section 3). Fakes and real voices use the same levels (doc 01).
 4. **Quiet is the baseline.** At night, with nothing happening, the loudest thing is the wind at
    about -34 dBFS RMS after the Master (target, `placeholder`). Scares are 20+ dB above that.
-5. **Pause menu and Dawn Report** low-pass `Master` at 1.2 kHz and drop `SFX` by 10 dB with a
-   0.3 s fade; `Ambience` is not touched, so the bed and wind keep playing at their current
-   gains under the low-pass (section 4.4 rule 2). The Dawn Report has no music.
+5. **Pause menu** low-passes `Master` at 1.2 kHz and drops `SFX` by 10 dB with a 0.3 s fade;
+   `Ambience` is not touched, so the bed and wind keep playing at their current gains under the
+   low-pass (section 4.4 rule 2). **Dawn Report (D-074, Q-072, P4-17):** a 1.2 kHz low-pass on
+   `Ambience` and `SFX` only (the `Report` effects in `default_bus_layout.tres`, off until
+   `Soundscape.set_report_open(true)`); `Voice`, `Creature` and `UI` stay clear, so the replayed
+   clips and the paper card sound normal. No fade or SFX drop (inference: a bare cutoff is the
+   smallest build; the CEO listen settles it). The Dawn Report has no music.
 6. **Simultaneous voice limit** is the game's: 4 real speakers plus at most 2 fakes at once
    (inference: doc 03 allows one lure at a time, ghosts add up to 3). Each is its own player node
    (doc 06 section 8).
@@ -602,10 +606,53 @@ marked. Rows tagged **(real)** are Freesound CC0 recordings since D-066 (section
 - **Emotes.** `sfx_emote_cloth` on `apply_emote` for every emote but the scream; the scream plays
   `vox_emote_scream` (from `whistle_emotes.gd`).
 - **Dawn Report.** `ui_paper_slide` when the card shows (`dawn_report_shown` log line, so the host hears
-  it too). The section 2.3 rule 5 low-pass is not built (Q-072).
+  it too). The Dawn Report low-pass is built in P4-17 (section 10.7).
 - **Logs.** `audio_play {id}` for every `play_3d`/`play_2d` (footsteps excepted), `audio_hush {seconds}`,
   `audio_taint_heartbeat {on}`.
 - **Not done:** `ui_paper_rustle`, `sfx_crow_flap`, a third corn part and ragdoll thud, Taint pitch.
+
+### 10.7 Phase 4 as built (P4-17)
+
+All 39 files are new, generated (D-015, no downloads, no music), `placeholder`, unheard by the author, rendered
+from `assets/audio/src/<id>.scd`; the sources are written by `tools/audio/gen_p4.py` (section 12.1 item 4).
+Mono, 48 kHz, 16-bit, peak -1.0 dBFS. Callers belong to P4-06, P4-08, P4-14, P4-15 and the Creature owner;
+the catalog rows carry the trims. `unit`/`max` for the new 3D rows are inference (like the P3 rows).
+
+| File | Length | RMS | What |
+|---|---|---|---|
+| `cre_gaunt_sig_01..03` | 1.75 s | -36.1, -35.7, -33.3 | sparse dry clicks with a 220 Hz knock, gaps 0.3-0.6, 0.4-0.8, 0.25-0.5 s (section 6); played at 0 dB (quiet files) |
+| `cre_scarecrow_sig_01..03` | 1.75 s | -25.2, -25.4, -25.8 | slow heavy coat flaps, 90 to 140 Hz body, gaps 0.45 to 0.9 s; -6 dB |
+| `cre_boar_sig_01..03` | 1.75 s | -20.6, -21.5, -21.3 | two chain drags (ring partials, scrape) with a 60 to 90 Hz hoof thud, about 0.75 to 0.9 s apart; -9 dB |
+| `cre_husk_sig_01..03` | 1.75 s | -20.3, -20.9, -19.3 | three 0.55 s bursts of the pulsed rattle at 18, 15 and 21 Hz (inside 14 to 22 Hz), 4 to 7 kHz pods over a hollow 800 Hz; the spectrogram shows the 55 ms pulse comb at 18 Hz; -9 dB |
+| `sfx_cart_squeak_loop` | 3.0 s loop | -10.8 | festival cart wheel: 600 to 720 Hz squeak, rattle and clunk, four 0.75 s cycles, quiet seam; -14 dB; the game pitches it with the pushers |
+| `cre_gnaw` | 2.5 s | -15.9 | four groups of wet crunches (crack, wet, thump); -8 dB |
+| `sfx_flare_shot` | 1.2 s | -17.3 | flat bang, 45 to 110 Hz boom, rising whoosh; -4 dB, `unit` 20 and `max` 220 (the loudest noise on the farm) |
+| `sfx_flare_hiss_loop` | 2.0 s loop | -14.3 | stationary bright hiss with sparse pops; -12 dB |
+| `cre_flare_hit` | 1.2 s | -16.8 | synthetic falling shriek (2.2 kHz to 350 Hz) and a stomp at 0.75 s; not a voice; -6 dB |
+| `vox_radio_squelch_on`, `_off`, `_dead` | 0.2 s each | -19.2, -22.0, -20.4 | key-up chirp, key-down chirp with a noise tail, a dying click and tone; -10 dB |
+| `vox_radio_low_battery` | 0.6 s | -9.8 | two 1.2 kHz beeps; -18 dB |
+| `vox_radio_static_loop` | 4.0 s loop | -20.7 | 300 to 3400 Hz band noise with crackle; -22 dB, level follows proximity (caller) |
+| `sfx_animal_chicken_01..03` | 0.7, 0.5, 0.9 s | -16.3, -18.0, -16.2 | cluck groups (Saw through a 1.4 kHz band-pass); -8 dB |
+| `sfx_animal_pig_01..02` | 1.0 s | -18.8, -17.4 | two oink grunts through 450 and 1100 Hz formants; -8 dB |
+| `sfx_animal_cow_01..02` | 2.0 s | -15.3, -14.8 | low moo with a formant glide; -8 dB |
+| `sfx_animal_panic_01..03` | 1.0 s | -15.6, -13.6, -14.4 | chicken squawks, pig squeal, cow bellow (one each, not variants); -6 dB |
+| `ui_click` | 0.1 s | -22.2 | wood tick; -8 dB |
+| `ui_confirm` | 0.25 s | -11.1 | soft up-chirp; -14 dB |
+| `ui_deny` | 0.35 s | -7.6 | two low down-chirps; -16 dB |
+| `ui_coins` | 0.5 s | -25.2 | five coin ticks; -4 dB |
+| `ui_stamp` | 0.4 s | -15.6 | rubber stamp on paper; -10 dB |
+| `ui_award_reveal` | 1.0 s | -20.1 | stamp then one bell tick, no melody; -8 dB |
+| `ui_shop_bell` | 0.9 s | -26.3 | town-stand door bell, two strikes; -4 dB |
+
+- **Animals are the weakest guess.** Synthetic chicken, pig and cow voices will not sound like animals. If the CEO
+  rejects them at listen 1, D-066 allows CC0 downloads (log each in section 13). The pig replaces the doc's
+  sheep (P4-08 spawns chicken, pig, cow).
+- **Dawn Report low-pass (D-074, Q-072).** `Report` low-pass effects (1.2 kHz) on `SFX` (slot 0) and `Ambience`
+  (slot 1), disabled by default. `Soundscape.set_report_open(on)` toggles them; it turns on at the
+  `dawn_report_shown` log line and off when the card's `_open` flag clears (polled in `_process`, because
+  `dawn_report.gd` logs no close event; a close event would replace the poll).
+- **Not done:** the `cre_jumpscare_hit` redo (the P4-16 bodies are not in this tree: `assets/models` is
+  missing); no caller wired for any new id (owners above).
 
 ## 11. Sound list
 
@@ -756,7 +803,8 @@ Bodies: only the chosen one is loaded per season.
 3. Commit the source and WAV together. Don't commit a re-render of an unchanged source (noise
    sources aren't bit-identical, `tools/audio/README.md`).
 4. Variants: one `.scd` per variant with a seed `RandSeed` and a pitch offset, or a generator script
-   `tools/audio/gen_variants.py` that writes the `.scd` files from a template (kept simple).
+   `tools/audio/gen_variants.py` that writes the `.scd` files from a template (kept simple). Built as
+   `tools/audio/gen_p4.py` (P4-17): `uv run tools/audio/gen_p4.py` rewrites the Phase 4 sources.
 5. The loop WAV files get `loop_mode = forward` in their `.import` files (Godot import setting; the
    `.import` file is committed).
 
@@ -790,6 +838,8 @@ Then each phase's rows by `P`. When the CEO provides real sound, it goes in `ass
 same IDs (CEO-approved files only).
 
 ## 13. Sources and licenses
+
+P4-17 (section 10.7) added no downloads: every new file is generated.
 
 Most sounds are generated by code in this repo, with SuperCollider 3.14.1 (GPL-3.0 tool, output not
 affected) and SoX 14.4.2 (tool only); both are CEO-approved in D-015. Since D-066 (CEO listen 2 of P3-08)
@@ -875,6 +925,14 @@ because these carry the game:
     `scare fake_out` with a player outdoors; the crow caws (`kill 2`, then `ghost caw 2`); the scream and the
     cloth (`emote scream 2`, `emote wave 2`); the paper slide (`phase dawn`). Is the scream scary or silly? CEO listen 3 redo: jumpscare hit,
     shed slam and bang, presence swell (breathing), the three caws, the scream's ending, the paper slide.
+11. Phase 4 (P4-17), section 10.7, all synthetic placeholders. In this order: the four lurk signatures
+    `cre_<body>_sig_01..03` (is the husk rattle clearly not corn rustle? back to back with `sfx_corn_rustle_*`);
+    the animals (chicken, pig, cow, then the three panic sounds: do they read as animals at all? if not, say so
+    and a D-066 download replaces them); `cre_gnaw`; the flare (`sfx_flare_shot`, `sfx_flare_hiss_loop`,
+    `cre_flare_hit`); the cart loop `sfx_cart_squeak_loop`; the five walkie sounds (`vox_radio_*`); the UI set
+    (`ui_click`, `ui_confirm`, `ui_deny`, `ui_coins`, `ui_stamp`, `ui_award_reveal`, `ui_shop_bell`); and the
+    Dawn Report low-pass (`phase dawn`: wind and SFX dull, the card and the replayed clips clear).
+    The `cre_jumpscare_hit` redo waits for the P4-16 bodies.
 
 ## 15. Gotchas
 
