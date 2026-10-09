@@ -314,3 +314,10 @@ Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent bac
 2. **`production/CONTRACTS.md:265`** does not list the `loose`/`picked_up` states or the new `cause` field. Director, with a DECISIONS entry.
 3. **`tools/qa/check_logs.py:291-297`** counts loose events from a death or leave as the victim acting; count only `cause: "pried"`. QA.
 4. **A client victim quitting mid-race** not tested live (`--force-spring` springs only host traps).
+
+## Found at the P4-33 follow-up review (QA, 2026-10-09)
+
+1. **Dawn Report flag count** is "planted minus pulled up"; flags cleared by disarm, fill or a leaver still count. Accepted as deliberate. Gameplay, if the CEO asks.
+2. **A dropped flag seen by a third client** not verified; needs 3 instances. QA.
+3. **`game/net/net.gd` `apply_flags(positions)`** name no longer matches what it carries. Gameplay.
+4. **Q-230** still open.
