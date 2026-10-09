@@ -1,12 +1,21 @@
 """P4-26: writes the footstep SuperCollider sources (assets/audio/src/sfx_step_<surface>_NN.scd), doc 08 s11.2.
-Run: uv run --no-project python tools/audio/gen_steps.py   then   uv run tools/audio/render.py <ids> --spectrogram
+Run: uv run --no-project python tools/audio/gen_steps.py --render
+(writes the sources, renders them, then re-renders the louder variants of each surface with a lower --peak so
+every variant's RMS sits within SPREAD_DB of the quietest; P4-26 QA. Without --render it only writes sources.)
 CEO session 2026-10-09: the P1-10 steps (a sine "boop" body under noise) sounded bad. These are noise only:
 a heel strike, a toe roll 60 to 120 ms later, a scuff between them and the surface texture (soil grains,
 leaf brush, plank knock). Each variant draws its own numbers from its seed, so variants differ in timing,
 weight and texture, not only in pitch. Every sound is a placeholder."""
+import array
+import math
+import subprocess
+import sys
+import wave
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parents[2] / "assets" / "audio" / "src"
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / "assets" / "audio" / "src"
+SPREAD_DB = 1.5  # max RMS spread between the variants of one surface (QA asked for about 2 dB)
 N = 6  # variants per surface; soundscape.gd never plays the same one twice in a row
 
 # Shared pieces (SuperCollider). @SEED@ is the variant seed. The language-side rrand calls run once at
@@ -40,7 +49,7 @@ FOOT = """			var hEnv = EnvGen.ar(Env.perc(0.002, 0.07, curve: -6));
 
 T = {}
 T["dirt"] = (HEAD + """		SynthDef(\\step, { |out = 0|
-""" + FOOT + """			Out.ar(out, thud + weight + toeHit + scuff + crunch);
+""" + FOOT + """			Out.ar(out, HPF.ar(HPF.ar(thud + weight + toeHit + scuff + crunch, 30), 30));
 		})
 	],
 	events: [[0, [\\s_new, \\step, -1, 0, 0]]]
@@ -52,7 +61,7 @@ T["corn"] = (HEAD + """		SynthDef(\\step, { |out = 0|
 """ + FOOT + """			var lEnv = EnvGen.ar(Env([0, 1, 0.6, 0], [0.025, toe + 0.05, 0.22 * extra], [2, -1, -4]));
 			var leaf = BPF.ar(WhiteNoise.ar, LFNoise1.kr(9).range(2600, 5200) * tone, 0.9) * LFNoise2.ar(90).range(0, 1).squared;
 			var dry = HPF.ar(Decay2.ar(Dust.ar(450 * extra), 0.0002, 0.002) * WhiteNoise.ar, 2800);
-			Out.ar(out, thud + weight + toeHit + scuff + crunch + (LPF.ar(leaf * 0.9 + (dry * 0.6), 7000) * lEnv * extra));
+			Out.ar(out, HPF.ar(HPF.ar(thud + weight + toeHit + scuff + crunch + (LPF.ar(leaf * 0.9 + (dry * 0.6), 7000) * lEnv * extra), 30), 30));
 		})
 	],
 	events: [[0, [\\s_new, \\step, -1, 0, 0]]]
@@ -75,7 +84,7 @@ T["wood"] = HEAD + """		SynthDef(\\step, { |out = 0, creak = 0|
 			var crEnv = EnvGen.ar(Env([0, 0, 1, 0.6, 0], [0.04, 0.04, 0.12, 0.08], [0, 2, 0, -3]));
 			var stick = Decay2.ar(Impulse.ar(LFNoise1.kr(25).range(55, 110)), 0.0002, 0.002);
 			var cr = Klank.ar(`[[520, 1130, 1870] * tone, [1, 0.5, 0.3], [0.02, 0.015, 0.01]], stick) * crEnv * creak * 0.015;
-			Out.ar(out, plank + thud + straw + cr);
+			Out.ar(out, HPF.ar(HPF.ar(plank + thud + straw + cr, 30), 30));
 		})
 	],
 	events: [[0, [\\s_new, \\step, -1, 0, 0, \\creak, @CREAK@]]]
@@ -91,6 +100,16 @@ DESC = {
 DUR = {"dirt": 0.35, "corn": 0.5, "wood": 0.4}
 SEED0 = {"dirt": 2610, "corn": 2620, "wood": 2630}
 
+def render(ids: list[str], peak: float) -> None:
+    subprocess.run(["uv", "run", "tools/audio/render.py", *ids, "--spectrogram", "--peak", str(peak)], cwd=ROOT, check=True)
+
+
+def rms_db(sid: str) -> float:
+    with wave.open(str(ROOT / "assets" / "audio" / f"{sid}.wav")) as w:
+        a = array.array("h", w.readframes(w.getnframes()))
+    return 20 * math.log10(math.sqrt(sum(x * x for x in a) / len(a)) / 32768)
+
+
 V = [(f"sfx_step_{s}_{n:02d}", s, n) for s in ("dirt", "corn", "wood") for n in range(1, N + 1)]
 
 if __name__ == "__main__":
@@ -101,3 +120,18 @@ if __name__ == "__main__":
             txt = txt.replace(f"@{k}@", str(v))
         (OUT / f"{sid}.scd").write_bytes(txt.encode())
     print(" ".join(sid for sid, _, _ in V))
+    if "--render" in sys.argv:
+        render([sid for sid, _, _ in V], -1.0)
+        for s in ("dirt", "corn", "wood"):
+            ids = [sid for sid, s2, _ in V if s2 == s]
+            peaks = dict.fromkeys(ids, -1.0)
+            for _ in range(4):  # noise renders differ a little each time (README), so re-check after re-rendering
+                levels = {sid: rms_db(sid) for sid in ids}
+                top = min(levels.values()) + SPREAD_DB  # sub-30 Hz is filtered out, so whole-file RMS is the audible level
+                over = [sid for sid, lv in levels.items() if lv > top + 0.2]
+                for sid in over:
+                    peaks[sid] = round(peaks[sid] - (levels[sid] - top), 2)
+                    render([sid], peaks[sid])
+                if not over:
+                    break
+            print(s, " ".join(f"{sid[-2:]}:{rms_db(sid):.1f}" for sid in ids))

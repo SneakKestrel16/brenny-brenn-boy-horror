@@ -21,7 +21,7 @@ grit = rrand(0.6, 1.0); gd = rrand(1400, 2600); extra = rrand(0.7, 1.0);
 			var cEnv = EnvGen.ar(Env([0, 1, 0.35, 0.9, 0], [0.004, toe, 0.004, 0.11], -4));
 			var grains = Decay2.ar(Dust.ar(gd), 0.0002, 0.0025) * WhiteNoise.ar;
 			var crunch = LPF.ar(BPF.ar(grains, 2200 * tone, 1.6), 4500) * cEnv * grit * 0.9;
-			Out.ar(out, thud + weight + toeHit + scuff + crunch);
+			Out.ar(out, HPF.ar(HPF.ar(thud + weight + toeHit + scuff + crunch, 30), 30));
 		})
 	],
 	events: [[0, [\s_new, \step, -1, 0, 0]]]

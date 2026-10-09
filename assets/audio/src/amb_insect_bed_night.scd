@@ -1,8 +1,10 @@
-// amb_insect_bed_night (placeholder). Stereo cricket bed, 20 s loop: 20 voices each repeat a
-// 3-chirp train at 4.2 to 5.4 kHz every 3.0 to 5.5 s (P4-26, CEO: chirps too often; was 0.9 to 1.6 s),
-// random pan and phase; a faint high-noise floor. No train crosses the end. Doc 08 sections 4.1, 11.1.
-// The bed carries the Stalk tell (it must never be silent in the loop): 20 voices still give about
-// 4.7 trains a second (was 16), and the floor is steady.
+// amb_insect_bed_night (placeholder). Stereo cricket bed, 20 s loop: 20 voices at 4.2 to 5.4 kHz take turns
+// chirping a 3-chirp train, one train every 0.15 to 0.27 s across the bed (about 4.7 a second); the next voice
+// is a random one that has rested at least 3 s, so each voice repeats every 3 to about 5 s (P4-26, CEO: chirps
+// too often; voices used to repeat every 0.9 to 1.6 s, 16 trains a second). Shared turns, not independent
+// timers: independent timers cluster and leave gaps near 0.9 s, and doc 08 s4.2
+// keeps the layer above -4 dB from its base (P4-26 QA). Random pan; a faint high-noise floor. No train
+// crosses the end. Doc 08 sections 4.1, 4.2, 11.1.
 (
 var dur = 20;
 thisThread.randSeed = 1701;
@@ -20,13 +22,19 @@ thisThread.randSeed = 1701;
 			Out.ar(out, [HPF.ar(PinkNoise.ar, 5000), HPF.ar(PinkNoise.ar, 5000)] * 0.004);
 		})
 	],
-	events: [[0, [\s_new, \floor, -1, 0, 0]]] ++ 20.collect { |v|
-		var f = rrand(4200, 5400), p = rrand(-0.9, 0.9), a = rrand(0.08, 0.2), t = rrand(0.0, 5.5), out = List.new;
-		while { t < (dur - 0.5) } {
-			out.add([t, [\s_new, \cricket, -1, 0, 0, \freq, f * rrand(0.995, 1.005), \amp, a, \pan, p]]);
-			t = t + rrand(3.0, 5.5);
+	events: [[0, [\s_new, \floor, -1, 0, 0]]] ++ Routine {
+		var vs = 20.collect { [rrand(4200, 5400), rrand(-0.9, 0.9), rrand(0.12, 0.2)] }, t = rrand(0.0, 0.15);
+		var last = 20.collect { rrand(-5.0, 0.0) }; // seconds since each voice last chirped, at the start
+		while { t < (dur - 0.25) } {
+			// a random voice that has rested 3 s, or the one that has rested longest if it passed 5 s: no fixed order
+			var idle = (0..19).select { |k| (t - last[k]) >= 3.0 };
+			var old = (0..19).maxItem { |k| t - last[k] };
+			var k = if ((t - last[old]) >= 5.0 or: { idle.isEmpty }) { old } { idle.choose };
+			var v = vs[k];
+			last[k] = t;
+			[t, [\s_new, \cricket, -1, 0, 0, \freq, v[0] * rrand(0.995, 1.005), \amp, v[2], \pan, v[1]]].yield;
+			t = t + rrand(0.15, 0.27);
 		};
-		out.asArray
-	}.flatten(1).sort { |a, b| a[0] <= b[0] }
+	}.all
 )
 )

@@ -22,7 +22,7 @@ grit = rrand(0.6, 1.0); gd = rrand(1400, 2600); extra = rrand(0.7, 1.0);
 			var crEnv = EnvGen.ar(Env([0, 0, 1, 0.6, 0], [0.04, 0.04, 0.12, 0.08], [0, 2, 0, -3]));
 			var stick = Decay2.ar(Impulse.ar(LFNoise1.kr(25).range(55, 110)), 0.0002, 0.002);
 			var cr = Klank.ar(`[[520, 1130, 1870] * tone, [1, 0.5, 0.3], [0.02, 0.015, 0.01]], stick) * crEnv * creak * 0.015;
-			Out.ar(out, plank + thud + straw + cr);
+			Out.ar(out, HPF.ar(HPF.ar(plank + thud + straw + cr, 30), 30));
 		})
 	],
 	events: [[0, [\s_new, \step, -1, 0, 0, \creak, 1]]]
