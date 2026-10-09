@@ -195,3 +195,15 @@ Source: the CEO's own play test at STOP 5 (host and one client on one PC). Route
    s7.3 scarecrow spots. Nothing tells the player that. Not routed; the CEO decides.
 10. **Would a bigger watering can fix the money gap?** Watering can capacity is 2 plots per fill
     (doc 02 s3, placeholder). P4-28 runs the simulator on it.
+
+## Found at the P4-21 review (QA, 2026-10-09)
+
+1. **Bot nights are dark nights.** The generator dies in every night of every bot season
+   (`generator_dead` 7 of 7). Bots never refuel after 50 s into the night, so they wait in a dark barn. A
+   Tainted bot does not wash at night: one QA season (`qts8_3p`) lost a bot to a `night_chase` inside the
+   barn. Human seasons would show whether a median team refuels.
+2. **The Prize Pumpkin is judged "sad" in every bot season** (`guarded_nights` 0). The sim's median
+   policy assumes `pumpkin_size` "large". This is part of the `sim.py compare` final-dawn gap.
+3. **No normal-length bot season has won** (13 builder seasons, 2 QA seasons). Final payments come up 358
+   to 949 short at 3p and 4p. Q-162 (idle host) and Q-164 (sentinel) decide how far bot seasons can stand
+   in for the median team.

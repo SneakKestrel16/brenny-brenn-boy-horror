@@ -1111,3 +1111,18 @@ stale `held_prize`, so `hold_registry.gd` refuses every verb but `set_down_prize
 (`hands_full`), and `load_cart` refuses `loaded`: those players are stuck until dawn (thousands of
 refusals per season). Bots now claim the pumpkin so only one lifts, but two humans can still hit it.
 Suggested fix: in `complete`, return without effect when `carrier != 0`, or re-run `can_start` there.
+
+### Q-164 · 2026-10-09 · QA -> Director · open
+P4-21 review (FAIL). Three items:
+1. **Bug, AI Programmer:** `game/bots/bot.gd:286` `_keeps_payment` lets bots buy moonflowers (`grow_days` 0)
+   from the first-payment money on day 3. At 2p no bot harvests at night (the sole bot is the sentinel),
+   so they wilt. `s2p_1` went from 110 to 10 coins and `s2p_2` from 62 to 12 before the foreclosure at
+   dawn 4. Fix it and re-run the 2p seasons.
+2. **FOR CEO (via the Game Designer, with Q-161):** the sanctuary sentinel. One player parked at the town
+   stand all night counts as "outside" (`game/ai_director/sabotage.gd:331`), so the "Unattended farm" term
+   is 0 at no risk. That breaks doc 01 "Nights" ("Hiding is never fully safe or free"). A human team could
+   use this rule hole too. Decide whether to close it (players in sanctuary do not count as outside) or
+   accept it. Until then, QA reads bot-season economy numbers as an upper bound, not a median team.
+3. **Director ruling:** do Harvest Moon deaths count toward "night deaths at the sim median or below"?
+   The sim spreads its 2 deaths over nights 1 to 7, and night 7 is the Harvest Moon. Counting them, 3 of
+   13 builder seasons and 1 of 2 QA seasons have 3 deaths.
