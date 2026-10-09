@@ -130,3 +130,25 @@ a hair; RMS the same). All sources CC0 with the whole chain checked (doc 08 sect
 Lead changes in `soundscape.gd` (TAINT_DB -20, crow burst +0.4 dB, wind pitch 0.5 and -3.1 dB) are in doc 08.
 Not used: Smash.ogg 536777 (mixes a deleted account's sound whose license cannot be checked).
 For the CEO to listen: the six above (`scare jumpscare 2`, `scare shed 2`, `scare hallucination 2`, `ghost caw 2`, `emote scream 2`, `phase dawn`).
+
+## CEO listen 4 (2026-10-08)
+Kept as liked: heartbeat, shed slam and bang, crow burst, scream, caws, wind, lunge (their WAVs differ only by the
+edge fix below). Rejected: jumpscare ("breaking a door"), presence swell (pig, too short), paper slide ("off").
+Per the Director, nothing is installed: three options each are in `builds/sound_options/` (doc 08 section 13.1 lists
+sources, lengths, RMS; RMS matches the old targets -9.4, -16.6, -20.8). Built with SoX (trim, EQ, pitch, DC) and
+SuperCollider NRT (layers, leaf-burst, thud and air sweeteners) by a scratch script; installing a pick means adding
+its recipe to `process_downloads.py`, copying the original mp3s into `assets/audio/src/dl/` with LICENSE.txt lines,
+removing the orphan originals (562189, 553886, 115917, 233111, 46631 once unused), rewriting doc 08 rows, and
+re-importing. Fixed (QA LOW): `process_downloads.py` trims, removes DC, then fades; first and last sample of all 11 WAVs
+are 0 (lengths and RMS unchanged). Listen to: the nine options. Flagged sources: craigsmith 675443 and 479677
+(1930s-60s film effects, see doc 08 13.1).
+
+### CEO listen 4 picks (installed)
+Presence B (dog 461839) and paper C (kyles 451411) are installed: originals and LICENSE.txt lines in
+`assets/audio/src/dl/`, recipes (`dog()`, `even()`, `paper()`) in `process_downloads.py` (pure numpy; the option's SoX
+and SuperCollider steps and its synthetic air swells are dropped, so it reproduces both WAVs). `cre_presence_swell` is
+5.69 s, RMS -16.6, peak -2.3 (was -1.0 in the option: ducking the loudest breath lowers the peak at equal RMS); its
+two breaths peak within 2 dB and nearly all energy is under 200 Hz, so it is a heavy low breath and small speakers
+will carry little of it. `ui_paper_slide` is 0.48 s, RMS -20.8, peak -1.0. Orphans removed: 233111, 46631. The
+jumpscare is not picked: its sources and the current WAV stay.
+

@@ -581,7 +581,7 @@ marked. Rows tagged **(real)** are Freesound CC0 recordings since D-066 (section
 | `sfx_taint_heartbeat` (changed twice) | 3.43 s loop | -19.0 | 70 bpm lub-dub, wet: a resonant low-pass squelch on each thump, low-passed 900 Hz, a stronger knock (CEO listen 1: more body above 100 Hz so small speakers carry it; played at -42, then -32, -26 and now -20 dB) |
 | `cre_jumpscare_hit` **(real)** | 1.39 s | -9.4 | CEO listen 3: a violent wood smash, not a cinematic boom: wooden box smash + wood smash + table crash layered on the body thud (section 13); 2 dB louder than the generated -11.4 for the startle; played at -8 dB (unchanged) |
 | `cre_lunge` **(real)** | 0.89 s | -13.9 | corn walk + body thud (section 13), liked at listen 3; played at -4 dB |
-| `cre_presence_swell` **(real)** | 2.83 s | -16.6 | CEO listen 3: a close slow pig breathing (two breaths, CC0 chain), no slow-down, low-passed at 1.1 kHz, clicks ducked, swell envelope; played at -8 dB |
+| `cre_presence_swell` **(real)** | 5.69 s | -16.6 | CEO listen 4 pick (option B): a sleeping dog's slow heavy breathing, played at 0.85x so it reads bigger, high-pass 40 Hz and low-pass 1.8 kHz, loud breaths ducked so the breaths are even (section 13); peak -2.3 dBFS; played at -8 dB |
 | `cre_corn_part_01`, `_02` (redone) | 1.00 s | -10.2, -10.2 | CEO listen 1: dense leaf and husk crackle, shoulder push, green-wood snaps (no ringing resonators); played at -12 dB (was -6) |
 | `sfx_ragdoll_thud_01`, `_02` (redone) | 0.70 s | -14.8, -14.4 | CEO listen 1: heavier: saturated sub drop, flesh slap, dirt grains, dull rattles instead of bright ticks |
 | `sfx_door_slam` **(real)** | 2.00 s | -14.0 | CEO listen 3: a hard thump on the wall, then a heavy wooden door kicked shut with rattle and a sharp slam transient (section 13); 5 dB louder than the generated -19.0 for the startle; played at -2 dB |
@@ -589,7 +589,7 @@ marked. Rows tagged **(real)** are Freesound CC0 recordings since D-066 (section
 | `sfx_crow_burst` **(real)** | 1.21 s | -18.0 | two startled caws and wing beats (section 13), liked at listen 3; played at +0.4 dB (listen 3: x1.4 amplitude, +2.9 dB from -2.5) |
 | `vox_emote_scream` **(real)** | 2.46 s | -16.4 | one whole scream with its own natural fall-off (the earlier cut ended it abruptly: "mechanical" at listen 3); kept by D-067; played at -1 dB |
 | `sfx_emote_cloth` | 0.70 s | -24.5 | cloth rustle under wave, point and shrug (P3-11) |
-| `ui_paper_slide` **(real)** | 0.58 s | -20.8 | a sheet sliding over a table, dry (section 13); played at -10.4 dB |
+| `ui_paper_slide` **(real)** | 0.48 s | -20.8 | CEO listen 4 pick (option C): one sheet scritching across wood, 0.6-10 kHz, no room (section 13); played at -10.4 dB |
 
 - **Taint heartbeat (Q-060).** `Soundscape` polls `Game.players[local].tainted` every frame; no
   `set_local_state` call from `Player` is needed. While Tainted and alive it loops `sfx_taint_heartbeat`
@@ -707,7 +707,7 @@ is generic farm stock and changes without touching the list shape.
 | `cre_jumpscare_hit` | C | M | 1.4 | no | 3 | **real** (section 13): wood smash and table crash layered with a body thud |
 | `cre_lunge` | C | M | 0.9 | no | 1 | **real** (section 13): corn walk rush, then a body thud |
 | `cre_corn_part_01..03` | C | 3D | 1 | no | 1 | heavy stalks: dense leaf crackle + push + green-wood snaps |
-| `cre_presence_swell` | C | M | 2.8 | no | 3 | **real** (section 13): two slow close animal breaths; the private "something's there" |
+| `cre_presence_swell` | C | M | 5.7 | no | 3 | **real** (section 13): two slow heavy dog breaths, 0.85x; the private "something's there" |
 | `cre_door_bang_01..03` | C | 3D | 1.6 | no | 1 | `_01` **real** (section 13): hard banging on a rattling door over a heavy thump; `_02`, `_03` not built |
 | `cre_gnaw` | C | 3D | 2.5 | no | 3 | wet crunch bursts |
 | `cre_trap_set_01..02` | C | 3D | 1.2 | no | 1 | scrape of dirt + metal click-clack |
@@ -721,7 +721,7 @@ is generic farm stock and changes without touching the list shape.
 | `sfx_still_heartbeat_loop` | S | M | 3 | yes | 1 | dry close "tum-tum" at 60 bpm x 3, a tighter attack than Taint's |
 | `sfx_shaken_ring` | S | M | 4 | no | 3 | 4 kHz sine with slow decay + faint 8 kHz overtone |
 | `ui_click`, `ui_confirm`, `ui_deny` | U | M | 0.1 to 0.35 | no | 1 | short wood tick, up-chirp, down-chirp (sine) |
-| `ui_paper_slide`, `ui_paper_rustle` | U | M | 0.6 | no | 3 | `ui_paper_slide` **real** (section 13): a sheet sliding over a table (Dawn Report); `ui_paper_rustle` not built |
+| `ui_paper_slide`, `ui_paper_rustle` | U | M | 0.5 | no | 3 | `ui_paper_slide` **real** (section 13): one sheet scritching across wood (Dawn Report); `ui_paper_rustle` not built |
 | `ui_stamp` | U | M | 0.4 | no | 3 | stamp thump + paper |
 | `ui_rec_start`, `ui_rec_stop` | U | M | 0.25 | no | 2 | soft two-tone tally ticks (the recording light's audio, doc 01 "Recording light") |
 
@@ -816,8 +816,8 @@ No voice pack, no music, no other license.
 | `cre_door_bang_01` | [623701 banging on rattling door](https://freesound.org/people/mediatheksuche/sounds/623701/) + 529396 | mediatheksuche, bouncyballblue | 0 to 1.6 s with the thump under the first hit (0.7); RMS -13.8 dB (+3 dB over -16.8) |
 | `cre_jumpscare_hit` | [562189 snd_box_smash](https://freesound.org/people/gristi/sounds/562189/) + [553886 Smash/knock wood](https://freesound.org/people/sukondi/sounds/553886/) + [115917 Weak table crash](https://freesound.org/people/issalcake/sounds/115917/) + [673424 Falling body hits the floor](https://freesound.org/people/courtneyeck/sounds/673424/) | gristi, sukondi, issalcake, courtneyeck | box smash 0 to 1 s, wood smash (0.9) and table crash 1.8 to 3.0 s (0.6) aligned on their first hit, body thud 1.0 to 1.6 s at 0.05 s (0.8); high-pass 30 Hz; RMS -9.4 dB (+2 dB over -11.4). Not used: 536777 Smash.ogg (egomassive), because it mixes "Crack of branch 3" by a deleted Freesound account whose license cannot be checked |
 | `cre_lunge` | [613567 Walking Through Corn Field](https://freesound.org/people/zazz.sound.design/sounds/613567/) + 673424 | zazz.sound.design, courtneyeck | corn 8.0 to 8.5 s, x4, fade-in 0.25 s, then the thud at 0.45 s |
-| `cre_presence_swell` | [233111 Pig - Breathing and chewing 1](https://freesound.org/people/JarredGibb/sounds/233111/) | JarredGibb | 2.5 to 5.45 s (two breaths, before a lip click); no slow-down; clicks ducked; high-pass 60 Hz, low-pass 1.1 kHz (smooth 4th-order, no ringing); swell envelope. Replaces 350414, whose chain led to a CC-BY 3.0 sound |
-| `ui_paper_slide` | [46631 sliding paper on table](https://freesound.org/people/123jorre456/sounds/46631/) | 123jorre456 | one slide, 1.82 to 2.55 s, 100 ms fade, no added reverb, no speed change |
+| `cre_presence_swell` | [461839 2-1 dog breathing- sleeping](https://freesound.org/people/15GPanskaCepelak_Adam/sounds/461839/) | 15GPanskaCepelak_Adam | 3.8 to 9.0 s (two slow breaths); played at 0.85x (linear-interpolated slow-down); high-pass 40 Hz, low-pass 1.8 kHz (smooth 4th-order); loud breaths ducked (120 ms follower, gain = (thr/env)^0.9 above peak -12 dB) so the two breaths peak within 2 dB; 0.15 s fade-in, 0.4 s fade-out. The option-B air swells (synth) are not used. Replaces the pig 233111. |
+| `ui_paper_slide` | [451411 foley paper sheet of white paper slide around on wood](https://freesound.org/people/kyles/sounds/451411/) | kyles | one scritch, 2.3 to 2.85 s; high-pass 600 Hz, low-pass 10 kHz; 4 ms fade-in, 80 ms fade-out; no added reverb. Replaces 46631. |
 
 `sfx_taint_heartbeat` stays generated: no clearly better CC0 beat was found. Not used:
 
@@ -826,6 +826,35 @@ No voice pack, no music, no other license.
 | Real voice lines for strangers | CEO or a consented person | n/a | not used; synthetic only |
 | TTS for stranger lines | OS built-in or offline TTS | to be checked | **not used; FOR CEO (Q-031)** |
 | Music | none | n/a | no day music or score, ever (CEO, Phase 1 playtest); only the chase sting |
+
+### 13.1 CEO listen 4 (2026-10-08)
+
+CEO listen 4 rejected `cre_jumpscare_hit` ("monster breaking a door"), `cre_presence_swell` (pig breath, too
+short) and `ui_paper_slide`. Three options each were built in `builds/sound_options/<sound_id>_A/_B/_C.wav`
+(git-ignored; scratch sources). The CEO picked **presence B** (installed, with the loudest breath ducked) and
+**paper C** (installed); the jumpscare pick is still open and the current jumpscare stays, so its sources
+(562189, 553886, 115917, 673424) stay in `assets/audio/src/dl/`. The pig and the old paper original are removed.
+`process_downloads.py` now trims leading silence, removes DC, then fades, so every installed WAV starts and ends
+at sample 0 (QA LOW; the presence swell began at -2975 and the paper slide at -987 before).
+
+| Sound | Option | Sources (all CC0 pages checked, no remix chain except where noted) | Length / RMS |
+|---|---|---|---|
+| jumpscare | A | Louisville Zoo tiger roar (lauramellis 263115) + 0.7x copy, corn field (zazz 613567), body fall (courtneyeck 673424), synth leaf burst | 1.60 s / -9.4 |
+| jumpscare | B | leaf burst first, then black bear growl (celldroid 763026) + 0.8x copy, body fall | 1.80 s / -9.4 |
+| jumpscare | C | lion roars (craigsmith 675443, flagged below) + 0.6x copy, corn field, body fall, synth burst | 1.60 s / -9.4 |
+| presence | A | horse breathing (craigsmith 479677, flagged), two breaths, + 0.85x copy | 6.60 s / -16.6 |
+| presence | B | sleeping dog (15GPanskaCepelak_Adam 461839) at 0.85x, synth low air swells | 6.57 s / -16.6 |
+| presence | C | cow breaths (JarredGibb 233137) at 0.8x + original, synth low air swells | 6.80 s / -16.6 |
+| paper | A | PaperSlide (eyesonlegs 464302), last 0.8 s of the pull, 0.8-11 kHz | 0.85 s / -20.8 |
+| paper | B | dropping and sliding paper (123jorre456 46625), clean swish, 0.9-11 kHz | 0.53 s / -20.8 |
+| paper | C | paper sheet on wood (kyles 451411), scritch, 0.6-10 kHz | 0.54 s / -20.8 |
+
+Flag for the CEO: craigsmith's 675443 and 479677 are CC0 on Freesound, but he states they are digitised copies of
+Hollywood optical and magnetic effects from the 1930s to the 1960s (USC Cinema). The CC0 grant is his; whether the
+original studio recordings are free of rights is not something the page settles. Options A and B for the jumpscare
+and B and C for the presence avoid them. Rejected as human voice or unclear chains: Vaporpup tiger and jaguar
+(mouth), 190595 dog snarl (voice, reversed), 170454 growl (voice), 470900 and 844096 breathing (voice), 350414
+(derived from a sound outside the checked chain).
 
 ## 14. Listening list for the CEO
 

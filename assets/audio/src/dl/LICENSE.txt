@@ -17,5 +17,5 @@ freesound_452609.mp3  https://freesound.org/people/kyles/sounds/452609/  kyles  
 freesound_216872.mp3  https://freesound.org/people/CastIronCarousel/sounds/216872/  CastIronCarousel  "Doorslam.wav"  CC0
 freesound_623701.mp3  https://freesound.org/people/mediatheksuche/sounds/623701/  mediatheksuche  "baging_on_rattling_door_4x.wav"  CC0
 freesound_613567.mp3  https://freesound.org/people/zazz.sound.design/sounds/613567/  zazz.sound.design  "VEGEMisc_Walking Through Corn Field_FC_KOKORIN_8040.ORTF.wav"  CC0
-freesound_233111.mp3  https://freesound.org/people/JarredGibb/sounds/233111/  JarredGibb  "Pig - Breathing and chewing 1 - 96kHz.wav"  CC0
-freesound_46631.mp3  https://freesound.org/people/123jorre456/sounds/46631/  123jorre456  "sliding paper on table.wav"  CC0
+freesound_461839.mp3  https://freesound.org/people/15GPanskaCepelak_Adam/sounds/461839/  15GPanskaCepelak_Adam  "2-1 dog breathing- sleeping.wav"  CC0
+freesound_451411.mp3  https://freesound.org/people/kyles/sounds/451411/  kyles  "foley paper sheet of white paper slide around on wood variations.wav" (page title truncated in the fetch; no remix chain)  CC0

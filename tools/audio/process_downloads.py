@@ -28,14 +28,14 @@ def mix(*parts):  # (audio, delay_s, gain)
     for a, d, g in parts: o[int(d*R):int(d*R)+len(a)] += a*g
     return o
 def norm(a, rms_db):
-    a = a - a.mean(); pk = 10**(-1/20); t = 10**(rms_db/20)
+    pk = 10**(-1/20); t = 10**(rms_db/20)
     lim = lambda g: pk*np.tanh(g*a/pk)  # soft limit at pk
     lo, hi = 0.0, 1000.0
     for _ in range(60):
         g = (lo+hi)/2; r = np.sqrt((lim(g)**2).mean())
         lo, hi = (g, hi) if r < t else (lo, g)
     o = lim(g); return o*(pk/abs(o).max()) if abs(o).max() > pk else o
-def caw(i, t0, t1): return fade(gate(filt(seg(load(i), t0, t1), hp=150)), 0.004, 0.09)
+def caw(i, t0, t1): return gate(filt(seg(load(i), t0, t1), hp=150))
 def declick(a):  # duck the lip/chew clicks: short 2-9 kHz bursts far above their surroundings
     h = filt(a, hp=2000, lp=9000); w = int(0.004*R)
     e = np.sqrt(np.convolve(h**2, np.ones(w)/w, "same"))
@@ -43,30 +43,39 @@ def declick(a):  # duck the lip/chew clicks: short 2-9 kHz bursts far above thei
     m = (e > 3*med+1e-4).astype(float); k = int(0.015*R)
     m = np.clip(np.convolve(m, np.hanning(2*k+1)/np.hanning(2*k+1).sum(), "same")*3, 0, 1)
     return a*(1-0.9*m)
-def breath():  # pig breathing (Jarred Gibb), no slow-down: low-passed so the hiss goes, smooth swell
-    a = filt(declick(seg(load(233111), 2.5, 5.45)), hp=60, lp=1100); n = len(a)
-    env = np.minimum(np.minimum(np.linspace(0,1,n)/0.2, 1), np.linspace(1,0,n)/0.25)
-    return a*np.clip(env, 0, 1)
+def slow(a, r):  # play at speed r (pitch and length change together), linear interpolation: the source is band-limited low
+    return np.interp(np.arange(0, len(a)-1, r), np.arange(len(a)), a)
+def even(a, top_db=-12.0, ratio=0.9, win=0.12):  # duck the loud breaths: above top_db (re the peak) the gain follows env^-ratio
+    h = int(win*R); e = np.sqrt(np.convolve(a**2, np.hanning(h)/np.hanning(h).sum(), "same")) + 1e-9
+    thr = e.max()*10**(top_db/20); g = np.where(e > thr, (thr/e)**ratio, 1.0)
+    return a*np.convolve(g, np.hanning(h)/np.hanning(h).sum(), "same")
+def dog():  # sleeping dog (15GPanskaCepelak_Adam): three slow breaths, played at 0.85x so it reads bigger, loud breaths ducked
+    a = filt(seg(load(461839), 3.8, 9.0), hp=40, lp=1800)
+    return even(slow(a, 0.85))
+def paper():  # sheet of paper scritching across wood (kyles), one clean pull
+    return filt(seg(load(451411), 2.3, 2.85), hp=600, lp=10000)
+# name: (audio before the end fades, rms dB, fade-in s, fade-out s). The main loop trims the leading silence,
+# removes DC, then fades, so the first and last sample are 0 whatever the trim cut.
 S = {
- "sfx_crow_caw_01": (caw(182090, 1.97, 2.5), -16.2),
- "sfx_crow_caw_02": (caw(673545, 5.33, 5.72), -16.2),
- "sfx_crow_caw_03": (caw(556221, 3.3, 3.75), -16.2),
- "sfx_crow_burst": (fade(seg(load(536732), 0.05, 1.3), 0.003, 0.2), -18.0),
- "vox_emote_scream": (fade(seg(load(850699), 0.2, 2.66), 0.02, 0.06), -16.4),
- "sfx_door_slam": (fade(mix((lead(seg(load(529396), 0.0, 0.7)), 0.0, 0.8), (lead(seg(load(452609), 0.0, 1.9)), 0.14, 1.0), (lead(load(216872)), 0.14, 0.9)), 0.001, 0.4), -14.0),
- "cre_door_bang_01": (fade(mix((lead(seg(load(623701), 0.0, 1.6)), 0.0, 1.0), (lead(seg(load(529396), 0.0, 0.7)), 0.0, 0.7)), 0.001, 0.3), -13.8),
- "cre_jumpscare_hit": (fade(filt(mix((seg(load(562189), 0.0, 1.0), 0, 1.0), (lead(seg(load(553886), 0.88, 2.3)), 0.0, 0.9), (lead(seg(load(115917), 1.8, 3.0)), 0.0, 0.6), (seg(load(673424), 1.0, 1.6), 0.05, 0.8)), hp=30), 0.001, 0.4), -9.4),
- "cre_lunge": (fade(mix((fade(seg(load(613567), 8.0, 8.5), 0.25, 0.05)*4, 0, 1.0), (seg(load(673424), 1.05, 1.5), 0.45, 1.0)), 0.01, 0.2), -13.9),
- "cre_presence_swell": (breath(), -16.6),
- "ui_paper_slide": (fade(seg(load(46631), 1.82, 2.55), 0.003, 0.1), -20.8),
+ "sfx_crow_caw_01": (caw(182090, 1.97, 2.5), -16.2, 0.004, 0.09),
+ "sfx_crow_caw_02": (caw(673545, 5.33, 5.72), -16.2, 0.004, 0.09),
+ "sfx_crow_caw_03": (caw(556221, 3.3, 3.75), -16.2, 0.004, 0.09),
+ "sfx_crow_burst": (seg(load(536732), 0.05, 1.3), -18.0, 0.003, 0.2),
+ "vox_emote_scream": (seg(load(850699), 0.2, 2.66), -16.4, 0.02, 0.06),
+ "sfx_door_slam": (mix((lead(seg(load(529396), 0.0, 0.7)), 0.0, 0.8), (lead(seg(load(452609), 0.0, 1.9)), 0.14, 1.0), (lead(load(216872)), 0.14, 0.9)), -14.0, 0.001, 0.4),
+ "cre_door_bang_01": (mix((lead(seg(load(623701), 0.0, 1.6)), 0.0, 1.0), (lead(seg(load(529396), 0.0, 0.7)), 0.0, 0.7)), -13.8, 0.001, 0.3),
+ "cre_jumpscare_hit": (filt(mix((seg(load(562189), 0.0, 1.0), 0, 1.0), (lead(seg(load(553886), 0.88, 2.3)), 0.0, 0.9), (lead(seg(load(115917), 1.8, 3.0)), 0.0, 0.6), (seg(load(673424), 1.0, 1.6), 0.05, 0.8)), hp=30), -9.4, 0.001, 0.4),
+ "cre_lunge": (mix((fade(seg(load(613567), 8.0, 8.5), 0.25, 0.05)*4, 0, 1.0), (seg(load(673424), 1.05, 1.5), 0.45, 1.0)), -13.9, 0.01, 0.2),
+ "cre_presence_swell": (dog(), -16.6, 0.15, 0.4),
+ "ui_paper_slide": (paper(), -20.8, 0.004, 0.08),
 }
 only = sys.argv[1:] or list(S)
 for k in only:
-    a, db = S[k]
-    # trim leading silence below -50 dB
-    i = np.argmax(abs(a) > 10**(-50/20)); a = a[i:]
-    a = norm(a, db)
+    a, db, fi, fo = S[k]
+    i = np.argmax(abs(a) > 10**(-50/20)); a = a[i:]  # trim leading silence below -50 dB
+    a = a - a.mean()
+    a = norm(fade(a, fi, fo), db)
     with wave.open(f"out/{k}.wav", "wb") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(R)
         w.writeframes((a*32767).astype("<i2").tobytes())
-    print(k, f"{len(a)/R:.2f}s pk{20*np.log10(abs(a).max()):.1f} rms{20*np.log10(np.sqrt((a**2).mean())):.1f}")
+    print(k, f"{len(a)/R:.2f}s pk{20*np.log10(abs(a).max()):.1f} rms{20*np.log10(np.sqrt((a**2).mean())):.1f} first{a[0]*32767:.0f} last{a[-1]*32767:.0f}")

@@ -508,7 +508,7 @@ Designer wants one, can use `cost_points`, already in the data.
 Sound effects may come from Freesound.org recordings licensed CC0 and from the Sonniss GameAudioGDC
 bundles (royalty-free, commercial use, no credit). Each downloaded file is listed in doc 08 section 13
 with its source URL, author and license before it is committed. Generated sounds (D-015) stay for
-everything not replaced. Voices of real people stay out (CONTRACTS section 11), and music stays out.
+everything not replaced. Voices of real people stay out (CONTRACTS section 11; one exception, D-067), and music stays out.
 **Why:** CEO listens 1 and 2 of P3-08: the generated jumpscare, lunge, presence, crows, scream and paper
 slide did not sound right after a rework; the CEO asked for a library of real sounds.
 **How to apply:** Audio Designer. Keep the original download unchanged under `assets/audio/src/dl/` with
