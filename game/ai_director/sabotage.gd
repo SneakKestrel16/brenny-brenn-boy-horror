@@ -111,7 +111,8 @@ func _physics_process(delta: float) -> void:
 	if Clock.phase == &"night":
 		_track_night(delta)
 	for p in _farm.registry.holds:
-		_hands_on[_farm.registry.holds[p].target.id] = p
+		if is_instance_valid(_farm.registry.holds[p].target):
+			_hands_on[_farm.registry.holds[p].target.id] = p
 	_check_t += delta
 	if _check_t >= CHECK_S:
 		_check_t = 0.0
@@ -263,6 +264,9 @@ func fixed(id: int, peer: int, how: StringName) -> void:
 		return
 	var d: Dictionary = live[id]
 	live.erase(id)
+	for p in _farm.registry.holds.keys():  # a second player on the same fix: its target is about to go
+		if is_instance_valid(_farm.registry.holds[p].target) and _farm.registry.holds[p].target.id == "dist_%d" % id:
+			_farm.registry.cancel(p, &"gone")
 	if d.has("src"):
 		get_tree().get_first_node_in_group(&"taint").remove_source(d.src)
 	Log.event(&"disturbance_fixed", {"id": id, "kind": String(d.kind), "by": peer, "fix": String(how), "day": Clock.day})
@@ -323,15 +327,29 @@ func _dawn_trample() -> void:
 		"nobody_outside_s": snappedf(_nobody_s, 0.1), "generator_dead": gen_dead, "farm_damage": farm_damage})
 
 
-## Doc 03 section 13 "scarecrow moved": free, daily, never dangerous. One scarecrow to a free spot at least
-## `trap_clear_m` from every armed trap, facing the farmhouse door.
+## Doc 03 section 13 "scarecrow moved": free, daily, never dangerous. One scarecrow to a free spot among
+## `scarecrow_03` to `_07`, never the spot nearest a living player, at least `trap_clear_m` from every trap spot,
+## facing the farmhouse door.
 func _move_scarecrow() -> void:
 	if _crows.is_empty():
 		return
 	var clear := float(_recs.scarecrow_moved.trap_clear_m)
-	var armed: Array = _creature._traps.values().filter(func(t: Dictionary) -> bool: return t.armed) if _creature else []
+	var traps := get_tree().get_nodes_in_group(&"trap_spots")
 	var spots := get_tree().get_nodes_in_group(&"scarecrow_spots").filter(func(n: Node3D) -> bool:
-		return not _crow_at.has(String(n.name)) and not armed.any(func(t: Dictionary) -> bool: return t.position.distance_to(n.global_position) < clear))
+		return String(n.name) >= "scarecrow_03" and String(n.name) <= "scarecrow_07" \
+				and not _crow_at.has(String(n.name)) \
+				and not traps.any(func(t: Node3D) -> bool: return t.global_position.distance_to(n.global_position) < clear))
+	# Inference: "the one closest to a player" is one spot, the nearest to any living player.
+	var near: Node3D = null
+	var near_d := INF
+	for p in Game.players:
+		if _alive(p):
+			for n: Node3D in spots:
+				var d := n.global_position.distance_squared_to(Game.players[p].pos)
+				if d < near_d:
+					near = n
+					near_d = d
+	spots.erase(near)
 	if spots.is_empty():
 		return
 	var i := _rng.randi() % _crows.size()

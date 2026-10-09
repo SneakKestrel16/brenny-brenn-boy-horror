@@ -400,7 +400,7 @@ that belong to Phase 4, so these wait: the `harvest_moon` profile and acts (doc 
 | P3-03 | AI Programmer | Dead players' voices favored in lure choice (doc 03 s12.1; weights from `ai_director.json` `lures`) | done | P3-02 |
 | P3-04 | AI Programmer | AI Director: tension meter, profiles, day arc, region nudges, private events, debug (doc 03 s11); it budgets lures in place of `DAY_LURE_GAP_S` | done | P3-02 |
 | P3-05 | AI Programmer, Audio Designer | Jumpscares, fake-outs, hallucinations (doc 03 s13), spent by the Director | done | P3-04 |
-| P3-06 | AI Programmer | Sabotage from the disturbance budget (doc 03 s10, D-034) | todo | P3-04 |
+| P3-06 | AI Programmer | Sabotage from the disturbance budget (doc 03 s10, D-034) | done | P3-04 |
 | P3-07 | Gameplay, AI Programmer | Taint and Shaken: player side and the well (doc 05 s10), creature tracking (doc 03 s3.3, s8); Taint is off since Phase 1 | done | P3-02 |
 | P3-08 | Technical Artist, Audio Designer | Taint stain and Taint heartbeat; scare and Director sounds (doc 07, doc 08) | done (CEO listen pending) | P3-05, P3-07 |
 | P3-09 | Gameplay, Technical Artist | Ghosts: lantern flicker, crow possession and corn rustle (doc 01 "Ghosts", doc 05 s14, doc 03 s13, doc 07) | done | P3-01 |

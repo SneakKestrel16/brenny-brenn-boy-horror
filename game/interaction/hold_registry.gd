@@ -43,7 +43,7 @@ func cancel(peer: int, reason: StringName = &"released", notify: bool = true) ->
 		return
 	var h: Dictionary = holds[peer]
 	holds.erase(peer)
-	Log.event(&"hold_cancelled", {"player": peer, "verb": String(h.verb), "target": h.target.id,
+	Log.event(&"hold_cancelled", {"player": peer, "verb": String(h.verb), "target": h.target.id if is_instance_valid(h.target) else "",
 			"reason": String(reason), "progress": snappedf(h.progress, 0.01)})
 	_release(h)
 	if notify:  # false when the peer has already left
@@ -69,7 +69,8 @@ func _validate(peer: int, verb: StringName, id: String) -> StringName:
 	var reason := &"no_such_verb"
 	if _flat_dist(st.pos, t.target_pos()) > t.range_m:
 		reason = &"out_of_range"
-	elif Interactable.INSTANT_S.has(verb) or Interactable.fix_hold_s(verb) > 0.0 			or (Data.has_table(&"labor") and not Data.record(&"labor", verb).is_empty()):  # fix_hold_s: P3-06 sabotage
+	elif Interactable.INSTANT_S.has(verb) or Interactable.fix_hold_s(verb) > 0.0 \
+			or (Data.has_table(&"labor") and not Data.record(&"labor", verb).is_empty()):  # fix_hold_s: P3-06 sabotage
 		reason = t.can_start(verb, st)
 	_release({"target": t})
 	return reason
@@ -77,6 +78,8 @@ func _validate(peer: int, verb: StringName, id: String) -> StringName:
 
 func _physics_process(delta: float) -> void:
 	for peer in holds.keys():
+		if not holds.has(peer):
+			continue  # cancelled by an earlier hold's completion this frame (P3-06 shared fixes)
 		var h: Dictionary = holds[peer]
 		var st: Dictionary = farm.pstate(peer)
 		if Game.is_ghost(peer) or not Game.players.has(peer):

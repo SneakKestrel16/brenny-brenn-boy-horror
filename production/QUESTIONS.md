@@ -744,4 +744,6 @@ P3-06 Sabotage. Doc 03 section 10 leaves these open; each is built as an inferen
 1. **When:** budgeted disturbances land at even times through the first third of the day (doc 03 section 11.3: "evidence of sabotage only"). Doc 03 gives no time.
 2. **Where at dawn:** the dawn trample hits the crops nearest the creature at dawn. A plot with no crop is never trampled, so on a bare farm the dawn trample does nothing (`trample` log: `want` 2, `trampled` 0).
 3. **Generator kill:** drains the tank to 0 during the day; the tank refills on the next day (`generator.gd`), logged as fix `new_day`. Like every disturbance, it never lands within 12 m of a living player.
-4. **Not built:** the full-wipe doubling of the next day's budget, the wash and buy-back fixes for a stolen tool that is not a can, and `broken_fence` / `pumpkin_gnaw` (Phase 4, D-059).
+4. **Found in QA:** the budgeted `trample` can land mid-day (doc 03 s10.1 says a plot is trampled at dawn), and the dawn trample hits the plot nearest the creature, so the same plot most dawns. Confirm or ask for a spread.
+5. **Scarecrow moved:** "never the one closest to a player" is read as one spot, the one nearest any living player.
+6. **Not built:** the full-wipe doubling of the next day's budget, the wash and buy-back fixes for a stolen tool that is not a can, and `broken_fence` / `pumpkin_gnaw` (Phase 4, D-059).
