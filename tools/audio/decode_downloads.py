@@ -5,6 +5,7 @@ polyphase (scipy), not linear, so it adds no aliasing grit."""
 import sys, glob, os, wave, miniaudio, numpy as np
 from math import gcd
 from scipy.signal import resample_poly
+os.makedirs(sys.argv[2], exist_ok=True)
 for f in sorted(glob.glob(sys.argv[1]+"/*.mp3")):
     d = miniaudio.mp3_read_file_f32(f)
     a = np.array(d.samples, dtype=np.float32).reshape(-1, d.nchannels)

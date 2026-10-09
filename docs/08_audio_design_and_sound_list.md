@@ -595,8 +595,8 @@ marked. Rows tagged **(real)** are Freesound CC0 recordings since D-066 (section
   `set_local_state` call from `Player` is needed. While Tainted and alive it loops `sfx_taint_heartbeat`
   (non-positional, `SFX`, -20 dB), local only. Log `audio_taint_heartbeat {on}`.
 - **Scares (P3-05 wiring in `game/ai_director/scares.gd`, AI Programmer).** Build-up: `hush(seconds)`
-  (section 4.4 rule 1), plus `cre_door_bang` for the shed. Jumpscare: `cre_jumpscare_hit` (2D) and
-  `sfx_ragdoll_thud` (3D). Disarm lunge: `cre_corn_part` twice, then `cre_lunge`. Shed: `sfx_door_slam`.
+  (section 4.4 rule 1), plus `cre_door_bang` for the shed. Jumpscare: `cre_jumpscare_hit` (2D; the body
+  thud is inside the file). Disarm lunge: `cre_corn_part` twice, then `cre_lunge`. Shed: `sfx_door_slam`.
   Wrong count and hallucination: `cre_presence_swell`. Fake-out: `sfx_crow_burst` at the perch. The
   build-up has no cue beyond the silence (doc 03 s13.1). "The trap" scare is not built, so it has no sound.
 - **Emotes.** `sfx_emote_cloth` on `apply_emote` for every emote but the scream; the scream plays

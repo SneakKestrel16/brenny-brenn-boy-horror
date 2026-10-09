@@ -39,7 +39,7 @@ Owner: Audio Designer  Date: 2026-10-08
 - Two instances, port 24741 (`multi.py -n 2 --headless`, `--dev-exec` on the host), MULTI PASS, 0 SCRIPT ERROR:
   - `taint 2`: `audio_taint_heartbeat on` in the client log only; `taint 2 off` turned it off there.
     `taint 1`: on in the host log only; dawn cleared it.
-  - Client log after each `scare <kind> 2`: jumpscare `audio_hush`, `cre_jumpscare_hit`, `sfx_ragdoll_thud`;
+  - Client log after each `scare <kind> 2`: jumpscare `audio_hush`, `cre_jumpscare_hit`, `sfx_ragdoll_thud` (the thud call is gone since the option 03 install below);
     disarm_lunge `audio_hush`, `cre_corn_part` x2, `cre_lunge`; shed `audio_hush`, `cre_door_bang`,
     `sfx_door_slam`; hallucination and wrong_count `audio_hush`, `cre_presence_swell`. None in the host log.
   - `emote wave 2`: `sfx_emote_cloth` on both peers. `emote scream 2`: `vox_emote_scream` on both.
