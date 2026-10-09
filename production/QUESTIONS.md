@@ -1229,3 +1229,15 @@ collision. Effects to confirm:
    mask 1, no navmesh, no unstuck logic, so a solid trunk on its line would pin it. I kept trunks
    non-solid. If you want players blocked by trunks, the creature needs avoidance first; tell me and I
    add a layer-1 trunk collider.
+### Q-185 · 2026-10-09 · AI Programmer -> Game Designer · open
+P4-25. On the coordinator's instruction (from the CEO's Harvest Moon test) I added a "Nobody pushing"
+bullet to doc 03 section 14: in acts 2 and 3 with nobody pushing, the creature goes for the living
+player it senses nearest the cart and chases them as at night (a catch kills); knock cooldown, stall
+bites, lit-building and sanctuary rules unchanged; in act 2 an unpushed cart lets the AI Director
+allow that chase. Doc 03 is yours: please review the wording or rewrite it.
+
+### Q-186 · 2026-10-09 · AI Programmer -> Director · open
+P4-25. Doc 03 section 6 ("Dark buildings ... it always bangs first", `door_bang_s` 3 s, audible at
+30 m) is not implemented: the creature walks straight into a dark building. The CEO's night 1 kill
+was in the dark barn, which the rule allows, but without the bang. Needs a task (AI Programmer) and
+two `data/creature.json` rows (`door_bang_s`, `door_bang_radius_m`).
