@@ -290,3 +290,20 @@ Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent bac
 
 1. **`yaw_off` in `game/interaction/hold_controller.gd:342` is always 0** because `--autopush` never moves the mouse; it proves facing tracks the cart, not that mouse look survives a turn. Add a fixed yaw offset in `--autopush` to prove it. Gameplay.
 2. **The cart turns about 86 degrees in about 0.3 s at a route corner** (`game/items/cart.gd:364`), and the pusher camera now turns with it. Playtest note.
+
+## Found at the P4-25 review (QA, 2026-10-09)
+
+1. **Corner pin:** a creature inside the wall pad at a barn corner (e.g. (8.43, -20.43)) never moves; `_way_to` (`game/creature/creature.gd:1261-1275`) aims through the wall. Only a spawn, teleport or push puts it there; dawn frees it. Fix: skip `_crosses` when inside `r.grow(WALL_PAD_M)` but not `r`, or step out first. AI Programmer.
+2. **Harvest Moon act 2 opens with a chase** before anyone pushes (`_begin_push`). Game Designer to confirm under Q-185.
+3. **Doc 03 edited by the AI Programmer** (Game Designer owns it). Director asked for it; Game Designer to review under Q-185.
+4. **`creature_dawn_reset` log event** is not in the CONTRACTS log table or doc 05 s18.
+5. **`_door_step`** takes the outward direction from building centre to door; right only while doors are centred on their walls.
+6. **Door bang before entering a dark building** (doc 03 s6) not built; Q-186.
+
+## Found at the P4-22 seed stock review (QA, 2026-10-09)
+
+1. **`tests/net/test_store_client.gd:4-8`** documents `--duration 90`; the client is killed before planting. Use 200. QA.
+2. **Broke team log noise:** every bot `next_job` logs `store_refused seed_turnip no_coins` (`game/items/store.gd:194`, `game/bots/bot.gd`); 287 lines in one run. AI Programmer.
+3. **Cross-owner edits:** `game/bots/bot.gd` (AI Programmer) and `docs/02` line 483 (Game Designer) edited by Gameplay; owners to sign off.
+4. **`request_store` doc comment** in `game/net/net.gd` omits the `seeds` op. Network & Voice.
+5. **Merge note:** bot planting now needs `_keeps_payment(p) and _plantable(p, st)` (P4-18 payment guard kept with P4-22 seed buying); the P4-22 hint offset was dropped for P4-32 left-edge hint.
