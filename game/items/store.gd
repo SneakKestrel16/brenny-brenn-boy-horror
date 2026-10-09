@@ -332,11 +332,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		Net.to_host(&"request_store", [&"scarecrow", &""])
 
 
-## Text for the tester prompt when the local player stands at the crate (no marker: it shows only up close).
-func prompt_text() -> String:
+## Text for the tester prompt when the local player, standing `at`, is at the crate (no marker: it shows only up
+## close). `at` is the local body's position: a client has no `Game.players[me].pos` (only the host sets it).
+func prompt_text(at: Vector3) -> String:
 	var crate := get_tree().get_first_node_in_group(&"store_crate") as Node3D
-	var me: Dictionary = Game.players.get(Game.local_peer(), {})
-	if crate == null or not me.has("pos") or Vector2(me.pos.x - crate.global_position.x, me.pos.z - crate.global_position.z).length() > REACH_M:
+	if crate == null or Vector2(at.x - crate.global_position.x, at.z - crate.global_position.z).length() > REACH_M:
 		return ""
 	return "%s: open the store (seeds and tools)" % _key(&"interact")  # P4-22: the list is store_menu.gd
 

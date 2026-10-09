@@ -944,7 +944,8 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   is built (`Ground/Floor`, `Buildings/*`, `Regions/field_*` and `corn_*`, groups `plot_spots`,
   `well`, `store_crate`, `sell_box`, `cart`), with the local player's arrow and every placed flag as a small red pennant (P4-33). It never reads the `creature` group,
   and nothing on it marks a teammate (D-141), a trap, a noise or a whistle. Information is diegetic (doc 01 "Diegetic"): the pegboard shows what tools are out, the
-  flag shows a trap, a wrinkled leaf shows a thirsty crop, the generator hums lower.
+  flag shows a trap, a wrinkled leaf shows a thirsty crop, the generator hums lower. Exception (D-091): the
+  P4-22 hotbar lists what the local player holds, with a use hint; it points at nothing.
 - **Accessibility** (inference, unscoped in doc 01): there are no voice subtitles at all (D-019): a
   missing speaker name on a creature fake would expose it and defeat the "wrong place" tell. A
   colour-blind option for the Taint visual. Settled by the CEO if it matters.
@@ -1120,13 +1121,14 @@ the QA changes.
 | `audio_chase_cue` | `Soundscape`, on every peer, when the creature state turns `chase` | `body` | Same |
 | `sell` | host, a sell-box hold completes | `player`, `items`, `coins` (per-crop price from `crops.json`) | Selling (P4-04) |
 | `harvest` | host | `player`, `plot`, `crop` | Crop checks (P4-04) |
-| `seed_picked` | client, on `cycle_seed` | `crop` | Seed choice is client-local; it rides in the `plant:<crop>` verb (P4-04) |
+| `seed_picked` | client, on `cycle_seed` or the store menu | `crop` | Seed choice is client-local; it rides in the `plant:<crop>` verb (P4-04) |
 | `dawn_step` | host, before each step of `Death.dawn()` | `step` (`cash_in`, `final_sale`, `medical_bill`, `payment`, `farm_damage`, `save`, `free_scrap`), `day` | Doc 02 section 9 order test (P4-04) |
 | `end_of_season_sale` | host, final dawn step 2 | `plots`, `coins` | Dawn Report ledger row (P4-04) |
 | `free_scrap` | host, dawn step 7 | `scrap` | Doc 02 section 9 step 7 (P4-04) |
 | `store_buy` | host | `item`, `price`, `buyer`, `day`, `coins` | Doc 02 section 10 (P4-06) |
 | `store_refused` | host | `item`, `buyer`, `reason` | P4-06 |
 | `store_picked` | local peer | `item`, `price` | P4-06 |
+| `store_menu` | local peer, on opening the crate's menu | `open` | P4-22 |
 | `store_seized` | host | `item` | Foreclosure (P4-07) |
 | `scrap_used` | host | `left` | P4-06 |
 | `flare_fired` | host | `player`, `hit`, `left` | P4-06 |

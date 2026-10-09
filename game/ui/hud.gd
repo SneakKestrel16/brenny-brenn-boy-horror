@@ -151,11 +151,12 @@ func _process(delta: float) -> void:
 	elif hold.held_can_id() >= 0:
 		prompt = "Tap %s: put the can down" % _key(&"drop")
 	if prompt == "" and farm:
-		prompt = farm.store.prompt_text()
+		prompt = farm.store.prompt_text(player.global_position)
 	var why: StringName = hold.fresh_refusal()
 	if why != &"" and hs[0] == &"":
 		prompt = REFUSED_TEXT.get(why, String(why).capitalize().replace("_", " "))
 	_prompt.text = prompt
+	_prompt.visible = not Game.console_open  # P4-22: not through the store menu
 	_show_hotbar(_slots(farm) if farm and not player.ghost else [])
 
 
@@ -177,6 +178,8 @@ func _slots(farm: Node) -> Array:
 		out.append(["Shovel", "Hold %s on a pit: fill it. Pegboard: hang it back" % _key(&"interact")])
 	if c.get("trap", false):
 		out.append(["Bear trap", "Hold %s on the pegboard: hang it" % _key(&"interact")])
+	if farm.seed_pick != &"" and not Crops.is_unlocked(farm.seed_pick, Clock.day):
+		farm.seed_pick = &""  # P4-22: a pick no longer on sale falls back to the default seed
 	var seed: StringName = farm.seed_pick if farm.seed_pick != &"" else Crops.default_seed()
 	out.append(["%s seed, %d coins" % [Data.record(&"crops", seed).get("name", seed), int(Data.record(&"crops", seed).get("seed", 0))],
 			"Hold %s on an empty plot: plant. %s or the store: change" % [_key(&"interact"), _key(&"cycle_seed")]])

@@ -875,8 +875,9 @@ coins earlier in the day and need a retune. Q-170 asks whether real seed stock i
 
 ### D-091 · 2026-10-09 · Gameplay Programmer · The hotbar is an exception to "no HUD markers"
 P4-22 adds a bottom-centre hotbar listing what the local player holds or the team owns, each with a
-one-line use hint (OPEN_ISSUES CEO session item 3). Doc 05 s16 says "No HUD markers"; the hotbar
-points at no teammate, objective or creature, so it does not break the doc 01 "Diegetic" rule.
+one-line use hint (OPEN_ISSUES CEO session item 3). Doc 05 s16 says "No HUD markers"; doc 01's only
+HUD rule is the whistle's "no HUD marker" (doc 01 "How players fight back"). The hotbar points at no
+teammate, objective, sound or creature, so it breaks neither.
 **Why:** CEO request in the 2-instance session: players could not tell what they held or how to use it.
 **How to apply:** the hotbar shows only the local player's things and the team's shared items. It never
 shows positions, threats or other players. It hides while the player is a ghost.

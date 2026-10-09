@@ -39,7 +39,7 @@ func _run() -> void:
 	farm.coins = 100
 	for i in 10:
 		await process_frame
-	_check(store.prompt_text() != "", "at the crate the prompt offers the store")
+	_check(store.prompt_text(player.global_position) != "", "at the crate the prompt offers the store")
 	_check(hud.hold.aimed_verb == &"", "nothing aimed (%s)" % hud.hold.aimed_verb)
 	_press(&"interact")
 	for i in 3:
@@ -61,6 +61,7 @@ func _run() -> void:
 
 	# seeds: locked rows are greyed; a chosen seed is what a field plot plants
 	_check(_row(menu, &"pumpkin")[3].disabled, "pumpkin seed locked before the first payment")
+	_check(_row(menu, &"pumpkin")[2].text == "from dawn 4, if the first payment was made", "locked pumpkin says when (%s)" % _row(menu, &"pumpkin")[2].text)
 	root.get_node("Clock").day = 4
 	load("res://game/farming/debt.gd").first_made = true
 	await process_frame
@@ -95,6 +96,10 @@ func _run() -> void:
 	if shot != "":
 		await create_timer(0.5).timeout
 		root.get_viewport().get_texture().get_image().save_png(shot.path_join("hotbar.png"))
+	# a pick that is no longer on sale falls back to the default seed
+	load("res://game/farming/debt.gd").first_made = false
+	await process_frame
+	_check(farm.seed_pick == &"" and "Turnip seed" in hud._hotbar.get_child(0).get_child(0).text, "a locked pick falls back to turnip")
 	print("test_store_menu: ", "PASS" if _fails == 0 else "FAIL")
 	quit(1 if _fails > 0 else 0)
 

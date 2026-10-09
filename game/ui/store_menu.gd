@@ -48,7 +48,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var farm := _farm()
 	if _open or Game.console_open or farm == null or not event.is_action_pressed(&"interact") or hud.player.ghost:
 		return
-	if hud.hold.aimed_verb == &"" and hud.hold.hold_state()[0] == &"" and farm.store.prompt_text() != "":
+	if hud.hold.aimed_verb == &"" and hud.hold.hold_state()[0] == &"" and farm.store.prompt_text(hud.player.global_position) != "":
 		set_open(true)
 
 
@@ -148,7 +148,9 @@ func _status(id: StringName, why: StringName) -> String:
 		&"locked_item": return "from day %d" % int(Data.record(&"store", id).unlock_day)
 		&"locked_crop":
 			var r := Data.record(&"crops", id)
-			return "after the first payment" if String(r.unlock_rule) == "first_payment_made" else "from day %d" % int(r.unlock_day)
+			if String(r.unlock_rule) == "first_payment_made":  # doc 02 s10
+				return "from dawn %d, if the first payment was made" % int(r.unlock_day)
+			return "from day %d" % int(r.unlock_day)
 		&"no_coins": return "not enough coins"
 	return hud.REFUSED_TEXT.get(why, String(why).replace("_", " "))
 
