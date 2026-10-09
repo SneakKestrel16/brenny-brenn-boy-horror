@@ -854,7 +854,7 @@ creature's; the order (hands, ground, board) is an inference that keeps a team t
 ahead of one that leaves them lying. A playtest settles whether the order matters.
 **How to apply:** trap race, pry, slow-after and night theft rules are unchanged. Bots pry themselves but
 do not fetch traps.
-### D-100 · 2026-10-09 · Level Designer (Director to confirm) · Farm cover blocks sight only
+### D-100 · 2026-10-09 · Level Designer, confirmed by Director · Farm cover blocks sight only
 P4-27 breaks up the open farm with trees, fences, dirt paths, signs and landmarks (doc 04 s14). Only tree
 canopies collide, on layer 5 (corn sight-blockers), from 1.2 m up; everything else is visual only.
 Canopies keep each work spot's doc 04 s8.4 corn distance (pumpkin 20 m), 2 m from every marker and plot,

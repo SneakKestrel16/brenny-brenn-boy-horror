@@ -604,7 +604,7 @@ no economy number and can start now.
 | P4-24 | Gameplay | CEO session: minimap in the top right showing the player, buildings, fields, store, well, cart | done (QA PASS; Q-180 for CEO) | — |
 | P4-25 | AI Programmer | CEO session: creature stuck in the barn; at dawn place it back in the corn; fix the cause | in progress | — |
 | P4-26 | Audio Designer | CEO session: new footstep sounds; crickets chirp less often | done (QA follow-ups merged; CEO approved the evened cricket bed 2026-10-09) | — |
-| P4-27 | Level Designer | CEO session: farm less open (cover, tree lines, landmarks); festival cart rests on the ground in the barn | in progress | — |
+| P4-27 | Level Designer | CEO session: farm less open (cover, tree lines, landmarks); festival cart rests on the ground in the barn | done (QA PASS) | — |
 | P4-28 | Game Designer | CEO session: simulate a bigger watering can (3 and 4 plots per fill) against the s18.3 targets and the bot-season gap | done (no change: capacity stays 2, CEO 2026-10-09; 3 or 4 breaks s18.3 at 2p and 3p) | — |
 | P4-29 | AI Programmer, Gameplay | CEO: a sprung bear trap stays where it sprang; players pick it up and hang it back on the pegboard | done (QA PASS; follow-up sent) | — |
 | P4-30 | Game Designer, Gameplay | CEO: sell bonus by player count so 2p makes its payments; sim targets still pass | done (QA PASS; bonus 0 everywhere, Q-210 for CEO) | P4-28 |

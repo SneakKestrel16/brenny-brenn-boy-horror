@@ -276,3 +276,12 @@ Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent bac
 3. **`game/net/net.gd:657` comment** does not list `loose`, `picked_up` or `stolen`. Network & Voice.
 4. **TrapRace keeps `picked_up` and `stolen` entries** and resends them to late joiners. Harmless.
 5. **P4-29 handoff calls `take_trap` instant**; logs show a 1.0 s hold.
+
+## Found at the P4-27 review (QA, 2026-10-09)
+
+1. **Wrong section cited:** `game/world/check_farm.gd:236` and `game/world/build_farm.py:130`, `:395` cite "doc 04 s13"; cover is s14. Level Designer.
+2. **Doc 03 s3.2 (line 127)** still says only corn blocks sight; tree canopies now block it too (layer 16). AI Programmer, once Q-196 is answered.
+3. **No solid trees:** players and the creature walk through trunks and fences (D-100), until the creature can steer round obstacles. Expect a playtest note.
+4. **Not checked:** that `build_farm.py` regenerates `farm.tscn` exactly (QA sandbox blocked the overwrite).
+5. **`test_debt_sync` race:** a client that joins after dawn misses the early 50 payment and fails the test. Harness problem, not P4-27. QA.
+6. **Merge note:** the P4-32 cart `Handle` now sits at `HANDLE_UP` (1.05 m) above the ground-level glb instead of 0.86 m higher; `test_cart` PASS after the merge.
