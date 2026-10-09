@@ -155,6 +155,9 @@ func step_medical_bill(farm: Node, _final: bool) -> void:
 	_dawn.bill = bill
 	if bill > 0:
 		Log.event(&"medical_bill", {"deaths": deaths, "bill": bill, "paid": paid, "to_final": bill - paid, "players": Game.player_count()})
+	var animals := get_tree().get_first_node_in_group(&"animals")  # P4-08: animals out at dusk, billed after the medical bill (doc 02 s10.1)
+	if animals:
+		animals.bill_dusk(farm)
 
 
 ## Step 4: payment due and early payment (doc 02 s7). P4-07.

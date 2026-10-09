@@ -10,6 +10,10 @@ func _ready() -> void:
 	farm.set_script(load("res://game/farming/farm.gd"))
 	farm.name = "Farm"
 	add_child(farm)  # before Players: the local Player's HoldController finds the Farm by group
+	var animals := Node3D.new()  # P4-08: the pen animals and the breakable fence (game/farming/), after Farm
+	animals.set_script(load("res://game/farming/animals.gd"))
+	animals.name = "Animals"
+	add_child(animals)
 	var look := Node.new()  # Technical Artist P1-11: lighting, fog, corn visuals (game/render/)
 	look.set_script(load("res://game/render/world_look.gd"))
 	look.name = "Look"

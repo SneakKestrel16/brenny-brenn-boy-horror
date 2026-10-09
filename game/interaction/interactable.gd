@@ -5,6 +5,7 @@ extends Node
 ## `verbs_for` gets the local replicated view only (it picks the prompt, the host decides).
 
 ## Verbs that are not chores, so labor.json has no entry: taking and returning the shovel (P2-11).
+const AnimalLogic := preload("res://game/farming/animal_logic.gd")
 const INSTANT_S := {&"take_shovel": 0.3, &"return_shovel": 0.3, &"take_trap": 1.0,
 		&"take_can": 0.5, &"drop_can": 0.3}  ## placeholders; take_trap about 1 s like hanging (doc 02 s2.1, P2-19)
 
@@ -15,12 +16,15 @@ var farm: Node  ## the Farm that owns this
 
 ## Hold seconds for a verb: labor.json, or INSTANT_S for the few verbs that are not chores, or a sabotage
 ## fix's `fix_hold_s` (P3-06: bury, pull_seeds; sabotage.json).
-static func hold_seconds(verb: StringName) -> float:
+static func hold_seconds(verb: StringName, role: StringName = &"") -> float:
 	verb = base(verb)
 	if INSTANT_S.has(verb):
 		return float(INSTANT_S[verb])
 	var fix := fix_hold_s(verb)
-	return fix if fix > 0.0 else Data.hold_s(verb)
+	var s := fix if fix > 0.0 else Data.hold_s(verb)
+	if verb == &"round_up" and role == &"rancher":  # P4-08: roles.json perk, rounded up (doc 02 section 4)
+		s = AnimalLogic.round_up_s(s, float(Data.record(&"roles", &"rancher").perks.round_up_hold_mult))
+	return s
 
 
 ## P4-04: a verb may carry an argument after a colon (`plant:<crop>`); the part before it names the chore.

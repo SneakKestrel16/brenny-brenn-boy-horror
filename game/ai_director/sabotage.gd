@@ -8,7 +8,8 @@ extends Node
 ## "Unattended farm") nearest where the creature is, and `farm_damage` is what the Death node's
 ## `dawn_summary` reports. Logs `disturbance_placed`, `disturbance_fixed`, `trample`.
 ## Every peer: the clue marks, the scarecrows and the bury / pull-seeds targets (`apply_disturbance`).
-## Not built: `broken_fence`, `pumpkin_gnaw` (D-059, Phase 4), buying a stolen tool back, burying a dead crow
+## `broken_fence` (P4-08) opens a pen fence section and lets animals out (game/farming/animals.gd).
+## Not built: `pumpkin_gnaw` (D-059, Phase 4), buying a stolen tool back, burying a dead crow
 ## by washing, the full-wipe doubling of farm damage (doc 02 section 14), the cost points (the budget is the
 ## count, doc 03 section 10 "Budget"; the points are placeholders left for `sim`).
 
@@ -179,6 +180,17 @@ func _place(kind: StringName) -> bool:
 			var pos: Vector3 = at[_rng.randi() % at.size()]
 			pos.y = 0.0
 			_add(kind, pos, {"src": get_tree().get_first_node_in_group(&"taint").add_source(kind, pos)})
+		&"broken_fence":
+			var an := get_tree().get_first_node_in_group(&"animals")  # P4-08: a section away from the players
+			if an == null or an.herd.is_empty():
+				return false
+			var pts: Array = _away(an.fence_points(), func(f: Array) -> Vector3: return f[1])
+			if pts.is_empty():
+				return false
+			var f: Array = pts[_rng.randi() % pts.size()]
+			if an.break_fence(f[0]) == 0:
+				return false  # nobody left in the pen to escape
+			_add(kind, f[1], {"fence": f[0]})
 		&"generator_kill":
 			var gen: Node = _farm.targets["generator"].gen if _farm.targets.has("generator") else null
 			if gen == null or not gen.powered() or live.values().any(func(d: Dictionary) -> bool: return d.kind == kind):
@@ -267,6 +279,8 @@ func fixed(id: int, peer: int, how: StringName) -> void:
 	for p in _farm.registry.holds.keys():  # a second player on the same fix: its target is about to go
 		if is_instance_valid(_farm.registry.holds[p].target) and _farm.registry.holds[p].target.id == "dist_%d" % id:
 			_farm.registry.cancel(p, &"gone")
+	if d.kind == &"broken_fence":
+		get_tree().get_first_node_in_group(&"animals").fix_fence(d.fence)  # P4-08
 	if d.has("src"):
 		get_tree().get_first_node_in_group(&"taint").remove_source(d.src)
 	Log.event(&"disturbance_fixed", {"id": id, "kind": String(d.kind), "by": peer, "fix": String(how), "day": Clock.day})
@@ -379,6 +393,7 @@ func fix_jobs() -> Array:
 		match d.kind:
 			&"trample": out.append([&"plant", d.plot])
 			&"stolen_tool": out.append([&"take_can", "can_%d" % d.can])
+			&"broken_fence": out.append([&"repair_fence", "dist_%d" % id])
 			&"dead_crow", &"strange_seeds": out.append([StringName(_recs[d.kind].fix), "dist_%d" % id])
 	return out
 
@@ -429,7 +444,7 @@ func _mark(id: int, kind: StringName, pos: Vector3) -> Node3D:
 		&"feathers":
 			for k in 6:
 				_box(root, Vector3(0.04, 0.02, 0.18), Vector3(r.randf_range(-0.8, 0.8), 0.01, r.randf_range(-0.8, 0.8)), mat).rotation.y = r.randf() * TAU
-	if rec.get("fix_hold_s") != null and _farm:
+	if (rec.get("fix_hold_s") != null or kind == &"broken_fence") and _farm:  # P4-08: the fence's repair_fence hold is labor.json's
 		var t := FixTarget.new()
 		t.verb = StringName(rec.fix)
 		t.did = id

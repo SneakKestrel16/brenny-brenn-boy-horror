@@ -223,8 +223,12 @@ def generate(full: bool) -> str:
         extra_plots(33, "b", 66, 0.5)  # south of field B (the cart route runs north of it)
 
     # Animal pen x -30..-18, z -38..-28, gate (-24,-28), 2 m gap in the south side
-    for nm, cx, cz, sx, sz in (("North", -24, -38, 12, .2), ("West", -30, -33, .2, 10), ("East", -18, -33, .2, 10),
-                               ("SouthL", -27.5, -28, 5, .2), ("SouthR", -20.5, -28, 5, .2)):
+    # P4-08: the north, west and east walls are six breakable sections (group fence_sections; broken_fence, doc 03 s10.1)
+    for nm, cx, cz, sx, sz in (("NorthW", -27, -38, 6, .2), ("NorthE", -21, -38, 6, .2),
+                               ("WestN", -30, -35.5, .2, 5), ("WestS", -30, -30.5, .2, 5),
+                               ("EastN", -18, -35.5, .2, 5), ("EastS", -18, -30.5, .2, 5)):
+        box("Pen", nm, cx, cz, sx, sz, 1.2, "fence", groups=["fence_sections"])
+    for nm, cx, cz, sx, sz in (("SouthL", -27.5, -28, 5, .2), ("SouthR", -20.5, -28, 5, .2)):
         box("Pen", nm, cx, cz, sx, sz, 1.2, "fence")
     marker("Pen", "PenGate", -24, -28, "pen_gates")
 

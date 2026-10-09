@@ -121,16 +121,16 @@ size = Vector3(1.5, 1.0, 1.5)
 size = Vector3(2.8, 0.05, 2.8)
 
 [sub_resource type="BoxMesh" id="BoxMesh_40"]
-size = Vector3(12, 1.2, 0.2)
+size = Vector3(6, 1.2, 0.2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_41"]
-size = Vector3(12, 1.2, 0.2)
+size = Vector3(6, 1.2, 0.2)
 
 [sub_resource type="BoxMesh" id="BoxMesh_42"]
-size = Vector3(0.2, 1.2, 10)
+size = Vector3(0.2, 1.2, 5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_43"]
-size = Vector3(0.2, 1.2, 10)
+size = Vector3(0.2, 1.2, 5)
 
 [sub_resource type="BoxMesh" id="BoxMesh_44"]
 size = Vector3(5, 1.2, 0.2)
@@ -600,40 +600,76 @@ metadata/upgrade = true
 mesh = SubResource("BoxMesh_39")
 material_override = SubResource("StandardMaterial3D_5")
 
-[node name="North" type="StaticBody3D" parent="Pen"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0.6, -38)
+[node name="NorthW" type="StaticBody3D" parent="Pen" groups=["fence_sections"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27, 0.6, -38)
 collision_layer = 1
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Pen/North"]
+[node name="Mesh" type="MeshInstance3D" parent="Pen/NorthW"]
 mesh = SubResource("BoxMesh_40")
 material_override = SubResource("StandardMaterial3D_6")
 
-[node name="Shape" type="CollisionShape3D" parent="Pen/North"]
+[node name="Shape" type="CollisionShape3D" parent="Pen/NorthW"]
 shape = SubResource("BoxShape3D_41")
 
-[node name="West" type="StaticBody3D" parent="Pen"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.6, -33)
+[node name="NorthE" type="StaticBody3D" parent="Pen" groups=["fence_sections"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21, 0.6, -38)
 collision_layer = 1
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Pen/West"]
+[node name="Mesh" type="MeshInstance3D" parent="Pen/NorthE"]
+mesh = SubResource("BoxMesh_40")
+material_override = SubResource("StandardMaterial3D_6")
+
+[node name="Shape" type="CollisionShape3D" parent="Pen/NorthE"]
+shape = SubResource("BoxShape3D_41")
+
+[node name="WestN" type="StaticBody3D" parent="Pen" groups=["fence_sections"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.6, -35.5)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Pen/WestN"]
 mesh = SubResource("BoxMesh_42")
 material_override = SubResource("StandardMaterial3D_6")
 
-[node name="Shape" type="CollisionShape3D" parent="Pen/West"]
+[node name="Shape" type="CollisionShape3D" parent="Pen/WestN"]
 shape = SubResource("BoxShape3D_43")
 
-[node name="East" type="StaticBody3D" parent="Pen"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.6, -33)
+[node name="WestS" type="StaticBody3D" parent="Pen" groups=["fence_sections"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.6, -30.5)
 collision_layer = 1
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Pen/East"]
+[node name="Mesh" type="MeshInstance3D" parent="Pen/WestS"]
 mesh = SubResource("BoxMesh_42")
 material_override = SubResource("StandardMaterial3D_6")
 
-[node name="Shape" type="CollisionShape3D" parent="Pen/East"]
+[node name="Shape" type="CollisionShape3D" parent="Pen/WestS"]
+shape = SubResource("BoxShape3D_43")
+
+[node name="EastN" type="StaticBody3D" parent="Pen" groups=["fence_sections"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.6, -35.5)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Pen/EastN"]
+mesh = SubResource("BoxMesh_42")
+material_override = SubResource("StandardMaterial3D_6")
+
+[node name="Shape" type="CollisionShape3D" parent="Pen/EastN"]
+shape = SubResource("BoxShape3D_43")
+
+[node name="EastS" type="StaticBody3D" parent="Pen" groups=["fence_sections"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.6, -30.5)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Pen/EastS"]
+mesh = SubResource("BoxMesh_42")
+material_override = SubResource("StandardMaterial3D_6")
+
+[node name="Shape" type="CollisionShape3D" parent="Pen/EastS"]
 shape = SubResource("BoxShape3D_43")
 
 [node name="SouthL" type="StaticBody3D" parent="Pen"]

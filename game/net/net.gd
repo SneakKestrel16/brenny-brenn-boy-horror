@@ -600,6 +600,13 @@ func apply_disturbance(id: int, kind: StringName, position: Vector3, yaw: float,
 	apply_received.emit(&"disturbance", [id, kind, position, yaw, on])
 
 
+## Host to all (P4-08): the pen animals (`state`: [state, x, z, yaw] each), the open fence sections (`fence`: indices),
+## or an animal sound (`sound`: [animal, panic]). game/farming/animals.gd applies it.
+@rpc("authority", "call_remote", "reliable")
+func apply_animals(kind: StringName, data: Array) -> void:
+	apply_received.emit(&"animals", [kind, data])
+
+
 @rpc("authority", "call_remote", "reliable")
 func apply_death(peer: int, cause: StringName, position: Vector3) -> void:
 	apply_received.emit(&"death", [peer, cause, position])

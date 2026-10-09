@@ -21,9 +21,14 @@ func request(peer: int, verb: StringName, id: String) -> void:
 		_reply(peer, &"refused", [verb, reason])
 		return
 	var target := _resolve(id)
-	holds[peer] = {"verb": verb, "target": target, "progress": 0.0, "hold_s": Interactable.hold_seconds(verb),
+	holds[peer] = {"verb": verb, "target": target, "progress": 0.0, "hold_s": Interactable.hold_seconds(verb, StringName(st_role(peer))),
 			"started": Log.now()}
 	target.on_start(verb, peer)
+
+
+## P4-08: `Game.players[peer].role` is set by roles (P4-09); empty until then.
+func st_role(peer: int) -> String:
+	return String(Game.players.get(peer, {}).get("role", ""))
 
 
 ## A scene target by id, or a throwaway FlagSpot for `flag:<x>,<z>` (freed when the hold ends).

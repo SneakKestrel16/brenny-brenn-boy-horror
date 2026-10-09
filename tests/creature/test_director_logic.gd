@@ -64,12 +64,12 @@ func _init() -> void:
 	_check(Logic.hop(links, "c", "d") == "d", "adjacent: the target")
 	_check(Logic.hop(links, "b", "b") == "b", "already there")
 	_check(Logic.hop(links, "a", "x") == "a", "no path: stay")
-	# sabotage (P3-06, doc 03 section 10): the pool opens by day; days 1-2 only trample and stolen tool
+	# sabotage (P3-06, doc 03 section 10): the pool opens by day (opens_day in sabotage.json; P4-03 enabled broken_fence day 2, pumpkin_gnaw day 3)
 	_check(Sab.pool(sab, 1) == [&"trample", &"stolen_tool"], "day 1 pool: trample, stolen tool")
-	_check(Sab.pool(sab, 2) == [&"trample", &"stolen_tool"], "day 2 pool: broken fence is Phase 4, nothing else")
-	_check(Sab.pool(sab, 3) == [&"trample", &"stolen_tool", &"dead_crow", &"strange_seeds"], "day 3 adds the Taint sources")
+	_check(Sab.pool(sab, 2) == [&"trample", &"stolen_tool", &"broken_fence"], "day 2 pool: broken fence joins (P4-03 enabled, P4-08)")
+	_check(Sab.pool(sab, 3) == [&"trample", &"stolen_tool", &"dead_crow", &"strange_seeds", &"broken_fence", &"pumpkin_gnaw"], "day 3 adds the Taint sources and pumpkin gnaw")
 	_check(Sab.pool(sab, 4).has(&"generator_kill") and not Sab.pool(sab, 3).has(&"generator_kill"), "generator kill from day 4")
-	_check(not Sab.pool(sab, 9).has(&"scarecrow_moved") and not Sab.pool(sab, 9).has(&"pumpkin_gnaw"), "free and disabled kinds never budgeted")
+	_check(not Sab.pool(sab, 9).has(&"scarecrow_moved"), "free kinds (scarecrow moved, budget false) never budgeted")
 	_check(dist[0] == [1, 1, 1] and dist[2] == [2, 2, 2] and dist[4] == [2, 3, 3] and dist[6] == [3, 4, 4], "disturbance counts scale up by headcount")
 	var tr: Dictionary = {}
 	for rec: Dictionary in sab:

@@ -827,8 +827,10 @@ P4-03 data. Debt, the first payment and the medical bill must read `player_scali
 
 **Answer (QA, P4-03 review):** already covered by D-079 "How to apply" (Gameplay makes debt and medical bills read `payment_pct_by_players`, P4-10 acceptance). The `derived_by_players` test table stays useful for P4-07/P4-10.
 
-### Q-080 · 2026-10-08 · Game Designer -> Gameplay Programmer · open
+### Q-080 · 2026-10-08 · Game Designer -> Gameplay Programmer · answered
 P4-03 animals. No `animals` table is in `Data.TABLES`, so species (chicken, pig, cow), `animals_per_species` 2, `animals_per_fence_break` 2, `animal_out_at_dusk_coins` 10, `animal_escape_m` 60 and `round_up_rounding` are records in `season.json`; the `round_up` hold (4 s) is in `labor.json`. Say if P4-08 wants a separate table. Out-at-dusk cost is billed at dawn after the medical bill with the 4-coin floor (doc 02 s10.1).
+
+**Answer (Gameplay, P4-08):** no separate table. `animals.gd` reads the `season.json` records; `Data.TABLES` unchanged. Billing is in `Death.dawn()` via `Animals.bill_dusk(farm)`.
 
 ### Q-081 · 2026-10-08 · Game Designer -> Technical Artist · open
 Cart speed by pushers is set: 1.0/1.6/2.0/2.4 m/s for 1 to 4 pushers (`ai_director.json` `profile_harvest_moon`, placeholder, doc 02 s9). Doc 05 s13 still says "placeholder until doc 02/03 says"; please update it. At 1 pusher the 147.9 m route takes about 148 s, so the 900 s cap stays reachable.
@@ -864,3 +866,18 @@ P4-04 / D-081 item 2. `DawnReport._close()` now logs `dawn_report_closed {day}` 
 
 ### Q-088 · 2026-10-08 · Gameplay Programmer -> Director · open
 P4-04 gaps for later rows, no doc 01 change. (1) `Crops.first_paid` (pumpkin `first_payment_made` unlock) is `day > first_payment_dawn` until P4-07 records the real payment. (2) The Season Awards screen is not built; `Clock.season_ended` and the final Dawn Report ("THE SEASON IS OVER") are its hook. (3) The final night runs as a normal night until the Harvest Moon (cart, P4-09 per the table). (4) Pumpkin seeds cost `seed` 10 each; the free Prize Pumpkin seed (D-017) is not modelled (P4-05).
+
+### Q-090 · 2026-10-08 · Gameplay -> Game Designer · open
+P4-08 placeholders in code with no data home: animal alert range base `ALERT_M` 35 m (creature distance for the panic sound; rancher `animal_alert_range_mult` 1.5 multiplies it, Q-084 item 3), animal walk 0.9 m/s and run 3.2 m/s, panic gap 12 s, idle-call gap 25 to 50 s. Say the base alert range and I move all of them to `season.json`. Until then they are consts in `game/farming/animals.gd`.
+
+### Q-091 · 2026-10-08 · Gameplay -> AI Programmer, Level Designer · open
+FYI P4-08 edits in your paths, kept minimal. AI: `game/ai_director/sabotage.gd` (`_place(&"broken_fence")`, `fixed()`, `_mark`, `fix_jobs`); `tests/creature/test_director_logic.gd` day 2/3 pool asserts updated (P4-03 enabled broken_fence). Level: `game/world/build_farm.py` pen north/west/east walls split into 6 sections in group `fence_sections`; `farm.tscn` and `farm_phase1.tscn` regenerated. Veto or restyle as you like; the group name and `Animals.fence_points()` are the contract.
+
+### Q-092 · 2026-10-08 · Gameplay -> Network & Voice · open
+FYI P4-08 added RPC `apply_animals(kind, data)` (authority, reliable, 5 Hz snapshot plus events) to `game/net/net.gd`. Check the channel and rate fit your budget.
+
+### Q-093 · 2026-10-08 · Gameplay -> Gameplay (P4-04, P4-09, P4-10) · open
+P4-04: `Death.dawn()` calls `animals.bill_dusk(farm)` after the medical bill (3 lines); merge with the season dawn work. P4-09: set `Game.players[peer].role` to `&"rancher"` and the round_up hold shortens (ceil 4 x 0.6 = 3 s) with no more code. P4-10: log `animals_out_at_dusk` {day,out,total,breaks_today,fence_still_broken,players} measures Q-084 item 2; `animal_dusk_bill` has the cost.
+
+### Q-089 · 2026-10-09 · QA (P4-08 review) -> AI Programmer · open
+Pre-existing, not P4-08: with `--no-phase1`, `game/creature/creature.gd:876` `_in_sanctuary` repeatedly errors on key `'sanctuary_m'` because `_num` is never filled without the phase1 table. Also for P4-10 (doc 06 s5): `Animals.bill_dusk` clamps headcount to 2 while `Death.bill_for` does not, so solo play pays 59% animal fee but 100% medical bill.
