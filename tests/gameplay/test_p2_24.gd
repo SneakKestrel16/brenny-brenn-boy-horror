@@ -13,5 +13,7 @@ func _ready() -> void:
 	var p: Node = preload("res://game/farming/plot.gd").new()
 	p.locked = true
 	fails += int(p.verbs_for({}).is_empty() or p.can_start(&"plant", {}) != &"locked")
+	s.free()
+	p.free()
 	print("test_p2_24 ", "FAIL %d" % fails if fails else "PASS")
 	get_tree().quit(1 if fails else 0)
