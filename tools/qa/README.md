@@ -16,6 +16,7 @@ through `--godot`, then `$GODOT`, then the CONTRACTS section 1 path.
 | `uv run tests/qa/test_harness.py` | Self-test of the three tools on fixtures. Needs no Godot |
 | `uv run tests/qa/test_grep_rules.py` | Self-test of `grep_rules.py` on temp git trees. Needs no Godot |
 | `uv run tests/qa/test_playtest.py` | Self-test of `playtest.py` and the packager's zip. Needs no Godot |
+| `"$GODOT" --headless --path . -s res://tests/qa/test_creature_art.gd` | Creature models (P4-19): P4-16 part names and pivots, under 5,000 tris, origin at base, ember glow only on eyes and heart, no `Light3D` |
 
 Every output goes under `logs/qa/` (gitignored), in one folder per run named by its timestamp.
 

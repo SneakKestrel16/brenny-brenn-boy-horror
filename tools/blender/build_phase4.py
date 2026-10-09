@@ -10,6 +10,7 @@ Each body part is its own object (own pivot) so a glimpse can show one part (doc
 """
 import math
 import os
+import random
 import sys
 
 import bmesh
@@ -39,6 +40,7 @@ def srgb(h):
 
 class Ctx:
     objs: list = []
+    jitter = 0.0  # metres; set per model in build()
 
 
 def make_materials():
@@ -74,7 +76,7 @@ class Part:
 
     def _fin(self, verts, col, mat):
         c = srgb(col)
-        for f in {f for v in verts for f in v.link_faces}:
+        for f in dict.fromkeys(f for v in verts for f in v.link_faces):
             f.material_index = mat
             f.smooth = False
             for l in f.loops:
@@ -111,6 +113,14 @@ class Part:
 
     def done(self):
         bm = self.bm
+        jitter = 0.0 if self.name == "Smear" else Ctx.jitter
+        if jitter:  # deterministic hand-made wobble, seeded by part name (P4-19)
+            rng = random.Random(self.name)
+            for v in bm.verts:
+                d = Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), rng.uniform(-1, 1))) * jitter
+                if v.co.z < 0.03:
+                    d.z = 0.0  # feet stay on the ground
+                v.co += d
         bmesh.ops.translate(bm, vec=-self.pivot, verts=bm.verts)
         me = bpy.data.meshes.new(self.name)
         bm.to_mesh(me)
@@ -145,73 +155,118 @@ def ring_pts(n, r, z=0.0, phase=0.0):
     return [(r * math.cos(phase + i * math.tau / n), r * math.sin(phase + i * math.tau / n), z) for i in range(n)]
 
 
-# ---------------------------------------------------------------- creatures
+# ---------------------------------------------------------------- creatures (P4-19 final art)
+# Silhouette first (doc 07 s1): each body has one unmistakable outline at 25 m. Part names and pivots are the
+# P4-16 ones, so creature code needs no change. Deterministic hand-made jitter (Part.done) gives the hand-painted,
+# not-machined look; no textures. Emissive only on ember eyes and the husk heart (doc 07 s2).
 HIDE, HIDE2, BONE, EMBER = "#1E1B1A", "#2C2624", "#B8AE98", "#FF5A1F"
+SKIN, SKIN2, TOOTH = "#8E8777", "#6E695C", "#CFC7B0"
 
 
 def gaunt():
+    # hunched: hump high behind and above the head, arms hang to the knees, thin digitigrade legs
     p = Part("Torso", (0, -0.1, 1.0))
-    p.between((0, -0.1, 1.0), (0, 0.1, 1.95), 0.2, 0.24, HIDE, seg=7)
-    p.ball((0.24, 0.2, 0.2), (0, 0.05, 1.9), HIDE2, seg=7, rings=5)  # hump
-    for i in range(4):  # ribs
-        z = 1.15 + i * 0.2
-        p.box((0.44, 0.05, 0.03), (0, 0.06 + i * 0.03 - 0.1, z), BONE)
+    p.between((0, -0.22, 1.0), (0, -0.14, 1.45), 0.2, 0.25, HIDE, seg=7)  # belly and ribcage
+    p.between((0, -0.14, 1.45), (0, 0.02, 1.86), 0.25, 0.2, HIDE, seg=7)
+    p.ball((0.26, 0.2, 0.24), (0, -0.12, 1.96), HIDE2, seg=7, rings=5)  # hump
+    for i in range(7):  # spine knuckles
+        z = 1.05 + i * 0.14
+        p.ball((0.035, 0.04, 0.04), (0, -0.3 + 0.03 * i - 0.0 + 0.0 * min(i, 6 - i), z), BONE, seg=4, rings=3)
+    for i in range(5):  # ribs show through the front
+        z = 1.2 + i * 0.16
+        p.box((0.46 - i * 0.02, 0.05, 0.035), (0, 0.06 - 0.02 * i, z), BONE)
+    p.box((0.12, 0.1, 0.16), (0, 0.03, 1.02), HIDE2)  # loincloth rag
     p.done()
     q = Part("Head", (0, 0.35, 1.6))
-    q.ball((0.12, 0.2, 0.13), (0, 0.5, 1.55), "#8E8777", seg=7, rings=5)
-    q.box((0.1, 0.16, 0.04), (0, 0.58, 1.44), BONE)  # jaw
+    q.between((0, 0.0, 1.86), (0, 0.4, 1.6), 0.09, 0.06, SKIN2, seg=5)  # neck
+    q.ball((0.11, 0.2, 0.12), (0, 0.46, 1.56), SKIN, seg=7, rings=5)  # long skull
+    q.ball((0.07, 0.07, 0.08), (0, 0.38, 1.68), SKIN2, seg=5, rings=4)  # brow
+    q.box((0.09, 0.17, 0.035), (0, 0.54, 1.44), BONE)  # jaw hangs open
     for sx in (-1, 1):
-        q.ball((0.025, 0.02, 0.025), (sx * 0.06, 0.66, 1.6), EMBER, mat=MAT_EMBER, seg=5, rings=4)
+        q.box((0.012, 0.012, 0.035), (sx * 0.035, 0.62, 1.47), TOOTH)  # fangs
+        q.box((0.012, 0.012, 0.03), (sx * 0.035, 0.6, 1.52), TOOTH)
+        q.ball((0.026, 0.02, 0.026), (sx * 0.06, 0.6, 1.6), EMBER, mat=MAT_EMBER, seg=5, rings=4)
     q.done()
     for s, nm in ((-1, "ArmL"), (1, "ArmR")):
         sh, el, ha = (s * 0.3, 0.1, 1.85), (s * 0.4, 0.3, 1.2), (s * 0.36, 0.36, 0.4)
         a = Part(nm, sh)
+        a.ball((0.1, 0.1, 0.1), sh, HIDE2, seg=5, rings=4)
         a.between(sh, el, 0.07, 0.05, HIDE2, seg=5).between(el, ha, 0.05, 0.035, HIDE2, seg=5)
-        for k in (-1, 0, 1):  # claw fingers
-            a.between(ha, (ha[0] + k * 0.04, ha[1] + 0.08, 0.2), 0.025, 0.01, BONE, seg=4)
+        a.ball((0.045, 0.045, 0.045), el, BONE, seg=4, rings=3)  # elbow knob
+        for k in (-2, -1, 0, 1, 2):  # five long claws
+            a.between(ha, (ha[0] + k * 0.035, ha[1] + 0.07 + 0.015 * (2 - abs(k)), 0.14), 0.022, 0.006, BONE, seg=4)
         a.done()
     for s, nm in ((-1, "LegL"), (1, "LegR")):
         hip, kn, ft = (s * 0.17, -0.15, 1.0), (s * 0.2, 0.1, 0.5), (s * 0.2, -0.05, 0.0)
         l = Part(nm, hip)
-        l.between(hip, kn, 0.1, 0.06, HIDE, seg=5).between(kn, ft, 0.06, 0.035, HIDE, seg=5)
-        l.box((0.1, 0.2, 0.04), (s * 0.2, 0.05, 0.02), HIDE2)
+        l.between(hip, kn, 0.1, 0.06, HIDE, seg=5).between(kn, ft, 0.06, 0.03, HIDE, seg=5)
+        l.ball((0.045, 0.05, 0.045), kn, BONE, seg=4, rings=3)  # knee knob
+        l.box((0.1, 0.24, 0.04), (s * 0.2, 0.06, 0.02), HIDE2)
+        for k in (-1, 0, 1):
+            l.between((s * 0.2 + k * 0.03, 0.14, 0.03), (s * 0.2 + k * 0.04, 0.24, 0.0), 0.014, 0.005, BONE, seg=3)
         l.done()
 
 
 def scarecrow_head(p):
-    p.ball((0.19, 0.19, 0.22), (0, 0, 1.86), "#A58C5A", seg=8, rings=6)
-    p.cyl(0.07, 0.08, 0.1, (0, 0, 1.68), "#A58C5A", seg=6)  # neck
+    # sack head, stitched grin, ember eyes, broad ragged hat
+    S, S2 = "#A58C5A", "#8A7448"
+    p.ball((0.2, 0.19, 0.23), (0, 0, 1.86), S, seg=8, rings=6)
+    p.ball((0.07, 0.07, 0.06), (0, 0, 2.06), S2, seg=5, rings=3)  # tied top knot
+    p.cyl(0.07, 0.09, 0.1, (0, 0, 1.68), S, seg=6)  # neck
+    p.cyl(0.11, 0.09, 0.03, (0, 0, 1.72), "#5A4A2E", seg=6)  # rope tie
     p.box((0.015, 0.02, 0.34), (0, 0.19, 1.86), "#2A2018")  # stitch seam
     for z in (1.76, 1.86, 1.96):
         p.box((0.1, 0.02, 0.015), (0, 0.19, z), "#2A2018")
+    for i in range(7):  # stitched grin
+        x = (i - 3) * 0.035
+        p.box((0.012, 0.02, 0.05), (x, 0.185, 1.77 + 0.012 * abs(i - 3)), "#2A2018")
     for sx in (-1, 1):
-        p.ball((0.03, 0.02, 0.035), (sx * 0.08, 0.18, 1.9), EMBER, mat=MAT_EMBER, seg=5, rings=4)
-    p.cyl(0.32, 0.31, 0.025, (0, 0, 2.02), "#4A3C28", seg=10)  # hat brim
-    p.cyl(0.19, 0.12, 0.2, (0, 0, 2.12), "#4A3C28", seg=8)  # crown
-    for i in range(5):  # straw
-        p.between((0, 0.12, 1.7 + 0.0), ((i - 2) * 0.07, 0.3, 1.62), 0.012, 0.004, "#C9B26A", seg=3)
+        p.ball((0.045, 0.02, 0.05), (sx * 0.08, 0.175, 1.9), "#14100C", seg=5, rings=4)  # eye holes
+        p.ball((0.028, 0.02, 0.034), (sx * 0.08, 0.185, 1.9), EMBER, mat=MAT_EMBER, seg=5, rings=4)
+    p.cyl(0.4, 0.38, 0.025, (0, 0, 2.0), "#4A3C28", seg=10)  # wide hat brim
+    for i in range(4):  # brim rags
+        a = 0.6 + i * 1.5
+        p.box((0.1, 0.02, 0.1), (0.38 * math.cos(a), 0.38 * math.sin(a), 1.96), "#3A2E1F", rot=(0, 0, a + math.pi / 2))
+    p.cyl(0.19, 0.1, 0.22, (0, 0, 2.11), "#4A3C28", seg=8)  # crown, tapered
+    p.cyl(0.2, 0.2, 0.04, (0, 0, 2.03), "#2A2018", seg=8)  # hatband
+    for i in range(7):  # straw under the hat and out of the neck
+        a = i * math.tau / 7
+        p.between((0.12 * math.cos(a), 0.12 * math.sin(a), 1.99),
+                  (0.26 * math.cos(a), 0.26 * math.sin(a), 1.9 - 0.04 * (i % 2)), 0.012, 0.004, "#C9B26A", seg=3)
+    for i in range(5):
+        p.between((0, 0.0, 1.66), ((i - 2) * 0.07, 0.06, 1.55), 0.012, 0.004, "#C9B26A", seg=3)
 
 
 def scarecrow():
+    # cross shape: arms nearly level on a stake, ragged coat to the knees, stick legs
     t = Part("Torso", (0, 0, 0.7))
-    t.cyl(0.4, 0.2, 0.9, (0, 0, 1.15), "#3B3226", seg=8)  # coat
+    t.cyl(0.4, 0.17, 0.95, (0, 0, 1.17), "#3B3226", seg=8)  # coat
     t.cyl(0.4, 0.4, 0.04, (0, 0, 0.72), "#2A2218", seg=8)
-    for i in range(10):  # ragged hem tatters
-        a = i * math.tau / 10
-        h = 0.18 + 0.12 * ((i * 7) % 3)
+    for i in range(12):  # ragged hem tatters
+        a = i * math.tau / 12
+        h = 0.18 + 0.14 * ((i * 7) % 3)
         t.box((0.1, 0.02, h), (0.4 * math.cos(a), 0.4 * math.sin(a), 0.7 - h / 2 + 0.03), "#2F281D", rot=(0, 0, a + math.pi / 2))
     t.box((0.18, 0.02, 0.18), (0.1, 0.2, 1.3), "#5A4A2E")  # patch
+    t.box((0.14, 0.02, 0.14), (-0.14, 0.2, 1.0), "#6A5A3C")
+    t.between((0, -0.14, 0.7), (0, -0.14, 1.78), 0.035, 0.03, "#5C402A", seg=5)  # stake through the back
+    t.box((0.4, 0.04, 0.05), (0, -0.14, 1.52), "#5C402A")  # crossbar behind the coat
+    for i in range(5):  # straw from the collar
+        t.between((0, 0.05, 1.62), ((i - 2) * 0.09, 0.2, 1.52), 0.014, 0.004, "#C9B26A", seg=3)
     t.done()
     for s, nm in ((-1, "ArmL"), (1, "ArmR")):
-        sh, ha = (s * 0.2, 0.0, 1.5), (s * 0.5, 0.3, 0.95)
+        sh, ha = (s * 0.2, 0.0, 1.5), (s * 0.44, 0.2, 1.3)
         a = Part(nm, sh)
-        a.between(sh, ha, 0.09, 0.06, "#3B3226", seg=6)
-        for k in (-1, 0, 1):
-            a.between(ha, (ha[0] + s * 0.04 * (k + 2) * 0.5, ha[1] + 0.12, ha[2] - 0.2), 0.012, 0.004, "#C9B26A", seg=3)
+        a.between(sh, ha, 0.1, 0.075, "#3B3226", seg=6)
+        for k in range(4):  # sleeve rags hanging below the arm
+            m = Vector(sh).lerp(Vector(ha), 0.3 + 0.2 * k)
+            a.box((0.06, 0.02, 0.16 + 0.04 * (k % 2)), (m.x, m.y, m.z - 0.12), "#2F281D")
+        for k in range(6):  # straw bundle at the cuff
+            a.between(ha, (ha[0] + s * 0.03 * (k % 3), ha[1] + 0.06 + 0.015 * k, ha[2] - 0.2 - 0.02 * (k % 2)), 0.014, 0.004, "#C9B26A", seg=3)
         a.done()
     for s, nm in ((-1, "LegL"), (1, "LegR")):
         l = Part(nm, (s * 0.1, 0, 0.75))
-        l.between((s * 0.1, 0, 0.75), (s * 0.12, 0.03, 0.0), 0.05, 0.035, "#4A3C28", seg=5)
+        l.between((s * 0.1, 0, 0.75), (s * 0.12, 0.03, 0.05), 0.055, 0.035, "#4A3C28", seg=5)
+        l.box((0.1, 0.2, 0.05), (s * 0.12, 0.08, 0.025), "#2A2218")  # boot
         l.done()
 
 
@@ -226,50 +281,79 @@ def husk_heart(p):
 
 
 def husk():
+    # a bundle of stalks leaning together into a tall hooded figure, peeled leaves hanging like rags,
+    # a dark hollow in the middle with the heart showing through gaps
     p = Part("Stalks", (0, 0, 0))
-    n = 16
+    p.cyl(0.14, 0.1, 1.6, (0, 0, 0.9), "#26260F", seg=7)  # dark hollow core, thinner than the heart (r 0.17)
+    n = 18
     for i in range(n):
         a = i * math.tau / n
-        r0, r1 = 0.42, 0.24 + 0.05 * math.sin(i * 2.3)
-        h = 1.9 + 0.5 * ((i * 5) % 4) / 3
-        p.between((r0 * math.cos(a), r0 * math.sin(a), 0), (r1 * math.cos(a), r1 * math.sin(a), h), 0.045, 0.012, "#7E7432" if i % 2 else "#5E5A2A", seg=5)
-    for i in range(10):  # peeled leaves hanging off the torso
-        a = i * math.tau / 10 + 0.3
-        r = 0.3
-        p.box((0.17, 0.012, 0.7), (r * math.cos(a), r * math.sin(a), 1.25 + 0.15 * (i % 3)), "#A89A52" if i % 2 else "#8C8442",
-              rot=(0.0, 0.0, a + math.pi / 2))
+        r0, r1 = 0.44 + 0.04 * (i % 2), 0.22 + 0.05 * math.sin(i * 2.3)
+        h = 1.7 + 0.6 * ((i * 5) % 4) / 3
+        p.between((r0 * math.cos(a), r0 * math.sin(a), 0), (r1 * math.cos(a), r1 * math.sin(a), h), 0.05, 0.012,
+                  "#7E7432" if i % 2 else "#5E5A2A", seg=5)
+    for i in range(12):  # peeled leaves hanging off the torso, tattered; peeled open at the front over the heart
+        if i in (2, 3):
+            continue
+        a = i * math.tau / 12 + 0.3
+        r = 0.3 + 0.03 * (i % 2)
+        h = 0.7 + 0.2 * (i % 3)
+        p.box((0.19, 0.012, h), (r * math.cos(a), r * math.sin(a), 1.3 + 0.1 * (i % 3) - (h - 0.7) / 2), "#A89A52" if i % 2 else "#8C8442",
+              rot=(0.12, 0.0, a + math.pi / 2))
+    for i in range(6):  # brittle ground-hugging blades at the foot
+        a = i * math.tau / 6 + 0.5
+        p.box((0.14, 0.012, 0.5), (0.42 * math.cos(a), 0.42 * math.sin(a), 0.22), "#6E6630", rot=(0.2, 0, a + math.pi / 2))
     p.done()
-    _head_part(lambda q: (q.ball((0.14, 0.14, 0.24), (0, 0.04, 2.05), "#9A8F48", seg=7, rings=5),
-                          [q.between((0, 0.1, 2.25), ((k - 2) * 0.05, 0.2, 2.4), 0.012, 0.004, "#C9B26A", seg=3) for k in range(5)]),
-               "Head", (0, 0, 1.85), False)
+
+    def head(q):
+        q.ball((0.14, 0.15, 0.26), (0, 0.04, 2.05), "#9A8F48", seg=7, rings=5)  # cob
+        for i in range(7):  # kernel rows
+            q.box((0.02, 0.02, 0.3), (0.0 + (i - 3) * 0.035, 0.18 - 0.012 * abs(i - 3), 2.03), "#C9B26A")
+        for sx in (-1, 1):  # hollow eyes, dark and not emissive
+            q.ball((0.035, 0.02, 0.05), (sx * 0.06, 0.18, 2.1), "#14120A", seg=5, rings=4)
+        for k in range(6):  # husk hood leaves around the head
+            a = k * math.tau / 6
+            q.box((0.12, 0.012, 0.4), (0.15 * math.cos(a), 0.04 + 0.15 * math.sin(a), 1.97), "#8C8442", rot=(0.0, 0.0, a + math.pi / 2))
+        for k in range(6):  # silk
+            q.between((0, 0.0, 2.28), ((k - 2.5) * 0.04, 0.08, 2.37), 0.012, 0.004, "#C9B26A", seg=3)
+    _head_part(head, "Head", (0, 0, 1.85), False)
     for s, nm in ((-1, "ArmL"), (1, "ArmR")):
-        sh, ha = (s * 0.3, 0, 1.6), (s * 0.46, 0.45, 0.9)
+        sh, ha = (s * 0.3, 0, 1.6), (s * 0.48, 0.45, 0.9)
         a = Part(nm, sh)
-        for k in range(3):
-            a.between((sh[0] + k * 0.02 * s, sh[1], sh[2] - k * 0.04), (ha[0] + (k - 1) * 0.04, ha[1] + k * 0.03, ha[2] - k * 0.05), 0.04, 0.01, "#7E7432", seg=4)
+        for k in range(4):  # bundled stalks as an arm
+            a.between((sh[0] + k * 0.02 * s, sh[1], sh[2] - k * 0.04), (ha[0] + (k - 1.5) * 0.04, ha[1] + k * 0.03, ha[2] - k * 0.05), 0.04, 0.01, "#7E7432", seg=4)
+        a.box((0.16, 0.012, 0.35), (ha[0], ha[1], ha[2] - 0.12), "#A89A52")  # leaf hand
         a.done()
     _head_part(husk_heart, "Heart", (0, 0, 1.2), False)
 
 
 def boar():
+    # low and wide: huge shoulder hump, tusked wedge head, bristle ridge, iron collar and dragging chain
+    B, B2 = "#3A2E27", "#2E241F"
     b = Part("Body", (0, 0, 0.8))
-    b.ball((0.55, 0.75, 0.58), (0, -0.1, 0.85), "#3A2E27", seg=9, rings=6)
-    b.ball((0.45, 0.4, 0.38), (0, 0.2, 1.1), "#2E241F", seg=8, rings=5)  # shoulder hump
-    for i in range(5):  # bristle ridge
-        b.box((0.05, 0.12, 0.12), (0, 0.5 - i * 0.28, 1.45 - 0.05 * abs(i - 1)), HIDE)
-    b.between((0, -0.8, 1.0), (0.1, -0.95, 0.7), 0.04, 0.015, "#3A2E27", seg=4)  # tail
+    b.ball((0.55, 0.72, 0.56), (0, -0.12, 0.84), B, seg=9, rings=6)
+    b.ball((0.48, 0.42, 0.4), (0, 0.18, 1.04), B2, seg=8, rings=5)  # shoulder hump
+    b.ball((0.4, 0.3, 0.3), (0, -0.55, 0.78), B2, seg=7, rings=5)  # haunch
+    for i in range(7):  # bristle ridge, taller at the shoulder
+        b.box((0.05, 0.12, 0.1 + 0.05 * (i % 2)), (0, 0.5 - i * 0.18, 1.4 - 0.06 * abs(i - 1)), HIDE, rot=(0.2, 0, 0))
+    b.between((0, -0.8, 0.95), (0.1, -0.9, 0.62), 0.04, 0.012, B, seg=4)  # tail
     for sx in (-1, 1):
-        for y in (-0.4, 0.4):
-            b.between((sx * 0.32, y, 0.55), (sx * 0.32, y, 0.0), 0.13, 0.09, "#2E241F", seg=6)
-            b.box((0.16, 0.2, 0.06), (sx * 0.32, y + 0.03, 0.03), HIDE)
+        for y in (-0.45, 0.4):
+            b.between((sx * 0.32, y, 0.55), (sx * 0.32, y, 0.1), 0.14, 0.085, B2, seg=6)
+            for k in (-1, 1):  # cloven hoof
+                b.box((0.07, 0.15, 0.1), (sx * 0.32 + k * 0.045, y + 0.03, 0.05), HIDE)
     b.done()
     h = Part("Head", (0, 0.6, 0.8))
-    h.ball((0.36, 0.38, 0.34), (0, 0.85, 0.8), "#3A2E27", seg=8, rings=6)
-    h.between((0, 1.1, 0.72), (0, 1.4, 0.66), 0.19, 0.15, "#4A3A33", seg=7)
+    h.ball((0.36, 0.34, 0.33), (0, 0.78, 0.8), B, seg=8, rings=6)
+    h.between((0, 1.0, 0.74), (0, 1.35, 0.64), 0.2, 0.16, "#4A3A33", seg=7)  # snout
+    h.box((0.24, 0.05, 0.1), (0, 1.38, 0.64), "#5A4640")  # snout disc
+    h.box((0.36, 0.06, 0.05), (0, 1.0, 0.98), HIDE)  # heavy brow
     for sx in (-1, 1):
-        h.between((sx * 0.14, 1.3, 0.6), (sx * 0.2, 1.48, 0.98), 0.045, 0.01, BONE, seg=5)  # tusk
-        h.ball((0.03, 0.02, 0.03), (sx * 0.2, 1.12, 0.92), EMBER, mat=MAT_EMBER, seg=5, rings=4)
-        h.box((0.1, 0.03, 0.16), (sx * 0.28, 0.75, 1.12), "#2E241F", rot=(0.4, 0, sx * 0.3))  # ear
+        h.between((sx * 0.14, 1.2, 0.58), (sx * 0.24, 1.38, 0.72), 0.05, 0.03, BONE, seg=5)  # tusk, curving up
+        h.between((sx * 0.24, 1.38, 0.72), (sx * 0.22, 1.44, 0.96), 0.03, 0.008, BONE, seg=5)
+        h.ball((0.028, 0.02, 0.026), (sx * 0.19, 1.02, 0.88), EMBER, mat=MAT_EMBER, seg=5, rings=4)
+        h.box((0.12, 0.03, 0.2), (sx * 0.28, 0.7, 1.1), B2, rot=(0.4, 0, sx * 0.3))  # ear
+        h.box((0.08, 0.03, 0.04), (sx * 0.3, 0.9, 0.92), "#5A4640")  # scar
     h.done()
     collar(Part("Collar", (0, 0.6, 0.85)))
     chain(Part("Chain", (0, 0.6, 0.85)))
@@ -287,7 +371,9 @@ def chain(p):
         a, b = Vector(pts[i]), Vector(pts[i + 1])
         p.between(a, b, 0.025, 0.025, "#4C5154", seg=4)
         p.box((0.07, 0.07, 0.04), (a + b) / 2, "#6A6F72", rot=(0, 0, 0.5))
+    p.box((0.12, 0.12, 0.1), (0, -0.6, 0.06), "#3E4244")  # drag weight at the end
     p.done()
+
 
 
 def hull_of(name, col="#6C7A99"):
@@ -650,6 +736,7 @@ MODELS = [
 
 def build(name, fn, cls):
     reset()
+    Ctx.jitter = 0.012 if name.startswith("creature_") else 0.0
     fn()
     bpy.context.view_layer.update()
     tris, lo, hi = 0, Vector((1e9,) * 3), Vector((-1e9,) * 3)
