@@ -598,6 +598,7 @@ no economy number and can start now.
 | P4-17 | Audio Designer | Phase 4 sounds: cart, gnaw, flare, radio, animals, signature variants, UI (doc 08 s11) | done (CEO listen pending, doc 08 s14 item 11; per-body cre_jumpscare_hit done, D-081) | P4-01 |
 | P4-19 | 3D Artist | Final art for the four creature bodies, glimpse parts and smear hulls (D-087) | done (QA PASS after QA fix: husk heart visible) | P4-16 |
 | P4-20 | Technical Artist | Final night look: phase lighting, fog, darkness, post stack, creature materials (D-087) | done (QA PASS after QA fixes: HUD below post layers, Harvest Moon disc; Q-150 open) | P4-16; creature materials after P4-19 |
+| P4-21 | AI Programmer | Bot seasons stand in for a median team (Q-157): bots go inside at night, save for the payment, plant the Prize Pumpkin; speed fix under `--time-scale` | in progress | P4-18 fixes |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
@@ -802,6 +803,23 @@ Acceptance:
   both wins and losses (doc 09 s3).
 - The doc 09 Phase 4 gate and the D-068 carried `checklist_p3` items.
 - Q-021 and Q-039 nits.
+
+### P4-21 Bot seasons as a median team
+Owner: AI Programmer. Output: `game/bots/`; handoff note. Source: Q-157, OPEN_ISSUES "Found at the
+P4-18 review" items 1 and 4, OPEN_ISSUES "Found at the P4-12 review" item 1. The CEO asked for it at
+STOP 5 (2026-10-09) so QA can test the economy in hours instead of evenings.
+Acceptance:
+- At dusk bots stop chores and go inside a lit building (doc 03 light rules); they come out at dawn.
+  Night deaths drop from 5 to 15 per season to the sim median or below.
+- Bots keep coins for the next payment (doc 02 s7) before spending on seeds; no foreclosure from
+  spending every coin on seeds.
+- Bots plant and tend the Prize Pumpkin, so the final judging has a pumpkin.
+- Bots stay inside the speed check under `--time-scale` (OPEN_ISSUES P4-18 item 4): a time-scale 8 bot
+  season logs 0 bot `speed_violation`.
+- Headless bot seasons (2p, 3p and 4p, at least 2 seeds, `--headcount=` set) include at least one win
+  and one loss; the `tools/sim/sim.py compare` result goes in the handoff, pass or fail.
+- Bots still use only the player paths (move frames, hold requests); no host-side shortcuts.
+- Full test suite and smoke pass headless with no new errors.
 
 ### P4-19 Creature bodies, final art
 Owner: 3D Artist. Output: `assets/models/creature_*.glb`, `assets/blender/`, `tools/blender/`;

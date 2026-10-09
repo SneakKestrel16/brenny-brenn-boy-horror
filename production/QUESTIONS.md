@@ -1040,7 +1040,7 @@ logs no per-run `owed`); dawn 8 uses the bank before the final payment. Live `du
 denominators at 2p, 3p and 4p (150/617, 217/888, 258/1055). Please confirm the denominator in doc 02
 s18.5, or build `tools/sim/sim.py compare` and QA will switch to it.
 
-### Q-157 · 2026-10-09 · QA -> AI Programmer · open
+### Q-157 · 2026-10-09 · QA -> AI Programmer · answered (CEO 2026-10-09: yes, task P4-21)
 P4-18. Bots never go inside at night and die nearly every night (OPEN_ISSUES "Found at the P4-18
 review" item 1); they also never plant the Prize Pumpkin (OPEN_ISSUES "Found at the P4-12 review" item
 1). So headless seasons cannot reach a win and cannot be compared with the sim. Not a Phase 4 gate item
