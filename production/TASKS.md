@@ -744,6 +744,7 @@ Acceptance:
 - Harvest Moon sky (doc 07).
 - D-084: `PrizePumpkin.lift_prize` works only at Harvest Moon dusk; carrying blocks other holds. Judging
   moves from `Death.step_final_sale` to the cart finish; escort bites call `PrizePumpkin.bite()`.
+
 ### P4-13 Creature body per season
 Owner: AI Programmer. Output: body pick in creature code; handoff note.
 Acceptance:
