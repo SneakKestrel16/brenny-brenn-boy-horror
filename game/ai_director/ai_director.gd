@@ -37,6 +37,7 @@ var _step_t := 0.0
 var _rng := RandomNumberGenerator.new()
 var _stand_rng := RandomNumberGenerator.new()  ## D-115 town stand rolls: its own stream, the other picks stay as they were
 var _stand: Dictionary = {}  ## "kind:peer" -> [until, won]: the current town stand roll
+var stand_night := false  ## D-116: tonight the nudge goes to the town stand's region while a player is there
 
 
 func _ready() -> void:
@@ -51,7 +52,7 @@ func _ready() -> void:
 	for r in Data.records(&"ai_director"):
 		_d[String(r.id)] = r
 	_rng.seed = Game.seed_value + 4  # its own stream: the creature's picks stay as they were
-	_stand_rng.seed = Game.seed_value + 5
+	_stand_rng.seed = Game.seed_value + 7  # scares.gd takes + 5
 	_relax_s = float(_d.phases.relax_min_s)
 	Clock.day_changed.connect(func(_d2: int) -> void:
 		_big.clear()
@@ -60,6 +61,9 @@ func _ready() -> void:
 		if p == &"dawn":
 			_roll(Clock.day + 1)
 			wander_region = ""
+			stand_night = false
+		elif p == &"night":
+			roll_stand_night()
 		_events.clear())
 	_setup.call_deferred()  # after the farm and the Creature are in the tree
 	_roll(Clock.day)
@@ -230,6 +234,12 @@ func stand_ok(kind: StringName, peer: int) -> bool:
 	return r[1]
 
 
+## D-116: at nightfall, is tonight a stand night (`town_stand.reach_night_chance`)? See `_nudge`.
+func roll_stand_night() -> void:
+	stand_night = _stand_rng.randf() < float(_d.town_stand.reach_night_chance)
+	Log.event(&"town_stand_night", {"day": Clock.day, "reach": stand_night})
+
+
 func _scare_ok(peer: int) -> bool:
 	return Logic.scare_ok(int(_big.get(peer, 0)), float(_last_big.get(peer, -INF)), _now, _d.scare_rules)
 
@@ -303,6 +313,8 @@ func region_rect(r: String) -> Rect2:
 
 ## Doc 03 section 11.6: one hop of the wander region toward the region with the most living players (their
 ## true region: presentation, region only). P4-12: `jump` (the Harvest Moon acts 2 and 3) goes there in one step.
+## D-116: on a stand night it jumps to the region of a living player at the town stand instead; hops from
+## the farm (about 100 m) would outlast the scripted stalk, and the guard could never be reached.
 func _nudge(jump := false) -> void:
 	if _creature == null or _regions.is_empty():
 		return
@@ -311,6 +323,10 @@ func _nudge(jump := false) -> void:
 		if _alive(p):
 			var r := region_of(Game.players[p].pos)
 			count[r] = int(count.get(r, 0)) + 1
+			if stand_night and Clock.phase == &"night" and _creature._at_stand(Game.players[p].pos):
+				count = {r: 1}
+				jump = true
+				break
 	if count.is_empty():
 		return
 	var toward: String = count.keys().reduce(func(a: String, b: String) -> String: return a if count[a] >= count[b] else b)

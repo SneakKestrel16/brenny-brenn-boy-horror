@@ -1,7 +1,8 @@
 extends SceneTree
 ## P4-34 (D-115) on a live host: at the town stand a kill, lure, scare, stalk pick or knock-off on a player is
 ## less likely but still possible (seeded, many trials); away from it every roll is won. A creature that
-## reaches a player at the stand kills on a won roll and backs off on a lost one.
+## reaches a player at the stand kills on a won roll and backs off on a lost one. D-116: on a stand night the
+## scripted creature gets from the farm to the guard.
 ##   "$GODOT" --headless --audio-driver Dummy --path . -s res://tests/creature/test_p4_34.gd -- --host --bots=1 --port=24851 --free-mouse
 ## Exits 0 on pass, 1 on any failure.
 
@@ -85,6 +86,7 @@ func _run() -> void:
 	_check(same, "100 asks inside reroll_s give the first answer")
 	await _reach(false)
 	await _reach(true)
+	await _stand_night()
 	print("test_p4_34: ", "FAIL %d" % _fails if _fails else "PASS")
 	quit(1 if _fails else 0)
 
@@ -115,5 +117,58 @@ func _reach(won: bool) -> void:
 		"roll %s: chase ends %s" % [won, st])
 	_check(Game.is_ghost(1) == won, "roll %s: player 1 %s" % [won, "killed" if won else "alive"])
 	dir._stand.erase("kill:1")
+	dev.run("phase day")
+	await create_timer(0.5).timeout
+
+
+## D-116: about reach_night_chance of nights are stand nights. On one the nudge jumps to the stand's region
+## and the scripted creature gets from the farm to a lone guard there; on other nights it hops one region.
+func _stand_night() -> void:
+	var chance := float(dir._d.town_stand.reach_night_chance)
+	_check(chance > 0.0 and chance < 1.0, "reach_night_chance %.2f is a chance" % chance)
+	var n := 0
+	for i in 400:
+		dir.roll_stand_night()
+		n += int(dir.stand_night)
+	_check(absf(n / 400.0 - chance) < 0.08, "%d of 400 nights are stand nights (chance %.2f)" % [n, chance])
+	for p in Game.players.keys():
+		if Game.is_ghost(p):
+			dev.run("respawn %d" % p)
+	var barn: Rect2 = cr._rects[0]
+	var inside := Vector3(barn.get_center().x, 0.0, barn.get_center().y)
+	_pin_all(inside)
+	Game.players[1].pos = STAND
+	cr.global_position = Vector3(20.0, 0.0, 67.5)  # its day cover in corn_ring_south
+	dir.stand_night = false
+	dir.wander_region = ""
+	dir._nudge()
+	_check(dir.wander_region != dir.region_of(STAND), "no stand night: one hop, not to %s (%s)" % [dir.region_of(STAND), dir.wander_region])
+	dev.run("phase night")
+	await create_timer(0.2).timeout
+	_pin_all(inside)
+	Game.players[1].pos = STAND
+	dir.stand_night = true
+	dir._stand["stalk:1"] = [INF, true]
+	dir._stand["kill:1"] = [INF, false]  # the reach is under test, not the kill
+	dir._nudge()
+	_check(dir.wander_region == dir.region_of(STAND), "stand night: nudge jumps to %s" % dir.wander_region)
+	_ev.clear()
+	Engine.time_scale = 4.0
+	var best := INF
+	var t := 0.0
+	while t < 30.0:  # 120 s of night
+		await create_timer(0.25, true, false, true).timeout
+		t += 0.25
+		best = minf(best, cr.global_position.distance_to(STAND))
+	Engine.time_scale = 1.0
+	var ended: Variant = null
+	for e in _ev:
+		if e[0] == "chase_ended" and int(e[1].target) == 1:
+			ended = e[1]
+	_check(best <= float(dir._d.town_stand.radius_m), "the creature came within %.1f m of the stand" % best)
+	_check(ended != null, "the scripted chase on the guard ended: %s" % [ended])
+	_check(not Game.is_ghost(1), "kill roll lost: the guard lives")
+	for k in ["stalk:1", "kill:1"]:
+		dir._stand.erase(k)
 	dev.run("phase day")
 	await create_timer(0.5).timeout

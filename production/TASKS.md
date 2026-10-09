@@ -609,7 +609,7 @@ no economy number and can start now.
 | P4-29 | AI Programmer, Gameplay | CEO: a sprung bear trap stays where it sprang; players pick it up and hang it back on the pegboard | in progress | — |
 | P4-30 | Game Designer, Gameplay | CEO: sell bonus by player count so 2p makes its payments; sim targets still pass | in progress | P4-28 |
 | P4-31 | AI Programmer | CEO: players in the town stand sanctuary do not count as outside at night (D-089); bots drop the sentinel job; re-run bot seasons | superseded by D-115, not merged (bots lost 12 of 12 seasons) | P4-21 |
-| P4-34 | AI Programmer, Game Designer | CEO: the town stand lowers creature interaction instead of being a sanctuary (D-115); re-run bot seasons and the sim | in progress | P4-21 |
+| P4-34 | AI Programmer, Game Designer | CEO: the town stand lowers creature interaction instead of being a sanctuary (D-115); re-run bot seasons and the sim | in review | P4-21 |
 | P4-32 | Gameplay | CEO: the Harvest Moon push bar shows the distance left to the gate, not a stuck 0%; pushers lock to the cart while holding interact | in progress | — |
 | P4-33 | Gameplay | CEO: flag limit per player; remove your own placed flag; flags as small icons on the minimap | waiting | P4-24 |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |

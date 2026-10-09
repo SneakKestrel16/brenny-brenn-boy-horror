@@ -771,3 +771,23 @@ not guarantee their safety. Bots keep their stand job. P4-31 is not merged; P4-3
 but cant completely guarantee their safety".
 **How to apply:** no code path may treat the stand as fully safe. P4-34 re-runs the bot seasons and the
 sim against the s18.3 targets.
+
+### D-116 · 2026-10-09 · AI Programmer (CEO "yes" to Q-225) · Stand nights give the creature reach to the town stand
+On a stand night the AI Director's nudge jumps the creature's wander region to the region of a living
+player at the town stand (`town_road`), instead of one hop toward the most players (doc 03 s11.6). At
+nightfall the AI Director rolls `ai_director.json town_stand.reach_night_chance` (placeholder 0.5) and
+logs `town_stand_night`. It is still a region, never a position, and every D-115 stand roll (lure, scare,
+stalk, knock-off, kill) still applies, so a guard is reached on some nights and killed on fewer.
+Target (placeholder): a guard at the stand dies on about 1 night in 10 (0.5 stand night x `stalk_mult`
+0.5 x reach x `kill_mult` 0.4, at most 0.1); a player outside at the farm when the scripted stalk starts
+is picked and chased with no roll, so the guard's risk stays well below it and above 0.
+To make the multipliers per-night chances, `town_stand.reroll_s` goes from 30 to 300, one night
+(`data/season.json night_s`, doc 01 Nights): with a 30 s hold a guard who stays at the stand is re-rolled
+ten times a night, so `stalk_mult` was only a delay (P4-34 QA). `kill_mult` goes from 0.2 to 0.4 to keep
+the target. The stand RNG seed moves from `seed + 5` to `seed + 7`, off the scares stream (`scares.gd`
+uses `seed + 5`).
+**Why:** CEO answer to Q-225, 2026-10-09: "yes", the creature must sometimes go after a player at the
+town stand. P4-34 measured 0 stand deaths in 84 bot nights without it: about 100 m of hops outlast the
+doc 03 s18 scripted stalk and chase.
+**How to apply:** the stand's risk is set by `reach_night_chance` and the D-115 multipliers together.
+Tune them against bot seasons (stand deaths per night), not one at a time.

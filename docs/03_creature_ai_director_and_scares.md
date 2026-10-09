@@ -596,7 +596,7 @@ condition (doc 01 "Day Deaths").
 | Rule | Detail | Source |
 |---|---|---|
 | Private events | go to one player only (`apply_scare` with a target slot, doc 06 section 7) | doc 01 "Voice mimicry" |
-| Town stand | within 10 m of the town stand: lures, scares, stalk picks, Harvest Moon knock-offs and kills on a player there are less likely, never impossible. Each goes ahead on a won roll at its `ai_director.json` `town_stand` multiplier (placeholders: lure 0.25, scare 0.25, stalk 0.5, knock-off 0.25, kill 0.2). A player there still counts as outside for the "Unattended farm" term | doc 01 "Town stand"; D-115; doc 04 sec 8 |
+| Town stand | within 10 m of the town stand: lures, scares, stalk picks, Harvest Moon knock-offs and kills on a player there are less likely, never impossible. Each goes ahead on a won roll at its `ai_director.json` `town_stand` multiplier (placeholders: lure 0.25, scare 0.25, stalk 0.5, knock-off 0.25, kill 0.4; one roll per kind and player per night, D-116). A player there still counts as outside for the "Unattended farm" term | doc 01 "Town stand"; D-115; doc 04 sec 8 |
 | Targeted day lure | only the target hears; no teammate within 15 m of the **source** (the lure's origin) | doc 01 "Voice mimicry" |
 | Dawn Report | replays targeted lures | doc 01 "Dawn Report" |
 
@@ -614,6 +614,13 @@ are `placeholder`. Regions are `Area3D` nodes in the level scene; adjacency is c
   region is allowed for presentation, not hunting). This is allowed only as a region: doc 01
   "Hunting and presentation".
 - Nudge cooldown 20 s (placeholder).
+- **Stand nights (D-116).** At nightfall the AI Director rolls `town_stand.reach_night_chance`
+  (placeholder 0.5). On a stand night, while a living player is within the town stand radius, the nudge
+  jumps straight to that player's region (`town_road`) instead of one hop: the stand is about 100 m from
+  the farm, and hops would outlast the scripted stalk (section 18). The section 11.5 stand rolls still
+  gate the stalk pick and the kill, so the guard is reached on some nights and dies on fewer
+  (target about 1 night in 10, placeholder: 0.5 x `stalk_mult` 0.5 x `kill_mult` 0.4 at most). The roll
+  hold `reroll_s` is one night (300 s), so a guard who stays is not re-rolled until the stalk wins.
 
 ### 11.7 Debug
 
@@ -646,10 +653,11 @@ Creature) runs on the host only; the pure rules are in `director_logic.gd` and c
   `day_lure`, `stalk`, `scare` and `kill`, after the profile has allowed the event; a chase is not rolled
   (the kill at its end is). The creature asks `stand_ok` itself for the scripted night's stalk pick and
   lure and for a Harvest Moon knock-off. A roll is won at `town_stand.<kind>_mult`; one roll per kind and
-  player holds `reroll_s` (30 s), so asking every frame cannot wear it down. Rolls use their own seeded
-  stream (`seed + 5`) and log `town_stand_roll` (`kind`, `player`, `won`). A chase that reaches its target
+  player holds `reroll_s` (300 s, one night, D-116), so asking every frame cannot wear it down. Rolls use
+  their own seeded stream (`seed + 7`; scares use `seed + 5`) and log `town_stand_roll` (`kind`, `player`, `won`). A chase that reaches its target
   on a lost kill roll ends as `retreat` / `town_stand` and the player lives; on a won roll the player dies
-  as anywhere else. `tests/creature/test_p4_34.gd` checks both.
+  as anywhere else. `tests/creature/test_p4_34.gd` checks both. `roll_stand_night()` sets `stand_night`
+  at nightfall and logs `town_stand_night` (`day`, `reach`); `_nudge` reads it (section 11.6, D-116).
 - **Daily roll.** At start and at each dawn (for the next day) it rolls `deep_m`, `earshot_m`,
   `trap_race_m` and `deep_trap_race_m` and logs `daily_roll`. A normal trap race keeps a floor of
   (pry hold + `min_spare_s`) at the approach speed, 21 m; a deep trap has none. `trap_race.gd` reads the

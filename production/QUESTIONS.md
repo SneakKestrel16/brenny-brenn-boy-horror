@@ -1166,7 +1166,7 @@ Soundscape still plays the barn room tone in the lobby (Audio's `_in_barn`), whi
 Players still spawn at the six barn spawn markers at match start (doc 04 s13): "players spawn on the
 farm" read as those markers (inference; the CEO can name another spawn area).
 
-### Q-225 · 2026-10-09 · AI Programmer -> Game Designer · open
+### Q-225 · 2026-10-09 · AI Programmer -> Game Designer · answered D-116
 P4-34 (D-115). The town stand guard cannot die in practice, whatever the `town_stand` multipliers say.
 The stand (farm.tscn `Sanctuary`, x 120, z -5) is about 100 m from where the creature lurks. The doc 03
 s18 scripted night gives it 15 s of stalk at 2.5 m/s and 10 s of chase at 5.5 m/s before the retreat
@@ -1179,3 +1179,6 @@ the target region before 60 s, (b) the AI Director nudges its region toward the 
 guard is outside, or (c) a longer scripted chase. (a) and (b) are AI Programmer changes once you rule;
 the multipliers can then be tuned against bot seasons. Settled by: your ruling, then a re-run of the 12
 seasons.
+**Answer (CEO, 2026-10-09):** "yes", the creature must sometimes go after a player at the town stand.
+Built as (b) in P4-34, D-116: on a stand night (`town_stand.reach_night_chance`, placeholder 0.5) the
+nudge jumps to the stand's region while a player is there. Bot-season numbers in the P4-34 handoff.
