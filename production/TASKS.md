@@ -599,6 +599,13 @@ no economy number and can start now.
 | P4-19 | 3D Artist | Final art for the four creature bodies, glimpse parts and smear hulls (D-087) | done (QA PASS after QA fix: husk heart visible) | P4-16 |
 | P4-20 | Technical Artist | Final night look: phase lighting, fog, darkness, post stack, creature materials (D-087) | done (QA PASS after QA fixes: HUD below post layers, Harvest Moon disc; Q-150 open) | P4-16; creature materials after P4-19 |
 | P4-21 | AI Programmer | Bot seasons stand in for a median team (Q-157): bots go inside at night, save for the payment, plant the Prize Pumpkin; speed fix under `--time-scale` | in progress | P4-18 fixes |
+| P4-22 | Gameplay | CEO session: store menu lists every item on interact; seed shop with a seed choice that planting uses; hotbar showing held items and how to use them | in progress | P4-06 |
+| P4-23 | Gameplay | CEO session: menu lobby before the match (roles, settings, ready), no spawning in the barn to pick | in progress | P4-09 |
+| P4-24 | Gameplay | CEO session: minimap in the top right showing the player, buildings, fields, store, well, cart | in progress | — |
+| P4-25 | AI Programmer | CEO session: creature stuck in the barn; at dawn place it back in the corn; fix the cause | in progress | — |
+| P4-26 | Audio Designer | CEO session: new footstep sounds; crickets chirp less often | in progress | — |
+| P4-27 | Level Designer | CEO session: farm less open (cover, tree lines, landmarks); festival cart rests on the ground in the barn | in progress | — |
+| P4-28 | Game Designer | CEO session: simulate a bigger watering can (3 and 4 plots per fill) against the s18.3 targets and the bot-season gap | in progress | — |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
@@ -820,6 +827,25 @@ Acceptance:
   and one loss; the `tools/sim/sim.py compare` result goes in the handoff, pass or fail.
 - Bots still use only the player paths (move frames, hold requests); no host-side shortcuts.
 - Full test suite and smoke pass headless with no new errors.
+
+### P4-22 to P4-28 CEO session fixes
+Source: OPEN_ISSUES "Found in the CEO's 2-instance session". Each row is done when a headless run and the
+full test suite show no new errors, a windowed screenshot (or listen file for P4-26) shows the change,
+and an Opus QA review passes.
+- **P4-22:** interacting with the store opens a menu with every `store.json` item, its price and a buy
+  button; seeds are sold there per crop (doc 02 crops), and planting uses the chosen seed; a hotbar shows
+  held items and a one-line use hint. Host-authoritative as now.
+- **P4-23:** a lobby screen before the match: role pick (D-077), settings, ready; the host starts the
+  season and players spawn on the farm. The barn lobby goes.
+- **P4-24:** a top-right minimap: player arrow, other living players, buildings, fields, store, well,
+  cart. Never shows the creature.
+- **P4-25:** at dawn the host places the creature back in the corn if it is outside it; find and fix
+  why it stuck in the barn.
+- **P4-26:** new footstep set per surface; cricket chirp interval longer (doc 08).
+- **P4-27:** break up open ground with cover, tree lines and landmarks (doc 04); keep sightlines, bot
+  routes and `tools/sim/layout.json` distances valid; festival cart sits on the barn floor.
+- **P4-28:** sim the watering can at 3 and 4 plots per fill; report median win rate and payment margins;
+  change `data/` only if the s18.3 targets still pass.
 
 ### P4-19 Creature bodies, final art
 Owner: 3D Artist. Output: `assets/models/creature_*.glb`, `assets/blender/`, `tools/blender/`;
