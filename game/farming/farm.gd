@@ -73,18 +73,31 @@ func _int_arg(prefix: String) -> int:
 	return 0
 
 
-## D-039: `extra` plots open when the match-start headcount reaches their `min_players`. The bought-plot
-## ceiling for the store is `plot_ceiling()` (player_scaling.json, not season.json); the store's `plot_pair` reads it (P4-06).
+## D-039: `extra` plots open when the match-start headcount reaches their `min_players`, in `_extra_key` order,
+## up to player_scaling.json `field_plots_start_by_players` minus the 4-player start (QA-check-2026-10-09: 5p opens
+## 2 of the 8, 6p opens 4). The bought-plot ceiling for the store is `plot_ceiling()`
+## (player_scaling.json, not season.json); the store's `plot_pair` reads it (P4-06).
 func _set_headcount(n: int) -> void:
 	headcount = n
-	var open := 0
+	var starts: Dictionary = Data.record(&"player_scaling", &"headcount").get("field_plots_start_by_players", {})
+	var allowed := int(starts.get(str(clampi(n, 2, Game.max_players())), 16)) - int(starts.get("4", 16))
+	var extras: Array = []
 	for m in get_tree().get_nodes_in_group(&"plot_spots"):
-		var t: Node = targets.get(String(m.name))
-		if t is Plot and bool(m.get_meta(&"extra", false)) and Game.full_farm:
-			t.locked = n < int(m.get_meta(&"min_players", 99))
-			t._refresh()
-			open += int(not t.locked)
+		if targets.get(String(m.name)) is Plot and bool(m.get_meta(&"extra", false)) and Game.full_farm:
+			extras.append(m)
+	extras.sort_custom(func(a, b): return _extra_key(a) < _extra_key(b))
+	var open := 0
+	for m in extras:
+		var t: Plot = targets[String(m.name)]
+		t.locked = n < int(m.get_meta(&"min_players", 99)) or open >= allowed
+		t._refresh()
+		open += int(not t.locked)
 	Log.event(&"plots_open", {"headcount": n, "extras_open": open, "ceiling": plot_ceiling()})
+
+
+## Opening order: lowest `min_players`, then `extra_order` (inner plots first), then name, so fields A and B alternate.
+func _extra_key(m: Node) -> Array:
+	return [int(m.get_meta(&"min_players", 99)), int(m.get_meta(&"extra_order", 0)), String(m.name)]
 
 
 func plot_ceiling() -> int:
