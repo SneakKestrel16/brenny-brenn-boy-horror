@@ -908,3 +908,16 @@ primitives do not tell the roles apart.
 inside centre of the band so it sits on a head at 1.74 m. The lobby's `LineUp._hat` loads them in place of
 the primitives. The hats are role markers, not cosmetics: wider cosmetics (overalls, picked hats) stay
 Phase 5. The D-142 and D-143 numbers are taken by the P4-33 and P4-35 branches still in review.
+
+### D-142 · 2026-10-09 · CEO · Anyone pulls up any flag; a leaver's flags go with them (P4-33)
+Amends D-120. Any player may pull up any flag (`remove_flag`), not only the one who placed it; the
+owner's slot frees. `not_your_flag` is gone; the host refuses only `no_flag` (nothing there). When a
+player leaves or disconnects, the host removes all their flags (`flags_dropped`). A flag never hides the
+trap it stands on: `HoldController.pick` sees through a flag to a target within 1 m behind it
+(placeholder), and the flag's pick body sits above a set trap's.
+**Why:** CEO 2026-10-09: "auto remove flags on leave or disconnect from that player, allow other players
+to remove someone else flags, and that should solve the issue with it overlapping the traps". The
+P4-33 QA follow-ups found a leaver's flags could never be removed and a flag's pick body could cover a
+trap's.
+**How to apply:** doc 01 "Flags" says any player can pull up any flag. `flag_removed` logs `player`
+(who pulled it) and `owner` (who placed it); the Dawn Report counts flags still out per owner.

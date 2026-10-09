@@ -1,8 +1,9 @@
 extends SceneTree
 ## P4-33: a client places flags up to its limit, is refused one more, pulls one up, and mirrors the host's
-## list with owners (the drawn flag offers `remove_flag` to its owner only). Run as the client of a 2-instance session:
+## list with owners. Then (D-142) it walks to the host's flag, planted by `--dev-exec=flag`, and pulls it up.
+## Run as the client of a 2-instance session:
 ##   uv run tools/qa/multi.py -n 2 --headless --duration 60 \
-##     --args "-- --host --port=24862 --free-mouse" \
+##     --args "-- --host --port=24862 --free-mouse --dev-exec=flag" \
 ##     --args "-s res://tests/net/test_flags_sync.gd -- --join=127.0.0.1 --port=24862 --free-mouse"
 
 var _t := 0.0
@@ -40,7 +41,8 @@ func _process(delta: float) -> bool:
 		for i in lim + 1:
 			_ids.append(FS.make_id(body.global_position + Vector3(i * 1.2 - 2.0, 0, 1.0)))
 		_step = 1
-	if _answers.size() < _step - 1 or _t - _sent < 0.2:
+	var want := _step - 1 if _step <= lim + 3 else _step - 2  # step lim + 4 moves the body and sends nothing
+	if _answers.size() < want or _t - _sent < 0.2:
 		return false  # waiting for the host's answer to the last request
 	if _step <= lim + 2:
 		var n := _step - 1
@@ -66,8 +68,29 @@ func _process(delta: float) -> bool:
 	if _t - _sent < 1.0:
 		return false  # the remove hold is 0.5 s; let apply_flags arrive
 	var last: Array = _answers[_answers.size() - 1]
-	_check(last[0] == &"hold_done" and last[1][0] == &"remove_flag", "remove_flag done (%s)" % [last])
-	_check(sweep.count_of(me) == lim - 1, "client mirror after remove: %d" % sweep.count_of(me))
+	if _step == lim + 3:
+		_check(last[0] == &"hold_done" and last[1][0] == &"remove_flag", "remove_flag done (%s)" % [last])
+		_check(sweep.count_of(me) == lim - 1, "client mirror after remove: %d" % sweep.count_of(me))
+		var host_flag: Array = sweep.flags.filter(func(f: Dictionary) -> bool: return f.by == 1)
+		_check(host_flag.size() == 1, "the host's flag (dev-exec) is mirrored")
+		if host_flag.is_empty():
+			print("test_flags_sync: FAIL (%d)" % _fails)
+			quit(1)
+			return false
+		_ids.append(FS.make_id(host_flag[0].pos))
+		body.global_position = host_flag[0].pos + Vector3(1.0, 0.5, 0)  # the client owns its movement
+		_step += 1
+		_sent = _t
+		return false
+	if _step == lim + 4:
+		if _t - _sent < 1.5:
+			return false  # let the host see the client beside the flag
+		net.to_host(&"request_hold", [&"remove_flag", _ids[_ids.size() - 1]])
+		_step += 1
+		_sent = _t
+		return false
+	_check(last[0] == &"hold_done" and last[1][0] == &"remove_flag", "D-142: a client pulls up the host's flag (%s)" % [last])
+	_check(sweep.count_of(1) == 0 and sweep.count_of(me) == lim - 1, "client mirror: the host's flag is gone, mine stay")
 	print("test_flags_sync: %s" % ("PASS" if _fails == 0 else "FAIL (%d)" % _fails))
 	quit(1 if _fails > 0 else 0)
 	return false

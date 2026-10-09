@@ -30,6 +30,7 @@ const HELP := """Commands (host only unless marked):
   scare <kind> [peer]       play a scare now, past the AI Director: jumpscare, shed, whisper, own_voice,
                             wrong_count, hallucination, disarm_lunge, fake_out (target defaults to you)
   trap [bear|pit]           creature sets a trap at the free trap spot nearest you (default bear)
+  flag [peer]               a player plants a flag at their feet, host rules apply (default: you)
   whistle [peer]            whistle as a player, through the host checks (default: you)
   emote <kind> [peer]       wave, point, shrug or scream as a player (default: you)
   kill [peer]               kill a player (default: you)
@@ -286,6 +287,13 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? no free trap spot"
 			creature._arm(best, kind, {"dev": true})
 			return "%s set at %s, %.0f m away" % [kind, best.name, best.global_position.distance_to(me)]
+		"flag":
+			var who := _peer_arg(a, 0)
+			if who == 0:
+				return "? flag [peer]"
+			var at: Vector3 = Game.players[who].pos
+			main.get_node("Farm").registry.request(who, &"place_flag", "flag:%.1f,%.1f" % [at.x, at.z])
+			return "peer %d plants a flag at their feet (a 1 s hold, host rules apply)" % who
 		"scare":
 			var scares := main.get_node("Scares")
 			var target := _peer_arg(a, 1)

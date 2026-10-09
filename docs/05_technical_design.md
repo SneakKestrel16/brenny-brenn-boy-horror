@@ -577,11 +577,14 @@ Traps are host-owned (doc 03 section 8). The player side is:
   within 2 m. A late joiner gets the list on `farm_state`.
   **Limit and removal (P4-33, D-120).** A player has at most `labor.json` `place_flag.max_per_player`
   flags out (3, placeholder); one more is refused `flag_limit`. Every drawn flag carries a `FlagSpot`
-  with a pick body, so its owner aims at it and holds `interact` for `remove_flag` (0.5 s,
-  `INSTANT_S`, placeholder); the host checks the owner (`not_your_flag` otherwise) and the slot frees.
-  A flag cleared by a disarm or fill frees its slot too. A peer that rejoins under a new id does not
-  get its old flags' slots back. The minimap draws every flag as a small red pennant from
-  `TrapSweep.flags`. Not built: the creature moving flags (doc 01 "Flags", day 5); when built it
+  with a thin pick body from 0.7 m to 1.8 m (above a set trap's 0.6 m box), so any player aims at it
+  and holds `interact` for `remove_flag` (0.5 s, `INSTANT_S`, placeholder; D-142); the host refuses
+  `no_flag` if none is there, and the owner's slot frees. `HoldController.pick` sees through a flag:
+  another target within `FLAG_SEE_THROUGH_M` (1 m, placeholder) behind it wins, so a flag on a trap
+  never hides its disarm, fill or pickup. A flag cleared by a disarm or fill frees its slot too. When a
+  player leaves or drops (`Game.player_left`) the host removes all their flags (`flags_dropped`).
+  Dev console: `flag [peer]` plants a flag at that player's feet through the same hold. The minimap
+  draws every flag as a small red pennant from `TrapSweep.flags`. Not built: the creature moving flags (doc 01 "Flags", day 5); when built it
   moves `pos` and keeps `by`.
 - **Pegboard (built, P2-11).** `TrapSweep` also keeps `filled`, one bool per `pegboard_slots` marker
   (sorted by name), and `apply_pegboard_changed(filled)` sends it. The board is one target (`pegboard`,
@@ -595,7 +598,7 @@ Traps are host-owned (doc 03 section 8). The player side is:
   4 m and facing it. `TrapRace` gives every set or sprung spot a `TrapTarget` (`sync_set()` on the host
   because the Creature tells only the *other* peers about `set` and `moved`).
 - **Log events.** `trap_changed` (`set`, `sprung`, `disarmed`, `filled`) with `by` and `kind`;
-  `flag_placed`, `pegboard_changed`; every peer logs `apply_flags` and `apply_pegboard_changed` when it
+  `flag_placed`, `flag_removed`, `flags_dropped`, `pegboard_changed`; every peer logs `apply_flags` and `apply_pegboard_changed` when it
   receives them. Doc 09 section 3 reads `trap_changed`.
 - **Scarecrows and fences.** `request_place_defense(kind, position, yaw)`; the host validates:
   a placement spot on open ground, no overlap with a plot or a trap spot, **and no closer than 3 m to
@@ -814,7 +817,7 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
     full wipe heads it; none gives `no_deaths`), Hero of the Night (score: trap disarmed or pit filled 3,
     a pry that freed a teammate 3, a refuel 2, outside the most while someone hid 1; placeholder weights,
     the biggest deed names the action), Heard in the Corn (up to 3 more targeted lures, placeholder cap)
-    and Flags Placed (per-player `flag_placed` counts). A section with nothing to say is left out,
+    and Flags Placed (per-player flags still out: `flag_placed` less `flag_removed` by `owner`). A section with nothing to say is left out,
     except Cause of Death and Flags Placed. Copy without a template (freed, refueled, flags) is in the
     builder until the Game Designer adds it (Q-066).
   - **Screen (every peer):** placeholder newspaper card (doc 07 section 9 colours, 0.5 degree tilt,
@@ -1090,7 +1093,8 @@ the QA changes.
 | `trap_theft_capped` | host | `cap`, `day` | Shed lock (D-053) |
 | `trap_skipped` | host | `kind`, `reason` (`no_supply`, `no_spot`) | Bear supply ran out (D-053) |
 | `trap_moved` | host | `trap`, `from_building`, `to_spot`, `player` | Lit-building trap to the corn at dawn (D-053) |
-| `flag_placed` / `flag_removed` | host | `player`, `position`, `trap_id` (or null), `flags` (all out), `mine` (the player's) | Flags; `flag_removed` is the owner pulling one up (P4-33) |
+| `flag_placed` / `flag_removed` | host | `player`, `position`, `trap_id` (or null), `flags` (all out), `mine` (the owner's); `flag_removed` adds `owner` | Flags; `flag_removed` is any player pulling one up (`player` pulled it, `owner` placed it; P4-33, D-142) |
+| `flags_dropped` | host | `player`, `count` | A leaver's flags go with them (D-142) |
 | `payment_made` | host | `amount`, `balance`, `due`, `late` | Debt |
 | `dawn_summary` | host | `day`, `coins`, `debt`, `plots_ripe`, `plots_wilted`, `farm_damage`, `deaths` (+ `medical_bill`, `final_extra`; P2-06) | Simulator `compare` (reads `money_changed` by dawn too) |
 | `generator` | host | `state` (`fuelled`, `dead`, `repaired`), `fuel_s` | Generator run |

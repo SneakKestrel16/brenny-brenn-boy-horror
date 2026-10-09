@@ -8,6 +8,7 @@ const Interactable := preload("res://game/interaction/interactable.gd")
 const FlagSpot := preload("res://game/traps_player/flag_spot.gd")
 const REACH_M := 3.0  ## ray length from the eye (placeholder; the host range check is range_m)
 const PICK_MASK := 8  ## layer 4 "interactable"
+const FLAG_SEE_THROUGH_M := 1.0  ## placeholder: a target this close behind a flag wins the pick (a trap's half-width plus room)
 const REFUSED_SHOW_MS := 2000  ## how long a refusal reason stays on screen (placeholder)
 
 var player: CharacterBody3D
@@ -186,9 +187,28 @@ func _ground_spot() -> Node:
 
 func _look_target() -> Node:
 	var from := _cam.global_position
-	var q := PhysicsRayQueryParameters3D.create(from, from - _cam.global_transform.basis.z * REACH_M, PICK_MASK)
-	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
-	return hit.collider.get_meta(&"interactable") if hit and hit.collider.has_meta(&"interactable") else null
+	return pick(player.get_world_3d().direct_space_state, from, from - _cam.global_transform.basis.z * REACH_M)
+
+
+## The interactable the ray from `from` to `to` hits. A flag does not hide what it stands on: the ray goes
+## on through a flag, and another target within FLAG_SEE_THROUGH_M behind it wins (D-142: a flag on a trap
+## must not stop its disarm, fill or pickup). Anything further back loses to the flag.
+static func pick(space: PhysicsDirectSpaceState3D, from: Vector3, to: Vector3) -> Object:
+	var q := PhysicsRayQueryParameters3D.create(from, to, PICK_MASK)
+	var flag: Object = null
+	var flag_at := Vector3.ZERO
+	for i in 4:  # placeholder cap: at most this many flags in one line
+		var hit := space.intersect_ray(q)
+		if hit.is_empty() or not hit.collider.has_meta(&"interactable"):
+			return flag
+		var it: Object = hit.collider.get_meta(&"interactable")
+		if it.get_script() != FlagSpot:
+			return it if flag == null or flag_at.distance_to(hit.position) <= FLAG_SEE_THROUGH_M else flag
+		if flag == null:
+			flag = it
+			flag_at = hit.position
+		q.exclude = q.exclude + [hit.rid]
+	return flag
 
 
 func _on_apply(what: StringName, args: Array) -> void:
