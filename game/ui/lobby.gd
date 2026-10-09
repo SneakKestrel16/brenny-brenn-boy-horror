@@ -84,6 +84,7 @@ class LineUp extends Node3D:
 	func _farmer(peer: int) -> Node3D:
 		var f := Node3D.new()
 		f.name = str(peer)
+		f.rotation.y = PI  # face the camera at +Z; models and hats front -Z (Q-242)
 		add_child(f)
 		var body := CapsuleMesh.new()  # the in-game body is the same placeholder capsule (player.gd)
 		body.radius = 0.3

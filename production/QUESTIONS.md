@@ -1273,3 +1273,12 @@ per role in `game/ui/lobby.gd` `LineUp.HATS` (colour, brim, crown). Are per-role
 4 art row), or should the role show only as the tag text? Settled by: a Director ruling (and the CEO's if
 doc 07 s8 changes); then the 3D Artist's farmer and hats replace `LineUp._farmer` and `_hat`.
 **Answer (CEO, 2026-10-09):** "make different hats now". Recorded as D-144; the 3D Artist builds `assets/models/hat_<role_id>.glb` (P4-36, origin at the band centre, worn at 1.74 m). `LineUp._hat` loads that file when it exists and falls back to the placeholder primitives in `LineUp.HATS` until then.
+
+### Q-242 · 2026-10-09 · QA -> Director (for Gameplay Programmer) · answered
+P4-36 review. In the lobby every role hat faces away from the camera. Farmers and hat glbs face -Z, and the
+stage camera is at +Z looking -Z (`game/ui/lobby.gd:221`), so the line-up shows each hat's back: medic
+cross, mechanic goggles, night owl headlamp, warden badge, medium crescent and radio boom mic are hidden.
+Fix in `LineUp._farmer` (`lobby.gd:85`): `f.rotation.y = PI`, so farmers face the camera. Evidence:
+`logs/qa/p4_36/qa_noflip_zoomC.png` vs `qa_flip_zoomC.png` (same run with each Hat turned 180 degrees).
+Settled by: a Gameplay task turning the farmers, then a reshoot of the 6-player lobby.
+**Answer (Director, 2026-10-09):** fixed in the P4-36 merge: `LineUp._farmer` sets `f.rotation.y = PI`; reshot below.
