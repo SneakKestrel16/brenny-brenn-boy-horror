@@ -897,11 +897,11 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   over a local 3D line-up, no farm and no player bodies (nobody spawns until the match starts). The line-up
   is the `Players` node (`lobby.gd` `LineUp`): a placeholder barn set at night (three `LightRig` lanterns,
   the centre one in group `barn_lantern` for the recording staging; a moon and a spot on the centre authored
-  in `lobby.tscn`), and one placeholder farmer per player with a role hat (`LineUp.HATS`, Q-241) and three
+  in `lobby.tscn`), and one placeholder farmer per player with a role hat (`assets/models/hat_<role>.glb` when present, D-144; else the `LineUp.HATS` placeholders) and three
   `Label3D` tags: name, role, and HOST / READY / NOT READY. The local farmer stands in the centre; the others
-  alternate right and left, a step back. `LineUp.sync()` runs on every refresh and frees a leaver's farmer.
+  alternate right and left, a step back; the camera fits six (doc 01 "Format" cap) between the side panels, and odd slots lift their tags so neighbours stagger. `LineUp.sync()` runs on every refresh and frees a leaver's farmer.
   Left: the role cards (P4-09; a taken role greyed out, all locked when a loaded season keeps its roles,
-  which clients learn from `apply_roles`' `locked` key, D-142). Right: a roster with each player's voice
+  which clients learn from `apply_roles`' `locked` key, D-143). Right: a roster with each player's voice
   setting, the join code, doc 01's Discord line, the group settings (difficulty and streamer-safe; host
   edits, `Game.set_group_settings`, everyone sees them). Bottom right: one big button. A client's button toggles Ready
   (`request_lobby_ready(on)`; the host logs `lobby_ready {player, on}` and broadcasts

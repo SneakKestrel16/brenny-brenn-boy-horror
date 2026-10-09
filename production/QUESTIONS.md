@@ -1265,10 +1265,11 @@ is `game/ui/lobby.gd`: a menu screen over a 3D line-up in a placeholder barn set
 until the match starts; the staging lantern is the centre `LightRig` in group `barn_lantern` (Q-176).
 Settled by: each owner rewording their lines to "menu lobby", or confirming they still hold.
 
-### Q-241 · 2026-10-09 · Gameplay Programmer -> 3D Artist, Director · open
+### Q-241 · 2026-10-09 · Gameplay Programmer -> 3D Artist, Director · answered
 P4-35. The task says to reuse the farmer model and role hats; neither exists (no `char_farmer.glb`; the
 in-game body is the capsule in `game/player/player.gd`). Doc 07 s8 lists hats as DD Phase 5 cosmetics, but
 D-140 puts a role on each farmer, so the lobby draws placeholder primitives: a capsule farmer and one hat
 per role in `game/ui/lobby.gd` `LineUp.HATS` (colour, brim, crown). Are per-role hats in scope now (a Phase
 4 art row), or should the role show only as the tag text? Settled by: a Director ruling (and the CEO's if
 doc 07 s8 changes); then the 3D Artist's farmer and hats replace `LineUp._farmer` and `_hat`.
+**Answer (CEO, 2026-10-09):** "make different hats now". Recorded as D-144; the 3D Artist builds `assets/models/hat_<role_id>.glb` (P4-36, origin at the band centre, worn at 1.74 m). `LineUp._hat` loads that file when it exists and falls back to the placeholder primitives in `LineUp.HATS` until then.

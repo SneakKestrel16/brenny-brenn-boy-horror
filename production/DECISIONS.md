@@ -922,7 +922,7 @@ trap's.
 **How to apply:** doc 01 "Flags" says any player can pull up any flag. `flag_removed` logs `player`
 (who pulled it) and `owner` (who placed it); the Dawn Report counts flags still out per owner.
 
-### D-142 · 2026-10-09 · Gameplay Programmer · `apply_roles` carries the role lock (P4-35, needs Director approval)
+### D-143 · 2026-10-09 · Gameplay Programmer · `apply_roles` carries the role lock (P4-35, needs Director approval)
 The `apply_roles` table (peer id -> role id) gains one non-peer key, `"locked": bool`: true when the host
 loaded a season (`Game.season_uids` not empty), so its roles stay as saved. `Roles.apply` stores it and
 `Roles.locked()` returns it on clients (the host reads `season_uids` directly). `Roles.apply` reads only

@@ -41,9 +41,14 @@ var _qa_ready := false
 ## player at x = 0 and the others stepping outward and back. Voice hangs each speaker's emitter on
 ## `player(peer)`, so lobby voice is placed at that farmer; the listener is the stage camera.
 class LineUp extends Node3D:
-	const SPACING := 1.15  ## m between farmers (placeholder)
-	const STEP_BACK := 0.35  ## m further back per slot from the centre (placeholder)
-	## Placeholder role hats until the 3D Artist's char_farmer.glb and hats exist (Q-241): colour, brim radius, crown height.
+	## Six farmers (doc 01 "Format" cap) fit between the side panels with the stage camera in `_stage`.
+	const SPACING := 0.9  ## m between farmers (placeholder)
+	const STEP_BACK := 0.3  ## m further back per slot from the centre (placeholder)
+	## Tag lines: node name, height over the farmer (m), font size. Odd slots lift theirs by TAG_LIFT so
+	## neighbouring tags stagger instead of overlapping.
+	const TAGS := [["Name", 2.56, 56], ["Role", 2.36, 36], ["Status", 2.2, 36]]
+	const TAG_LIFT := 0.6
+	## Placeholder role hats until the 3D Artist's hat_<role>.glb files land (D-144, P4-36): colour, brim radius, crown height.
 	const HATS := {&"farmer": [Color(0.6, 0.48, 0.26), 0.3, 0.14], &"rancher": [Color(0.4, 0.27, 0.16), 0.34, 0.16],
 			&"mechanic": [Color(0.25, 0.3, 0.36), 0.2, 0.1], &"tracker": [Color(0.3, 0.33, 0.2), 0.26, 0.12],
 			&"carpenter": [Color(0.55, 0.36, 0.18), 0.22, 0.1], &"medic": [Color(0.7, 0.68, 0.62), 0.2, 0.12],
@@ -72,6 +77,8 @@ class LineUp extends Node3D:
 				continue
 			var slot := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)  # 0, +1, -1, +2, -2, ...
 			f.position = Vector3(slot * SPACING, 0.0, -absf(slot) * STEP_BACK)
+			for t in TAGS:
+				(f.get_node(t[0]) as Node3D).position.y = t[1] + (TAG_LIFT if absi(slot) % 2 == 1 else 0.0)
 			_tag(f, order[i])
 
 	func _farmer(peer: int) -> Node3D:
@@ -91,12 +98,12 @@ class LineUp extends Node3D:
 		arm.height = 0.7
 		for side in [-1, 1]:
 			f.add_child(_mesh(arm, Color(0.36, 0.28, 0.22), Vector3(side * 0.36, 1.0, 0.0)))  # shirt sleeves
-		for line in [["Name", 2.5, 56], ["Role", 2.34, 36], ["Status", 2.2, 36]]:
+		for line in TAGS:
 			var l := Label3D.new()
 			l.name = line[0]
 			l.position.y = line[1]
 			l.font_size = line[2]
-			l.pixel_size = 0.004
+			l.pixel_size = 0.005
 			l.outline_size = 14
 			l.outline_modulate = Color(0, 0, 0, 0.85)
 			l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -122,12 +129,19 @@ class LineUp extends Node3D:
 			if old:
 				old.free()
 			if HATS.has(role):
-				f.add_child(_hat(HATS[role]))
+				f.add_child(_hat(role))
 
-	func _hat(h: Array) -> Node3D:
-		var hat := Node3D.new()
+	## The role's hat: the 3D Artist's `hat_<role>.glb` (P4-36, D-144; origin at the band centre) when it
+	## exists, else the placeholder primitives from HATS.
+	func _hat(role: StringName) -> Node3D:
+		var path := "res://assets/models/hat_%s.glb" % role
+		var hat: Node3D = (load(path) as PackedScene).instantiate() if ResourceLoader.exists(path) else _hat_placeholder(HATS[role])
 		hat.name = "Hat"
 		hat.position.y = 1.74
+		return hat
+
+	func _hat_placeholder(h: Array) -> Node3D:
+		var hat := Node3D.new()
 		var brim := CylinderMesh.new()
 		brim.top_radius = h[1]
 		brim.bottom_radius = h[1]
@@ -204,8 +218,8 @@ func _stage() -> void:
 	we.environment = env
 	stage.add_child(we)
 	var cam := Camera3D.new()
-	cam.position = Vector3(0, 1.5, 4.4)
-	cam.rotation_degrees.x = -2.0
+	cam.position = Vector3(0, 1.6, 8.2)  # far enough back for six full bodies between the panels (QA P4-35)
+	cam.rotation_degrees.x = -3.0
 	cam.fov = 48.0
 	stage.add_child(cam)
 	cam.make_current()
@@ -213,9 +227,9 @@ func _stage() -> void:
 	cam.add_child(ear)
 	ear.make_current()
 	var wood := Color(0.16, 0.1, 0.06)
-	_box(stage, Vector3(14, 0.1, 9), Vector3(0, -0.05, 0), Color(0.12, 0.08, 0.05))  # floor
-	for i in 23:  # back wall planks, two tones
-		_box(stage, Vector3(0.58, 5.5, 0.12), Vector3(-6.6 + i * 0.6, 2.75, -3.2), wood * (0.8 if i % 2 else 1.0))
+	_box(stage, Vector3(20, 0.1, 16), Vector3(0, -0.05, 4.5), Color(0.12, 0.08, 0.05))  # floor
+	for i in 31:  # back wall planks, two tones
+		_box(stage, Vector3(0.58, 7.0, 0.12), Vector3(-9.0 + i * 0.6, 3.5, -3.2), wood * (0.8 if i % 2 else 1.0))
 	for x in [-3.6, 3.6]:  # posts and the beam the lanterns hang from
 		_box(stage, Vector3(0.28, 4.2, 0.28), Vector3(x, 2.1, -1.0), wood * 1.2)
 	_box(stage, Vector3(7.8, 0.3, 0.3), Vector3(0, 3.6, -1.0), wood * 1.2)
@@ -239,7 +253,7 @@ func _stage() -> void:
 			rig.add_to_group(&"barn_lantern")  # RecordingScreen._find_lantern: "lantern_out" blows this one out
 		stage.add_child(rig)
 	var spot := $Spot as Node3D  # the local player's spotlight
-	spot.position = Vector3(0, 4.6, 3.2)
+	spot.position = Vector3(0, 5.0, 1.6)
 	spot.look_at_from_position(spot.position, Vector3(0, 0.6, 0))
 
 
@@ -265,7 +279,7 @@ func _ui() -> void:
 	title.add_theme_color_override(&"font_color", INK)
 	title.position = Vector2(32, 20)
 	add_child(title)
-	var left := _panel(Control.PRESET_LEFT_WIDE, 330)
+	var left := _panel(Control.PRESET_LEFT_WIDE, 300)
 	var lv := VBoxContainer.new()
 	left.add_child(lv)
 	_heading(lv, "Pick a role (kept for the season)")
@@ -276,7 +290,7 @@ func _ui() -> void:
 	_cards = VBoxContainer.new()
 	_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_cards)
-	var right := _panel(Control.PRESET_RIGHT_WIDE, 330)
+	var right := _panel(Control.PRESET_RIGHT_WIDE, 300)
 	right.offset_bottom = -130  # the big button sits under it
 	var rv := VBoxContainer.new()
 	rv.add_theme_constant_override(&"separation", 8)
@@ -314,7 +328,7 @@ func _ui() -> void:
 	rv.add_child(menu)
 	_go = Button.new()
 	_go.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-	_go.offset_left = -362
+	_go.offset_left = -332
 	_go.offset_top = -110
 	_go.offset_right = -32
 	_go.offset_bottom = -32
