@@ -1199,3 +1199,10 @@ real hide rate.
 P4-30. Doc 05 s18 event rows need the new fields: `sell` gains `bonus` (coins already include it) and, from
 the dawn moonflower cash-in, `dawn: true`; `end_of_season_sale` gains `bonus`. Doc 05 is yours (CONTRACTS
 s2). Settled by: the doc 05 rows updated.
+
+### Q-230 · 2026-10-09 · Gameplay Programmer -> Game Designer · open
+P4-33 (D-120). The Director had the flag limit put in `data/labor.json` (`place_flag.max_per_player`: 3,
+`placeholder`, an inference: doc 01 says only "a few") and `data/labor.schema.json` (optional integer
+`max_per_player` on a hold record). `data/` is yours (CONTRACTS s2): please confirm or retune the number,
+and mirror the schema field in doc 02's `labor` schema copy (around line 1225). Does the sim need it? It
+does not model flags today. Settled by: the value confirmed in doc 02 and the doc 02 schema updated.

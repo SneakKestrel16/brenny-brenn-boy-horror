@@ -1,6 +1,6 @@
 extends Node
 ## Doc 05 section 11 (P2-11): the sweep tools' shared state. Flags (world objects every peer sees,
-## `apply_flags`) and the shed pegboard (`apply_pegboard_changed`: which `pegboard_slots` hold a bear
+## `apply_flags`; each remembers who placed it, so the owner can pull it up and the limit counts it, P4-33) and the shed pegboard (`apply_pegboard_changed`: which `pegboard_slots` hold a bear
 ## trap). The host owns both and broadcasts the whole list on every change; a late joiner gets them on
 ## `farm_state`. The disarm and fill holds are in `trap_target.gd`; the pegboard and flag holds are
 ## `peg_target.gd` and `flag_spot.gd`. For P2-05 (the creature steals a trap): `take_trap()`.
@@ -11,7 +11,7 @@ const PegTarget := preload("res://game/traps_player/peg_target.gd")
 const START_FILLED := true  ## doc 02 section 12: the starting pegboard holds its bear traps (placeholder)
 
 var farm: Node
-var flags: Array = []  ## every peer: Vector3 per flag
+var flags: Array = []  ## every peer: {pos: Vector3, by: peer} per flag
 var filled: Array = []  ## every peer: bool per slot, slots sorted by marker name
 var _flag_root: Node3D
 var _slots: Array = []
@@ -52,23 +52,55 @@ func _ready() -> void:
 
 func flag_near(p: Vector3, gap: float) -> bool:
 	for f in flags:
-		if Vector2(f.x - p.x, f.z - p.z).length() < gap:
+		if _flat(f.pos, p) < gap:
 			return true
 	return false
 
 
+## Flags out per player at once (doc 01 "Flags", D-120; labor.json `place_flag.max_per_player`, placeholder).
+func limit() -> int:
+	return int(Data.record(&"labor", &"place_flag").get("max_per_player", 3))
+
+
+func count_of(peer: int) -> int:
+	return flags.filter(func(f: Dictionary) -> bool: return f.by == peer).size()
+
+
+## The index of `peer`'s flag at `p` (the wire rounds to 0.1 m), or -1.
+func own_flag_at(p: Vector3, peer: int) -> int:
+	for i in flags.size():
+		if flags[i].by == peer and _flat(flags[i].pos, p) < 0.1:
+			return i
+	return -1
+
+
 func add_flag(p: Vector3, peer: int) -> void:
-	flags.append(p)
-	Log.event(&"flag_placed", {"player": peer, "position": [p.x, p.z], "flags": flags.size()})
+	flags.append({"pos": p, "by": peer})
+	Log.event(&"flag_placed", {"player": peer, "position": [p.x, p.z], "trap_id": null, "flags": flags.size(), "mine": count_of(peer)})
 	_send_flags()
 
 
-## A flag is cleared when a trap beside it is disarmed or filled (the sweep for that spot is done).
+## P4-33: the owner pulls a flag up; the slot frees.
+func remove_flag(i: int, peer: int) -> void:
+	if i < 0 or i >= flags.size():
+		return
+	var p: Vector3 = flags[i].pos
+	flags.remove_at(i)
+	Log.event(&"flag_removed", {"player": peer, "position": [p.x, p.z], "trap_id": null, "flags": flags.size(), "mine": count_of(peer)})
+	_send_flags()
+
+
+## A flag is cleared when a trap beside it is disarmed or filled (the sweep for that spot is done); its
+## owner gets the slot back.
 func remove_flags_near(p: Vector3, radius: float) -> void:
-	var keep: Array = flags.filter(func(f: Vector3) -> bool: return Vector2(f.x - p.x, f.z - p.z).length() > radius)
+	var keep: Array = flags.filter(func(f: Dictionary) -> bool: return _flat(f.pos, p) > radius)
 	if keep.size() != flags.size():
 		flags = keep
 		_send_flags()
+
+
+static func _flat(a: Vector3, b: Vector3) -> float:
+	return Vector2(a.x - b.x, a.z - b.z).length()
 
 
 ## `peer` hangs the trap in their hands on the first free slot (the registry has checked there is one).
@@ -131,7 +163,18 @@ func _on_apply(what: StringName, args: Array) -> void:
 func _draw_flags() -> void:
 	for c in _flag_root.get_children():
 		c.free()
-	for f in flags:
+	for fl in flags:
+		var f: Vector3 = fl.pos
+		var at := Node3D.new()  # P4-33: the owner aims at the flag to pull it up
+		at.position = f
+		_flag_root.add_child(at)
+		var spot := FlagSpot.new()
+		spot.id = FlagSpot.make_id(f)
+		spot.pos = f
+		spot.by = int(fl.by)
+		spot.sweep = self
+		at.add_child(spot)
+		spot.add_pick_body(Vector3(0.6, 1.8, 0.6))
 		var pole := MeshInstance3D.new()  # placeholder art: a thin pole with a red cloth, visible from far
 		var pm := CylinderMesh.new()
 		pm.top_radius = 0.025

@@ -262,7 +262,9 @@ Traps still armed in the morning become daytime chores, and weapons for the lure
 - **Clues:** fresh dirt, bent stalks and glinting metal, visible only to players who look closely.
 - **Spotting:** disarming is safer with a teammate watching, which pulls two players off farming.
 - **Flags:**
-  - Free and unlimited: a shared, honest "checked" or "trap here" map that needs no voice.
+  - Free, but each player has only a few out at once: a shared, honest "checked" or "trap here" map that needs no voice.
+  - A player can pull up a flag they placed, freeing it for somewhere else.
+  - Placed flags show as small icons on the minimap, where each flag is now.
   - From day 5 the creature can move one flag a night.
 - **Lure combo:** day lures pull players toward unchecked rows. Teams that split sweeps and share which rows are clear stay safe, but talking feeds the creature clips.
 - **Lethality:** rarely lethal by day (only by losing the race); deadly at night, when a trapped player is easy prey.

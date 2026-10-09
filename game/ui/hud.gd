@@ -7,12 +7,13 @@ const HINT_S := 20.0  ## controls hint stays this long after first spawn (placeh
 const PHASE_TEXT := {&"day": "Daylight", &"dusk": "Dusk", &"night": "NIGHT", &"dawn": "Dawn", &"harvest_moon": "HARVEST MOON"}
 const VERB_TEXT := {&"plant": "Plant", &"water": "Water", &"harvest": "Harvest", &"sell": "Sell the crop",
 		&"fill_can": "Fill the watering can", &"pry": "Pry free", &"refuel": "Refuel",
-		&"disarm_bear": "Disarm the bear trap", &"fill_pit": "Fill the pit", &"place_flag": "Plant a flag",
+		&"disarm_bear": "Disarm the bear trap", &"fill_pit": "Fill the pit", &"place_flag": "Plant a flag", &"remove_flag": "Pull up your flag",
 		&"hang_trap": "Hang the trap on the board", &"take_shovel": "Take the shovel", &"return_shovel": "Hang the shovel back", &"take_trap": "Pick up the trap",
 		&"take_can": "Pick up the can", &"drop_can": "Put the can down", &"wash": "Wash at the well",
 		&"clear_plot": "Clear the dead crop", &"pay_early": "Pay the bank early"}
 const REFUSED_TEXT := {&"locked": "Locked: needs more players, or buy it at the store", &"need_shovel": "You need the shovel", &"hands_full": "Your hands are full",
-		&"pegboard_full": "No free hook", &"flag_here": "A flag is already here", &"not_armed": "Nothing set here",
+		&"pegboard_full": "No free hook", &"flag_here": "A flag is already here", &"flag_limit": "All your flags are out: pull one up first",
+		&"not_your_flag": "Not your flag", &"not_armed": "Nothing set here",
 		&"no_can": "You need a watering can", &"no_fuel_can": "You need the fuel can", &"can_taken": "Someone has it", &"has_fuel_can": "The can is full",
 		&"not_tainted": "Your hands are clean", &"no_coins": "Not enough coins for the seed", &"locked_crop": "That seed is not on sale yet",
 		&"too_far": "Stand at the shipping crate", &"locked_item": "Not on sale yet", &"owned": "You have that already", &"max_bought": "The crate has no more",

@@ -2,9 +2,11 @@ extends Control
 ## P4-24 (CEO session, OPEN_ISSUES item 5): a north-up map of the whole farm in the top-right corner.
 ## Read from the level's own nodes when the HUD is built (doc 04 names: `Ground/Floor`, `Buildings/*`,
 ## `Regions/field_*` and `corn_*`, groups `plot_spots`, `well`, `store_crate`, `sell_box`, `cart`), so a
-## layout change shows without editing this file. Shows the local player's arrow and living players.
+## layout change shows without editing this file. Shows the local player's arrow and every
+## placed flag as a small red pennant (P4-24, P4-33; where the flag is now, so a moved flag shows moved).
 ## Never the creature: nothing here reads the `creature` group. A pure reader, local only.
-## Cheap: the farm is drawn once on this Control; only the `_dyn` child (players, cart) redraws each frame.
+## Cheap: the farm is drawn once on this Control; only the `_dyn` child (arrow, cart, flags) redraws each frame.
+## No teammate dots (D-141, CEO: "dont show players on the minimap").
 
 const SIZE := Vector2(264, 172)  ## px; the 240 x 150 m full farm at about 1 px/m (placeholder)
 const PAD := 6.0
@@ -107,11 +109,11 @@ func _draw_dyn() -> void:
 		var cp := _px((cart.get_parent() as Node3D).global_position)
 		_dyn.draw_rect(Rect2(cp - Vector2(3, 3), Vector2(6, 6)), Color(1.0, 0.6, 0.2))
 		_dyn.draw_string(ThemeDB.fallback_font, cp + Vector2(4, 4), "C", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1.0, 0.6, 0.2))
-	var players := get_tree().current_scene.get_node_or_null(^"Players")
-	for peer in Game.players:
-		var body: Node3D = players.player(peer) if players else null
-		if body and body != player and not Game.is_ghost(peer):
-			_dyn.draw_circle(_px(body.global_position), 3.0, Color(0.6, 1.0, 0.6))
+	var sweep := get_tree().get_first_node_in_group(&"trap_sweep")
+	for f in sweep.flags if sweep else []:  # P4-33: a pole and a pennant, about 7 px tall
+		var fp := _px(f.pos)
+		_dyn.draw_line(fp, fp - Vector2(0, 7), Color(0.9, 0.85, 0.75), 1.0)
+		_dyn.draw_colored_polygon(PackedVector2Array([fp - Vector2(0, 7), fp + Vector2(5, -5), fp - Vector2(0, 3)]), Color(0.95, 0.12, 0.08))
 	if player:  # the local arrow, pointing where the camera faces (yaw 0 = north, -z)
 		var p := _px(player.global_position)
 		var f := Vector2(-sin(player.yaw), -cos(player.yaw))

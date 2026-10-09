@@ -830,3 +830,15 @@ shows teammates or the creature.
 **Why:** the CEO said "dont show players on the minimap"; teammate dots would expose fake voices and
 replace the whistle (doc 01 "Voice mimicry", "Whistle").
 **How to apply:** P4-33 removes the teammate dots from `game/ui/minimap.gd` `_draw_dyn`.
+### D-120 · 2026-10-09 · CEO · Flags: a per-player limit, removal, and minimap icons (P4-33)
+Replaces doc 01 "Flags" "Free and unlimited". Each player has at most `labor.json`
+`place_flag.max_per_player` flags out at once (3, `placeholder`); the host refuses one more with
+`flag_limit`. A player pulls up a flag they placed by aiming at it and holding `interact`
+(`remove_flag`, 0.5 s placeholder); the host refuses anyone else (`not_your_flag`). Every placed flag
+shows as a small icon on the P4-24 minimap. Flags stay free; the day-5 flag move is unchanged.
+`labor.schema.json` gains the optional integer `max_per_player` on a hold record.
+**Why:** CEO 2026-10-09: "players should have a limit on the amount of flags they can place and add a
+method to remove one they already placed, flags should up on the minimap as well as small icons".
+**How to apply:** the limit is data only. `TrapSweep.flags` holds `{pos, by}`; code that moves a flag
+(the creature, day 5) changes `pos` and keeps `by`. Q-230 asks the Game Designer to own the number and
+mirror the schema field in doc 02.

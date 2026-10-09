@@ -559,10 +559,18 @@ Traps are host-owned (doc 03 section 8). The player side is:
 - **Flags (built, P2-11).** Right mouse (`alt_use`) held 1 s on the ground the ray hits (3 m) is a
   `place_flag` hold; the target id is the wire name `flag:<x>,<z>` (one decimal, `FlagSpot`), built by
   the client for its ring and by the host per request (the registry frees it). Refused `flag_here`
-  within 1 m of another flag. `TrapSweep` (`game/traps_player/trap_sweep.gd`, host) keeps the list and
-  sends `apply_flags(positions)`; every peer draws a pole and red cloth (placeholder art). Disarming or
-  filling a trap clears flags within 2 m. Free and unlimited (doc 01 "Night Traps > Flags"). A late
-  joiner gets the list on `farm_state`. Not built: `request_remove_flag`, the creature moving flags.
+  within 1 m of another flag. `TrapSweep` (`game/traps_player/trap_sweep.gd`, host) keeps the list,
+  one `{pos, by}` per flag (`by` is the placing peer), and sends it whole as `apply_flags(flags)`;
+  every peer draws a pole and red cloth (placeholder art). Disarming or filling a trap clears flags
+  within 2 m. A late joiner gets the list on `farm_state`.
+  **Limit and removal (P4-33, D-120).** A player has at most `labor.json` `place_flag.max_per_player`
+  flags out (3, placeholder); one more is refused `flag_limit`. Every drawn flag carries a `FlagSpot`
+  with a pick body, so its owner aims at it and holds `interact` for `remove_flag` (0.5 s,
+  `INSTANT_S`, placeholder); the host checks the owner (`not_your_flag` otherwise) and the slot frees.
+  A flag cleared by a disarm or fill frees its slot too. A peer that rejoins under a new id does not
+  get its old flags' slots back. The minimap draws every flag as a small red pennant from
+  `TrapSweep.flags`. Not built: the creature moving flags (doc 01 "Flags", day 5); when built it
+  moves `pos` and keeps `by`.
 - **Pegboard (built, P2-11).** `TrapSweep` also keeps `filled`, one bool per `pegboard_slots` marker
   (sorted by name), and `apply_pegboard_changed(filled)` sends it. The board is one target (`pegboard`,
   on the `pegboard_spots` marker): with a trap in hand it offers `hang_trap` (1 s, first empty slot;
@@ -911,8 +919,8 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   health bar. The one exception is the CEO-requested minimap (P4-24, D-094, `game/ui/minimap.gd`,
   a child of the HUD): a north-up farm map in the top right, read from the level's nodes when the HUD
   is built (`Ground/Floor`, `Buildings/*`, `Regions/field_*` and `corn_*`, groups `plot_spots`,
-  `well`, `store_crate`, `sell_box`, `cart`), with the local player's arrow and dots for living
-  players. It never reads the `creature` group, and nothing on it marks a trap, a noise or a whistle. Information is diegetic (doc 01 "Diegetic"): the pegboard shows what tools are out, the
+  `well`, `store_crate`, `sell_box`, `cart`), with the local player's arrow and every placed flag as a small red pennant (P4-33). It never reads the `creature` group,
+  and nothing on it marks a teammate (D-141), a trap, a noise or a whistle. Information is diegetic (doc 01 "Diegetic"): the pegboard shows what tools are out, the
   flag shows a trap, a wrinkled leaf shows a thirsty crop, the generator hums lower.
 - **Accessibility** (inference, unscoped in doc 01): there are no voice subtitles at all (D-019): a
   missing speaker name on a creature fake would expose it and defeat the "wrong place" tell. A
@@ -1052,7 +1060,7 @@ the QA changes.
 | `trap_theft_capped` | host | `cap`, `day` | Shed lock (D-053) |
 | `trap_skipped` | host | `kind`, `reason` (`no_supply`, `no_spot`) | Bear supply ran out (D-053) |
 | `trap_moved` | host | `trap`, `from_building`, `to_spot`, `player` | Lit-building trap to the corn at dawn (D-053) |
-| `flag_placed` / `flag_removed` | host | `player`, `position`, `trap_id` (or null) | Flags |
+| `flag_placed` / `flag_removed` | host | `player`, `position`, `trap_id` (or null), `flags` (all out), `mine` (the player's) | Flags; `flag_removed` is the owner pulling one up (P4-33) |
 | `payment_made` | host | `amount`, `balance`, `due`, `late` | Debt |
 | `dawn_summary` | host | `day`, `coins`, `debt`, `plots_ripe`, `plots_wilted`, `farm_damage`, `deaths` (+ `medical_bill`, `final_extra`; P2-06) | Simulator `compare` (reads `money_changed` by dawn too) |
 | `generator` | host | `state` (`fuelled`, `dead`, `repaired`), `fuel_s` | Generator run |

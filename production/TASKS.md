@@ -612,7 +612,7 @@ no economy number and can start now.
 | P4-34 | AI Programmer, Game Designer | CEO: the town stand lowers creature interaction instead of being a sanctuary (D-115); re-run bot seasons and the sim | in progress | P4-21 |
 | P4-35 | Gameplay | CEO: menu lobby as a character line-up scene (D-140); doc 01 menu-lobby wording (Q-176) | in progress | P4-23 |
 | P4-32 | Gameplay | CEO: the Harvest Moon push bar shows the distance left to the gate, not a stuck 0%; pushers lock to the cart while holding interact | in progress | — |
-| P4-33 | Gameplay | CEO: flag limit per player; remove your own placed flag; flags as small icons on the minimap | waiting | P4-24 |
+| P4-33 | Gameplay | CEO: flag limit per player; remove your own placed flag; flags as small icons on the minimap | in review | P4-24 |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
