@@ -606,6 +606,8 @@ no economy number and can start now.
 | P4-26 | Audio Designer | CEO session: new footstep sounds; crickets chirp less often | in progress | — |
 | P4-27 | Level Designer | CEO session: farm less open (cover, tree lines, landmarks); festival cart rests on the ground in the barn | in progress | — |
 | P4-28 | Game Designer | CEO session: simulate a bigger watering can (3 and 4 plots per fill) against the s18.3 targets and the bot-season gap | in progress | — |
+| P4-29 | AI Programmer, Gameplay | CEO: a sprung bear trap stays where it sprang; players pick it up and hang it back on the pegboard | in progress | — |
+| P4-30 | Game Designer, Gameplay | CEO: sell bonus by player count so 2p makes its payments; sim targets still pass | in progress | P4-28 |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
@@ -846,6 +848,17 @@ and an Opus QA review passes.
   routes and `tools/sim/layout.json` distances valid; festival cart sits on the barn floor.
 - **P4-28:** sim the watering can at 3 and 4 plots per fill; report median win rate and payment margins;
   change `data/` only if the s18.3 targets still pass.
+
+### P4-29 and P4-30 CEO requests (2026-10-09)
+- **P4-29:** a sprung bear trap no longer disappears. It stays where it sprang, visibly sprung, after the
+  victim is freed. A player picks it up (existing trap pickup hold) and hangs it back on the pegboard
+  (doc 02 s3 "Hang a trap on the pegboard", 1 s), which fills the outline (doc 01 "Pegboard"). The trap
+  race and the night theft rule (doc 02 s21: traps off the pegboard at nightfall are the creature's)
+  stay as they are. Synced on every peer; logged.
+- **P4-30:** a sell bonus scaled by player count (largest at 2p, none at the headcount where the sim
+  already meets its targets), data-driven in `data/`, applied at every sale on the host and shown in the
+  sale log. Sim (`tools/sim/sim.py`) models it; all s18.3 checks pass; 2p median pays the first payment.
+  Decision recorded. Same done-when line as P4-22 to P4-28.
 
 ### P4-19 Creature bodies, final art
 Owner: 3D Artist. Output: `assets/models/creature_*.glb`, `assets/blender/`, `tools/blender/`;
