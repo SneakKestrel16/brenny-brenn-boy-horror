@@ -733,3 +733,14 @@ systems still in play (rows P4-09 to P4-15, untested Phase 3, Open Issue 4) is n
 **How to apply:** rows P4-19 (3D Artist) and P4-20 (Technical Artist). P4-18 depends on both. No
 economy number or gameplay rule changes. Night readability (doc 07 s5) still gates: if the art
 changes how far a creature or a trap clue is seen, the logs say so and the Director reviews it.
+
+### D-088 · 2026-10-09 · CEO · 5 and 6 players retuned in the simulator
+The P4-02 gate ran 2 to 4 players. At 5p and 6p the final payment cleared in about 83% of simulated
+seasons (target 55 to 70) and the Prize Pumpkin size barely mattered (QA-check-2026-10-09). Retuned in
+`tools/sim/` (doc 02 s18.6): `field_plots_start_by_players` 5p 20 to 18, 6p 24 to 20;
+`field_plots_max_by_players` 5p 28 to 26, 6p 32 to 28; `payment_pct_by_players` 6p 140 to 138 (5p stays
+120). All s18.3 targets pass at 2 to 6 players on seeds 1 to 3. `sim.py` now defaults to `--players
+2,3,4,5,6`. `farm.gd` opens extra plots up to `field_plots_start_by_players` instead of every plot whose
+`min_players` is met, so the data, not the level, sets the starting field.
+**Why:** CEO call 2026-10-09 ("fix the 5-6 player balance").
+**How to apply:** 2 to 4 players are unchanged. A 5p or 6p playtest session checks it (doc 09 s3 DD Phase 4).

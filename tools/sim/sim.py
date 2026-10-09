@@ -1,6 +1,6 @@
 """Season simulator (doc 02 section 18). Python 3.13, stdlib only.
 
-Run: uv run --no-project python -I tools/sim/sim.py --players 2,3,4 --runs 10000 --seed 1
+Run: uv run --no-project python -I tools/sim/sim.py --players 2,3,4,5,6 --runs 10000 --seed 1
 Reads data/*.json (the same files the game reads) and copies no number into code. Not spatial:
 distances come from tools/sim/layout.json (doc 04). Rules and every placeholder are in doc 02 18.
 One step per phase per day: harvest/sell, buy, plant, night, dawn (cash-in, bill, payment, damage).
@@ -413,7 +413,7 @@ def resolve_scenarios(arg: str) -> list:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--players", default="2,3,4")
+    ap.add_argument("--players", default="2,3,4,5,6")
     ap.add_argument("--runs", type=int, default=10000)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--policy", default="median")

@@ -208,7 +208,7 @@ this is a precaution, not a known bug.
 
 **Tuned payment scaling (P4-02; CEO, D-079 revised).** Payments, the debt and medical bills
 use `player_scaling.json` `payment_pct_by_players` (`sim`): **59 at 2p, 85 at 3p, 101 at 4p**, 120 at
-5p, 140 at 6p. Traps, disturbances and payouts keep `pct_by_players` (60/80/100). Resulting figures
+5p, 138 at 6p (6p tuned in QA-check-2026-10-09, section 18.6). Traps, disturbances and payouts keep `pct_by_players` (60/80/100). Resulting figures
 (debt, first payment, final payment before the payout): 2p 767, 150, 617; 3p 1,105, 217, 888; 4p
 1,313, 258, 1,055 (doc 01: 780/153/627, 1,040/204/836, 1,300/255/1,045). The 4p example (one drop
 before dawn 2) becomes 187.6 + 6 x 157.9 = 1,135 total, first payment 223. **The values are tuned to 1%
@@ -228,9 +228,12 @@ and 6 with no other data change, all `placeholder` until the simulator sets the 
 (7.1), medical bill (8), traps and disturbances (11), the Prize Pumpkin payout (6). **Per-player
 values need no scaling:** the moonflower bed (1 plot per player), `plots_per_player` (the median
 team's 4) and every `store.json` `per_player` row grow with the head count by definition. The
-**field grows with the head count above 4** (CEO follow-up to D-038, `placeholder`): 4 plots per
-player, so the starting field is 16 at 2 to 4 players, 20 at 5p and 24 at 6p, and the bought-plot
-ceiling is the start plus 8 (the 8 of doc 01's 16 to 24): 24 at 2 to 4 players, 28 at 5p, 32 at 6p.
+**field grows with the head count above 4** (CEO follow-up to D-038; 5p and 6p tuned by the simulator): the
+starting field is 16 at 2 to 4 players, 18 at 5p and 20 at 6p, and the bought-plot
+ceiling is the start plus 8 (the 8 of doc 01's 16 to 24): 24 at 2 to 4 players, 26 at 5p, 28 at 6p. These
+were 20/24 and 28/32 (4 plots per extra player); the simulator then cleared the final payment in about 83%
+of 5p and 6p seasons, and no 6p payment passed section 18.3 with a 24-plot start (section 18.6,
+QA-check-2026-10-09). The game opens extra plots up to `field_plots_start_by_players` (`farm.gd`).
 Below 4 nothing changes (the ceiling stays 24; D-078 item 2 keeps 16 plots at every headcount). Data: `player_scaling.json`
 `field_plots_start_by_players` and `field_plots_max_by_players`; `season.json` `field_plots_start`
 and `field_plots_max` stay doc 01's 4-player values. Without this the field was 16 plots at 5p and
@@ -257,7 +260,7 @@ matters for trap and disturbance counts (section 11).
   switch, `crops.json` `unlock_rule`: `first_payment_made` (the default) or `day` (unlock at dawn
   4 regardless). The simulator runs both (section 18.2).
 - **Plots:** 16 field plots at the start, up to 24 with bought plots, in two fields (`01 Crops`). Above 4
-  players the start is 20 (5p) and 24 (6p) and the ceiling 28 and 32 (section 4, `placeholder`).
+  players the start is 18 (5p) and 20 (6p) and the ceiling 26 and 28 (section 4, `sim`).
   The moonflower bed is separate: 1 plot per player (`01 Crops`).
 - **Seed pack:** one seed per plot; doc 01 "Medical bill" calls 4 coins "a turnip seed pack".
 - **Watering rule** (placeholder; inference from `01 The Prize Pumpkin` and "Labor"): a crop
@@ -449,7 +452,7 @@ stand and at the dawn cash-in (D-017). `sim` prices are the simulator's starting
 | `walkie_battery` | 10 | sim | 180 s of transmitting (placeholder) |
 | `brighter_lantern` | 25 | sim | light radius in doc 03 |
 | `scarecrow` | 20 | sim | effect in doc 03 |
-| `plot_pair` | 22 | sim | 2 field plots, start to ceiling: 16 to 24 (2 to 4p), 20 to 28 (5p), 24 to 32 (6p) (section 4) |
+| `plot_pair` | 22 | sim | 2 field plots, start to ceiling: 16 to 24 (2 to 4p), 18 to 26 (5p), 20 to 28 (6p) (section 4) |
 | `flare_gun` | 50 | sim | one shot, refilled each dawn; scares the creature off for 30 s (`01 Store`) |
 
 - **Pegboard lock (P2-12):** `data/store.json` `shed_lock`, price 40 (`doc01`), effect
@@ -751,7 +754,7 @@ Findings, inference until the simulator runs:
 
 **Status (P4-02): built.** `tools/sim/sim.py`, `test_sim.py` (the 18.4 tests, one file),
 `layout.json`, `policies/{median,perfect_start}.json`, `scenarios/*.json`. Run
-`uv run --no-project python -I tools/sim/sim.py --players 2,3,4 --runs 10000 --seed 1`. The
+`uv run --no-project python -I tools/sim/sim.py --players 2,3,4,5,6 --runs 10000 --seed 1`. The
 `compare` command (18.5) is a stub: no live full-season logs exist yet (P4-10 supplies them).
 The simulator gates DD Phase 4 (`01 Season simulator`).
 
@@ -762,7 +765,7 @@ The simulator gates DD Phase 4 (`01 Season simulator`).
 - **Granularity:** one step per phase (day, dusk, night, dawn) per day. Not spatial: actions cost
   seconds from `labor.json` and layout distances from `tools/sim/layout.json`, a copy of doc 04's
   distances that cites doc 04.
-- **Command:** `uv run tools/sim/sim.py --players 2,3,4 --runs 10000 --seed 1 [--policy median]
+- **Command:** `uv run tools/sim/sim.py --players 2,3,4,5,6 --runs 10000 --seed 1 [--policy median]
   [--scenario <file>]`. A fixed seed gives identical output.
 
 ### 18.2 Inputs
@@ -895,6 +898,22 @@ The 4p `plot_pair` price sits near a cliff: 22 works, 24 fails (4p final 65 to 2
 in the sweep), and 26 collapses, because the day-5 pair stops being affordable.
 D-078 item 4's Medium drop (about 25 at 2p) is accepted; the sim gives 37/44/48, so the 30 check passes.
 `unlock_rule` both ways is in the summary (`scenarios/unlock_day.json`).
+
+**5 and 6 players (QA-check-2026-10-09).** The gate above ran 2 to 4 players only. Run at 5p and 6p, the
+final clear was 83.3% and 83.2% (target 55 to 70) and the Medium drop 13.6 and 2.6 (target 30). Sweeps
+(2,000 runs, seed 1): with the 20/24-plot start no 6p `payment_pct_by_players` passes, because the first
+and final clear fall together (143: 78.5/78.0; 145: 70.8/70.0), and a lower ceiling does not separate them.
+A smaller start does. Chosen: 5p start 18, ceiling 26, payment 120 (unchanged); 6p start 20, ceiling 28,
+payment 138. Plot pairs to buy stay 4 at every headcount.
+
+| Seed | First clear 2p/3p/4p/5p/6p | Final clear 2p/3p/4p/5p/6p | Spread first / final | Medium drop 5p/6p |
+|---|---|---|---|---|
+| 1 | 87.1/85.3/85.6/84.0/83.8 | 63.1/57.9/63.0/63.4/60.6 | 3.3 / 5.5 | 49.1/49.8 |
+| 2 | 87.0/85.4/85.2/83.5/84.5 | 63.6/57.1/62.4/62.1/60.2 | 3.5 / 6.5 | 48.1/49.6 |
+| 3 | 86.7/85.4/85.2/83.8/84.3 | 63.4/56.8/62.2/62.5/61.1 | 2.9 / 6.6 | 48.3/50.0 |
+
+10,000 runs, `--players 2,3,4,5,6`; the gate exits 0 on all three seeds. Like 4p's `plot_pair` price, 5p
+and 6p sit near a cliff: 5p 121% drops the final clear to about 52%, 6p 139% to about 52%.
 
 ## 19. Gotchas
 
