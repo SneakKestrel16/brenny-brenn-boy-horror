@@ -8,6 +8,7 @@
 .circle30{fill:none;stroke:#7f8c8d;stroke-width:2;stroke-dasharray:2 4}.circle20{fill:none;stroke:#d35400;stroke-width:2;stroke-dasharray:6 4}.sanct{fill:#3498db;fill-opacity:0.15;stroke:#2471a3;stroke-width:2}
 .p1{fill:none;stroke:#1a5276;stroke-width:3;stroke-dasharray:14 6}.grid{stroke:#000;stroke-opacity:0.08;stroke-width:1}
 .trap{fill:#000}.cover{fill:#7d3c98}.crow{fill:#222}.scare{fill:#b9770e}.esc{fill:#16a085}.aud{fill:#2471a3}
+.tree{fill:#2e6b3a;fill-opacity:0.8}
 .pt{fill:#fff;stroke:#000;stroke-width:1.5}
 .lbl{font-size:13px;fill:#111}.sm{font-size:10px;fill:#333}.big{font-size:16px;font-weight:bold;fill:#111}
 .mk{font-size:9px;fill:#222}
@@ -252,17 +253,58 @@
 <line x1="240" y1="584" x2="240" y2="594.0" stroke="#111" stroke-width="2"/>
 <text class="lbl" x="140" y="580" text-anchor="middle">50 m (grid 10 m, 1 m = 4 px)</text>
 <text class="sm" x="40" y="610.0" text-anchor="start">origin (0, 0) = barn door; x east, z south</text>
-<rect x="772" y="404" width="160" height="120" fill="#fff" fill-opacity="0.85" stroke="#999"/>
-<rect class="trap" x="780" y="415" width="8" height="8" style="fill:#000"/>
-<text class="sm" x="792" y="423.2" text-anchor="start">trap spot (number)</text>
-<rect class="cover" x="780" y="431" width="8" height="8" style="fill:#7d3c98"/>
-<text class="sm" x="792" y="439.2" text-anchor="start">creature cover point</text>
-<rect class="crow" x="780" y="447" width="8" height="8" style="fill:#222"/>
-<text class="sm" x="792" y="455.2" text-anchor="start">crow perch</text>
-<rect class="scare" x="780" y="463" width="8" height="8" style="fill:#b9770e"/>
-<text class="sm" x="792" y="471.2" text-anchor="start">scarecrow spot</text>
-<rect class="esc" x="780" y="479" width="8" height="8" style="fill:#16a085"/>
-<text class="sm" x="792" y="487.2" text-anchor="start">animal escape spot</text>
-<rect class="aud" x="780" y="495" width="8" height="8" style="fill:#2471a3"/>
-<text class="sm" x="792" y="503.2" text-anchor="start">spatial audio marker</text>
+<circle class="tree" cx="536" cy="420" r="7.2"/>
+<circle class="tree" cx="560" cy="420" r="7.2"/>
+<circle class="tree" cx="584" cy="420" r="7.2"/>
+<circle class="tree" cx="536" cy="444" r="7.2"/>
+<circle class="tree" cx="560" cy="444" r="7.2"/>
+<circle class="tree" cx="584" cy="444" r="7.2"/>
+<circle class="tree" cx="536" cy="468" r="7.2"/>
+<circle class="tree" cx="560" cy="468" r="7.2"/>
+<circle class="tree" cx="584" cy="468" r="7.2"/>
+<circle class="tree" cx="528" cy="172" r="5.2"/>
+<circle class="tree" cx="544" cy="172" r="5.2"/>
+<circle class="tree" cx="560" cy="172" r="5.2"/>
+<circle class="tree" cx="576" cy="172" r="5.2"/>
+<circle class="tree" cx="592" cy="172" r="5.2"/>
+<circle class="tree" cx="536" cy="156" r="5.2"/>
+<circle class="tree" cx="552" cy="156" r="5.2"/>
+<circle class="tree" cx="568" cy="156" r="5.2"/>
+<circle class="tree" cx="584" cy="156" r="5.2"/>
+<circle class="tree" cx="760" cy="180" r="5.2"/>
+<circle class="tree" cx="776" cy="160" r="5.2"/>
+<circle class="tree" cx="792" cy="184" r="5.2"/>
+<circle class="tree" cx="804" cy="156" r="5.2"/>
+<circle class="tree" cx="780" cy="140" r="5.2"/>
+<circle class="tree" cx="828" cy="388" r="5.2"/>
+<circle class="tree" cx="828" cy="408" r="5.2"/>
+<circle class="tree" cx="828" cy="428" r="5.2"/>
+<circle class="tree" cx="828" cy="448" r="5.2"/>
+<circle class="tree" cx="828" cy="468" r="5.2"/>
+<circle class="tree" cx="828" cy="488" r="5.2"/>
+<circle class="tree" cx="812" cy="420" r="5.2"/>
+<circle class="tree" cx="812" cy="460" r="5.2"/>
+<circle class="tree" cx="216" cy="164" r="5.2"/>
+<circle class="tree" cx="236" cy="184" r="5.2"/>
+<circle class="tree" cx="252" cy="152" r="5.2"/>
+<circle class="tree" cx="204" cy="200" r="5.2"/>
+<circle class="tree" cx="228" cy="136" r="5.2"/>
+<circle class="tree" cx="332" cy="488" r="7.2"/>
+<circle class="tree" cx="352" cy="504" r="7.2"/>
+<circle class="tree" cx="364" cy="476" r="7.2"/>
+<rect x="872" y="404" width="160" height="136" fill="#fff" fill-opacity="0.85" stroke="#999"/>
+<rect class="trap" x="880" y="415" width="8" height="8" style="fill:#000"/>
+<text class="sm" x="892" y="423.2" text-anchor="start">trap spot (number)</text>
+<rect class="cover" x="880" y="431" width="8" height="8" style="fill:#7d3c98"/>
+<text class="sm" x="892" y="439.2" text-anchor="start">creature cover point</text>
+<rect class="crow" x="880" y="447" width="8" height="8" style="fill:#222"/>
+<text class="sm" x="892" y="455.2" text-anchor="start">crow perch</text>
+<rect class="scare" x="880" y="463" width="8" height="8" style="fill:#b9770e"/>
+<text class="sm" x="892" y="471.2" text-anchor="start">scarecrow spot</text>
+<rect class="esc" x="880" y="479" width="8" height="8" style="fill:#16a085"/>
+<text class="sm" x="892" y="487.2" text-anchor="start">animal escape spot</text>
+<rect class="aud" x="880" y="495" width="8" height="8" style="fill:#2471a3"/>
+<text class="sm" x="892" y="503.2" text-anchor="start">spatial audio marker</text>
+<circle class="tree" cx="884" cy="515" r="5"/>
+<text class="sm" x="892" y="519.2" text-anchor="start">tree canopy (section 14)</text>
 </svg>

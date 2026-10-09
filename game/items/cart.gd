@@ -17,7 +17,7 @@ const SYNC_EVERY_S := 1.0  ## placeholder: position resync while moving (Q-128)
 const SQUEAK_EVERY_S := 1.0  ## placeholder: one squeak Noise per second while moving
 const SQUEAK_M := 25.0  ## placeholder: no creature.json `noise_cart_squeak` row yet (Q-127)
 const OUT_X := 78.0  ## doc 03 s14, doc 04 s6: past the fields
-const BED_Y := 0.9  ## inference from prop_cart.glb (1.72 m tall with the lantern post); settle by eye
+const BED_Y := 0.9  ## prop_cart.glb bed floor at y 0.87 to 0.9 above the wheel base (vertex levels, P4-27)
 const KNOCK_CAMERA_S := 2.0  ## placeholder: the knocked pusher's knockdown camera
 const LANTERN := Vector3(0.0, 1.86, -1.3)  ## front of the cart (it faces -Z along the route)
 ## P4-32: the push handle bar of prop_cart.glb (tools/blender/build_phase4.py `cart()`: x -0.55..0.55, Blender
@@ -58,11 +58,10 @@ static func build(world: Node) -> Node3D:
 	var b := Node3D.new()
 	b.name = "Cart"
 	var m: Node3D = load("res://assets/models/prop_cart.glb").instantiate()
-	m.position.y = 0.86  # the glb is centred on its 1.72 m height
-	b.add_child(m)
+	b.add_child(m)  # P4-27: the glb origin is at the wheel base (AABB y 0.025..1.75), so no lift: it sat 0.86 m up
 	var handle := Node3D.new()  # P4-32: pushers stand along this bar
 	handle.name = "Handle"
-	handle.position = Vector3(0.0, m.position.y + HANDLE_UP, HANDLE_Z)
+	handle.position = Vector3(0.0, HANDLE_UP, HANDLE_Z)
 	b.add_child(handle)
 	var spot := Node3D.new()
 	spot.name = "Lantern"

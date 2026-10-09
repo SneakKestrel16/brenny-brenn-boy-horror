@@ -1206,3 +1206,26 @@ P4-33 (D-120). The Director had the flag limit put in `data/labor.json` (`place_
 `max_per_player` on a hold record). `data/` is yours (CONTRACTS s2): please confirm or retune the number,
 and mirror the schema field in doc 02's `labor` schema copy (around line 1225). Does the sim need it? It
 does not model flags today. Settled by: the value confirmed in doc 02 and the doc 02 schema updated.
+### Q-195 · 2026-10-09 · Level Designer -> Gameplay Programmer · open (FYI, edit already made)
+P4-27 (Director-assigned, OPEN_ISSUES item 6). The cart hovered both parked in the barn and while pushed.
+Cause: `game/items/cart.gd` raised the `prop_cart.glb` model with `m.position.y = 0.86`, but the model's
+origin is at the wheel base (mesh AABB y 0.025..1.75; bed floor vertices at y 0.87 to 0.9). The body
+follows `CartRoute` at y = 0 (`_place`, `pos_at`), so the offset floated the wheels 0.86 m everywhere on
+the route. I removed that one line in your file (the task scope names the fix); `BED_Y` stays 0.9, which
+matches the bed floor, and its comment now cites the vertex levels. Screenshots parked and mid-route:
+`logs/qa/p4_27/after_cart.png`, `after_cart_mid.png`. Please check nothing else in `cart.gd` relied on
+the model being raised (pumpkin slot, lantern, handle grab points looked right in the shots).
+
+### Q-196 · 2026-10-09 · Level Designer -> AI Programmer, Gameplay Programmer · open
+P4-27 adds 39 trees to `farm.tscn` (doc 04 s14). Their canopies are layer 5 (corn sight-blocker)
+`StaticBody3D` cylinders from 1.2 m to about 4.2 m up; trunks, fences, signs and landmarks have no
+collision. Effects to confirm:
+1. **Creature sight** (`creature.gd` `_blocked`, mask 1 | 16 at eye 1.65 m): a canopy between the
+   creature and a player now hides the player, as corn does. Intended: trees are cover.
+2. **Hearing** (ray at 1 m, mask 16) and the ghost's `_in_corn` point test (1 m) and the sprint-in-corn
+   step (1 m) pass under the canopy, so standing under a tree is not "in corn" and does not muffle sound.
+   Intended (inference: a tree is not corn). Say if the ghost should count tree shade as corn.
+3. **Solid trees** would need creature avoidance: the creature moves straight with `move_and_slide` on
+   mask 1, no navmesh, no unstuck logic, so a solid trunk on its line would pin it. I kept trunks
+   non-solid. If you want players blocked by trunks, the creature needs avoidance first; tell me and I
+   add a layer-1 trunk collider.

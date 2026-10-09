@@ -23,6 +23,7 @@ func _run() -> void:
 	_pumpkin()
 	_lure_and_ghost()
 	_route()
+	_cover()
 	print("check_farm: %s" % ("PASS" if _fails == 0 else "%d FAIL" % _fails))
 	quit(1 if _fails else 0)
 
@@ -225,3 +226,68 @@ func _route() -> void:
 	var gate := _p("Props/FarmGate")
 	var last := c.get_point_position(c.point_count - 1)
 	_expect("R8 on the gate", Vector2(last.x, last.z).distance_to(gate), 0.0)
+
+
+func _seg_dist(p: Vector2, a: Vector2, b: Vector2) -> float:
+	return p.distance_to(Geometry2D.get_closest_point_to_segment(p, a, b))
+
+
+func _cover() -> void:
+	print("-- doc 04 s13 tree canopies (layer-5 sight blockers)")
+	var a := _centre("a")
+	var b := _centre("b")
+	var barn := _p("Buildings/Barn")
+	var house := _p("Buildings/Farmhouse")
+	var shed := _p("Buildings/ToolShed")
+	var drum := _p("Props/FuelDrum")
+	var gen := _p("Props/Generator")
+	var well := _p("Props/Well")
+	var pump := _p("Props/PrizePumpkin")
+	var moon := _centre("moonflower")
+	var stand := _p("Props/TownStand")
+	var crate := _p("Props/ShippingCrate")
+	# canopies count as corn for doc 04 s8.4: keep each work spot at least its table distance away
+	var keep := {"pumpkin": [pump, 20.0], "moonflower": [moon, 8.0], "fuel drum": [drum, 11.0],
+			"barn door": [barn, 12.0], "field A": [a, 12.0], "shed door": [shed, 13.4],
+			"pen gate": [_p("Pen/PenGate"), 17.0], "farmhouse door": [house, 20.0], "field B": [b, 20.0],
+			"crate": [crate, 20.0], "generator": [gen, 23.0], "well": [well, 32.2],
+			"farm gate": [_p("Props/FarmGate"), 4.0]}
+	# doc 04 s8.7 walks (start, waypoints, end): a canopy on one would lengthen it
+	var walks := [[barn, Vector2(11, 3), Vector2(19, 3), a], [a, Vector2(45, -16), Vector2(53, -16), b],
+			[b, moon], [b, stand], [stand, Vector2(104, -2), crate], [drum, gen], [barn, pump], [house, pump],
+			[well, pump], [well, Vector2(19, 3)], [well, barn], [barn, shed]]
+	var route := (_world.get_node("CartRoute") as Path3D).curve
+	var markers := []
+	for g in [&"trap_spots", &"creature_cover", &"crow_perches", &"scarecrow_spots", &"animal_escape_spots",
+			&"spatial_audio_markers", &"player_spawns", &"plot_spots"]:
+		markers.append_array(_group(g))
+	var bad := 0
+	for t in _world.get_node("Trees").get_children():
+		var p := Vector2(t.global_position.x, t.global_position.z)
+		var r: float = ((t.get_node("Shape") as CollisionShape3D).shape as CylinderShape3D).radius
+		var why := []
+		for k in keep:
+			var d: float = p.distance_to(keep[k][0]) - r
+			if d < keep[k][1]:
+				why.append("%s %.1f" % [k, d])
+		for m in markers:
+			if p.distance_to(Vector2(m.global_position.x, m.global_position.z)) < 2.0 + r:
+				why.append("marker " + m.name)
+		for i in range(1, route.point_count):
+			var q0 := route.get_point_position(i - 1)
+			var q1 := route.get_point_position(i)
+			if _seg_dist(p, Vector2(q0.x, q0.z), Vector2(q1.x, q1.z)) < 3.0 + r:
+				why.append("route leg R%d" % i)
+		for w in walks:
+			for i in range(1, w.size()):
+				if _seg_dist(p, w[i - 1], w[i]) < 1.0 + r:
+					why.append("walk leg %s-%s" % [w[i - 1], w[i]])
+		if p.y > 10 - r and p.y < 22 + r and p.x > -30 - r and p.x < 38 + r:
+			why.append("spatial audio band")
+		if why:
+			bad += 1
+			_fails += 1
+			print("FAIL tree %s %s: %s" % [t.name, p, why])
+	print("%s %d of %d trees clear of work spots, markers, cart route, walks and audio band" % [
+			"ok  " if bad == 0 else "FAIL", _world.get_node("Trees").get_child_count() - bad,
+			_world.get_node("Trees").get_child_count()])

@@ -854,3 +854,13 @@ creature's; the order (hands, ground, board) is an inference that keeps a team t
 ahead of one that leaves them lying. A playtest settles whether the order matters.
 **How to apply:** trap race, pry, slow-after and night theft rules are unchanged. Bots pry themselves but
 do not fetch traps.
+### D-100 · 2026-10-09 · Level Designer (Director to confirm) · Farm cover blocks sight only
+P4-27 breaks up the open farm with trees, fences, dirt paths, signs and landmarks (doc 04 s14). Only tree
+canopies collide, on layer 5 (corn sight-blockers), from 1.2 m up; everything else is visual only.
+Canopies keep each work spot's doc 04 s8.4 corn distance (pumpkin 20 m), 2 m from every marker and plot,
+3 m from the cart route and 1 m from every s8.7 walk line, and stay out of the audio test band.
+`check_farm.gd` `_cover` enforces this. No marker, building, field or route point moved, so doc 04 s8 and
+`tools/sim/layout.json` are unchanged.
+**Why:** players and the creature use collision mask 1 and the creature has no navmesh or unstuck logic,
+so solid obstacles could pin it (Q-196). Sight cover is what the open ground lacked.
+**How to apply:** new world dressing stays visual or layer 5 unless the AI Programmer adds avoidance.
