@@ -285,3 +285,8 @@ Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent bac
 4. **Not checked:** that `build_farm.py` regenerates `farm.tscn` exactly (QA sandbox blocked the overwrite).
 5. **`test_debt_sync` race:** a client that joins after dawn misses the early 50 payment and fails the test. Harness problem, not P4-27. QA.
 6. **Merge note:** the P4-32 cart `Handle` now sits at `HANDLE_UP` (1.05 m) above the ground-level glb instead of 0.86 m higher; `test_cart` PASS after the merge.
+
+## Found at the P4-32 follow-up review (QA, 2026-10-09)
+
+1. **`yaw_off` in `game/interaction/hold_controller.gd:342` is always 0** because `--autopush` never moves the mouse; it proves facing tracks the cart, not that mouse look survives a turn. Add a fixed yaw offset in `--autopush` to prove it. Gameplay.
+2. **The cart turns about 86 degrees in about 0.3 s at a route corner** (`game/items/cart.gd:364`), and the pusher camera now turns with it. Playtest note.
