@@ -33,7 +33,7 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 	&"cre_corn_part": {"n": 2, "bus": &"Creature", "unit": 4.0, "max": 40.0, "db": -12.0},
 	&"sfx_ragdoll_thud": {"n": 2, "bus": &"SFX", "unit": 4.0, "max": 40.0, "db": -4.0},
 	&"sfx_door_slam": {"n": 0, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": -2.0},
-	&"sfx_crow_burst": {"n": 0, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": -2.5},  # +0.83 dB (10 percent amplitude) over the old -4.0, after RMS re-match (-0.7 dB)
+	&"sfx_crow_burst": {"n": 0, "bus": &"SFX", "unit": 8.0, "max": 90.0, "db": 0.4},  # CEO: listen 1 +0.83 dB, listen 3 x1.4 amplitude (+2.9 dB)
 	# P3-11 emote scream (doc 08 section 11.6), file from P3-08.
 	# unit/max are inference: a 60 m Noise, like the tripwire bells row in section 3.2.
 	&"vox_emote_scream": {"n": 0, "bus": &"Voice", "unit": 6.0, "max": 110.0, "db": -1.0},
@@ -44,7 +44,7 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 	&"ui_paper_slide": {"n": 0, "bus": &"UI", "db": -10.4},  # P3-12 Dawn Report card: CEO listen 1 -2.5 dB, listen 2 a further -3.1 dB (30 percent amplitude)
 }
 ## Taint heartbeat (doc 08 sections 2.4, 8): "faint", local to the Tainted player only. Placeholder level.
-const TAINT_DB := -26.0  # CEO listens: -42 barely audible, -32 still too quiet; listen 2 asked double (+6 dB)
+const TAINT_DB := -20.0  # CEO listens: -42 barely audible, then double (+6 dB) at listens 2 and 3
 ## Doc 08 section 8: the Taint beat ducks 8 dB under the still heartbeat; the chase heartbeat reuses that loop (inference).
 const TAINT_DUCK_DB := 8.0
 ## Ids not written to the `audio_play` log (one per stride would flood it).
@@ -66,7 +66,7 @@ const STRANGER_LINES: Array[StringName] = [&"vox_stranger_over_here", &"vox_stra
 		&"vox_stranger_anyone", &"vox_stranger_come", &"vox_stranger_lost", &"vox_stranger_hello"]
 ## Layer levels in dB: [day, night] (doc 08 section 4.1, placeholder). No day insect bed: day is wind only.
 const LAYERS := {
-	&"wind": {"file": "amb_wind_loop", "day": -26.0, "night": -20.0},
+	&"wind": {"file": "amb_wind_loop", "day": -29.1, "night": -23.1, "pitch": 0.5},  # CEO listen 3: half frequency, -30 percent (-3.1 dB)
 	&"insect_night": {"file": "amb_insect_bed_night", "day": -80.0, "night": -28.0},
 	&"barn": {"file": "amb_barn_lobby_loop", "day": BARN_DB, "night": BARN_DB},  # gain by _barn, not the phase
 }
@@ -108,6 +108,7 @@ func _ready() -> void:
 		p.bus = &"Ambience"
 		p.volume_db = SILENT_DB
 		p.stream = _stream(String(LAYERS[id].file), true)
+		p.pitch_scale = LAYERS[id].get("pitch", 1.0)
 		add_child(p)
 		_players[id] = p
 	set_phase(Clock.phase, true)

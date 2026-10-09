@@ -508,9 +508,17 @@ Designer wants one, can use `cost_points`, already in the data.
 Sound effects may come from Freesound.org recordings licensed CC0 and from the Sonniss GameAudioGDC
 bundles (royalty-free, commercial use, no credit). Each downloaded file is listed in doc 08 section 13
 with its source URL, author and license before it is committed. Generated sounds (D-015) stay for
-everything not replaced. Voices of real people stay out (D-005), and music stays out.
+everything not replaced. Voices of real people stay out (CONTRACTS section 11), and music stays out.
 **Why:** CEO listens 1 and 2 of P3-08: the generated jumpscare, lunge, presence, crows, scream and paper
 slide did not sound right after a rework; the CEO asked for a library of real sounds.
 **How to apply:** Audio Designer. Keep the original download unchanged under `assets/audio/src/dl/` with
-the license, process it with SoX into `assets/audio/<sound_id>.wav` (48 kHz, 16-bit, peak -1 dBFS), and
+the license, process it (tools/audio/process_downloads.py) into `assets/audio/<sound_id>.wav` (48 kHz, 16-bit, peak -1 dBFS), and
 note the processing in doc 08 section 13. Any other license needs the CEO first.
+
+### D-067 · 2026-10-08 · CEO · The CC0 scream recording stays
+The scream emote (`vox_emote_scream`) keeps the real CC0 recording of a woman's scream (Freesound 850699
+by IENBA), an exception to CONTRACTS section 11 ("No real person's voice recording is ever committed").
+**Why:** CEO listen 2 rejected the synthetic scream ("doesnt sound like a scream at all"); QA flagged the
+recording against section 11 and the CEO chose to keep it ("keep it").
+**How to apply:** this file only. Any other recording of a real voice still needs the CEO first. Player
+voices stay out of the repo as section 11 says.

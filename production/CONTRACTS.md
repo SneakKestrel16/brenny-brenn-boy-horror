@@ -274,5 +274,7 @@ Added by P2-21 (P2-09 finding C; doc 06 s14 already lists it):
 
 - No real person's voice recording is ever committed. Test voices are synthetic or CEO-approved
   and kept outside the repo (`user://voice/`); `.gitignore` catches stray copies.
+  One exception (D-067): the CC0 scream in `vox_emote_scream` (Freesound 850699), a published
+  performance, not a player's voice.
 - Voice settings behave exactly as doc 01 "Voice settings" states. QA checks this to the letter.
 - Phase 5 features (live clips, spliced clips from live speech) are not built.

@@ -1,16 +1,21 @@
 Downloaded sounds (D-066). Each file is the unchanged Freesound HQ preview (mp3) of the sound; the page
 shows the license "Creative Commons 0" (public domain dedication, creativecommons.org/publicdomain/zero/1.0/).
+No sound is a remix of a non-CC0 sound (each page and any "original recordings" credit checked).
 Processed results live in assets/audio/<sound_id>.wav; see docs/08_audio_design_and_sound_list.md section 13.
 
-freesound_813115.mp3  https://freesound.org/people/qubodup/sounds/813115/  qubodup  "Crow Caw"  CC0
-freesound_611150.mp3  https://freesound.org/people/LiftPizzas/sounds/611150/  LiftPizzas  "Crow 02.wav"  CC0
-freesound_361470.mp3  https://freesound.org/people/Jofae/sounds/361470/  Jofae  "Crow Caw"  CC0
+freesound_182090.mp3  https://freesound.org/people/qubodup/sounds/182090/  qubodup  "U.S. National Park Service - American Crow.flac" (cleaned US public-domain recording, archive.org/details/AmericanCrow)  CC0
+freesound_673545.mp3  https://freesound.org/people/deadrobotmusic/sounds/673545/  deadrobotmusic  "American Crows"  CC0
+freesound_556221.mp3  https://freesound.org/people/Walking.With.Microphones/sounds/556221/  Walking.With.Microphones  "Rook (Corvus frugilegus)"  CC0
 freesound_536732.mp3  https://freesound.org/people/egomassive/sounds/536732/  egomassive  "Caw.ogg"  CC0
-freesound_850699.mp3  https://freesound.org/people/IENBA/sounds/850699/  IENBA  "Female Scream"  CC0
-freesound_413274.mp3  https://freesound.org/people/Timmeh515/sounds/413274/  Timmeh515  "Door Slam"  CC0
-freesound_277165.mp3  https://freesound.org/people/LampEight/sounds/277165/  LampEight  "Shed Door Close"  CC0
-freesound_814884.mp3  https://freesound.org/people/AudioPapkin/sounds/814884/  AudioPapkin  "Sound Design Elements Impact SFX PS 090"  CC0
+freesound_850699.mp3  https://freesound.org/people/IENBA/sounds/850699/  IENBA  "Female Scream"  CC0 (kept by D-067)
+freesound_562189.mp3  https://freesound.org/people/gristi/sounds/562189/  gristi  "snd_box_smash.wav"  CC0
+freesound_553886.mp3  https://freesound.org/people/sukondi/sounds/553886/  sukondi  "Smash Sound Effect | Smash/knock wood"  CC0
+freesound_115917.mp3  https://freesound.org/people/issalcake/sounds/115917/  issalcake  "Weak table crash, break.wav"  CC0
 freesound_673424.mp3  https://freesound.org/people/courtneyeck/sounds/673424/  courtneyeck  "Falling body hits the floor"  CC0
+freesound_529396.mp3  https://freesound.org/people/bouncyballblue/sounds/529396/  bouncyballblue  "thump_thud_slam_fist_heavy.wav"  CC0
+freesound_452609.mp3  https://freesound.org/people/kyles/sounds/452609/  kyles  "door wood old heavy kick open good impact 1 with rattle 1 without.wav"  CC0
+freesound_216872.mp3  https://freesound.org/people/CastIronCarousel/sounds/216872/  CastIronCarousel  "Doorslam.wav"  CC0
+freesound_623701.mp3  https://freesound.org/people/mediatheksuche/sounds/623701/  mediatheksuche  "baging_on_rattling_door_4x.wav"  CC0
 freesound_613567.mp3  https://freesound.org/people/zazz.sound.design/sounds/613567/  zazz.sound.design  "VEGEMisc_Walking Through Corn Field_FC_KOKORIN_8040.ORTF.wav"  CC0
-freesound_350414.mp3  https://freesound.org/people/bevibeldesign/sounds/350414/  bevibeldesign  "Animal Heavy Breathing"  CC0
-freesound_464302.mp3  https://freesound.org/people/eyesonlegs/sounds/464302/  eyesonlegs  "PaperSlide.wav"  CC0
+freesound_233111.mp3  https://freesound.org/people/JarredGibb/sounds/233111/  JarredGibb  "Pig - Breathing and chewing 1 - 96kHz.wav"  CC0
+freesound_46631.mp3  https://freesound.org/people/123jorre456/sounds/46631/  123jorre456  "sliding paper on table.wav"  CC0

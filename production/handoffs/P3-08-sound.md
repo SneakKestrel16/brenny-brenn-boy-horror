@@ -59,7 +59,7 @@ Owner: Audio Designer  Date: 2026-10-08
 ## CEO listen list (corrected 2026-10-08)
 Start a host with `--dev`, a second instance joined; open the console with the backquote key on the host. The
 target `2` is the nth player (the second machine), not a peer id.
-1. `taint 2`: the wet heartbeat on the second machine only (now -32 dB). `taint 2 off` stops it.
+1. `taint 2`: the wet heartbeat on the second machine only (now -20 dB). `taint 2 off` stops it.
 2. `scare jumpscare 2`: the silence, then the hit and a body thud (second machine).
 3. `scare disarm_lunge 2`: corn parting twice, then the lunge.
 4. `scare shed 2`: the target walks into the ToolShed first. The dev console forces past `not_in_shed`, but both
@@ -115,3 +115,18 @@ slam and bang, the jumpscare hit, the lunge, the presence swell (real breathing)
 was RMS-matched to the file it replaced, so catalog levels hold; the three caws now share one RMS. Levels:
 `TAINT_DB` -32 to -26 (doubled), paper slide -7.3 to -10.4 dB (30 percent quieter). The heartbeat file is unchanged.
 Processing: `tools/audio/decode_downloads.py` and `tools/audio/process_downloads.py`.
+
+## CEO listen 3 (2026-10-08)
+Six sounds changed; the lunge and crow burst are unchanged (decode now resamples polyphase, so their files differ by
+a hair; RMS the same). All sources CC0 with the whole chain checked (doc 08 section 13); originals in
+`assets/audio/src/dl/`, eight unused originals removed. `process_downloads.py` rebuilds every WAV;
+`decode_downloads.py` now reads `freesound_<id>.mp3` straight from `assets/audio/src/dl` (no rename step).
+- `cre_jumpscare_hit`: box smash + wood smash + table crash + body thud, no cinematic impact; RMS -11.4 to -9.4 dB (+2). Catalog -8 dB kept.
+- `sfx_door_slam`: wall thump, then a kicked heavy door with rattle and a sharp slam; -19.0 to -14.0 (+5). `cre_door_bang_01`: banging on a rattling door over a thump; -16.8 to -13.8 (+3). Catalog dB kept, so both play louder by that much.
+- `cre_presence_swell`: pig breathing (CC0 chain), no slow-down, low-passed 1.1 kHz, clicks ducked; 5.87 s to 2.83 s, RMS -16.6. Replaces 350414 (CC-BY chain).
+- `sfx_crow_caw_01..03`: clean American crow x2 and a rook, gated; same RMS -16.2.
+- `vox_emote_scream`: whole scream to its own fall-off (kept by D-067); 1.95 s to 2.46 s.
+- `ui_paper_slide`: real table slide, 1.04 s to 0.58 s, RMS -20.8 and catalog -10.4 kept.
+Lead changes in `soundscape.gd` (TAINT_DB -20, crow burst +0.4 dB, wind pitch 0.5 and -3.1 dB) are in doc 08.
+Not used: Smash.ogg 536777 (mixes a deleted account's sound whose license cannot be checked).
+For the CEO to listen: the six above (`scare jumpscare 2`, `scare shed 2`, `scare hallucination 2`, `ghost caw 2`, `emote scream 2`, `phase dawn`).
