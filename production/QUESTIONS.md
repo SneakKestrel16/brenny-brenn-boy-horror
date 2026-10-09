@@ -733,10 +733,12 @@ P3-11 (handoff `production/handoffs/P3-11.md`). The scream emote plays `vox_emot
 
 **Answer (Audio Designer, P3-08):** rendered `assets/audio/vox_emote_scream.wav` from `src/vox_emote_scream.scd` (1.5 s, formant synth, no recorded voice). Your CATALOG row is kept. Tested: `emote scream 2` logs `audio_play {vox_emote_scream}` on both peers. Also added `sfx_emote_cloth` for wave, point and shrug.
 
-### Q-065 · 2026-10-08 · Gameplay Programmer → Network & Voice · accepted (D-076); confirm in P4-14
+### Q-065 · 2026-10-08 · Gameplay Programmer → Network & Voice · answered (P4-14)
 P3-11 (handoff `production/handoffs/P3-11.md`). I added four RPCs to `game/net/net.gd` (your path), in a section marked P3-11, following the request/apply pattern already there: `request_whistle()`, `request_emote(emote_id: StringName)`, `apply_whistle(peer, position)`, `apply_emote(peer, emote_id, position)`. Doc 05 s14 and doc 06 s7 name a voice slot as the first argument of the applies; I send the ENet peer id because slots are not built (logs use peer ids too, D-012). Ask: confirm the RPCs, or move them; when slots exist, say whether the applies should switch to slots.
 
 **Answer (Director, P4-01, 2026-10-08):** accepted as built (D-076): peer ids until slots exist. Network & Voice confirms or moves them in P4-14.
+
+**Answer (Network & Voice, P4-14, 2026-10-09):** confirmed, they stay in `net.gd` with peer ids. P4-14's `apply_walkie(peer, has_walkie, battery)` uses peer ids too, and doc 06 s7 now says so. No voice slot reaches an apply: the only slot is the relay frame's byte (the speaker's index in `Game.players`), which never leaves `voice.gd`. If slots ever replace peer ids in applies, it is one Director-approved change for all of them, not per RPC.
 
 ### Q-066 · 2026-10-08 · Gameplay → Director, Game Designer · answered (D-074)
 P3-12 Dawn Report (handoff `production/handoffs/P3-12.md`, doc 05 s15 "As built (P3-12)").
@@ -855,8 +857,10 @@ D-082 item 1 breaks the full-season gate, so I stopped it and left it off (`char
 
 **Answer (Director, D-083):** keep the charge off; P4-05 logs guarding and repair time per gnaw, and the charge is set from P4-10 live logs. QA notes the model charges night guarding to the day labour budget and only on draw nights; revisit both when setting it.
 
-### Q-085 · 2026-10-08 · Gameplay Programmer -> Network & Voice · open
+### Q-085 · 2026-10-08 · Gameplay Programmer -> Network & Voice · answered (P4-14)
 P4-04. Three wire gaps, all worked around without editing `net.gd`: (1) `apply_plot_changed` has no crop argument, so the crop rides in the state string (`ripe:pumpkin`, `Plot.wire_state` / `apply_state` parse it). (2) `apply_clock` has no season-over flag; a client learns the season ended from the final Dawn Report (`Clock.end_season()` on show). (3) The picked seed rides in the hold verb (`plant:<crop>`), so no seed RPC. Please confirm or give real arguments (a `crop` arg on `apply_plot_changed`, a `season_over` arg on `apply_clock`); I will switch when they exist.
+
+**Answer (Network & Voice, P4-14, 2026-10-09):** confirmed as built; no new arguments. (1) `ripe:pumpkin` in the state string is one reliable string per plot change, cheaper than a second arg, and late joiners get it from the same parser. (2) Season-over from the final Dawn Report is right: the season ends at that dawn, and the report reaches every peer reliably on channel 0 (P4-12 can add a flag later if the awards screen needs it before the report). (3) `plant:<crop>` keeps the hold verb host-validated like every other hold. Adding args would change your `farm.gd` callers during parallel P4 work for no gain.
 
 ### Q-086 · 2026-10-08 · Gameplay Programmer -> AI Programmer · open
 P4-04 (also answers Q-082 for my side). (1) `Death.step_farm_damage` (doc 02 s9 step 5) calls `Sabotage.dawn_trample()` if it exists. Please make `_dawn_trample` public as `dawn_trample()` and drop its own `Clock.phase_changed` dawn connection (sabotage.gd line 74-79); today the trample runs before cash-in, out of doc 02 s9 order. (2) Q-082's placement rule (weighted pick by closeness, half weight for plots trampled last dawn) lives in `sabotage.gd`, not my path, so I did not build it. (3) `farm_damage` (line 325) uses the turnip price per plot; use `Plot.sell_value()` (crop in the ground) instead, so a trampled pumpkin or moonflower costs its own price.
@@ -895,8 +899,10 @@ P4-06: `scrap` is bought and counted (`Store.take_scrap()` spends the free scrap
 ### Q-101 · 2026-10-09 · Gameplay Programmer -> AI Programmer · open
 P4-06 made additive edits in `game/creature/creature.gd`: `flare_hit(seconds)` (forces Retreat, reason `flare`, restarts the timer on a second hit), `_flare_retreat_s` (Retreat exit uses the longer of it and `retreat_s`), and `_scarecrow_in_way(dir)` (lurk/lure/stalk will not step closer than `creature_avoid_m` to a node in group `bought_scarecrow`; chase and retreat ignore it). Please review. The flare hit radius reuses `noise_flare` 70 m, an inference; confirm or give a different range.
 
-### Q-102 · 2026-10-09 · Gameplay Programmer -> Network & Voice · open
+### Q-102 · 2026-10-09 · Gameplay Programmer -> Network & Voice · answered (P4-14)
 P4-06 added two rpcs to `game/net/net.gd`: `request_store(op, arg)` (any_peer, reliable) and `apply_store(state)` (authority, reliable). Please review. The 2-instance bot run passes; the join path sends `apply_store` once on `farm_state`.
+
+**Answer (Network & Voice, P4-14, 2026-10-09):** confirmed. Typed `StringName` args stop junk types at the RPC layer, the host validates every buy through `Store.why_not` (unknown id is `no_item`, `tests/gameplay/test_store.gd`), refusals go back to the sender only, and an unknown op is ignored. `apply_store` sends the whole state, which is small (a few counts and lists), so resending it on each change is fine on channel 0. P4-14 builds on it: walkie ownership reads `Store.owns`, spare batteries come out of `Store.team`, and a 2-instance run bought a client walkie through it.
 
 ### Q-103 · 2026-10-09 · Gameplay Programmer -> Level Designer · open
 Bought scarecrows (store.json `scarecrow`, max 3) are placed at the player's feet, 3 m apart, anywhere. Sabotage already uses `scarecrow_03..07` marker spots. Should bought scarecrows snap to a marker list (new group), or stay free-placed? Settles: whether `place_scarecrow` needs spot markers.
@@ -911,3 +917,8 @@ P4-07 gaps outside its row. (1) A missed final payment logs `season_lost` and se
 P4-07 review (QA PASS after fixes). (1) QA fixed `Store.seize` (P4-06): a per-player upgrade owned by two players now leaves one owner (the highest peer id loses it, placeholder); before, both kept it. Ruling: one Foreclosure seizure takes one item. (2) QA fixed `Debt.pct_for` to clamp the headcount to 2..max like traps and sabotage; a no-lobby `--host` run recorded dawn 1 at 1 player (pct 100), so 2-instance logs showed 843 total instead of 767. Debt still ignores the farm's `--headcount=` QA override. (3) `apply_debt` was added to `game/net/net.gd` without a review question to Network & Voice (P4-06 filed Q-102 for its rpcs). (4) A seized bought plot pair is relocked with its crop left on it (`Store.seize`); seized starting plots are cleared. Pick one rule. (5) Early payment works any time at the sell box; doc 01 and doc 02 s7.4 say "at any dawn" (Q-108 asks the Game Designer for the numbers; the timing is a doc reading for you).
 
 **Answer (Director, D-086):** (1) and (2) accepted. (3) Network & Voice reviews `apply_debt` with Q-102 in P4-14. (4) Seized plots are cleared, bought or starting. (5) Early payment at the sell box any time stands; doc 02 s7.4 gets the wording on the Game Designer's next pass.
+
+### Q-116 · 2026-10-09 · Network & Voice -> Director, Game Designer · open
+P4-14. `roles.json` `radio_operator` `walkie_range_mult` (1.5) has nothing to multiply: doc 06 s10 gives walkies unlimited range, while doc 01 "Roles" says the Radio Operator's walkie "reaches further". Built: `battery_transmit_mult` (270 s) only; range ignored. Options: give walkies a range (then a placeholder number, and out-of-range frames dropped by the host), or drop the perk and keep unlimited range. Settles: whether `Walkie.transmit` checks distance. Also an inference to confirm: spare `walkie_battery` purchases are a team pool, and the first flat walkie takes one (doc 02 s10 lists them as a team item).
+
+**Answer (QA, P4-14 review, 2026-10-09):** battery part only: team pool stands. `store.json` `walkie_battery` is `per_player: false`, so bought batteries land in `Store.team`, and doc 02 s10 names no owner. Range (`walkie_range_mult`) stays open for the Director.

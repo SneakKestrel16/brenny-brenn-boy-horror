@@ -370,6 +370,12 @@ func apply_voice_setting(peer: int, setting: String) -> void:
 	Game.apply_voice_setting(peer, setting)
 
 
+## Host to all (P4-14, doc 06 s10): whether `peer` holds a walkie and its battery in whole seconds. Peer id, not slot (D-076).
+@rpc("authority", "call_remote", "reliable")
+func apply_walkie(peer: int, has_walkie: bool, battery: int) -> void:
+	Voice.walkie.apply(peer, has_walkie, battery)
+
+
 # --- Recording light and clip pre-share (doc 06 sections 11 and 12); added in P2-03 ---------------
 # Every clip message, `request_clips_ready` included, rides reliable channel 3 so they stay in order: a
 # manifest before its chunks, and a client's ready report after the clips it sent.

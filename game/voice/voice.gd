@@ -24,7 +24,10 @@ extends Node
 ## The layers run only while the speaker talks. The host logs each ghost talk spurt as `ghost_action`
 ## `static_voice`; ghost frames still never feed the creature (D-011).
 ##
-## Not built yet (doc 06 sections 10 to 12): the radio bus, walkies, mic check (NORMAL_DB is a fixed placeholder).
+## P4-14 (doc 06 s10): `walkie` (Walkie) holds the radio: the radio key opens the mic and sets the radio flag, the host
+## honours it through `walkie.transmit`, and radio frames play on this player's own powered walkie (`walkie.hear`).
+##
+## Not built yet (doc 06 sections 11 to 12): mic check (NORMAL_DB is a fixed placeholder).
 
 ## Doc 06 section 7 type bytes. 0x01/0x02 were doc 06's, but movement (game/player/move_frame.gd)
 ## took 1 and 2 on the same `peer_packet` signal; voice moved to 0x10/0x11 (Q-042).
@@ -62,6 +65,7 @@ var transmitting := false
 var level_db := -100.0
 var input_name := "off"
 var clips: VoiceClips
+var walkie: Walkie
 ## A take or barn chatter is being written on this machine (doc 06 s11 "The recording light").
 var capturing := false
 
@@ -103,6 +107,8 @@ func _ready() -> void:
 	clips = VoiceClips.new()
 	clips.name = "Clips"
 	add_child(clips)
+	walkie = Walkie.new()
+	add_child(walkie)
 	var vs := _arg(args, "--voice-setting")
 	if vs in ["off", "lobby_lines", "unchosen"]:
 		Settings.set_value(&"voice_setting", vs)
@@ -232,6 +238,8 @@ func _process(delta: float) -> void:
 func _wants_to_talk(db: float) -> bool:
 	if muted:
 		return false
+	if walkie.keyed():  # the radio key talks too (doc 06 s10)
+		return true
 	if push_to_talk:
 		return Input.is_action_pressed(&"voice_push_to_talk")
 	if db >= VAD_OPEN_DB:
@@ -283,6 +291,8 @@ static func volume_byte(db: float) -> int:
 
 
 func _emit(opus: PackedByteArray, vol: int, flags: int) -> void:
+	if walkie.keyed():
+		flags |= FLAG_RADIO
 	var f := PackedByteArray([VOICE_FRAME, flags, (_seq >> 8) & 0xFF, _seq & 0xFF, vol])
 	f.append_array(opus)
 	_seq = (_seq + 1) & 0xFFFF
@@ -307,8 +317,9 @@ func _take(from: int, f: PackedByteArray) -> void:
 		_loudest[from] = maxi(int(_loudest.get(from, 0)), f[4])
 	elif f[1] & FLAG_TALK_START:  # doc 09 s13: a ghost talk spurt, tallied with the ghost powers
 		Log.event(&"ghost_action", {"kind": "static_voice", "peer": from})
-	# No walkies in DD Phase 1, so the radio bit is never valid yet (doc 06 section 7 check).
-	var flags := (f[1] & ~FLAG_RADIO) | (FLAG_GHOST if ghost else 0)
+	# Doc 06 s10: the radio bit stands only if the sender is alive and holds a walkie with battery (drained here).
+	var radio := (f[1] & FLAG_RADIO) != 0 and walkie.transmit(from)
+	var flags := (f[1] & ~FLAG_RADIO) | (FLAG_RADIO if radio else 0) | (FLAG_GHOST if ghost else 0)
 	var relay := PackedByteArray([VOICE_RELAY, slot, flags, f[2], f[3]])
 	relay.append_array(f.slice(5))
 	for id in multiplayer.get_peers():
@@ -345,6 +356,8 @@ func _play(speaker: int, flags: int, seq: int, opus: PackedByteArray) -> void:
 	var e := _emitter(speaker)
 	if e:
 		e.receive(flags, seq, opus)
+	if flags & FLAG_RADIO:
+		walkie.hear(speaker, flags, seq, opus)
 
 
 ## The speaker's emitter, or null once its body is gone (a scene change frees it before
@@ -486,6 +499,7 @@ func log_stats() -> void:
 	Log.event(&"voice_sent", {"input": input_name, "encoded": frames_encoded, "sent": frames_sent,
 			"bytes": bytes_sent, "talk_spurts": talk_spurts, "push_to_talk": push_to_talk,
 			"relayed": _relayed})
+	walkie.log_stats()
 	for e in _emitters.values():
 		if is_instance_valid(e):
 			Log.event(&"voice_stats", e.stats())

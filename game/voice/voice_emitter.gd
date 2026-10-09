@@ -26,6 +26,8 @@ var lost := 0  ## concealed by PLC
 var late := 0
 var decoded := 0
 var talk_spurts := 0
+## Start each spurt at its first frame's seq (P4-14 walkie: radio frames are a subset of the speaker's sequence).
+var resync := false
 
 var _playback: AudioStreamPlaybackOpus
 var _frames: Dictionary = {}  ## seq -> {"opus", "flags", "at"}
@@ -63,7 +65,7 @@ func receive(flags: int, seq: int, opus: PackedByteArray) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	received += 1
 	_last_frame_at = now
-	if _next_seq < 0:
+	if _next_seq < 0 or (resync and _state == IDLE and _frames.is_empty()):
 		_next_seq = seq
 	if _seq_diff(seq, _next_seq) < 0:
 		late += 1  # arrived after its slot was concealed

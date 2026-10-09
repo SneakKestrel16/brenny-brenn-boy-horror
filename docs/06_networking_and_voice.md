@@ -422,7 +422,7 @@ There is no clip-deleted message: a new manifest **replaces** the owner's whole 
 or re-recorded clip is a manifest without it or with a new hash (section 12). Off is an empty
 manifest plus `apply_voice_setting`.
 | `apply_lure(lure_id, source, position, target_slot, tell, ghost)` | 0 | host → target or all | — |
-| `apply_walkie(slot, has_walkie, battery)` | 0 | host → all | host (item state) |
+| `apply_walkie(peer, has_walkie, battery)` | 0 | host → all | host (item state); peer id, not slot (D-076, Q-065), battery in whole seconds |
 
 ## 8. Voice pipeline
 
@@ -710,6 +710,40 @@ teammates. Limited batteries; static when the creature is near." Price and batte
   creature distance, starting at 30 m (`placeholder`, doc 03 may tune).
 - **Unfakeable by construction:** the radio path only plays relay frames from a live player's slot.
   There is no API from lure or clip playback into `VoiceRadio`.
+
+### As built (P4-14)
+
+`game/voice/walkie.gd` (class `Walkie`, node `Voice/Walkie` on every peer); `Voice._take` and
+`Voice._play` call into it, `Net.apply_walkie` carries its state. Tests:
+`tests/net/test_walkie.gd` (host rules) and the two-instance `--walkie-qa` run in
+`production/handoffs/P4-14.md`.
+
+- **Who holds one:** the store (P4-06, `store.json` `walkie_talkie`, `per_player`) says the player
+  owns it, and they are alive (D-013). Bought, not crafted: doc 02 s10 moved it to the store.
+- **Battery:** one battery is `store.json` `walkie_battery` `effect.transmit_s` seconds of
+  transmitting (180, `placeholder`), times `roles.json` `radio_operator` `battery_transmit_mult`
+  (1.5) for the Radio Operator (doc 01 "Roles"). Each relayed radio frame drains 20 ms. A new
+  walkie's included battery goes in at once. When a walkie runs flat the host loads a spare from the
+  team's bought `walkie_battery` count (`Store.team`), so spares are a **team pool** (inference: doc
+  02 lists batteries as a team item and does not say whose walkie they go into; first flat walkie
+  takes one). Holding the radio key transmits even in silence, like a real walkie; open-mic VAD
+  does not gate it.
+- **Sync:** the host sends `apply_walkie(peer, has_walkie, battery_s)` every 0.25 s when the whole
+  seconds change, and everything again when a player joins.
+- **Playback:** one `VoiceEmitter` per speaker on `VoiceRadio` (high-pass 500 Hz plus low-pass
+  2.8 kHz, doc 08 s7.2), attenuation off, no panning. It resyncs its sequence at each spurt, since
+  radio frames are a subset of the speaker's sequence. A `vox_radio_static_loop` layer plays under
+  each spurt at -20 dB, rising linearly in dB to -6 dB as this listener's camera comes from 30 m to
+  5 m of the creature (doc 08 s7.2; one layer for both, inference). Squelch on and off per spurt, a
+  low-battery beep every 20 s at 30 s or less (threshold `placeholder`), a dead click when the
+  battery dies or a flat walkie is keyed (P4-17 sounds).
+- **Logs:** `walkie_transmit` and `walkie_refused` (with reason) per spurt, `walkie_battery_in`,
+  `walkie_dead`, `walkie_state` (local), `walkie_heard {speaker, static_db}`, `walkie_stats` every
+  10 s on the host, and radio `voice_stats` with `"radio": true`.
+- **QA args:** `--radio-hold` holds the radio key; `--walkie-qa` (host) buys every client a walkie
+  at 3 s and the host one at 12 s.
+- **Radio range:** unlimited, so the Radio Operator's `walkie_range_mult` has nothing to multiply
+  (Q-116).
 
 ## 11. Lobby lines, barn chatter and voice settings
 
@@ -1265,6 +1299,10 @@ from the cited source.
 - **A freed emitter in a typed variable is a `SCRIPT ERROR` (measured (P2-03)).** Assigning a
   previously freed emitter to a typed local fails before any `is_instance_valid` check. Look
   emitters up through `Voice._emitter(peer)`, which checks first.
+- **A `-s` test that names a `class_name` whose script uses autoloads fails to compile (measured
+  (P4-14)).** `Walkie.static_db(...)` in `tests/net/test_walkie.gd` compiled `walkie.gd` before the
+  autoloads existed ("Identifier not found: Game"), which then broke `Voice` and hung the test.
+  Reach the class through its instance (`Voice.walkie.static_db(...)`), as Q-057 says for preloads.
 - **`DirAccess.get_files_at` on a missing directory logs an engine `ERROR` (measured (P2-03)).**
   Check `DirAccess.dir_exists_absolute` first.
 - **Local copies share one `settings.cfg`.** Two instances on one machine read and write the same
