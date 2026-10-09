@@ -173,3 +173,25 @@ session rechecks them (P2-09, D-034).
    host (`players.gd:177`) can see 0.4 m in 0.1 s (4.0 > 3.6 m/s). Likely fix: move only on send steps,
    by `walk * ticks / SEND_HZ`. A time-scale 8 bot season with 0 violations after the fix would settle
    it. Use `--fixed-fps 60` for bot seasons meanwhile.
+
+## Found in the CEO's 2-instance session (CEO, 2026-10-09)
+
+Source: the CEO's own play test at STOP 5 (host and one client on one PC). Routed to P4-22 to P4-28.
+
+1. **The store shows no full list.** Interacting with the store should open a menu listing every item.
+   P4-22.
+2. **No seed choice.** There is no seed shop; planting spends coins on a fixed seed, so a player cannot
+   choose a crop. P4-22.
+3. **No hotbar.** After buying an item, nothing shows what is held or how to use it. P4-22.
+4. **No lobby screen.** Players start in the barn and pick there; the CEO wants a menu lobby for roles
+   and other settings before the match starts. P4-23.
+5. **The farm feels too open and hard to read.** No minimap; the CEO asks for one in the top right
+   (P4-24) and for a less open layout (P4-27).
+6. **The festival cart hovers in the barn.** P4-27.
+7. **The creature stuck itself in the barn** and was still there at the start of the next day. The CEO
+   asks that at dawn the creature is put back in the corn. P4-25.
+8. **Footsteps sound bad; crickets chirp too often.** P4-26.
+9. **Scarecrows stand in open fields.** By design: doc 01 "Jumpscares > The scarecrow moved" and doc 04
+   s7.3 scarecrow spots. Nothing tells the player that. Not routed; the CEO decides.
+10. **Would a bigger watering can fix the money gap?** Watering can capacity is 2 plots per fill
+    (doc 02 s3, placeholder). P4-28 runs the simulator on it.
