@@ -240,3 +240,15 @@ Source: `production/handoffs/P4-24.md` "QA review" (PASS). None blocks.
 1. **The ghost "YOU ARE DEAD" text runs off-screen and under the minimap** (`game/ui/hud.gd:125`). Gameplay.
 2. **`docs/05_technical_design.md` line 906 is not wrapped.** Gameplay.
 3. **Teammate dots on the minimap** may undercut doc 01's voice-mimicry and whistle tells (Q-180, for the CEO).
+
+## Found at the P4-30 review (QA, 2026-10-09)
+
+Source: the Opus QA review of P4-30 (PASS). None blocks. Game Designer unless noted.
+
+1. **The sim rounds the sell bonus once per day** (`tools/sim/sim.py:224, 227, 278`); the game rounds up per
+   sale (`game/farming/station.gd:49`). Fix before the bonus table goes above 0; Q-210 sizes are low until then.
+2. **`tests/gameplay/test_season.gd:134-140` checks headcount 1**, which has no table key, so the "shipped 0"
+   check passes by default. Loop over keys 2 to 6. Gameplay.
+3. **Doc 02 line 225 says a 2p bonus "above about 0.5%"** breaks 70%; with ceil any nonzero bonus does (D-106).
+4. **With `unattended_term` on, 6p first clear stays 84.3** while 4p and 5p fall. Recheck with a per-night
+   trample trace before Q-211 is ruled on (inference).
