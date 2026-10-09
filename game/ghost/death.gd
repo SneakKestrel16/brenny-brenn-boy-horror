@@ -38,7 +38,7 @@ func _ready() -> void:
 	_creature = get_parent().get_node("Creature")
 	_creature.caught.connect(func(p: int) -> void:
 		if not get_parent().get_node("TrapRace").victims.values().has(p):  # a pinned player dies by the race clock
-			die(p, &"night_chase"))
+			die(p, &"harvest_moon" if Clock.phase == &"harvest_moon" else &"night_chase"))  # P4-12: doc 03 s15 cause id
 	Clock.phase_changed.connect(func(ph: StringName) -> void:
 		if ph == &"dawn":
 			dawn())
@@ -139,8 +139,12 @@ func step_cash_in(farm: Node, _final: bool) -> void:
 func step_final_sale(farm: Node, final: bool) -> void:
 	if not final:
 		return
+	if farm.cart:
+		farm.cart.settle()  # P4-12: the cap; a cart out the gate has judged the pumpkin already
+	elif farm.targets.has("prize_pumpkin"):
+		farm.targets["prize_pumpkin"].judge(farm)  # the Phase 1 farm has no cart
 	if farm.targets.has("prize_pumpkin"):
-		farm.targets["prize_pumpkin"].judge(farm)  # P4-05: size sets the payout; P4-12 moves this to the cart
+		farm.targets["prize_pumpkin"].pay(farm)  # doc 02 s9 step 2: the festival payout at the final dawn
 	var total := 0
 	var plots := 0
 	for t in farm.targets.values():

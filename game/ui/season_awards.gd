@@ -82,7 +82,7 @@ func _on_log(n: StringName, d: Dictionary) -> void:
 		_hm_wipe = Game.players.keys().all(func(p: int) -> bool: return p == int(d.player) or Game.is_ghost(p))
 
 
-## P4-12 provides the host flag `cart_out` (Q-130). Placeholder: the group name `cart` is a guess until P4-12 lands.
+## The festival cart (game/items/cart.gd, group `cart`) holds the host flag `cart_out` (Q-130, Q-131).
 func _cart() -> Node:
 	var cart := get_tree().get_first_node_in_group(&"cart")
 	return cart if cart != null and "cart_out" in cart else null
@@ -105,7 +105,7 @@ func _host_end() -> void:
 	var lost: bool = (debt != null and debt.lost) or _hm_wipe
 	if _cart() != null:
 		lost = lost or not _cart_out()
-	# else placeholder: no cart provider yet (P4-12), so a paid debt with no Harvest Moon wipe counts as the cart out
+	# else no CartRoute (Phase 1 farm, unit tests): no cart, so a paid debt with no Harvest Moon wipe wins
 	var res := Logic.build(_tally, {"names": names, "players": Game.players.keys(), "day": Clock.day}, tpl, lost)
 	Net.to_peers(&"apply_season_awards", [res])
 	show_card(res)

@@ -7,7 +7,7 @@ extends Node
 ## `ai_director.json`. Scares (picking `scare_*`, calling `jumpscare`) live in scares.gd (P3-05); the daily
 ## disturbances in its child `Sabotage` (sabotage.gd, P3-06).
 ## Nightmare widens the trap race bend and lowers its floor (doc 03 s7.2, `nightmare_bend_m` / `nightmare_min_spare_s`).
-## Not built: the `harvest_moon` profile (section 14),
+## P4-12: the `harvest_moon` profile (section 14) follows the cart's acts, not the meter. Not built:
 ## deep and earshot day deaths (rolled and logged only, nothing reads them).
 
 const Logic := preload("res://game/ai_director/director_logic.gd")
@@ -115,7 +115,10 @@ func _physics_process(delta: float) -> void:
 		_log_t = 0.0
 		Log.event(&"tension", {"value": snappedf(meter, 0.1), "phase": String(phase), "profile": String(_profile_id())})
 	_nudge_t += delta
-	if _nudge_t >= float(_d.nudge.cooldown_s) and Clock.phase == &"night" and phase == &"build_up":
+	var act := _cart_act()  # P4-12: in acts 2 and 3 it follows the cart's escort region, no hop, no cooldown (section 14)
+	if act >= 2 and act <= 3:
+		_nudge(true)
+	elif _nudge_t >= float(_d.nudge.cooldown_s) and Clock.phase == &"night" and phase == &"build_up":
 		_nudge_t = 0.0
 		_nudge()
 
@@ -160,7 +163,15 @@ func jumpscare(peer: int) -> void:
 
 
 func _profile_id() -> StringName:
+	if _cart_act() >= 2:  # cart.gd PUSH
+		return &"harvest_moon"
 	return &"day" if Clock.phase == &"day" else &"night"
+
+
+## P4-12: the festival cart's act on the Harvest Moon (cart.gd PARKED 0 to DONE 4), -1 otherwise.
+func _cart_act() -> int:
+	var cart := get_tree().get_first_node_in_group(&"cart")
+	return int(cart.act) if cart and Clock.phase == &"harvest_moon" else -1
 
 
 ## The day's third (1 to 3), 0 when it is not day.
@@ -176,6 +187,8 @@ func allow(kind: StringName, peer: int) -> bool:
 		return true
 	if Game.players.has(peer) and _creature and _creature._in_sanctuary(Game.players[peer].pos):
 		return false
+	if _profile_id() == &"harvest_moon":  # section 14: acts, not tension; no lures or scares; act 3 a guaranteed peak
+		return kind in [&"kill", &"stalk"] or (kind == &"chase" and _cart_act() == 3)
 	var pr: Dictionary = _d["profile_" + _profile_id()]
 	var n := int(_events.get(peer, 0))
 	match kind:
@@ -266,8 +279,8 @@ func region_rect(r: String) -> Rect2:
 
 
 ## Doc 03 section 11.6: one hop of the wander region toward the region with the most living players (their
-## true region: presentation, region only).
-func _nudge() -> void:
+## true region: presentation, region only). P4-12: `jump` (the Harvest Moon acts 2 and 3) goes there in one step.
+func _nudge(jump := false) -> void:
 	if _creature == null or _regions.is_empty():
 		return
 	var count: Dictionary = {}
@@ -279,7 +292,7 @@ func _nudge() -> void:
 		return
 	var toward: String = count.keys().reduce(func(a: String, b: String) -> String: return a if count[a] >= count[b] else b)
 	var from := wander_region if wander_region else region_of(_creature.global_position)
-	var to := Logic.hop(_links, from, toward)
+	var to := toward if jump else Logic.hop(_links, from, toward)
 	if to == wander_region:
 		return
 	wander_region = to

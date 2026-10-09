@@ -11,6 +11,7 @@ const Cans := preload("res://game/items/cans.gd")
 const Crops := preload("res://game/farming/crops.gd")
 const PrizePumpkin := preload("res://game/farming/prize_pumpkin.gd")
 const Store := preload("res://game/items/store.gd")
+const Cart := preload("res://game/items/cart.gd")
 
 var targets: Dictionary = {}  ## id -> Interactable
 var carry: Dictionary = {}  ## every peer: peer -> {can, bag, fuel_can}, replicated by `apply_carry`
@@ -21,6 +22,7 @@ var free_scrap := 0  ## host: scrap handed out at the last dawn, spent by the st
 var registry: Node
 var cans: Cans  ## D-054: the physical watering and fuel cans
 var store: Store  ## P4-06: the shipping crate's store
+var cart: Cart  ## P4-12: the festival cart (full farm only, else null)
 var _log_farm := OS.get_cmdline_user_args().has("--log-farm")
 var headcount := 0  ## players at match start: fixes which `extra` plots are open (P2-14, D-039); host decides, clients are told
 var _headcount_arg := _int_arg("--headcount=")  ## QA: host-only override for a no-lobby run (joiners arrive after the farm loads)
@@ -41,6 +43,11 @@ func _ready() -> void:
 			_attach(n, s, g[2], Vector3(2.0, 1.0, 2.0))
 	for n in get_tree().get_nodes_in_group(&"pumpkin_patch"):  # P4-05: the Prize Pumpkin
 		_attach(n, PrizePumpkin.new(), "prize_pumpkin", Vector3(3.0, 2.0, 3.0))
+	var world := get_node_or_null(^"../World")
+	var cart_body := Cart.build(world) if world else null
+	if cart_body:
+		cart = Cart.new()
+		_attach(cart_body, cart, "cart", Vector3(1.8, 1.5, 3.0))
 	cans = Cans.new()
 	cans.farm = self
 	add_child(cans)
@@ -188,6 +195,8 @@ func _on_request(what: StringName, peer: int, args: Array) -> void:
 			cans.snapshot_to(peer)
 			if targets.has("prize_pumpkin"):
 				targets["prize_pumpkin"].snapshot_to(peer)
+			if cart:
+				cart.snapshot_to(peer)
 			for p in Game.players:
 				var cs := pstate(p)
 				Net.to_peers(&"apply_carry", [p, int(cs.can), int(cs.bag), bool(cs.get("fuel_can", false))], [peer])

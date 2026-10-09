@@ -276,7 +276,7 @@ func _round_pen(from: Vector3) -> Array:
 func _on_phase(ph: StringName) -> void:
 	if ph == &"day":
 		_breaks_today = 0
-	elif ph == &"night":  # dusk just ended (D-082 item 2: P4-10 measures how often animals are still out)
+	elif ph in [&"night", &"harvest_moon"]:  # dusk just ended (D-082 item 2: P4-10 measures how often animals are still out)
 		out_at_dusk = herd.filter(func(a: Dictionary) -> bool: return a.state != &"pen").size()
 		Log.event(&"animals_out_at_dusk", {"day": Clock.day, "out": out_at_dusk, "total": herd.size(), "breaks_today": _breaks_today,
 				"fence_still_broken": broken.size(), "players": Game.player_count()})
@@ -305,7 +305,7 @@ func bill_dusk(farm: Node) -> void:
 ## Host: an idle call by day and the panic before the creature arrives (P4-17 sounds), heard by everyone.
 func _sounds(delta: float) -> void:
 	_panic_t -= delta
-	if Clock.phase == &"night":
+	if Clock.phase in [&"night", &"harvest_moon"]:  # P4-12: the Harvest Moon is a night
 		var cr := get_tree().get_first_node_in_group(&"creature") as Node3D
 		var mult := 1.0
 		for p in Game.players:

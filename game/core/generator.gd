@@ -103,7 +103,7 @@ func powered() -> bool:
 func _physics_process(delta: float) -> void:
 	if not Game.is_host():
 		return
-	if Clock.phase in [&"dusk", &"night"] and powered():
+	if Clock.phase in [&"dusk", &"night", &"harvest_moon"] and powered():
 		fuel_s = maxf(fuel_s - delta, 0.0)
 		if fuel_s <= 0.0:
 			_went_dead(&"empty")

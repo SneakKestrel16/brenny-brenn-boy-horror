@@ -619,20 +619,28 @@ Traps are host-owned (doc 03 section 8). The player side is:
 
 ## 13. The festival cart
 
-Harvest Moon only (doc 01 "The Harvest Moon", doc 02 section 9). Host-owned `Cart` node
-(`game/items/cart.tscn`) rolling along the level's `cart_route` path.
+Harvest Moon only (doc 01 "The Harvest Moon", doc 02 section 9, doc 03 section 14). As built in
+P4-12: `game/items/cart.gd`, an interactable that `farm.gd` builds under `World` when the level has a
+`World/CartRoute` `Path3D` (none on the Phase 1 farm). Group `cart`; SeasonAwards reads `cart_out`.
 
-- Players load crops into it in the barn and push it: `request_push_cart(on)` as a hold-like
-  continuous action (while held and within range the cart advances; speed by pusher count is
-  doc 02's or doc 03's; `placeholder` until they say). `apply_cart(loaded, pushers)` (doc 06
-  section 7) is sent on change only; the cart's transform rides the normal object update
-  (inference: the Network & Voice Programmer owns the cadence, Q-019).
-- "Out" is the host check `cart.position.x > 78` (doc 04 section 6.1: "past the fields", an inference
-  of doc 04's; settled when the Game Designer fixes doc 02 section 9). At the cap, a cart still short
-  of x > 78 counts as not out. Reaching the gate (x > 105) ends the run early and starts the payout.
-- Pushers are shown by their bodies; the cart load is visible on the cart. No HUD.
-- Knock-off: the creature knocks the cart off the route with the 15 s cooldown from doc 03 section
-  12; the host moves it and players re-push.
+- Acts (`cart_act` log): 1 loading when the final dusk turns into `harvest_moon`; 2 push once the
+  Prize Pumpkin is loaded (`load_cart`, an instant verb while holding it) or, with no pumpkin planted,
+  on the first push; the generator fails at act 2. 3 gate run is the route's last `gate_run_m`
+  (`profile_harvest_moon`); then done.
+- Pushing is the `push_cart` hold that never completes. Each tick the host counts the living players
+  holding it; the count sets the speed (`profile_harvest_moon`, doc 02 section 9).
+- The creature knocks a pusher off (`knock`): the hold is cancelled, the cart stalls `knock_stall_s`,
+  and the next knock waits `knock_cooldown_s` (act 2 only). Each stall allows one `bite` of the
+  pumpkin; the pumpkin caps bites at `max_escort_bites`.
+- Out: the route's end is the gate. Reaching it with a living player sets `cart_out` (Q-130), judges
+  the pumpkin and ends the Harvest Moon early. At the cap (dawn) `settle()` counts the cart out only
+  when `x > 78` (doc 03 section 14, doc 04 section 6.1). All players dead ends it not out.
+- The payout is paid once at the final dawn (`PrizePumpkin.pay`, reason `pumpkin_payout`); the final
+  sale also calls `settle()` so a cart still rolling at the cap is decided first.
+- `Net.apply_cart(offset, act, loaded, pushers, stall, cart_out, knocked)` is sent on change and
+  every 1 s while moving (placeholder cadence, Q-128). Every peer moves the body along the curve.
+- The cart squeaks: a `cart_squeak` Noise every 1 s while moving, 25 m (placeholder, Q-127).
+- Pushers are shown by their bodies; the pumpkin sits visibly on the cart, bitten after a bite. No HUD.
 
 ## 14. Death, ghosts, whistle and emotes
 
@@ -1083,7 +1091,13 @@ the QA changes.
 | `pumpkin_planted`, `pumpkin_watered`, `pumpkin_lifted`, `pumpkin_set_down` | host, Prize Pumpkin verbs | `player`, `day` / `watered_days`, `size` / `pos` | P4-05 |
 | `pumpkin_night` | host, dawn | `day`, `guard_max_s`, `guard_total_s`, `guarded`, `guarded_nights` | Guard rule, doc 02 s6 (P4-05) |
 | `pumpkin_gnaw`, `pumpkin_bite` | host, P4-11 / P4-12 call `gnaw()` / `bite()` | `day`, `size`, `drops`, `guard_max_s`, `guard_total_s`, `repair_s` (0, no fix) | D-083 guard-charge data (P4-05) |
-| `pumpkin_judged` | host, final dawn (`step_final_sale`) | `size`, `watered_days`, `guarded_nights`, `drops`, `payout`, `players` | Doc 02 s6 (P4-05) |
+| `pumpkin_judged` | host, when the loaded cart goes out (P4-12); at `step_final_sale` only on the Phase 1 farm (no cart) | `size`, `watered_days`, `guarded_nights`, `drops`, `bites`, `payout`, `players` | Doc 02 s6 (P4-05) |
+| `cart_act` | host | `act` (1 loading, 2 push, 3 gate run) | Doc 03 s14 acts (P4-12) |
+| `cart_loaded` | host | `player`, `size` | P4-12 |
+| `cart_knock` | host | `player`, `x`, `stall_s` | Knock-off cooldown and stall (P4-12) |
+| `cart_finished` | host | `reason` (`gate`, `cap`, `all_dead`), `x`, `offset_m`, `loaded`, `cart_out`, `bites` | P4-12 |
+| `cart_out` | host, with `cart_finished` when out | `alive`, `loaded` | Win condition (Q-130); P4-15 |
+| `cart_seen` | client, on `apply_cart` when the act changes | `act`, `offset_m`, `pushers`, `cart_out` | Replication check (P4-12) |
 | `pumpkin_seen` | client, on `apply_prize` | `size`, `watered_days`, `drops`, `judged` | Replication check (P4-05) |
 | `dawn_report_closed` | each peer, `DawnReport._close()` | `day` | `Soundscape` ends the report bed on it (D-081 item 2) |
 | `ghost_action` | host | `kind` (`flicker`, `crow`, `rustle`, `caw`), `peer`, plus `light_id` (flicker), `crow_id` (crow, caw) or `position` `[x, z]` (rustle). As built in P3-09; replaces the proposed `ghost_flicker` row and the `player`/`action`/`target` fields. P3-10 adds `kind` `static_voice` (a ghost starts a talk spurt; `peer` only) | Doc 01 Phase 3 "the dead stay engaged"; QA flicker checks (Q-037); `check_logs.py` tallies it by kind |

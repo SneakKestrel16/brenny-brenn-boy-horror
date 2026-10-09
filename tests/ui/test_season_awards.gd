@@ -31,6 +31,16 @@ func _process(delta: float) -> bool:
 	_check(awards != null, "Main has a SeasonAwards")
 	var clock: Node = root.get_node("Clock")
 	var debt: Node = main.get_tree().get_first_node_in_group(&"debt")
+	var cart: Node = main.get_tree().get_first_node_in_group(&"cart")  # P4-12: the full farm's festival cart
+	if cart == null:  # the gray-box farm has none: a stand-in provider
+		var src := GDScript.new()
+		src.source_code = "extends Node\nvar cart_out := false\n"
+		src.reload()
+		cart = Node.new()
+		cart.set_script(src)
+		cart.add_to_group(&"cart")
+		main.add_child(cart)
+	cart.cart_out = true  # Q-130: the win needs the cart out
 	clock.end_season()
 	_check(awards._open, "card opens when the season ends")
 	var texts := _texts(awards._box)
@@ -43,18 +53,12 @@ func _process(delta: float) -> bool:
 	_check("THE BANK TOOK THE FARM" in _texts(awards._box), "loss card after a missed final payment")
 	# Q-130: everyone dead on the Harvest Moon is a loss; with a cart provider (P4-12), cart_out gates the win
 	debt.lost = false
+	cart.cart_out = false  # a death after the cart is out is no wipe
 	root.get_node("Log").event(&"death", {"player": main.multiplayer.get_unique_id(), "phase": "harvest_moon", "cause": "test", "position": [0.0, 0.0]})
 	_check(awards._hm_wipe, "a Harvest Moon death of the last player alive is a wipe")
 	_end(clock)
 	_check("THE BANK TOOK THE FARM" in _texts(awards._box), "loss card after a Harvest Moon wipe")
 	awards._hm_wipe = false
-	var src := GDScript.new()
-	src.source_code = "extends Node\nvar cart_out := false\n"
-	src.reload()
-	var cart := Node.new()
-	cart.set_script(src)
-	cart.add_to_group(&"cart")
-	main.add_child(cart)
 	_end(clock)
 	_check("THE BANK TOOK THE FARM" in _texts(awards._box), "loss card while the cart is not out")
 	cart.cart_out = true

@@ -8,13 +8,13 @@ extends CanvasLayer
 ## Removed (or compiled out) before release: tracked in DECISIONS D-031.
 
 const TOGGLE_KEY := KEY_QUOTELEFT
-const PHASES: Array[StringName] = [&"day", &"dusk", &"night", &"dawn"]
+const PHASES: Array[StringName] = [&"day", &"dusk", &"night", &"harvest_moon", &"dawn"]
 const CREATURE_STATES: Array[StringName] = [&"lurk", &"stalk", &"chase", &"retreat"]
 const HELP := """Commands (host only unless marked):
   help                      this list (any peer)
   status                    phase, time, coins, fuel, creature, players (any peer)
   skip                      end the current phase now
-  phase day|dusk|night|dawn jump to that phase (advances through the ones between)
+  phase day|dusk|night|harvest_moon|dawn  jump to that phase (advances through the ones between)
   time <s>                  set seconds into the current phase
   day <n>                   set the day number (scares and events that open on a day)
   tension <n>               set the AI Director's tension meter (0 to 100)
@@ -23,6 +23,7 @@ const HELP := """Commands (host only unless marked):
   buy <item>                buy a store.json item as you, anywhere (the crate's other rules apply)
   pay                       early payment toward the debt as you (P4-07; one 50-coin step)
   fuel [s]                  add s seconds of fuel (default: fill the tank)
+  cart [m]                  move the festival cart to m metres along its route; show its state
   gen damage|repair         break or fix the generator
   creature <state> [peer]   force lurk, stalk, chase or retreat (target defaults to you)
   grow [ripe|growing|empty] set every planted plot to a stage (default ripe)
@@ -165,7 +166,7 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 			return "ending %s" % Clock.phase
 		"phase":
 			if a.is_empty() or not StringName(a[0]) in PHASES:
-				return "? phase day|dusk|night|dawn"
+				return "? phase day|dusk|night|harvest_moon|dawn"
 			var want := StringName(a[0])
 			var guard := 0
 			while Clock.phase != want and guard < PHASES.size():
@@ -190,8 +191,8 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 			dir._add(a[0].to_float() - dir.meter)
 			return "tension %.0f, %s" % [dir.meter, dir.phase]
 		"length":
-			if a.size() < 2 or not StringName(a[0]) in [&"day", &"dusk", &"night"] or not a[1].is_valid_float() or a[1].to_float() <= 0.0:
-				return "? length day|dusk|night <seconds>"
+			if a.size() < 2 or not StringName(a[0]) in [&"day", &"dusk", &"night", &"harvest_moon"] or not a[1].is_valid_float() or a[1].to_float() <= 0.0:
+				return "? length day|dusk|night|harvest_moon <seconds>"
 			Clock.set_length(StringName(a[0]), a[1].to_float())
 			return "%s is now %.0f s on the host (a client's countdown still shows its own length)" % [a[0], a[1].to_float()]
 		"buy":
@@ -222,6 +223,15 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				"bite": pk.bite()
 				"judge": pk.judge(main.get_node("Farm"))
 			return "pumpkin %s, watered %d, drops %d" % [pk.size_name(), pk.watered_days, pk.drops]
+		"cart":  # P4-12: host moves the festival cart along its route for QA
+			var cart = main.get_node("Farm").cart
+			if cart == null:
+				return "no cart on this farm"
+			if not a.is_empty() and a[0].is_valid_float():
+				cart.offset = clampf(a[0].to_float(), 0.0, cart.length)
+				cart._send()
+			return "cart act %d, %.1f of %.1f m, x %.1f, loaded %s, out %s" % [cart.act, cart.offset, cart.length,
+					cart.body.global_position.x, cart.loaded, cart.cart_out]
 		"fuel":
 			var gen := main.get_node_or_null("Generator")
 			var s: float = a[0].to_float() if not a.is_empty() and a[0].is_valid_float() else gen.tank_s

@@ -3,7 +3,7 @@ extends Node
 ## phase change and every 5 s; clients advance by delta and snap to the host value, never decide a
 ## phase change. Lengths from season.json (doc 02 section 3); --phase1 uses phase1.json night_s.
 ## The `apply_clock` RPC is on `Net`, which calls `apply_clock` here. The Harvest Moon (final night)
-## is not built in Phase 1.
+## (P4-12) follows the final dusk instead of night; the cart ends it early (`end_harvest_moon`), else its cap does.
 ## Playtest pacing (D-030): `--day-s=<n>`, `--dusk-s=<n>`, `--night-s=<n>` replace a phase's length in
 ## seconds. The host's values decide phase changes; a client with other values only shows a wrong
 ## countdown, so Host.bat and Join.bat pass the same ones.
@@ -26,7 +26,7 @@ var _override: Dictionary = {}  ## phase -> seconds, from the command line (D-03
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
-		for p in [&"day", &"dusk", &"night"]:
+		for p in [&"day", &"dusk", &"night", &"harvest_moon"]:
 			var key := "--%s-s=" % p
 			if a.begins_with(key) and a.substr(key.length()).is_valid_float():
 				var s := a.substr(key.length()).to_float()
@@ -51,6 +51,12 @@ func length_of(p: StringName) -> float:
 ## Host only: dev console `length` (D-031). Same effect as the command-line override.
 func set_length(p: StringName, seconds: float) -> void:
 	_override[p] = seconds
+
+
+## Host (P4-12): the cart left the gate or everyone is dead, so the Harvest Moon ends now (doc 01 "Length").
+func end_harvest_moon() -> void:
+	if phase == &"harvest_moon":
+		_advance()
 
 
 ## Host only: dev console `phase` (D-031). Ends the current phase now, as its timer would.
@@ -92,8 +98,8 @@ func _advance() -> void:
 	t_phase = 0.0
 	match phase:
 		&"day": phase = &"dusk"
-		&"dusk": phase = &"night"
-		&"night": phase = &"dawn"
+		&"dusk": phase = &"harvest_moon" if Game.full_farm and day >= int(Data.value(&"season", &"season_days")) else &"night"  # P4-12: night 7 is the Harvest Moon (doc 01); the gray-box farm has no cart
+		&"night", &"harvest_moon": phase = &"dawn"
 		_:
 			if day >= int(Data.value(&"season", &"season_days")):  # the season ends after the final dawn (doc 02 s3)
 				end_season()

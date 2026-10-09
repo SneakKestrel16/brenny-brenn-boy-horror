@@ -24,7 +24,9 @@ var players: Dictionary = {}  ## peer id -> PlayerState (a Dictionary until P1-0
 var session_id := ""
 var season_id := ""  ## P4-10: names the save folder; a new game uses its session id, a loaded save keeps its own (doc 05 s17)
 var _leaving := false
-var difficulty: StringName = &"normal"  ## doc 01 "Difficulty and group settings": easy / normal / nightmare (difficulty.json); host picks in the lobby
+## doc 01 "Difficulty and group settings": easy / normal / nightmare (difficulty.json); host picks in the lobby.
+## P4-12: `short_season` is a difficulty.json record too; `--short-season` (or `--difficulty=short_season`) until a lobby picks it (Q-125)
+var difficulty: StringName = &"short_season" if OS.get_cmdline_user_args().has("--short-season") else &"normal"
 var streamer_safe := OS.get_cmdline_user_args().has("--streamer-safe")  ## group option: no voice replays in the dawn report (P4-11)
 var seed_value := 0
 var debug_view := false

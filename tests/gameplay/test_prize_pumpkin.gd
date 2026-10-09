@@ -1,5 +1,6 @@
 extends SceneTree
 ## P4-05: Prize Pumpkin sizes, payouts, guarding, gnaw log, carrying and judging. One host, no client.
+## P4-12 (D-084): it lifts only at the final dusk and the Harvest Moon; judging logs, paying adds the coins once.
 ##   "$GODOT" --headless --audio-driver Dummy --path . -s res://tests/gameplay/test_prize_pumpkin.gd -- --host --phase1 --port=45398 --free-mouse
 
 var _t := 0.0
@@ -51,7 +52,12 @@ func _process(delta: float) -> bool:
 		_check(pk.can_start(&"water_prize_pumpkin", st) == &"already_watered", "once a day")
 		pk.watered = false  # next day
 	_check(pk.size_name() == &"large", "7 watered, 0 guarded is large (got %s)" % pk.size_name())
-	_check(pk.can_start(&"lift_prize", st) == &"", "lift")
+	clock.day = 1
+	clock.phase = &"day"
+	_check(pk.can_start(&"lift_prize", st) == &"not_harvest_moon" and not &"lift_prize" in pk.verbs_for(st), "no lift before the final dusk")
+	clock.day = int(root.get_node("Data").value(&"season", &"season_days"))
+	clock.phase = &"dusk"
+	_check(pk.can_start(&"lift_prize", st) == &"", "lift at the final dusk")
 	pk.complete(&"lift_prize", me, st)
 	_check(pk.carrier == me and pk.can_start(&"set_down_prize", st) == &"", "carried by me, can set down")
 	st.pos = Vector3(10, 0, 10)
@@ -89,8 +95,11 @@ func _process(delta: float) -> bool:
 	farm.coins = 0
 	var r: Dictionary = pk.judge(farm)
 	_check(r.size == &"sad" and r.payout == Data_scaled(20), "judged sad pays 20 at this headcount (got %s)" % str(r))
-	_check(_last(&"pumpkin_judged").get("payout", -1) == r.payout, "pumpkin_judged logged")
+	_check(_last(&"pumpkin_judged").get("payout", -1) == r.payout and _last(&"pumpkin_judged").has("bites"), "pumpkin_judged logged with bites")
 	_check(pk.judge(farm).is_empty(), "judged once")
+	_check(farm.coins == 0, "judging pays nothing yet")
+	_check(pk.pay(farm) == r.payout and farm.coins == r.payout, "the final dawn pays the payout")
+	_check(pk.pay(farm) == 0 and farm.coins == r.payout, "paid once")
 	print("test_prize_pumpkin: %s (%d failures)" % ["PASS" if _fails == 0 else "FAIL", _fails])
 	quit(1 if _fails > 0 else 0)
 	return false

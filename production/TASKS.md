@@ -590,7 +590,7 @@ no economy number and can start now.
 | P4-09 | Gameplay | Roles: all ten doc 01 roles, lobby pick, locked per season (D-077) | done (QA PASS after QA fixes) | P4-04, P4-08 |
 | P4-10 | Gameplay, Network & Voice | Saving at dawn, loading, host left, joining and leaving mid-season with headcount scaling | done (QA PASS 2026-10-09; Q-145 refusal flake, Q-122 AI Director state unsaved) | P4-07 |
 | P4-11 | AI Programmer, Gameplay | Phase 4 sabotage and difficulty: `pumpkin_gnaw`, full-wipe doubling, difficulty settings | done (QA PASS; `stolen_tool` beyond cans deferred to Q-113) | P4-05, P4-06 |
-| P4-12 | AI Programmer, Gameplay, Technical Artist | Short season and the Harvest Moon: festival cart, acts, `harvest_moon` profile (doc 03 s14) | in progress | P4-05, P4-07 |
+| P4-12 | AI Programmer, Gameplay, Technical Artist | Short season and the Harvest Moon: festival cart, acts, `harvest_moon` profile (doc 03 s14) | done (QA PASS after QA fixes: cart comment, season awards test; Q-125..Q-129 open, Q-155) | P4-05, P4-07 |
 | P4-13 | AI Programmer | Creature body per season: host seeded pick, logged, `--body=<id>` dev flag (doc 01 "Bodies", Q-074, D-068) | done (save and load waits for P4-10, Q-076) | P4-01 |
 | P4-14 | Network & Voice | Walkie-talkies as store items (doc 06 s10, doc 02 s10) | done (QA PASS after QA fixes; range Q-116) | P4-06 |
 | P4-15 | Gameplay, Technical Artist | Season Awards and season end screens (doc 03 s17.4, doc 05 s15) | done (QA PASS after QA fixes; Q-130 win rule wired, cart_out via Q-131) | P4-07 |

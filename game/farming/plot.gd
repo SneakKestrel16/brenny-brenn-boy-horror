@@ -129,13 +129,13 @@ func sell_value() -> int:
 
 ## Host: a night crop that is grown and watered ripens once night falls (doc 01 Crops: picked at night).
 func _ripen_at_night() -> void:
-	if state == &"growing" and watered and Clock.phase == &"night" and bed and age >= int(Crops.rec(crop).grow_days):
+	if state == &"growing" and watered and Clock.phase in [&"night", &"harvest_moon"] and bed and age >= int(Crops.rec(crop).grow_days):
 		state = &"ripe"
 
 
 ## Host, on a phase change.
 func on_phase(ph: StringName) -> void:
-	if ph == &"night" and bed:
+	if ph in [&"night", &"harvest_moon"] and bed:
 		_ripen_at_night()
 		farm.plot_changed(self)
 

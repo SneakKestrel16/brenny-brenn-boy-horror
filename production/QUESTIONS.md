@@ -952,6 +952,8 @@ P4-15 review. (1) P4-12: `SeasonAwards` (`game/ui/season_awards.gd` `_cart()`) f
 
 **Note (QA, P4-10 review):** item 3 closed: the season tally and `_hm_wipe` save at dawn (Q-123).
 
+**Note (QA, P4-12 review):** item 1 closed: `game/items/cart.gd` joins group `cart` with `var cart_out`; the `_cart()` placeholder comments are removed and the win needs `cart_out` when a cart exists.
+
 ### Q-120 · 2026-10-09 · Gameplay -> Network & Voice · open
 P4-10: saves live under `Net.user_dir() + "saves/<season_id>/"` (per profile), not `user://saves/`. Doc 06 s5 line ~268 still says `user://saves/<season_id>/`; please reword. I also added to `game/net/net.gd`: signal `host_left(how)`, rpcs `apply_host_leaving`, `request_leaving`, `apply_dawn_save` (channel 3), and `_log_host_left` no longer calls `Game.is_host()` (it errored on a timeout after the peer was gone). Please review. Inference to settle: a refused or pending peer gets no position sends (P2-18 `Net.send_bytes` skips `_refused`/`_pending`); I did not add a separate test.
 
@@ -985,3 +987,31 @@ P4-10 review, first live `not_in_season` refusal (a loaded save's lobby, D-048).
 P4-20 review. (1) Director, with a CEO night screenshot: doc 07 s5 says a player "cannot see a creature at 25 m", but its silhouette rule calls a creature against the sky line the intended scare. In the open yard at night (camera at -20,1.65,30, looking at 25 m), the P4-19 gaunt and boar read as dark shapes against the horizon fog band, with no detail and no ember pixels. In the corn they are not visible. This is not new: night fog, ambient and sun values are unchanged by P4-20 (mean luminance 33.4 before, 33.6 after). Settle: is the sky-line silhouette at 25 m in the open yard intended, or must night fog get denser? Low quality has no ground fog (doc 07 s6), so a low-quality peer sees slightly further (mean 35.3). (2) Gameplay: `creature.gd` still spawns a capsule. When the P4-19 glb is wired, call `CreatureLook.apply(root)` and `CreatureLook.ghost_view(root, on)` (`game/render/creature_look.gd`). The lantern owner calls `CreatureLook.lantern_glass(root, lit)`. A held lantern's shadow must be off when `WorldLook.low_quality()` is true.
 
 **Director note (2026-10-09):** a second session reviewed its rival P4-20 build (41c5ab1, not merged) and listed six must-fixes before STOP 5. Checked against main: (1) P4-20 is landed as 9403a5e, the reviewed build. (2) The capsule is still in game: the Gameplay wiring above stands. (3) No snap into the Harvest Moon look on main: `world_look.gd` eases in over `HARVEST_EASE_S`. (4) The 25 m night shot was taken by QA; the ruling above is still open. (5) Gaunt depth 1.06 m, boar length 2.38 m and husk depth 1.07 m accepted by P4-19 QA; doc 07 s11.7 updated to the built sizes. (6) No shimmer: `ghost_rim.gdshader` on main has no TIME input.
+
+### Q-125 · 2026-10-09 · AI Programmer -> Gameplay Programmer, Network & Voice · open
+P4-12 short season: `difficulty.json` `short_season` (3 days, doc 02 s16) is chosen only by the dev flag `--short-season` (sets `Game.difficulty`; `Data.value(&"season", &"season_days")` reads the override). No lobby pick and no replication of the choice to clients yet; clients only follow the host's clock. Who adds the lobby option and sends the difficulty to joiners (P4-11 difficulty settings or P4-10 save/join)?
+
+**Note (QA, P4-12 review):** replication closed by P4-11 (`apply_session_state`, `apply_group_settings`; a 2-instance run logs `group_settings short_season` on the client). The lobby pick stays open: see Q-155.
+
+### Q-126 · 2026-10-09 · AI Programmer -> Game Designer · open
+P4-12 Prize Pumpkin timing (D-084). Built: `lift_prize` opens at the final dusk and through the Harvest Moon; the pumpkin is judged when the loaded cart goes out the gate (with its escort bites), and the payout is paid once at the final dawn (`pumpkin_payout`, dawn step 2). A cart not out, or out unloaded, pays nothing. Inference from doc 01 "The Harvest Moon" and doc 02 s9; please confirm in doc 02 s6/s9.
+
+**Note (QA, P4-12 review):** consistent with D-084 and P4-12 acceptance step 2. A cart not out is a season loss anyway (Q-130), so its zero payout changes no outcome. Stays open for the doc 02 wording.
+
+### Q-127 · 2026-10-09 · AI Programmer -> Game Designer · open
+P4-12 cart squeak has no data row. Code const `Cart.SQUEAK_M` = 25 m, one `cart_squeak` Noise per 1 s while moving (placeholders). The creature hears it (`heard_cart_squeak`) and goes to the cart. Please add `noise_cart_squeak` to `creature.json` (doc 03 s3 noise table).
+
+**Note (QA, P4-12 review):** doc 03 has no squeak radius; stays open for the Game Designer.
+
+### Q-128 · 2026-10-09 · AI Programmer -> Network & Voice · open
+P4-12 added `Net.apply_cart(offset, act, loaded, pushers, stall, cart_out, knocked)` (authority, reliable), sent on every change and every 1 s while the cart moves (`Cart.SYNC_EVERY_S`, placeholder). Every peer moves the body along the curve from `offset`. Please review the cadence and channel; a 2-instance run shows the client's `cart_seen` per act.
+
+**Note (QA, P4-12 review):** 2-instance run (port 49470): the client logged `cart_seen` for acts 1, 2 and done with offset 69.3, equal to the host. Cadence review stays open for Network & Voice.
+
+### Q-129 · 2026-10-09 · AI Programmer -> Game Designer · open
+P4-12 Harvest Moon rules built by inference, please settle in doc 03 s14: (1) knock-offs only in act 2; act 3 (last `gate_run_m` 30 m) is a chase, and the AI Director allows chase only in act 3. (2) After a knock-off the creature bites the stalled cart once, then backs off a straight 30 m (placeholder; the farthest cover would leave act 3 with no creature near). (3) In acts 2 and 3 the AI Director nudge jumps to the players' region every tick with no hop or cooldown. (4) The cap counts out only at x > 78; the gate (route end) ends the Harvest Moon early. (5) `Cart.BED_Y` 0.9 m is read off `prop_cart.glb` by eye (Technical Artist).
+
+**Note (QA, P4-12 review):** items 1 and 4 match doc 03 s14 and doc 01 "Length". Items 2, 3 and 5 stay open. The route ends at x = 105 exactly, while acceptance and doc 03 s14 say the gate is at x > 105: see Q-155.
+
+### Q-155 · 2026-10-09 · QA -> Director, Gameplay Programmer · open
+P4-12 review. (1) The short season is the difficulty id `short_season` (`--short-season`, `--difficulty=short_season`). The lobby F7 list (easy, normal, nightmare) cannot pick it, and it cannot combine with Easy or Nightmare. Doc 01 lists the short season under "Saving", not "Difficulty" (inference: it is a separate group option). Decide: separate lobby toggle, or a fourth difficulty entry. (2) `World/CartRoute` ends at x = 105 exactly; P4-12 acceptance and doc 03 s14 say "gate at x > 105". The cart counts out at the route end, so behaviour is right; confirm the wording or move the route end past 105.

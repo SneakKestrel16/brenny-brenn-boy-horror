@@ -25,7 +25,7 @@ func emit_kind(kind: StringName, position: Vector3, source_peer: int, mult: floa
 	var r := float(Data.value(&"creature", StringName("noise_" + kind), &"radius_m"))
 	if kind.begins_with("step_") and bool(Game.players.get(source_peer, {}).get("tainted", false)):
 		mult *= TAINT_STEP_MULT
-	mult *= Roles.noise_mult(Roles.of(source_peer), kind, Clock.phase == &"night")  # P4-09 Night Owl
+	mult *= Roles.noise_mult(Roles.of(source_peer), kind, Clock.phase in [&"night", &"harvest_moon"])  # P4-09 Night Owl
 	emit(position, r * mult, kind, source_peer)
 
 

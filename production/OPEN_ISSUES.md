@@ -142,3 +142,11 @@ session rechecks them (P2-09, D-034).
 3. **The dawn trample does nothing on a bare farm.** Run 1 (joiners replaced both chore bots, no crops) logged `trample`
    with `trampled` 0. Run 2 (one chore bot kept, crops planted) trampled 1 to 3 plots each dawn. Known as
    Q-070 item 2; listed so STOP 4 plants crops before night 1.
+
+## Found at the P4-12 review (QA, 2026-10-09)
+
+1. **Bot runs push an empty festival cart.** Bots never plant the Prize Pumpkin, so headless Harvest Moon
+   runs never judge it or pay `pumpkin_payout`; the first push starts act 2. Bots also keep buying seeds
+   (`money_changed seed`) after the season ends. Human sessions must plant the pumpkin to test D-084.
+2. **The short season has no lobby pick.** Only `--short-season` or `--difficulty=short_season` choose it
+   (Q-155). STOP sessions that test the Harvest Moon must launch the host with the flag.

@@ -2,8 +2,10 @@ extends "res://game/interaction/interactable.gd"
 ## P4-05 (doc 02 s6, doc 01 "The Prize Pumpkin"): the one Prize Pumpkin, on the `pumpkin_patch` marker. Host owns
 ## the counters; every peer shows the size. Size = rank from watered days (and guarded nights for Giant), minus
 ## one per gnaw and escort bite, floor Sad. Numbers come from pumpkin.json. Verbs: `plant` (free seed, D-017),
-## `water_prize_pumpkin`, `lift_prize` (carry it, one hand-load), `set_down_prize` (G). Judged once at the final
-## dawn (`judge`), payout logged. P4-11 calls `gnaw()`, P4-12 calls `bite()`.
+## `water_prize_pumpkin`, `lift_prize` (carry it, both hands), `set_down_prize` (G). P4-12 (D-084): it lifts only
+## at the Harvest Moon dusk and on the Harvest Moon itself, then rides the cart once loaded. Judged once when the cart
+## goes out the gate (`judge`, size and payout logged); the payout is paid at the final dawn (`pay`, doc 02 s9 step
+## 2). On the Phase 1 farm (no cart) the final dawn judges it. P4-11 calls `gnaw()`, the cart calls `bite()`.
 
 const SIZES: Array[StringName] = [&"sad", &"medium", &"large", &"giant"]  ## index = rank
 const DIAMETER_M := [0.7, 1.3, 2.0, 3.0]  ## gray-box; giant 3 m from doc 07 s11.5
@@ -16,6 +18,8 @@ var drops := 0  ## gnaws + bites taken
 var bites := 0
 var carrier := 0  ## peer carrying it, 0 none
 var judged := false
+var payout := 0  ## host: set by `judge`, paid once by `pay`
+var paid := false
 var _gnaw_day := 0  ## host: day of the last gnaw (one gnaw per night, doc 03 s10)
 var guard_s: Dictionary = {}  ## host, this night: peer -> seconds within guard radius
 var _night_closed := true
@@ -79,6 +83,15 @@ static func rule(field: StringName) -> int:
 
 # ---- interaction ----
 
+## D-084: the final day's dusk and the Harvest Moon.
+static func lift_time() -> bool:
+	return Clock.day >= int(Data.value(&"season", &"season_days")) and Clock.phase in [&"dusk", &"harvest_moon"]
+
+
+func on_cart() -> bool:
+	return farm != null and farm.get(&"cart") != null and farm.cart.loaded
+
+
 func target_pos() -> Vector3:
 	if carrier != 0 and Game.players.has(carrier) and Game.players[carrier].has("pos"):
 		return Game.players[carrier].pos
@@ -87,7 +100,7 @@ func target_pos() -> Vector3:
 
 func verbs_for(st: Dictionary) -> Array[StringName]:
 	var out: Array[StringName] = []
-	if judged:
+	if judged or on_cart():
 		return out
 	if carrier != 0:
 		if carrier == Game.local_peer():
@@ -96,7 +109,7 @@ func verbs_for(st: Dictionary) -> Array[StringName]:
 		out.append(&"plant")
 	elif not watered and int(st.get("can", 0)) > 0:
 		out.append(&"water_prize_pumpkin")
-	else:
+	elif lift_time():
 		out.append(&"lift_prize")
 	return out
 
@@ -120,6 +133,10 @@ func can_start(verb: StringName, st: Dictionary) -> StringName:
 				return &"not_growing"
 			if carrier != 0:
 				return &"carried"
+			if on_cart():
+				return &"on_cart"
+			if not lift_time():
+				return &"not_harvest_moon"
 			if int(st.get("held_can", -1)) >= 0 or st.get("shovel", false) or st.get("trap", false):
 				return &"hands_full"
 			return &""
@@ -248,8 +265,8 @@ func bite() -> bool:
 	return true
 
 
-## Host, final dawn: size sets the payout (counts toward the final payment, doc 02 s6). Once only.
-func judge(farm: Node) -> Dictionary:
+## Host: the cart is out the gate (or the Phase 1 final dawn): size sets the payout (doc 02 s6). Once only.
+func judge(_farm: Node) -> Dictionary:
 	end_night()
 	if judged:
 		return {}
@@ -257,13 +274,21 @@ func judge(farm: Node) -> Dictionary:
 	if carrier != 0:
 		_set_down(carrier)
 	var rk := rank()
-	var pay := payout_for(rk) if planted else 0
+	payout = payout_for(rk) if planted else 0
 	Log.event(&"pumpkin_judged", {"size": String(size_name()), "watered_days": watered_days, "guarded_nights": guarded_nights,
-			"drops": drops, "payout": pay, "players": Game.player_count()})
-	if pay > 0:
-		farm.add_coins(pay, &"pumpkin_payout", 0)
+			"drops": drops, "bites": bites, "payout": payout, "players": Game.player_count()})
 	_send()
-	return {"size": size_name(), "payout": pay}
+	return {"size": size_name(), "payout": payout}
+
+
+## Host, final dawn (doc 02 s9 step 2): the festival pays the judged payout toward the final payment. Once only.
+func pay(farm: Node) -> int:
+	if not judged or paid:
+		return 0
+	paid = true
+	if payout > 0:
+		farm.add_coins(payout, &"pumpkin_payout", 0)
+	return payout
 
 
 # ---- replication and look ----
@@ -300,6 +325,14 @@ func _on_apply(what: StringName, args: Array) -> void:
 func _process(_d: float) -> void:
 	if carrier != 0:
 		_home.global_position = Vector3(target_pos().x, 0.0, target_pos().z)  # the marker rides with the carrier
+	elif on_cart():
+		_home.global_position = farm.cart.body.global_position * Vector3(1, 0, 1)  # P4-12: it rides the cart
+	if _mesh:
+		_mesh.position.y = _lift()
+
+
+func _lift() -> float:
+	return float(DIAMETER_M[rank()]) * 0.4 + (1.2 if carrier != 0 else (farm.cart.BED_Y if on_cart() else 0.0))
 
 
 func _refresh() -> void:
@@ -309,7 +342,7 @@ func _refresh() -> void:
 	var d: float = DIAMETER_M[rank()]
 	(_mesh.mesh as SphereMesh).radius = d / 2.0
 	(_mesh.mesh as SphereMesh).height = d * 0.8
-	_mesh.position.y = (d * 0.4) + (1.2 if carrier != 0 else 0.0)
+	_mesh.position.y = _lift()
 	var m := StandardMaterial3D.new()
 	m.albedo_color = Color(0.45, 0.2, 0.1) if drops > 0 else Color(0.9, 0.5, 0.1)  # darker = gnawed (art: pumpkin_prize_gnawed)
 	_mesh.material_override = m

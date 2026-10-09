@@ -7,6 +7,7 @@ extends Node
 ## P3-06: a Tainted bot washes (Q-061), and bots fix sabotage (sabotage.gd `fix_jobs`). On the full farm
 ## bots stand unless `--bot-chores`: then they walk straight lines (no collision, no route) and do all of it.
 ## P4-11 (D-085): a damage fix spends scrap, so bots buy scrap when the team has none.
+## P4-12: on the Harvest Moon a bot lifts the Prize Pumpkin, loads it on the cart and pushes, walking with the cart.
 
 const Route := preload("res://game/bots/bot_route.gd")
 const Frame := preload("res://game/player/move_frame.gd")
@@ -82,7 +83,10 @@ func _run() -> void:
 			await _wait(rng.randf_range(IDLE_S.x, IDLE_S.y))
 			continue
 		claims[job[1]] = peer
-		await _do(job[0], job[1])
+		if job[0] == &"push_cart":
+			await _push()
+		else:
+			await _do(job[0], job[1])
 		claims.erase(job[1])
 
 
@@ -91,6 +95,14 @@ func next_job() -> Array:
 	var st: Dictionary = farm.pstate(peer)
 	if bool(st.get("tainted", false)) and _free("well"):
 		return [&"wash", "well"]  # Q-061: Taint ends with a wash at the well
+	if Clock.phase == &"harvest_moon" and farm.get(&"cart"):  # P4-12: doc 03 s14 acts 1 to 3
+		var cart: Node = farm.cart
+		if bool(st.get("held_prize", false)):
+			return [&"load_cart", "cart"]
+		if cart.act == cart.LOADING and farm.targets.has("prize_pumpkin") and &"lift_prize" in farm.targets["prize_pumpkin"].verbs_for(st):
+			return [&"lift_prize", "prize_pumpkin"]
+		if cart.can_start(&"push_cart", st) == &"":
+			return [&"push_cart", "cart"]  # every bot pushes: no claim on the cart
 	if Clock.phase in [&"dusk", &"night"] and farm.targets.has("generator") and _free("generator"):
 		var gen: Node = farm.targets["generator"].gen
 		if gen.damaged and _scrap_ok():
@@ -171,6 +183,21 @@ func _do(verb: StringName, id: String) -> void:
 		await get_tree().physics_frame
 	if farm.registry.holds.has(peer):
 		Net.request_received.emit(&"hold_cancel", peer, [])
+
+
+## P4-12: hold `push_cart` and walk beside the cart until the hold ends (knocked off, cart out, dead).
+func _push() -> void:
+	var cart: Node = farm.cart
+	await _walk(cart.target_pos())
+	if Game.is_ghost(peer):
+		return
+	Net.request_received.emit(&"hold", peer, [&"push_cart", "cart"])
+	if not farm.registry.holds.has(peer):
+		await _wait(REFUSED_WAIT_S)
+		return
+	while farm.registry.holds.has(peer) and not Game.is_ghost(peer):
+		_path = [cart.body.global_position + cart.body.global_basis.z * 1.5]  # behind: the cart faces -Z
+		await get_tree().physics_frame
 
 
 func _walk(to: Vector3) -> void:

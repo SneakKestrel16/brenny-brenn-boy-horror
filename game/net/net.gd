@@ -588,6 +588,13 @@ func apply_prize(planted: bool, watered_days: int, guarded: int, drops: int, car
 	apply_received.emit(&"prize", [planted, watered_days, guarded, drops, carrier, watered, judged, x, z])
 
 
+## P4-12: the festival cart (cart.gd, doc 05 s13): route offset, act, load, pushers, stall, `cart_out`,
+## and the peer just knocked off (0 none). Sent on change and every 1 s while it rolls (Q-128).
+@rpc("authority", "call_remote", "reliable")
+func apply_cart(offset: float, act: int, loaded: bool, pushers: Array, stall: float, cart_out: bool, knocked: int) -> void:
+	apply_received.emit(&"cart", [offset, act, loaded, pushers, stall, cart_out, knocked])
+
+
 @rpc("authority", "call_remote", "reliable")
 func apply_money_changed(coins: int) -> void:
 	apply_received.emit(&"money_changed", [coins])

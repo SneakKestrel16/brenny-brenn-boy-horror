@@ -63,6 +63,8 @@ func _validate(peer: int, verb: StringName, id: String) -> StringName:
 		return &"no_body"
 	if st.get("pinned", false) and verb != &"pry":
 		return &"pinned"  # doc 03 section 7: a trapped player can only pry
+	if st.get("held_prize", false) and not Interactable.base(verb) in [&"set_down_prize", &"load_cart", &"pry"]:
+		return &"hands_full"  # D-084: the Prize Pumpkin takes both hands
 	if holds.has(peer):
 		return &"busy"
 	if id.begins_with("flag:"):

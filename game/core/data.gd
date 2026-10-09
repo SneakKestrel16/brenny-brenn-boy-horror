@@ -123,11 +123,19 @@ func records(table: StringName) -> Array[Dictionary]:
 
 
 func value(table: StringName, id: StringName, field: StringName = &"value") -> Variant:
+	if table == &"season" and id == &"season_days" and _short():
+		return record(&"difficulty", &"short_season").season_days  # P4-12: one place for every season-length reader
 	var r := record(table, id)
 	if not r.has(field):
 		push_error("Data: %s.%s has no field '%s'" % [table, id, field])
 		return null
 	return r[field]
+
+
+## P4-12: the short season (difficulty.json `short_season`, doc 02 s16) is on.
+func _short() -> bool:
+	var g := get_node_or_null(^"/root/Game")
+	return g != null and g.difficulty == &"short_season"
 
 
 func hold_s(verb: StringName) -> float:

@@ -46,7 +46,7 @@ func _physics_process(delta: float) -> void:
 			_log_positions()
 	if not Game.is_host():
 		return
-	if Clock.phase == &"night":
+	if Clock.phase in [&"night", &"harvest_moon"]:
 		for peer in Game.players:
 			var st: Dictionary = Game.players[peer]
 			if st.has("pos") and not Game.is_ghost(peer) and BUILDINGS.any(func(r: Rect2) -> bool: return r.has_point(Vector2(st.pos.x, st.pos.z))):
@@ -73,7 +73,7 @@ func _physics_process(delta: float) -> void:
 
 ## Host: doc 05 section 12 `inside_at_night`, once per player when the night ends.
 func _flush_inside(phase: StringName) -> void:
-	if phase == &"night":
+	if phase in [&"night", &"harvest_moon"]:
 		_inside_s.clear()
 		return
 	if phase != &"dawn":

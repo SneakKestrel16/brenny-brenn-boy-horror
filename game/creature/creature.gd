@@ -96,6 +96,8 @@ var _night_t := -1.0  ## seconds into the current night, negative by day
 var _t_state := 0.0
 var _stalk_at := -1.0
 var _scripted := false  ## the scripted sequence is running this night
+var _harvest := false  ## P4-12: the Harvest Moon is running (doc 03 section 14)
+var _bite_cart := false  ## P4-12: it knocked a pusher off and goes for the pumpkin
 var _goal := Vector3.INF
 var _memory: Array = []  ## heard: {position, margin, t, peer, kind}
 var _seen: Dictionary = {}  ## peer -> {position, t}
@@ -214,8 +216,11 @@ func _ready() -> void:
 	Clock.phase_changed.connect(func(p: StringName) -> void:
 		if p == &"night" and not _test:
 			_start_night()
+		elif p == &"harvest_moon" and not _test:
+			_start_harvest()
 		elif p == &"dawn" and not _test:
 			_night_t = -1.0
+			_harvest = false
 			if _full:
 				_dawn_traps())
 	Net.request_received.connect(func(what: StringName, peer: int, _a: Array) -> void:
@@ -288,6 +293,10 @@ func _start_night() -> void:
 
 
 func _night(delta: float) -> void:
+	if _harvest:
+		_sense()
+		_harvest_moon(delta)
+		return
 	if _test and _night_t >= _num[&"night_s"]:
 		_start_night()
 		return
@@ -309,6 +318,80 @@ func _night(delta: float) -> void:
 		_run_script()
 	else:
 		_hunt(delta)
+
+
+## P4-12, doc 03 section 14: no scripted sequence and no ordinary traps on the Harvest Moon.
+func _start_harvest() -> void:
+	_night_t = 0.0
+	_harvest = true
+	_bite_cart = false
+	_scripted = false
+	_plan.clear()
+	_memory.clear()
+	_set_state(&"lurk", &"harvest_moon", 0)
+	_goal = Vector3.INF
+
+
+## Doc 03 section 14. Act 1: it hunts as at night. Act 2: it lunges at the pusher it senses loudest (section 3.1),
+## knocks them off (reach on the true position, like a catch), then bites the pumpkin in the stall and retreats.
+## Act 3: it chases a sensed pusher, the guaranteed peak. Who it picks comes from what it senses only.
+func _harvest_moon(delta: float) -> void:
+	var cart := get_tree().get_first_node_in_group(&"cart")
+	if cart == null or cart.act < cart.PUSH:
+		_hunt(delta)
+		return
+	if cart.act == cart.DONE:
+		_bite_cart = false
+		if state != &"retreat":
+			_goal = Vector3.INF
+			_set_state(&"retreat", &"cart_done", 0)
+		_goal_retreat()
+		return
+	if _bite_cart:
+		_goal = cart.body.global_position  # it is at the cart: it just knocked the pusher off
+		if cart.stall_s <= 0.0 or Vector2(_goal.x - global_position.x, _goal.z - global_position.z).length() <= _num[&"reach_m"] + 1.0:
+			_bite_cart = false
+			_set_state(&"retreat", &"bit_pumpkin" if cart.bite() else &"knock_off", 0)
+			# ponytail: a straight 30 m back-off (placeholder), not the farthest cover: act 3 needs it near (Q-129)
+			var away := global_position - _goal
+			_goal = global_position + Vector3(away.x, 0.0, away.z).normalized() * 30.0
+		return
+	if cart.act == cart.PUSH and state == &"chase":
+		var sensed := _sensed_pos(target, {})
+		if sensed != Vector3.INF:
+			_goal = sensed
+		if not cart.knock_ready() or not cart.pushers.has(target) or _t_state >= _num[&"stalk_max_s"]:
+			_set_state(&"lurk", &"knock_off", 0)
+		elif _t_state >= _num[&"chase_tell_s"] and _alive(target) and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"] and cart.knock(target):
+			_bite_cart = true
+		return
+	if cart.act == cart.GATE_RUN and state == &"retreat" and _flare_retreat_s == 0.0:
+		_goal = Vector3.INF
+		_set_state(&"lurk", &"gate_run", 0)  # the guaranteed peak cuts a knock-off retreat short; a flare's holds
+	if state in [&"chase", &"retreat", &"lure"]:
+		_hunt(delta)  # act 3 chase and every retreat run as at night (catch, sanctuary, losing it)
+		return
+	var mem := _memory.filter(func(e: Dictionary) -> bool: return cart.pushers.has(int(e.peer)))
+	var heard := Logic.pick_heard(mem if mem else _memory, _now, _num[&"hearing_memory_s"], LOUDER_WINS_S)
+	var p := 0 if heard.is_empty() else int(heard.peer)
+	for s in cart.pushers:  # sight finds a pusher it did not hear
+		if p == 0 and _seen.has(s) and _now - float(_seen[s].t) < 0.5:
+			p = s
+	if heard.is_empty() and p == 0:
+		_set_state(&"lurk", &"lost_track", 0)
+		if _dir.wander_region and _goal != Vector3.INF and not _dir.region_rect(_dir.wander_region).has_point(Vector2(_goal.x, _goal.z)):
+			_goal = Vector3.INF  # acts 2 and 3: the AI Director's region (section 11.6) wins over an old lurk goal
+		_wander()
+		return
+	_goal = _sensed_pos(p, heard) if p != 0 else heard.position
+	var near := p != 0 and _goal.distance_to(global_position) <= STALK_STANDOFF_M + ARRIVE_M
+	if cart.act == cart.GATE_RUN and p != 0 and _dir.allow(&"chase", p):
+		_dir.spend(&"chase", p)
+		_set_state(&"chase", &"gate_run", p)
+	elif cart.act == cart.PUSH and near and cart.pushers.has(p) and cart.knock_ready():
+		_set_state(&"chase", &"knock_off", p)  # the lunge carries the chase tell before the hit
+	else:
+		_set_state(&"stalk", &"heard_" + String(heard.kind) if heard and int(heard.peer) == p else &"seen", p)
 
 
 func _run_script() -> void:
