@@ -121,3 +121,4 @@ Install all picks in one batch after the listen. Use the steps under "Installing
 | scarecrow signature (`cre_scarecrow_sig_*`) | A | FilmCow flag snaps at 0.8x |
 | boar signature (`cre_boar_sig_*`) | A | FilmCow chain + dirt/bass hoof + Freesound 158746 pig |
 | husk signature (`cre_husk_sig_*`) | B | Freesound 434881 gourd + 610143 seed pods at 17 Hz |
+| gaunt jumpscare (`cre_jumpscare_hit_gaunt`) | C | |
