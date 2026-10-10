@@ -79,7 +79,7 @@ else glows, players will misread it.
 | Farmer character (with sleeves and hands) | up to 4,000 | one 512 px texture |
 | Creature body (each of 4) | up to 5,000 | one 512 px texture |
 | Building (exterior and interior together) | up to 12,000 | one 1024 px atlas |
-| Corn stalk (single mesh, section 10) | 40 high LOD, 12 mid, a 2-quad card far | shared |
+| Corn stalk (single mesh, section 10, 10.4) | 65 high LOD, 35 mid, a 34-tri leafy card, a 64-tri band tile far | shared |
 
 Use vertex colour wherever a flat colour will do. Trim-sheet or atlas textures only; no unique 2K maps.
 Every mesh gets a simple collision shape or none (the 3D Artist does not make physics shapes; the
@@ -372,9 +372,9 @@ m clearing, about 9,000 m2, plus strips of about 90, 47, 70, 17 m of 6 m width, 
 - **Rendering.** Corn is drawn with `MultiMeshInstance3D`, one MultiMesh per 16 by 16 m cell, so
   frustum culling works at cell level. Stalks per m2: 6 (placeholder, thin enough to look like a
   field). That is about 62,000 stalks over the farm; not all drawn at once.
-- **Three levels of detail.** Within 12 m: 40-triangle stalk with a leaf quad. 12 to 35 m: 12-triangle
-  stalk. Beyond 35 m: a flat two-quad card per cluster (impostor) with the same wall silhouette.
-  Beyond about 60 m the corn wall is drawn as a textured band mesh. The cutoffs are `placeholder`.
+- **Three levels of detail.** Within 12 m: 65-triangle stalk (P5-49, 10.4). 12 to 30 m: 35-triangle
+  stalk. Two crossed leafy cards sit under both (2 per m2) and beyond 30 m a band tile with tassel spikes rings each
+  cell edge. The cutoffs are `placeholder`.
 - **Wind.** Sway is a vertex shader (`mat_corn_stalk`), no CPU cost, no per-frame uploads.
 - **Parting stalks.** When the creature or a player moves through corn, stalks within 1.5 m of the
   mover bend away via a shader uniform array of up to 8 mover positions per frame (players and the
@@ -417,6 +417,34 @@ walls at x -32..-57 and 46..71, doc 04 s9).
    range 12 to 8 m, stalks per m2 6 to 4, MultiMesh cell size. Record each change and the effect in
    the PP-08 follow-up handoff.
 5. Record which GPU each instance used (`RenderingServer.get_video_adapter_name()`).
+
+### 10.4 Corn look (P5-49, CEO: "looks like grass, it should look like corn")
+
+Cause (seen in `production/handoffs/P5-49/before_*.png`): the old stalk was a 5 cm tube with 7 cm leaf blades, and the
+cards and band were flat gradient slabs, so at every distance the field read as a wall of grass.
+
+Now (built by `tools/blender/build_p5_16.py`; same file names, same MultiMesh instancing, placement, density, ranges and
+2.4 m height; the layer 5 blockers are untouched):
+
+- **Stalk (lod0, 65 tris, 0 to 12 m).** Thick jointed stalk (4 segments, 10 cm to 4 cm wide, a shoulder at every node), six
+  broad arching ribbon leaves (up to 0.9 m, dark green to dry tan tip) alternating off the nodes, one husked ear on the
+  side (gold kernels, four husk blades, brown silk), a tassel on top. Highest point 2.4 m, farmer 1.8 m.
+- **Mid (lod1, 35 tris, 9 to 30 m).** One tapered tube, four leaves, small ear, tassel.
+- **Card (34 tris, 0 to 30 m).** Two crossed vertical planes, each a stalk strip and five arching leaves; fills the gaps.
+- **Band (64 tris per 4 m tile, beyond 30 m).** Leaf lobes and tassel spikes break the top edge, so the far wall reads as
+  a corn row against the sky.
+- **Colour.** Vertex colour: `#3F6A2A` leaf base, `#6C9A38` leaf, `#B9A545` (the doc 07 s2 corn colour) and `#C9A85C` dry
+  tips, `#E0B83A` kernels, `#D6BE74` tassel (`placeholder` like the rest of the palette). `game/render/corn.gdshader` now
+  uses the vertex colour, varies it per plant, shades the base and adds faint stripes. At night the corn stays darker than
+  the sky (s7 silhouette rule).
+- **Cost (P5-38 spots, 1280x720, one instance, vsync off, 2026-10-10).** Draw calls unchanged (68 to 69 lane, 394 to 398
+  road). Frame: lane 1.01 ms before, 0.97 after; road 1.40 before, 1.51 after (GPU 0.46 to 0.57 ms). The probe's triangle
+  counter fell (lane 84,675 to 6,303; road 158,409 to 145,810; clearing 71k to 22k) although the meshes got bigger.
+  Cause (measured by QA, P5-49 review): the importer builds automatic mesh LODs (`meshes/generate_lods=true`). With
+  mesh LOD off (root viewport `mesh_lod_threshold = 0`) the counter reads lane 321,517, road 353,097, field B 197,925,
+  the same frame time and draw calls, and an identical lane image; so the full-detail worst case is about 353k, under the
+  1,500,000 budget. Upper bound if every stalk in a 30 m circle drew at full detail (2.7k lod0 x 65, 14k lod1 x 35,
+  5.6k cards x 34): about 860k tris, also under budget.
 
 ## 11. Asset list
 
@@ -519,10 +547,10 @@ moonflower bed has 4 plots (2 by 2); the Prize Pumpkin patch is 4 m across centr
 
 | Name | Dimensions | Phase |
 |---|---|---|
-| `corn_stalk_lod0.glb` | 0.15 x 0.15 x 2.4, 40 tris | P1 |
-| `corn_stalk_lod1.glb` | same, 12 tris | P1 |
-| `corn_card_lod2.glb` (2-quad cluster) | 1 x 0.2 x 2.4 | P1 |
-| `corn_wall_band.glb` (far band, tiles along edges) | 4 x 0.5 x 2.4 | P1 |
+| `corn_stalk_lod0.glb` | 1.4 x 1.6 x 2.4, 65 tris (P5-49, section 10.4) | P1 |
+| `corn_stalk_lod1.glb` | 1.0 x 1.6 x 2.4, 35 tris | P1 |
+| `corn_card_lod2.glb` (2 crossed leafy planes, 34 tris) | 1 x 1 x 2.3 | P1 |
+| `corn_wall_band.glb` (far band, tiles along edges, tassel spikes, 64 tris) | 4 x 0.5 x 2.4 | P1 |
 | `corn_stalk_cut.glb` (flattened, "trampled" decal) | 1 x 1 x 0.05 | P2 |
 
 ### 11.7 Characters and creatures (`char`, `creature`, `animal`)

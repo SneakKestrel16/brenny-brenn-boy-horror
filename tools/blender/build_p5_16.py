@@ -219,62 +219,106 @@ def tube4(p, z0, z1, r0, r1, col0, col1, mat=MAT_CORN, lean=(0, 0)):
     return Vector((lean[0], lean[1], z1))
 
 
-def corn_leaf(p, z, yaw, L, W, pitch, droop):
-    d = Vector((-math.sin(yaw) * math.cos(pitch), math.cos(yaw) * math.cos(pitch), math.sin(pitch)))
-    side = Vector((math.cos(yaw), math.sin(yaw), 0)) * (W / 2)
-    b = Vector((0, 0, z)) + d * 0.01
-    tip = b + d * L + Vector((0, 0, -droop))
-    poly(p, [b + side, tip, b - side], [CORN_LEAF, CORN_HI, CORN_LEAF], MAT_CORN)  # a triangle blade, 1 tri
+# P5-49: corn that reads as corn. Thick jointed stalk, broad arching ribbon leaves alternating off the nodes, a husked
+# ear on the side, a tassel on top. Palette: doc 07 s2 corn gold-green #B9A545 as the mass tone, with leaf greens and dry tan.
+LEAF_DK, LEAF_MD, LEAF_TIP, DRY_TAN = "#3F6A2A", "#6C9A38", "#B9A545", "#C9A85C"
+STALK_LO, STALK_HI = "#8FA047", "#6E8A38"
+HUSK, HUSK_TIP, KERNEL, SILK, TASSEL = "#7F9A3E", "#B8B062", "#E0B83A", "#8A6A3A", "#D6BE74"
 
 
-def stalk_lod0():  # 40 tris: 3 stem segments (24), 4 leaf blades (4), cob (6), husk leaf (2), 2 tassel quads... counted in build
-    p = Part("Stalk")
-    tube4(p, 0.0, 0.8, 0.026, 0.02, CORN_LO, CORN_LO)
-    tube4(p, 0.8, 1.6, 0.02, 0.015, CORN_LO, CORN_HI)
-    top = tube4(p, 1.6, 2.2, 0.015, 0.008, CORN_HI, CORN_HI)
-    for z, yaw, droop in ((0.9, 0.0, 0.18), (1.2, math.pi, 0.2), (1.55, math.pi / 2, 0.15), (1.85, -math.pi / 2, 0.12)):
-        corn_leaf(p, z, yaw, 0.07, 0.035, 0.7, droop)
-    # cob: 4-sided cone on the stem at 1.35 m, tilted out (tip 4 tris + 1 base quad = 6 tris), pale husk colour
-    cb = Vector((0.02, 0.0, 1.3))
-    tip = cb + Vector((0.05, 0.0, 0.18))
-    ring = [cb + Vector((0.02 * math.cos(a), 0.02 * math.sin(a), 0)) for a in (0, math.pi / 2, math.pi, 3 * math.pi / 2)]
-    for i in range(4):
-        poly(p, [ring[i], ring[(i + 1) % 4], tip], [CORN_COB, CORN_COB, CORN_HI], MAT_CORN)
-    poly(p, ring, CORN_LEAF, MAT_CORN)
-    # tassel: one thin crossed pair of quads at the top (4 tris)
+def hdir(yaw):
+    return Vector((-math.sin(yaw), math.cos(yaw), 0))
+
+
+def ribbon(p, base, yaw, L, W, rise, droop, vertical=False):
+    """Arching ribbon leaf, 3 tris: narrow base, widest at 45 percent, pointed tip that droops. vertical = width in Z
+    (a leaf drawn flat in a vertical plane, for the cards)."""
+    h = hdir(yaw)
+    b = Vector(base)
+    side = Vector((0, 0, W / 2)) if vertical else Vector((math.cos(yaw), math.sin(yaw), 0)) * (W / 2)
+    m = b + h * (L * 0.45) + Vector((0, 0, L * rise))
+    tip = b + h * (L * 0.95) + Vector((0, 0, L * rise * 1.1 - droop))
+    poly(p, [b - side * 0.35, b + side * 0.35, m + side, m - side], [LEAF_DK, LEAF_DK, LEAF_MD, LEAF_MD], MAT_CORN)
+    poly(p, [m - side, m + side, tip], [LEAF_MD, LEAF_MD, DRY_TAN], MAT_CORN)
+
+
+def tassel(p, top, h_up):
+    """Pale tan spikes: two crossed upright blades and four arching branches, 6 tris."""
     for yaw in (0.0, math.pi / 2):
-        s = Vector((math.cos(yaw), math.sin(yaw), 0)) * 0.025
-        poly(p, [top - s, top + s, top + s * 0.2 + Vector((0, 0, 0.2)), top - s * 0.2 + Vector((0, 0, 0.2))], [CORN_HI, CORN_HI, CORN_COB, CORN_COB], MAT_CORN)
-    # lift tassel top to the 2.4 m ceiling is the stem 2.2 + 0.2
-    p.done()
+        s = Vector((math.cos(yaw), math.sin(yaw), 0)) * 0.02
+        poly(p, [top - s, top + s, top + Vector((0, 0, h_up))], [STALK_HI, STALK_HI, TASSEL], MAT_CORN)
+    for k in range(4):
+        d = hdir(k * math.pi / 2 + 0.4)
+        s = Vector((d.y, -d.x, 0)) * 0.015
+        t = top + Vector((0, 0, h_up * 0.35))
+        poly(p, [t - s, t + s, t + d * 0.17 + Vector((0, 0, h_up * 0.55))], [TASSEL, TASSEL, DRY_TAN], MAT_CORN)
 
 
-def stalk_lod1():  # 12 tris: one 8-tri tube + two 2-tri leaf quads
+def ear(p, c, yaw, length=0.27, r=0.05):
+    """Husked ear: kernel-gold 4-sided cone, four green husk blades over its corners, brown silk tip. 9 tris."""
+    h = hdir(yaw)
+    a = (h * 0.4 + Vector((0, 0, 1))).normalized()
+    u = h.cross(Vector((0, 0, 1))).normalized()
+    ring = [c + (h * math.cos(t) + u * math.sin(t)) * r for t in (0, math.pi / 2, math.pi, 3 * math.pi / 2)]
+    tip = c + a * length
+    for i in range(4):
+        poly(p, [ring[i], ring[(i + 1) % 4], tip], [KERNEL, KERNEL, KERNEL], MAT_CORN)
+    for i in range(4):
+        v, nx, pv = ring[i], ring[(i + 1) % 4], ring[i - 1]
+        o = (v - c).normalized() * 0.015
+        poly(p, [v + (pv - v) * 0.4 + o, v + (nx - v) * 0.4 + o, tip + a * 0.05 + o * 1.5], [HUSK, HUSK, HUSK_TIP], MAT_CORN)
+    poly(p, [tip - u * 0.01, tip + u * 0.01, tip + a * 0.07 + h * 0.03], [SILK, SILK, SILK], MAT_CORN)
+
+
+def stalk_lod0():  # about 80 tris: 4 stalk segments with a shoulder at every node, 6 leaves, ear, tassel
     p = Part("Stalk")
-    tube4(p, 0.0, 2.4, 0.03, 0.012, CORN_LO, CORN_HI)
-    for z, yaw in ((1.2, 0.0), (1.7, math.pi)):
-        d = Vector((-math.sin(yaw), math.cos(yaw), 0))
-        side = Vector((math.cos(yaw), math.sin(yaw), 0)) * 0.012
-        b = Vector((0, 0, z))
-        poly(p, [b - side, b + side, b + d * 0.07 + Vector((0, 0, 0.5)) + side * 0.5, b + d * 0.07 + Vector((0, 0, 0.5)) - side * 0.5], [CORN_LEAF, CORN_LEAF, CORN_HI, CORN_HI], MAT_CORN)
+    zs = [(0.0, 0.55, 0.052, 0.046), (0.55, 1.1, 0.054, 0.042), (1.1, 1.7, 0.046, 0.034), (1.7, 2.2, 0.038, 0.018)]
+    for z0, z1, r0, r1 in zs:
+        tube4(p, z0, z1, r0, r1, STALK_LO, STALK_HI)
+    for i, (z, L) in enumerate(((0.5, 0.85), (0.8, 0.9), (1.1, 0.85), (1.45, 0.75), (1.75, 0.62), (2.0, 0.5))):
+        yaw = i * (math.pi + 0.35) + 0.2
+        ribbon(p, hdir(yaw) * 0.04 + Vector((0, 0, z)), yaw, L, 0.17 if L > 0.6 else 0.12, 0.38, 0.22 * L)
+    ear(p, Vector((-0.02, 0.05, 1.28)), 0.9)
+    tassel(p, Vector((0, 0, 2.2)), 0.2)
     p.done()
 
 
-def corn_card():  # 4 tris: two parallel quads 0.2 m apart, 1 m wide, 2.4 high; the far impostor of one cluster
+def stalk_lod1():  # about 40 tris: one tapered tube, 4 leaves, small ear, tassel
+    p = Part("Stalk")
+    tube4(p, 0.0, 2.2, 0.052, 0.018, STALK_LO, STALK_HI)
+    for i, (z, L) in enumerate(((0.7, 0.85), (1.1, 0.85), (1.5, 0.7), (1.9, 0.5))):
+        yaw = i * (math.pi + 0.35) + 0.2
+        ribbon(p, hdir(yaw) * 0.04 + Vector((0, 0, z)), yaw, L, 0.16, 0.38, 0.22 * L)
+    ear(p, Vector((0.0, 0.05, 1.28)), 0.9, 0.24, 0.045)
+    tassel(p, Vector((0, 0, 2.2)), 0.2)
+    p.done()
+
+
+def corn_card():  # 2 crossed vertical planes, each a stalk strip and 5 arching leaves seen from the side
     p = Part("Card")
-    for y in (-0.1, 0.1):
-        poly(p, [(-0.5, y, 0), (0.5, y, 0), (0.5, y, 2.4), (-0.5, y, 2.4)], [CORN_LO, CORN_LO, CORN_HI, CORN_HI], MAT_CORN)
+    for pl in (0.0, math.pi / 2):
+        d = Vector((math.cos(pl), math.sin(pl), 0))
+        poly(p, [d * -0.03, d * 0.03, d * 0.015 + Vector((0, 0, 2.2)), d * -0.015 + Vector((0, 0, 2.2))], [STALK_LO, STALK_LO, STALK_HI, STALK_HI], MAT_CORN)
+        for i, z in enumerate((0.45, 0.85, 1.25, 1.65, 2.0)):
+            yaw = -pl + (math.pi / 2 if i % 2 == 0 else -math.pi / 2)  # hdir(yaw) = +-d
+            ribbon(p, (0, 0, z), yaw, 0.55, 0.2, 0.3, 0.2, vertical=True)
     p.done()
 
 
-def corn_band():  # tiles along edges: two jagged-top faces 0.5 apart, 4 m wide, 2.4 high, ends equal for seamless tiling
+def corn_band():  # tiles along edges: two faces 0.5 apart, 4 m wide, ends equal for seamless tiling; leafy lobes and tassel spikes on top
     p = Part("Band")
-    hts = [2.3, 2.4, 2.2, 2.4, 2.3, 2.4, 2.2, 2.4, 2.3]
+    tops = [1.95, 2.05, 1.9, 2.1, 1.95, 2.05, 1.9, 2.1]
     for y, flip in ((-0.25, False), (0.25, True)):
         for i in range(8):
             x0, x1 = -2 + i * 0.5, -1.5 + i * 0.5
-            q = [(x0, y, 0), (x1, y, 0), (x1, y, hts[i + 1]), (x0, y, hts[i])]
-            poly(p, q[::-1] if flip else q, [CORN_LO, CORN_LO, CORN_HI, CORN_HI], MAT_CORN)
+            xm, t = (x0 + x1) / 2, tops[i]
+            q = [(x0, y, 0), (x1, y, 0), (x1, y, t), (x0, y, t)]
+            cl = [LEAF_DK, LEAF_DK, LEAF_MD, LEAF_MD]
+            poly(p, q[::-1] if flip else q, cl[::-1] if flip else cl, MAT_CORN)
+            lobe = [(x0, y, t), (x1, y, t), (xm + (0.12 if i % 2 else -0.12), y, t + 0.22)]
+            poly(p, lobe[::-1] if flip else lobe, [LEAF_MD, LEAF_MD, DRY_TAN], MAT_CORN)
+            spike = [(xm - 0.05, y, t + 0.05), (xm + 0.05, y, t + 0.05), (xm + 0.01 * (1 if i % 2 else -1), y, 2.4)]
+            poly(p, spike[::-1] if flip else spike, [LEAF_TIP, LEAF_TIP, TASSEL], MAT_CORN)
     p.done()
 
 
