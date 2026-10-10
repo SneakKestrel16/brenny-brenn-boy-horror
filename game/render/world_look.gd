@@ -30,6 +30,7 @@ const DAWN_MID := {"sun_col": Color("FFA458"), "sun_e": 0.6, "elev": 8.0, "amb_c
 		"fog_col": Color("A07C7C"), "fog_d": 0.004, "sky_top": Color("4A5E94"), "sky_hor": Color("F0A064"),
 		"vig": 0.25, "grain": 0.04, "sat": 1.0, "con": 1.05, "moon": 0.0, "moon_s": 0.3, "moon_c": Color("D8E4FF"), "pool": 0.3}
 const INTERIOR_FILL_M := {"Barn": 14.0, "Farmhouse": 11.0, "ToolShed": 6.0}  ## P5-50: placeholder room fill ranges, about each building's depth (doc 04 s4 footprints)
+const DETAIL := true  ## P5-59: false restores the flat ground, paths and box props (one-line revert)
 const SUN_AZIMUTH := -30.0
 const HARVEST_EASE_S := 15.0  ## placeholder: night to Harvest Moon look, on the shared clock
 const MOON_M := 300.0  ## QA P4-20: moon disc distance from the camera, beyond the farm, inside the far plane
@@ -69,6 +70,8 @@ func _ready() -> void:
 			m.roughness = 1.0
 			floor_mesh.material_override = m
 		_paint_props(world)
+		if DETAIL:
+			_detail_pass(world)
 	_apply(_state())
 	if _shot != "" or _cam_arg():
 		_shot_camera()
@@ -95,6 +98,32 @@ func _paint_props(world: Node) -> void:
 		accent.position = spec[3]
 		accent.material_override = _flat(spec[4])
 		body.add_child(accent)
+
+
+## P5-59: swaps every plain opaque lit box and ground material under the world for the shared detail shader
+## (same colour, noise on top), one ShaderMaterial per colour so batching is unchanged. World-space noise on
+## big flat surfaces (ground, paths), object-space on props. Skips emissive, transparent, unshaded and textured
+## materials, so no light or glow changes. Static: nothing here animates.
+func _detail_pass(world: Node) -> void:
+	var cache := {}
+	var shader := load("res://game/render/surface_detail.gdshader") as Shader
+	for mi in world.find_children("*", "MeshInstance3D", true, false):
+		var m := (mi as MeshInstance3D).material_override as StandardMaterial3D
+		if m == null or m.emission_enabled or m.albedo_texture or m.shading_mode != BaseMaterial3D.SHADING_MODE_PER_PIXEL \
+				or m.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or m.vertex_color_use_as_albedo:
+			continue
+		var big := ((mi as MeshInstance3D).get_aabb().size.x > 6.0 or (mi as MeshInstance3D).get_aabb().size.z > 6.0)
+		var key := [m.albedo_color, big]
+		if not cache.has(key):
+			var sm := ShaderMaterial.new()
+			sm.shader = shader
+			sm.set_shader_parameter("use_vertex_color", false)
+			sm.set_shader_parameter("albedo_color", m.albedo_color)
+			sm.set_shader_parameter("world_space", true)
+			sm.set_shader_parameter("detail_scale", 2.5 if big else 5.0)
+			sm.set_shader_parameter("patch_strength", 0.16 if big else 0.08)
+			cache[key] = sm
+		(mi as MeshInstance3D).material_override = cache[key]
 
 
 func _flat(c: Color) -> StandardMaterial3D:

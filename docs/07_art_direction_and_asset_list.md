@@ -301,7 +301,7 @@ a new material needs a reason.
 
 | Material | Shader | Notes |
 |---|---|---|
-| `mat_flat_lit` | standard, vertex colour, roughness 1, no specular | 90% of the world |
+| `mat_flat_lit` | shader `game/render/surface_detail.gdshader` (P5-59): vertex colour albedo with soft value-noise mottling, roughness about 0.88, no specular, no emission; `crop_plot` and `trap_*` models keep the old StandardMaterial3D | 90% of the world |
 | `mat_prop_atlas` | standard, 256 px atlas | tools, small props |
 | `mat_building_atlas` | standard, 1024 px atlas | buildings |
 | `mat_corn_stalk` | custom, instanced, wind sway in the vertex shader, per-instance colour jitter | section 10 |
