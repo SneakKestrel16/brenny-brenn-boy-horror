@@ -1001,3 +1001,10 @@ based on, pull from public libraries and give me 3 options", animals "bad base t
 (`C:\Users\Ockey\fc_dl\recorded\`); only the processed wavs and a source list enter the repo. Log every source with
 its file name or Freesound id and license in doc 08 section 13. No recording of a person's voice or name enters the
 repo without the CEO's approval (D-067 precedent).
+### D-150 · 2026-10-09 · CEO · Live clips: no lobby toggle; P4-37 doc 01 wording approved
+The doc 01 group option "no live clips" is dropped and not built. Live clips are controlled only by each player's
+own setting (Off / Live clips) and by streamer-safe. The CEO approves the P4-37 doc 01 changes: live clips on by
+default, and the barn recording removed (D-146).
+**Why:** CEO, 2026-10-09: "skip the lobby option to turn off live clips and approve the design doc". This answers
+Q-244.
+**How to apply:** When P4-37 merges, mark Q-244 answered and remove the "no live clips" group option from doc 01.
