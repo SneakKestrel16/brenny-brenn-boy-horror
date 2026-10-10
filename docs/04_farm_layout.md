@@ -195,9 +195,9 @@ cart counts as out only if it's past the fields" ("Nights > Length").
 
 | Waypoint | (x, z) | Leg length | Least distance to corn on the leg |
 |---|---|---|---|
-| R0 barn door | (0, 0) | | 12.0 |
-| R1 | (0, 8) | 8.0 | 12.0 |
-| R2 south of strip 2's tip | (15, 9) | 15.0 | 6.8 |
+| R0 cart park, east of the barn door | (5, 6) | | 8.1 |
+| R1 | (5, 8) | 2.0 | 9.2 |
+| R2 south of strip 2's tip | (15, 9) | 10.0 | 6.7 |
 | R3 east of field A | (40, 5) | 25.3 | 6.0 |
 | R4 north, between field A and strip 3 | (41, -24) | 29.0 | 5.3 |
 | R5 north of strip 3's tip | (58, -24) | 17.0 | 9.0 |
@@ -205,7 +205,14 @@ cart counts as out only if it's past the fields" ("Nights > Length").
 | R7 north of field B | (82, -14) | 16.0 | 14.0 |
 | R8 farm gate | (105, -5) | 24.7 | 3.7 |
 
-- **Length 147.9 m.** It weaves round both strip tips, so the creature has cover within 5 to 7 m of
+- **R0 moved off the barn door (P5-18, CEO report 2026-10-09: "the cart shouldnt block the doorway to the
+  barn").** R0 was (0, 0), the door itself, so the 3 m cart (about 1.6 m wide, 3 m long, prop_cart.glb)
+  parked across the door gap (x -1.5 to 1.5). It now parks at (5, 6) facing +Z towards R1: body x 4.2 to
+  5.8, z 4.5 to 7.5, so 2.7 m east of the door gap and 4.5 m south of the wall. The straight walk out of
+  the door (x -1.5 to 1.5) and the barn-to-field-A walk of doc 04 s8.7 (barn, (11, 3), (19, 3): 1.4 m
+  from the wall at x = 5, 3 m clear of the cart body) both stay open. The cart still starts beside the
+  barn (6.7 m from the door). The old length was 147.9 m (docs 02 and 05 still quote it, Q-326).
+- **Length 136.9 m.** It weaves round both strip tips, so the creature has cover within 5 to 7 m of
   the cart on the R2 to R5 legs.
 - **The gate is a corn pinch.** The gate opens into the 8 m road lane, so on the last metres of
   R7 to R8 the cart passes 3.7 m from the ring's corn, and 4 m from it on both sides at the gate.

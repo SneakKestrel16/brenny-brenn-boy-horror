@@ -437,3 +437,10 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   Owner: Game Designer (data), AI Programmer.
 - **P5-04 e2e client check is weak** (passes on reload plus one trait). Owner: QA.
 - **Docs 05 section 26** is P5-04's; P5-11 also claims a section 26 and must renumber at its merge. Owner: Director.
+
+## Found at the P5-18 review (QA, 2026-10-09)
+
+- **Route length in docs 02 and 05** still 147.9 m; now 136.9 m, about 137 s for one pusher (Q-326). Owner: Game
+  Designer (doc 02), Technical Director (doc 05).
+- **Doc 01 "Harvest Moon" act 1 and doc 03 s14** say "load the cart in the lit barn"; sync to "beside the lit barn
+  door" (D-172). Owner: Game Designer.

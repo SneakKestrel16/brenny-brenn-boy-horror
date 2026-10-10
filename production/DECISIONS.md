@@ -1186,3 +1186,11 @@ the quirk seed's season. Rulings: Q-271 AI Programmer task, base percentage the 
 `splice_master` from the pool until the splice handles more than two segments; Q-273 harmless; Q-274 accept the
 `net.gd` edit; Q-275 roles re-pick through the lobby is a follow-up task, end copy stays a placeholder.
 **Why:** QA PASS with fixes (handoffs/P5-04.md "QA review").
+
+### D-172 · 2026-10-09 · Director · P5-18 merged
+P5-18 (cart parks clear of the barn doorway, CEO request) passed QA: `ROUTE` R0/R1 move to (5, 6)/(5, 8), the cart
+parks 4.5 m outside the barn wall east of the door, route 136.9 m. Harvest Moon act 1 now reads "load the cart
+beside the lit barn door": the 3 m load range still reaches the 6 m lit-doorway shelter. This is a CEO-requested
+deviation from doc 01 / doc 03 s14 ("in the lit barn"); do not move the cart back to the door. Q-326 (docs 02 and 05
+quote 147.9 m) stays open for its owners, folded into their next doc task.
+**Why:** QA PASS (handoffs/P5-18.md "QA review"); CEO 2026-10-09 "the cart shouldnt block the doorway to the barn".

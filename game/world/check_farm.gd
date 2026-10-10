@@ -218,10 +218,13 @@ func _route() -> void:
 	for i in range(1, c.point_count):
 		var a := c.get_point_position(i - 1)
 		var b := c.get_point_position(i)
+		var leg := 1e9
 		for k in 101:
 			var q := a.lerp(b, k / 100.0)
-			least = minf(least, _corn_dist(Vector2(q.x, q.z)))
-	_expect("route length", len_m, 147.9)
+			leg = minf(leg, _corn_dist(Vector2(q.x, q.z)))
+		least = minf(least, leg)
+		print("leg R%d-R%d %.1f m, least corn %.1f m" % [i - 1, i, a.distance_to(b), leg])
+	_expect("route length", len_m, 136.9)
 	_expect("closest pass to corn (gate end)", least, 3.7, 0.15)
 	var gate := _p("Props/FarmGate")
 	var last := c.get_point_position(c.point_count - 1)

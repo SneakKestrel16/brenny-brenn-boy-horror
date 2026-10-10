@@ -242,15 +242,15 @@ size = Vector3(25, 2, 100)
 
 [sub_resource type="Curve3D" id="Curve3D_80"]
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 15, 0, 9, 0, 0, 0, 0, 0, 0, 40, 0, 5, 0, 0, 0, 0, 0, 0, 41, 0, -24, 0, 0, 0, 0, 0, 0, 58, 0, -24, 0, 0, 0, 0, 0, 0, 66, 0, -14, 0, 0, 0, 0, 0, 0, 82, 0, -14, 0, 0, 0, 0, 0, 0, 105, 0, -5),
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 5, 0, 6, 0, 0, 0, 0, 0, 0, 5, 0, 8, 0, 0, 0, 0, 0, 0, 15, 0, 9, 0, 0, 0, 0, 0, 0, 40, 0, 5, 0, 0, 0, 0, 0, 0, 41, 0, -24, 0, 0, 0, 0, 0, 0, 58, 0, -24, 0, 0, 0, 0, 0, 0, 66, 0, -14, 0, 0, 0, 0, 0, 0, 82, 0, -14, 0, 0, 0, 0, 0, 0, 105, 0, -5),
 "tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0)
 }
 
 [sub_resource type="BoxMesh" id="BoxMesh_81"]
-size = Vector3(3.0, 0.02, 11.0)
+size = Vector3(3.0, 0.02, 5.0)
 
 [sub_resource type="BoxMesh" id="BoxMesh_82"]
-size = Vector3(3.0, 0.02, 18.03329637837291)
+size = Vector3(3.0, 0.02, 13.04987562112089)
 
 [sub_resource type="BoxMesh" id="BoxMesh_83"]
 size = Vector3(3.0, 0.02, 28.317977802344327)
@@ -1704,12 +1704,12 @@ curve = SubResource("Curve3D_80")
 [node name="Landmarks" type="Node3D" parent="."]
 
 [node name="Route1" type="MeshInstance3D" parent="Paths"]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 0.0, 0.01, 4.0)
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5.0, 0.01, 7.0)
 mesh = SubResource("BoxMesh_81")
 material_override = SubResource("StandardMaterial3D_7")
 
 [node name="Route2" type="MeshInstance3D" parent="Paths"]
-transform = Transform3D(0.06652, 0, 0.99779, 0, 1, 0, -0.99779, 0, 0.06652, 7.5, 0.01, 8.5)
+transform = Transform3D(0.0995, 0, 0.99504, 0, 1, 0, -0.99504, 0, 0.0995, 10.0, 0.01, 8.5)
 mesh = SubResource("BoxMesh_82")
 material_override = SubResource("StandardMaterial3D_7")
 

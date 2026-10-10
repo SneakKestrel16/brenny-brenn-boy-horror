@@ -1579,3 +1579,6 @@ and nothing re-opens the pick. (2) After the last season (`campaign.seasons_max`
 yours. The campaign is over." and offers only "Back to menu" (placeholder copy). Settled by: the Game Designer wording it and
 deciding whether roles re-pick between seasons.
 **Answer (Director, D-171):** roles re-pick through the lobby is a follow-up task; the end-of-campaign copy stays a placeholder for the Game Designer.
+
+### Q-326 (Level Designer to Game Designer / Technical Director)
+P5-18 moved the cart route R0 off the barn door: the route is now 136.9 m (was 147.9). Doc 02 line 446 ("147.9 m ... about 148 s") and doc 05 line 606 ("147.9 m") still quote the old length; one pusher now takes about 137 s. Please update the figure in your docs (and any cart timing built on 148 s). Settled by: the owners editing those lines.
