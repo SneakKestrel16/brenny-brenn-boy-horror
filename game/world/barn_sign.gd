@@ -6,9 +6,10 @@ extends Node
 
 const CENTRE := Vector3(-7.7, 2.45, -10.0)  ## on the inside of the west wall, between the spawns and the lantern
 const BOARD := Vector2(4.8, 4.3)  ## m
-const PIXEL_SIZE := 0.0036  ## m per font pixel: 36 px lines are 0.13 m, legible from about 5 m
-const LEFT := "HOW TO PLAY\n\nGOAL\nPay the bank in 7 days. Make the final payment and get the festival cart out the gate with someone alive.\n\nDAY\nRead the pegboard. Sweep and disarm traps. Plant, water, harvest, sell at the town stand.\n\nDUSK\nThe bell rings three times. Harvest and top up the generator."
-const RIGHT := "NIGHT\nThe creature hunts and copies voices. It never enters a lit building. Keep the generator fuelled (the drum by the shed is free). Moonflowers are picked in the dark only.\n\nCORRUPTED\nCreature leavings, stolen tools, items left out at dusk and unpicked moonflowers. Wash at the well: about 10 s of noisy pumping.\n\nTRAPS\nBear trap: pry free, a teammate helps. Pit: fill it. Disarm kneeling still. Flags mark rows, free and honest.\n\nDAWN\nSelling, medical bill, payments, farm damage: all on the Dawn Report."
+const PIXEL_SIZE := 0.0036  ## m per font pixel: 40 px lines are 0.14 m, legible from about 5 m
+## P5-64 (CEO playtest): summarised to headline lines, one fact per line, explicit breaks.
+const LEFT := "HOW TO PLAY\n\nGOAL\nPay the bank in 7 days,\nthen cart out the gate\nwith someone alive.\n\nDAY\nRead the pegboard.\nPlant, water, harvest, sell.\nSweep and disarm traps.\n\nDUSK\nBell rings 3x: harvest,\nfuel the generator."
+const RIGHT := "NIGHT\nThe creature copies voices.\nIt never enters lit buildings.\nFuel the generator\n(free drum by the shed).\nPick moonflowers in the dark.\n\nCORRUPTED\nLeavings, stolen tools,\nitems left out at dusk.\nWash at the well (10 s, loud).\n\nTRAPS\nBear: pry free, get help.\nPit: fill it in.\nDisarm kneeling still.\nFlags mark rows."
 
 
 func _ready() -> void:
@@ -37,7 +38,7 @@ func _column(root: Node3D, text: String, x: float) -> void:
 	var l := Label3D.new()
 	l.text = text
 	l.pixel_size = PIXEL_SIZE
-	l.font_size = 36
+	l.font_size = 40
 	l.outline_size = 0
 	l.modulate = Color(0.95, 0.9, 0.75)
 	l.width = int((BOARD.x / 2.0 - 0.3) / PIXEL_SIZE)
