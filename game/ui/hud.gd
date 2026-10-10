@@ -18,7 +18,7 @@ const REFUSED_TEXT := {&"locked": "Locked: needs more players, or buy it at the 
 		&"no_can": "You need a watering can", &"no_fuel_can": "You need the fuel can", &"can_taken": "Someone has it", &"has_fuel_can": "The can is full",
 		&"not_tainted": "Your hands are clean", &"no_coins": "Not enough coins", &"no_seeds": "Buy seeds at the store", &"locked_crop": "That seed is not on sale yet",
 		&"too_far": "Stand at the shipping crate", &"locked_item": "Not on sale yet", &"owned": "You have that already", &"max_bought": "The crate has no more",
-		&"plots_max": "No more plots can be opened", &"no_flare": "No flare gun", &"flare_empty": "The flare gun is empty", &"flare_reloading": "Reloading",
+		&"plots_max": "No more plots can be opened", &"no_flare": "No flare gun", &"flare_empty": "The flare gun is empty", &"flare_full": "The flare gun is full", &"flare_reloading": "Reloading",
 		&"no_scarecrow": "No scarecrow to put up", &"too_close": "Too close to another scarecrow"}
 
 var player: CharacterBody3D

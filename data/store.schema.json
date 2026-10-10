@@ -187,6 +187,18 @@
               "id"
             ]
           }
+        },
+        {
+          "contains": {
+            "properties": {
+              "id": {
+                "const": "flare_shell"
+              }
+            },
+            "required": [
+              "id"
+            ]
+          }
         }
       ]
     }

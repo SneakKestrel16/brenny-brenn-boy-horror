@@ -82,10 +82,13 @@ func take_scrap() -> bool:
 	return true
 
 
-## Host, dawn step 7 (doc 01 Store): the flare gun is loaded again.
+## Host, dawn step 7 (doc 01 Store): the flare gun is loaded again. `flare_reloaded` feeds the Dawn Report line (D-147).
 func refill_flare() -> void:
 	if int(team.get(&"flare_gun", 0)) > 0:
+		var before := flare_shots
 		flare_shots = flare_capacity()
+		if flare_shots > before:
+			Log.event(&"flare_reloaded", {"before": before, "shots": flare_shots})
 		_send()
 
 
@@ -108,6 +111,11 @@ func why_not(peer: int, id: StringName, near: bool = true) -> StringName:
 		return &"too_far"
 	if Clock.day < int(r.unlock_day):
 		return &"locked_item"
+	if id == &"flare_shell":  # D-147: a shell needs the gun and room in it
+		if int(team.get(&"flare_gun", 0)) < 1:
+			return &"no_flare"
+		if flare_shots >= flare_capacity():
+			return &"flare_full"
 	if farm.coins < price(peer, id):
 		return &"no_coins"
 	var e: Dictionary = r.get("effect", {})
@@ -145,13 +153,14 @@ func buy(peer: int, id: StringName, near: bool = true) -> StringName:
 				cr.shed_lock = true
 		&"walkie_talkie": team[&"walkie_battery"] = int(team.get(&"walkie_battery", 0)) + int(e.batteries_included)  # P4-14 builds the radio
 		&"flare_gun": flare_shots = flare_capacity()
+		&"flare_shell": flare_shots = mini(flare_shots + int(e.shots), flare_capacity())
 		&"plot_pair":
 			for p in _locked_plots().slice(0, int(e.plots)):
 				plots.append(p.id)
 				p.locked = false
 				p._refresh()
 				farm.plot_changed(p)
-	Log.event(&"store_buy", {"item": String(id), "price": paid, "buyer": peer, "day": Clock.day, "coins": farm.coins})
+	Log.event(&"store_buy", {"item": String(id), "price": paid, "buyer": peer, "day": Clock.day, "coins": farm.coins, "flare": flare_shots})
 	_send()
 	return &""
 

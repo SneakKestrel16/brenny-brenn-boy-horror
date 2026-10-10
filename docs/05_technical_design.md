@@ -1141,13 +1141,14 @@ the QA changes.
 | `dawn_step` | host, before each step of `Death.dawn()` | `step` (`cash_in`, `final_sale`, `medical_bill`, `payment`, `farm_damage`, `save`, `free_scrap`), `day` | Doc 02 section 9 order test (P4-04) |
 | `end_of_season_sale` | host, final dawn step 2 | `plots`, `coins` | Dawn Report ledger row (P4-04) |
 | `free_scrap` | host, dawn step 7 | `scrap` | Doc 02 section 9 step 7 (P4-04) |
-| `store_buy` | host | `item`, `price`, `buyer`, `day`, `coins`; seeds: `item` `seed_<crop>`, `count`, `price` the total | Doc 02 section 10 (P4-06, D-093) |
+| `store_buy` | host | `item`, `price`, `buyer`, `day`, `coins`, `flare` (shots after the buy); seeds: `item` `seed_<crop>`, `count`, `price` the total | Doc 02 section 10 (P4-06, D-093) |
 | `store_refused` | host | `item`, `buyer`, `reason` | P4-06 |
 | `store_picked` | local peer | `item`, `price` | P4-06 |
 | `store_menu` | local peer, on opening the crate's menu | `open` | P4-22 |
 | `store_seized` | host | `item` | Foreclosure (P4-07) |
 | `scrap_used` | host | `left` | P4-06 |
 | `flare_fired` | host | `player`, `hit`, `left` | P4-06 |
+| `flare_reloaded` | host, dawn step 7 when the reload added shots | `before`, `shots` | Dawn Report "Flare Gun" line (D-147, P4-38) |
 | `scarecrow_placed` | host | `player`, `position`, `avoid_m` | P4-06 |
 | `season_ended` | each peer (host from the clock, clients from the final Dawn Report) | `day` | Season Awards entry point (P4-04) |
 | `pumpkin_planted`, `pumpkin_watered`, `pumpkin_lifted`, `pumpkin_set_down` | host, Prize Pumpkin verbs | `player`, `day` / `watered_days`, `size` / `pos` | P4-05 |

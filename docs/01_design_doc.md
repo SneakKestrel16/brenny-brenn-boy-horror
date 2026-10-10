@@ -546,6 +546,7 @@ Bought by the shipping crate. "sim" means the price is set with the simulator be
 | More scarecrows | sim | |
 | New plots (to 24; to 28 at 5 players, 32 at 6) | sim | |
 | Flare gun | sim | One shot, refilled each dawn; scares the creature off for 30 s; anyone can carry it |
+| Flare shell | placeholder | Needs the flare gun; loads one shot, up to the gun's capacity; not sold while the gun is full (D-147) |
 | Cosmetic hats, overalls | sim | Phase 5, bought once the debt is paid |
 
 ---

@@ -464,6 +464,7 @@ stand and at the dawn cash-in (D-017). `sim` prices are the simulator's starting
 | `scarecrow` | 20 | sim | effect in doc 03 |
 | `plot_pair` | 22 | sim | 2 field plots, start to ceiling: 16 to 24 (2 to 4p), 18 to 26 (5p), 20 to 28 (6p) (section 4) |
 | `flare_gun` | 50 | sim | one shot, refilled each dawn; scares the creature off for 30 s (`01 Store`) |
+| `flare_shell` | 15 | placeholder | needs `flare_gun`; loads one shot up to `flare_capacity()`; refused while full (D-147) |
 
 - **Pegboard lock (P2-12):** `data/store.json` `shed_lock`, price 40 (`doc01`), effect
   `theft_cap_per_night` 1 (one trap a night; without the lock, every bear trap off the board at nightfall is
@@ -481,15 +482,20 @@ stand and at the dawn cash-in (D-017). `sim` prices are the simulator's starting
 | `flare_gun` | `shots` 1, `retreat_s` 30 (`01 Store`), `refill` each dawn, `reload_s` 8 (placeholder; the wait between shots, the base the Warden's `flare_reload_mult` multiplies), `noise_ref` `creature.json` `noise_flare` |
 | `shed_lock` | as above (`doc01`) |
 | `plot_pair` | 2 plots, section 4 |
+| `flare_shell` | `shots` 1, `needs` `flare_gun` |
 
   The Retreat is 30 s because doc 01 says so; `creature.json` `retreat_after_flare_s` is the same
   number, and `store.json` cites it.
+- **Flare shell price (D-147, P4-38):** 15, `placeholder`. Reasoning: the scrap price, a consumable of the same
+  weight (one repair against one shot), and under a third of the gun's 50, so a team that owns the gun can afford a
+  spare shot most nights without it replacing seeds. The sim does not model the flare gun or shells, so this price
+  was not run; the economy pass (D-148, deferred until the game is fully playable) sets it.
 - Cosmetics are DD Phase 5 and out of scope.
 - **Animals (P4-03, Q-032):** see section 10.1 below the list.
 - **Walkies:** doc 01 calls them "craftable" (`01 How players fight back`) and lists them in the
   store. They are bought; no crafting system exists (D-017).
 - **Plots sold in pairs** because Foreclosure seizes 2 (placeholder).
-- **Upgrades** (what Foreclosure can seize): every bought item except seeds and scrap.
+- **Upgrades** (what Foreclosure can seize): every bought item except seeds, scrap and flare shells.
 - **Seeds are bought ahead (P4-22, D-093, CEO ruling on Q-170):** the crate's menu sells seeds into a
   team stock (`Buy 1`, `Buy 5`, at most 10 per request); planting an empty plot uses one seed of the
   picked crop and charges nothing. With no seed owned, planting is refused ("Buy seeds at the store").

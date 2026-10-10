@@ -66,6 +66,9 @@ func _init() -> void:
 	ids = r.sections.map(func(x: Dictionary) -> String: return x.id)
 	_check(ids == ["cause_of_death", "flags_placed"], "quiet day: %s" % [ids])
 	_check(_sec(r, "cause_of_death").lines[0] == tpl.no_deaths, "no deaths line")
+	# D-147: the dawn reload loaded the flare gun
+	r = Logic.build([["flare_reloaded", {"before": 0, "shots": 2}], ["dawn_summary", {"day": 1, "coins": 0}]], ctx, tpl)
+	_check(_sec(r, "flare_reloaded").lines == ["The flare gun was reloaded: 2 shots."], "flare reload line: %s" % [_sec(r, "flare_reloaded")])
 	# full wipe heads the obituaries
 	var wipe: Array = [["death", {"player": 1, "cause": "night_trap"}], ["death", {"player": 2, "cause": "deep_corn"}],
 		["death", {"player": -1, "cause": "unknown_cause"}], ["dawn_summary", {"day": 2, "coins": 0}]]

@@ -156,6 +156,21 @@
       "sources": {
         "effect": "placeholder"
       }
+    },
+    {
+      "id": "flare_shell",
+      "source": "placeholder",
+      "cite": "D-147; doc 01 Store; doc 02 section 10. Price placeholder (the scrap price, under a third of the gun); the economy pass (D-148) sets it",
+      "name": "Flare shell",
+      "price": 15,
+      "unlock_day": 1,
+      "upgrade": false,
+      "consumable": true,
+      "per_player": false,
+      "effect": {
+        "shots": 1,
+        "needs": "flare_gun"
+      }
     }
   ]
 }

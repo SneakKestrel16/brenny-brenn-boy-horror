@@ -11,7 +11,7 @@ const Logic := preload("res://game/ui/dawn_report_logic.gd")
 const REVEAL_S := 3.0  ## doc 07 section 9: sections fade in on click or every 3 s
 const REPLAY_GAP_S := 2.5  ## placeholder: room for one lobby line between replays
 const KEEP := ["lure_played", "lure_result", "chase_started", "death", "inside_at_night", "flag_placed", "flag_removed", "trap_changed",
-		"hold_completed", "trap_race_result", "money_changed", "medical_bill", "dawn_summary"]
+		"hold_completed", "trap_race_result", "money_changed", "medical_bill", "dawn_summary", "flare_reloaded"]
 const PAPER := Color("#E8DCC0")  ## doc 07 section 9 placeholder card style
 const INK := Color("#2B2118")
 const RED_INK := Color("#8B1A1A")

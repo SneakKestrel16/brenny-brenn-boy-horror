@@ -15,6 +15,7 @@ const HERO_FREED := "pried {teammate} out of a trap"
 const HERO_REFUELED := "kept the generator fed"
 const FLAGS_LINE := "{name} planted {n} flags."
 const NO_FLAGS := "Nobody marked a trap."
+const FLARE_LINE := "The flare gun was reloaded: {n} shot{s}."  ## D-147: players are told of the free dawn reload
 
 
 static func build(events: Array, ctx: Dictionary, templates: Dictionary) -> Dictionary:
@@ -34,6 +35,7 @@ static func build(events: Array, ctx: Dictionary, templates: Dictionary) -> Dict
 	var sale := 0  # the final dawn's end-of-season sale (doc 02 s9 step 2)
 	var bill := {}
 	var summary := {}
+	var flare := 0  # shots the dawn reload left in the gun; 0 when it loaded nothing
 	for e: Array in events:
 		var d: Dictionary = e[1]
 		match String(e[0]):
@@ -78,6 +80,8 @@ static func build(events: Array, ctx: Dictionary, templates: Dictionary) -> Dict
 				bill = d
 			"dawn_summary":
 				summary = d
+			"flare_reloaded":
+				flare = int(d.shots)
 	var report := {"day": ctx.get("day", summary.get("day", 0)), "streamer_safe": ctx.get("streamer_safe", false),
 		"ledger": _ledger(cash, bill, summary, sale), "final": bool(summary.get("final", false)), "sections": []}
 	var sections: Array = report.sections
@@ -168,6 +172,8 @@ static func build(events: Array, ctx: Dictionary, templates: Dictionary) -> Dict
 	for p: int in flags:
 		fl.append(FLAGS_LINE.format({"name": _name(names, p), "n": flags[p]}))
 	sections.append({"id": "flags_placed", "title": "Flags Placed", "lines": fl if fl else [NO_FLAGS], "replays": []})
+	if flare > 0:
+		sections.append({"id": "flare_reloaded", "title": "Flare Gun", "lines": [FLARE_LINE.format({"n": flare, "s": "" if flare == 1 else "s"})], "replays": []})
 	return report
 
 

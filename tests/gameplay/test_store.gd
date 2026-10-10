@@ -45,6 +45,8 @@ func _process(delta: float) -> bool:
 	# every row at its price
 	for r: Dictionary in root.get_node("Data").records(&"store"):
 		var id := StringName(r.id)
+		if id == &"flare_shell":  # D-147: refused while the gun is full; checked below
+			continue
 		var before: int = farm.coins
 		var open_before: int = store.open_plots()
 		var why: StringName = store.buy(me, id)
@@ -53,7 +55,7 @@ func _process(delta: float) -> bool:
 		if id == &"plot_pair":
 			_check(store.open_plots() - open_before == 2, "plot_pair opens 2 plots")
 	var buys := _log.filter(func(e: Array) -> bool: return e[0] == "store_buy")
-	_check(buys.size() == root.get_node("Data").records(&"store").size(), "one store_buy logged per purchase")
+	_check(buys.size() == root.get_node("Data").records(&"store").size() - 1, "one store_buy logged per purchase")
 	_check(buys[0][1].has("item") and buys[0][1].has("price") and buys[0][1].has("buyer"), "store_buy has item, price and buyer")
 
 	# per-item effects
@@ -100,6 +102,21 @@ func _process(delta: float) -> bool:
 	store.refill_flare()
 	_check(store.flare_shots == 1, "dawn refills the shot")
 	_check(_log.any(func(e: Array) -> bool: return e[0] == "flare_fired"), "flare_fired logged")
+
+	# D-147 flare shells: one shot per buy, up to the capacity, only with the gun
+	_check(store.buy(me, &"flare_shell", false) == &"flare_full", "a full gun refuses a shell")
+	store.team[&"flare_gun"] = 0
+	_check(store.buy(me, &"flare_shell", false) == &"no_flare", "no gun: a shell is refused")
+	store.team[&"flare_gun"] = 1
+	store.flare_shots = 0
+	var c_shell: int = farm.coins
+	_check(store.buy(me, &"flare_shell", false) == &"" and store.flare_shots == 1, "a shell loads one shot (%d)" % store.flare_shots)
+	_check(c_shell - farm.coins == int(store.rec(&"flare_shell").price), "a shell costs its price")
+	_check(store.buy(me, &"flare_shell", false) == &"flare_full", "then the gun is full again")
+	store.flare_shots = 0
+	_log.clear()
+	store.refill_flare()
+	_check(_log.any(func(e: Array) -> bool: return e[0] == "flare_reloaded" and e[1].shots == 1), "the dawn reload logs flare_reloaded")
 
 	# P4-09 roles: the Carpenter builds cheaper, the Warden gets a shot more and reloads in half the time
 	var players: Dictionary = root.get_node("Game").players
