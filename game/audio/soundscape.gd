@@ -223,7 +223,7 @@ func _on_apply(what: StringName, args: Array) -> void:
 		play_3d(STRANGER_LINES[hash(args[0]) % STRANGER_LINES.size()], args[2])
 	elif what == &"trap_changed" and args[2] == &"sprung":  # args: id, kind, state, position (P1-09)
 		play_3d(&"sfx_beartrap_snap" if args[1] == &"bear" else &"sfx_pit_fall", args[3])
-	elif what == &"emote" and args[1] != &"scream":  # args: peer, emote_id, position; the scream is whistle_emotes'
+	elif what == &"emote" and not args[1] in [&"scream", &"interact"]:  # args: peer, emote_id, position; the scream is whistle_emotes', interact is a hold's body animation (P5-23)
 		play_3d(&"sfx_emote_cloth", args[2])
 
 

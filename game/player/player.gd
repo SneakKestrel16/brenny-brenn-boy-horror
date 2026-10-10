@@ -106,7 +106,7 @@ func _ready() -> void:
 	Log.event(&"player_spawned", {"peer": peer, "local": is_local})
 
 
-## Placeholder in-hand props (no art yet), children of the camera so the owner and everyone else see
+## In-hand props (the P5-22 models), children of the camera so the owner and everyone else see
 ## them at the same spot: a blue watering can (pale when empty) and a red fuel can (replaces it while carried).
 func _make_held() -> void:
 	_held = Node3D.new()
@@ -334,7 +334,7 @@ func shake(seconds: float, mult: float) -> void:
 ## P3-11 (doc 05 s14), P5-13: an emote on this body, every peer: the farmer's wave, point, shrug or scream
 ## animation. The owner sees nothing on itself (first person, its mesh is hidden).
 func play_emote(kind: StringName) -> void:
-	if kind in [&"wave", &"point", &"shrug", &"scream"] and _mesh.has_anim(kind):
+	if kind in [&"wave", &"point", &"shrug", &"scream", &"interact"] and _mesh.has_anim(kind):
 		_emote_s = _mesh.shot(kind)
 
 

@@ -1286,3 +1286,10 @@ Dawn Report consumes the flag, then repeated the trait line on every load. The f
 season-start state (`apply_pending`, next to `season_start = true`); dawn saves never carry it, old saves load false.
 The lobby shows "Season N" and its right panel scrolls above START.
 **Why:** doc 03 s22.1 prints the trait line once; QA re-review loads of both save kinds confirm it.
+
+### D-184 · 2026-10-10 · Director · Player-placed scarecrows keep their yaw
+P5-23 wires the P5-13 primitives (Taint look and sleeves, `interact` animation, cart lantern glass, store scarecrows).
+QA's first review failed it: placed scarecrows all faced yaw 0, so the OCD gaze check was wrong. `store.gd` now keeps
+`scarecrow_yaws`, saves write `[x, y, z, yaw]` (old 3-value saves load yaw 0), and `quirk_watch` `in_gaze` takes the
+yaw. Small edits landed in `soundscape.gd` (Audio) and `taint_look.gd` (Technical Artist).
+**Why:** the CEO asked for scarecrow facing; QA re-review saw both clients render the host's yaws and saves keep them.

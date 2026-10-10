@@ -1005,7 +1005,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-20 | Gameplay | Players type their own name in the lobby before start (CEO 2026-10-09: "not everyone shows up as farmer") | done (QA PASS, D-173) | |
 | P5-21 | Level Designer | Paths connect every structure to another; remove the stray path behind the barn to the animal pen (CEO 2026-10-09) | done (QA PASS, D-175) | P5-18 |
 | P5-22 | Gameplay | Wire the P5-14 to P5-17 models: buildings, traps, pegboard, tools, crops, corn, crows, hands, road items, ragdoll, ghost shell | done (re-QA PASS, D-181) | P5-13 |
-| P5-23 | Gameplay | Wire the primitives left by P5-13 (Q-283): Taint look, Taint sleeves, `interact` animation, cart lantern glass, store scarecrows, scarecrow facing | todo | P5-13 |
+| P5-23 | Gameplay | Wire the primitives left by P5-13 (Q-283): Taint look, Taint sleeves, `interact` animation, cart lantern glass, store scarecrows, scarecrow facing | done (QA PASS, D-184) | P5-13 |
 | P5-24 | Gameplay | Next season through the lobby: roles re-picked, quirk reroll, `Imposter.pick`, season-start save (P5-04 follow-up) | done (QA PASS, D-178) | P5-04, P5-11 |
 | P5-25 | Gameplay | Imposter `pegboard_mark` and interaction holds for the kit (Q-303) | done (QA PASS, D-179) | P5-11 |
 | P5-26 | 3D | Missing models: trap_tripwire, field scarecrow, perched crow, clue decals, window glow, lit road lamp, hoe, whistle | done (QA PASS, D-182) | P5-14 |

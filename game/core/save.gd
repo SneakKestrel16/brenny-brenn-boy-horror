@@ -70,8 +70,9 @@ static func build(tree: SceneTree, final: bool = false) -> Dictionary:
 	for k in store.team:
 		team[String(k)] = int(store.team[k])
 	var crows := []
-	for c in store.scarecrows:
-		crows.append([c.x, c.y, c.z])
+	for i in store.scarecrows.size():
+		var c: Vector3 = store.scarecrows[i]
+		crows.append([c.x, c.y, c.z, store.scarecrow_yaws[i] if i < store.scarecrow_yaws.size() else 0.0])  # P5-23: 4th value = yaw; old saves have 3
 	var s := {
 		"day": Clock.day, "phase": "dawn", "over": final, "difficulty": String(Game.difficulty),
 		"headcount": farm.headcount, "coins": farm.coins, "final_extra": farm.final_extra, "free_scrap": farm.free_scrap,
@@ -361,8 +362,10 @@ static func _apply_store(farm: Node, d: Dictionary, main: Node) -> void:
 	st.scrap_bought = int(d.get("scrap", 0))
 	st.flare_shots = int(d.get("flare", 0))
 	st.scarecrows.clear()
+	st.scarecrow_yaws.clear()
 	for c in d.get("crows", []):
 		st.scarecrows.append(Vector3(float(c[0]), float(c[1]), float(c[2])))
+		st.scarecrow_yaws.append(float(c[3]) if c.size() > 3 else 0.0)
 	st.plots.assign(d.get("plots", []))
 	own_by_uid = d.get("own", {}).duplicate(true)
 	var cr := main.get_tree().get_first_node_in_group(&"creature")

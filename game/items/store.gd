@@ -15,6 +15,7 @@ var team: Dictionary = {}  ## item id -> count bought for the whole team
 var own: Dictionary = {}  ## peer -> {item id: true} for `per_player` rows
 var scrap_bought := 0  ## paid scrap in stock; the free scrap is `farm.free_scrap`
 var scarecrows: Array[Vector3] = []  ## placed bought scarecrows
+var scarecrow_yaws: Array[float] = []  ## P5-23: each one's facing (the placer's yaw), parallel to `scarecrows`; old saves load as 0
 var flare_shots := 0  ## shots left in the flare gun
 var plots: Array[String] = []  ## field plots a `plot_pair` opened
 var pick := 0  ## this machine's crate pick (`cycle_item`), an index into the table
@@ -259,6 +260,7 @@ func place_scarecrow(peer: int) -> StringName:
 		if s.distance_to(at) < SPACING_M:
 			return &"too_close"
 	scarecrows.append(at)
+	scarecrow_yaws.append(float(st.get("yaw", 0.0)))
 	Log.event(&"scarecrow_placed", {"player": peer, "position": [snappedf(at.x, 0.1), snappedf(at.z, 0.1)], "avoid_m": float(rec(&"scarecrow").effect.creature_avoid_m)})
 	_send()
 	return &""
@@ -294,6 +296,7 @@ func seize(id: StringName) -> void:
 		&"scarecrow":
 			if scarecrows.size() > team[id]:
 				scarecrows.pop_back()
+				scarecrow_yaws.pop_back()
 		&"flare_gun": flare_shots = 0
 		&"shed_lock":
 			var cr := get_tree().get_first_node_in_group(&"creature")
@@ -306,7 +309,7 @@ func seize(id: StringName) -> void:
 # --- wire -------------------------------------------------------------------------------------------
 
 func _state() -> Dictionary:
-	return {"team": team, "own": own, "scrap": scrap_bought, "free": farm.free_scrap, "crows": scarecrows, "flare": flare_shots, "plots": plots}
+	return {"team": team, "own": own, "scrap": scrap_bought, "free": farm.free_scrap, "crows": scarecrows, "yaws": scarecrow_yaws, "flare": flare_shots, "plots": plots}
 
 
 func _send(peer: int = 0) -> void:
@@ -346,6 +349,7 @@ func _on_apply(what: StringName, args: Array) -> void:
 		farm.free_scrap = s.free
 		flare_shots = s.flare
 		scarecrows.assign(s.crows)
+		scarecrow_yaws.assign(s.get("yaws", []))
 		plots.assign(s.plots)
 		for pid in plots:
 			if farm.targets.has(pid) and farm.targets[pid].locked:
@@ -354,25 +358,19 @@ func _on_apply(what: StringName, args: Array) -> void:
 	_show_scarecrows()
 
 
-## Placeholder look: a post with a sack head, until the Technical Artist's scarecrow (the creature avoids it on the host).
+## Look: prop_scarecrow_player.glb (the creature avoids it on the host).
 func _show_scarecrows() -> void:
 	while _crows.size() > scarecrows.size():
 		_crows.pop_back().queue_free()
 	while _crows.size() < scarecrows.size():
 		var n := Node3D.new()
-		var post := MeshInstance3D.new()
-		var m := CylinderMesh.new()
-		m.top_radius = 0.06
-		m.bottom_radius = 0.06
-		m.height = 2.0
-		post.mesh = m
-		post.position.y = 1.0
-		n.add_child(post)
+		n.add_child((load("res://assets/models/prop_scarecrow_player.glb") as PackedScene).instantiate())  # P5-23; faces -Z, turned by the stored yaw below
 		n.add_to_group(&"bought_scarecrow")
 		get_parent().add_child(n)
 		_crows.append(n)
 	for i in _crows.size():
 		_crows[i].global_position = scarecrows[i]
+		_crows[i].rotation.y = scarecrow_yaws[i] if i < scarecrow_yaws.size() else 0.0
 
 
 # --- client input -----------------------------------------------------------------------------------

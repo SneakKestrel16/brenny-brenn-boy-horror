@@ -534,3 +534,12 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 
 - **Imposter toggle below the fold** at 1280x720 with 4+ players, exactly when it becomes usable (the panel scrolls
   79 px). Shorter checkbox text or a taller panel fixes it. Owner: Gameplay (UI).
+
+## Found at the P5-23 review (QA, 2026-10-10)
+
+- **`interact` plays once** (0.875 s) at the start of a hold, even a long one, and keeps playing after a cancel.
+  Owner: Gameplay.
+- **Tainted farmer shows two pairs of arms** to other players: the stained body arms plus the floating forearms from
+  `taint_look.gd` `_arms`. Owner: Technical Artist.
+- **P5-23 touched files outside Gameplay**: `game/audio/soundscape.gd` (Audio) and `game/render/taint_look.gd`
+  (Technical Artist, stale comment). Owners: review on next pass.

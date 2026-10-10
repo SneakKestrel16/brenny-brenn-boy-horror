@@ -5,10 +5,8 @@ extends Node
 ##   Soundscape; never NoiseBus (the creature cannot hear it), never sent, never a ghost voice, radio or light effect,
 ##   and it moves no tension (doc 01 Quirks, Photosensitivity safety: audio only).
 ## OCD (host): standing in a scarecrow's gaze for the dwell time makes that player Shaken (never Taint), once per
-##   scarecrow per player per cooldown. A scarecrow has no stored facing yet: inference, the front arc is world -Z
-##   (Godot's forward for an unrotated model); Q-276 asks who stores it once the model lands.
+##   scarecrow per player per cooldown. A scarecrow faces the yaw its placer had (store.scarecrow_yaws, P5-23, Q-276).
 
-const CROW_FACING := Vector2(0.0, -1.0)  ## x, z
 
 var _t := 0.0  ## seconds this node has run; the OCD cooldowns read it
 var _next_step := -1.0  ## paranoia: the time of the next phantom
@@ -25,13 +23,13 @@ func _ready() -> void:
 	Clock.day_changed.connect(func(_d: int) -> void: _today = 0)
 
 
-## Pure: is `pos` (x, z) within `range_m` of a scarecrow at `crow` and inside the arc around its facing?
-static func in_gaze(crow: Vector3, pos: Vector3, range_m: float, arc_deg: float) -> bool:
+## Pure: is `pos` (x, z) within `range_m` of a scarecrow at `crow` facing `yaw` (0 = world -Z) and inside the arc around its facing?
+static func in_gaze(crow: Vector3, pos: Vector3, range_m: float, arc_deg: float, yaw := 0.0) -> bool:
 	var v := Vector2(pos.x - crow.x, pos.z - crow.z)
 	var d := v.length()
 	if d > range_m:
 		return false
-	return d < 0.001 or absf(rad_to_deg(v.angle_to(CROW_FACING))) <= arc_deg / 2.0
+	return d < 0.001 or absf(rad_to_deg(v.angle_to(Vector2(-sin(yaw), -cos(yaw))))) <= arc_deg / 2.0
 
 
 func _process(delta: float) -> void:
@@ -80,7 +78,7 @@ func _gaze(delta: float) -> void:
 		var fx := Quirks.effects(&"ocd")
 		var seen := -1
 		for i in farm.store.scarecrows.size():
-			if _cool.get("%d:%d" % [p, i], 0.0) <= _t and in_gaze(farm.store.scarecrows[i], Game.players[p].pos, float(fx.scarecrow_gaze_m), float(fx.scarecrow_gaze_arc_deg)):
+			if _cool.get("%d:%d" % [p, i], 0.0) <= _t and in_gaze(farm.store.scarecrows[i], Game.players[p].pos, float(fx.scarecrow_gaze_m), float(fx.scarecrow_gaze_arc_deg), farm.store.scarecrow_yaws[i] if i < farm.store.scarecrow_yaws.size() else 0.0):
 				seen = i
 				break
 		if seen < 0:

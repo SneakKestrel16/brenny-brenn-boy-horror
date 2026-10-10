@@ -4,10 +4,9 @@ extends RefCounted
 ## `show_on` when a player's Taint changes (every peer), `mark` for a Taint source on the ground (every peer).
 ## - Hands and sleeves: two forearms under the camera (like the held props, so the owner sees them at the
 ##   bottom of the screen and everyone else sees them in front of the body), oil stained to the elbow. They
-##   show only while Tainted: there is no hands model yet (3D Artist), so a clean pair would be new art.
+##   show only while Tainted: the tool_hands model (P5-22), with no clean pair.
 ## - Screen: the Tainted player alone gets edge smudges and a faint dark fog (taint_screen.gdshader).
-## - Ground: leavings are an oil puddle, strange seeds a dark scatter, a dead crow a dark lump (placeholder
-##   until its model). "Black stains underfoot" (P3-08 acceptance) is read as these sources (inference: no doc
+## - Ground: leavings are an oil puddle, strange seeds a dark scatter, a dead crow prop_dead_crow (P5-22). "Black stains underfoot" (P3-08 acceptance) is read as these sources (inference: no doc
 ##   names Tainted footprints; the Game Designer settles it).
 ## Nothing here is a light or emissive, and the screen fade is slow (doc 07 section 4.3).
 
@@ -23,6 +22,9 @@ static func show_on(pl: Node3D, on: bool) -> void:
 	var cam: Camera3D = pl.get("_cam")
 	if cam == null:
 		return
+	var body = pl.get("_mesh")  # P5-23: the world body's sleeves (mat_farmer_sleeves) take the stain too
+	if body and body.has_method(&"stain"):
+		body.stain(on)
 	var arms := cam.get_node_or_null(^"TaintArms") as Node3D
 	if arms == null:
 		arms = _arms(bool(pl.get("is_local")))

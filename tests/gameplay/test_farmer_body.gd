@@ -33,6 +33,24 @@ func _init() -> void:
 	for n in ["wave", "point", "shrug", "scream", "interact"]:
 		_check(bodies[0].has_anim(StringName(n)) and ap.get_animation(n).loop_mode == Animation.LOOP_NONE, n + " one-shot")
 	_check(bodies[0].shot(&"wave") > 1.0, "wave has a length")
+	# P5-23: Taint stains the sleeves surface and washing clears it.
+	var sleeves := func(b: Node) -> Array:
+		var out := []
+		for mi in b.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			for s in m.mesh.get_surface_count():
+				var base := m.mesh.surface_get_material(s)
+				if base and base.resource_name == "mat_farmer_sleeves":
+					out.append(m.get_surface_override_material(s))
+		return out
+	_check(not (sleeves.call(bodies[0]) as Array).is_empty(), "has a sleeves surface")
+	bodies[0].stain(true)
+	for o in sleeves.call(bodies[0]):
+		_check(o != null and (o as StandardMaterial3D).albedo_color.v < 0.1, "stained sleeves are dark")
+	bodies[0].stain(false)
+	for o in sleeves.call(bodies[0]):
+		_check(o == null, "washed sleeves back to the glb material")
+	print("interact length: ", bodies[0].shot(&"interact"))
 	for b in bodies:
 		for mi in b.find_children("*", "MeshInstance3D", true, false):  # the Dummy renderer errors on freeing overrides
 			for s in (mi as MeshInstance3D).mesh.get_surface_count():

@@ -46,6 +46,7 @@ var _bit := false  ## this stall's bite is taken
 var _since_sync := 0.0
 var _since_squeak := 0.0
 var _spot: Node3D
+var _glass_lit := true  ## P5-23: the glass shows lit (model default); CreatureLook.lantern_glass when it changes
 var _squeak: AudioStreamPlayer3D
 var _slot: Node3D
 var _slot_bitten: Node3D
@@ -71,6 +72,7 @@ static func build(world: Node) -> Node3D:
 	spot.set_meta(&"radius_m", 7.0)  # doc 07 s5 cart lantern: #FFB45A, 7 m, 1.2 (LightRig defaults)
 	spot.set_meta(&"own_power", true)  # oil, not the generator (lights.gd)
 	var lamp: Node3D = load("res://assets/models/prop_cart_lantern.glb").instantiate()
+	lamp.name = "Lamp"
 	lamp.position.y = -0.14  # base origin; centre the glass on the rig's lamp
 	spot.add_child(lamp)
 	b.add_child(spot)
@@ -339,7 +341,11 @@ func _process(delta: float) -> void:
 	_place()
 	var rig := _rig()
 	if rig:
-		Lights.set_own(rig, act in [LOADING, PUSH, GATE_RUN])
+		var lit := act in [LOADING, PUSH, GATE_RUN]
+		Lights.set_own(rig, lit)
+		if lit != _glass_lit:  # P5-23 (Q-283): unlit glass has no emission
+			_glass_lit = lit
+			CreatureLook.lantern_glass(_spot.get_node(^"Lamp"), lit)
 		if not rig.has_meta(&"box_hidden"):  # P5-13: the rig's grey lamp box is the placeholder for the glb lantern
 			rig.set_meta(&"box_hidden", true)
 			for mi in rig.find_children("*", "MeshInstance3D", false, false):

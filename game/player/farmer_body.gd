@@ -12,6 +12,7 @@ const LOOPED: Array[StringName] = [&"idle", &"walk", &"run", &"crouch"]
 var _ap: AnimationPlayer
 var _slot := 0
 var _overalls := Color(0, 0, 0, 0)  ## P5-05 cosmetic overalls colour; alpha 0 = none
+var _stained := false  ## P5-23 Taint: sleeves stained
 var _overlay: Array[MeshInstance3D] = []
 var _att: BoneAttachment3D  ## P5-05 cosmetic hat on the `hat` bone
 
@@ -43,6 +44,20 @@ func tint(slot: int) -> void:
 				var own := mat.duplicate() as StandardMaterial3D
 				own.albedo_color = _overalls if _overalls.a > 0.0 else colour(slot)
 				m.set_surface_override_material(i, own)
+			elif mat and mat.resource_name == "mat_farmer_sleeves":
+				var sl: StandardMaterial3D = null
+				if _stained:
+					sl = mat.duplicate() as StandardMaterial3D
+					sl.albedo_color = Color(0.06, 0.05, 0.05)
+					sl.roughness = 0.35  # oil: a little sheen
+				m.set_surface_override_material(i, sl)
+
+
+## P5-23 (doc 01 "The Taint", doc 07 s11.7): Taint stains the `mat_farmer_sleeves` surface (sleeves, hands) dark and oily.
+## Not emissive, no animation (doc 07 s4.3).
+func stain(on: bool) -> void:
+	_stained = on
+	tint(_slot)
 
 
 ## P5-05 (doc 02 s21.5): cosmetic overalls colour; alpha 0 keeps the player colour (D-159).

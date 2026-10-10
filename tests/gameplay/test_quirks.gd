@@ -35,6 +35,7 @@ func _pure() -> void:
 	_check(Watch.in_gaze(g, Vector3(0, 0, -5), 6.0, 120.0), "OCD: 5 m in front is in the gaze")
 	_check(not Watch.in_gaze(g, Vector3(0, 0, 5), 6.0, 120.0), "OCD: behind the scarecrow is not")
 	_check(not Watch.in_gaze(g, Vector3(0, 0, -7), 6.0, 120.0), "OCD: 7 m is out of range")
+	_check(Watch.in_gaze(g, Vector3(-5, 0, 0), 6.0, 120.0, PI / 2.0) and not Watch.in_gaze(g, Vector3(0, 0, -5), 6.0, 120.0, PI / 2.0), "OCD: a scarecrow turned 90 degrees faces -X (P5-23)")
 	_check(Watch.in_gaze(g, Vector3(3, 0, -2), 6.0, 120.0) and not Watch.in_gaze(g, Vector3(4, 0, -2), 6.0, 120.0) and not Watch.in_gaze(g, Vector3(5, 0, 1), 6.0, 120.0), "OCD: the arc is 120 degrees")
 
 

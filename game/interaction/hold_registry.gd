@@ -24,6 +24,9 @@ func request(peer: int, verb: StringName, id: String) -> void:
 	holds[peer] = {"verb": verb, "target": target, "progress": 0.0, "hold_s": Interactable.hold_seconds(verb, StringName(st_role(peer)), target),
 			"started": Log.now()}
 	target.on_start(verb, peer)
+	var pos: Vector3 = farm.pstate(peer).pos  # P5-23: everyone sees the farmer's `interact` animation (the emote channel, no sound)
+	Net.to_peers(&"apply_emote", [peer, &"interact", pos])
+	Net.apply_received.emit(&"emote", [peer, &"interact", pos])
 
 
 ## P4-08: `Game.players[peer].role` is set by roles (P4-09); empty until then.

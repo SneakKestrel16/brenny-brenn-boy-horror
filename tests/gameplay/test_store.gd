@@ -72,6 +72,20 @@ func _process(delta: float) -> bool:
 	st.pos += Vector3(10, 0, 0)
 	_check(store.place_scarecrow(me) == &"", "another placed 10 m on")
 	_check(main.get_tree().get_nodes_in_group(&"bought_scarecrow").size() == 2, "two scarecrow nodes stand")
+	# P5-23: the placer's yaw is the scarecrow's facing; saved as a 4th value, old 3-value saves load as 0
+	_check(store.scarecrow_yaws.size() == 2, "a yaw per scarecrow")
+	st.yaw = 1.0
+	store.buy(me, &"scarecrow")
+	st.pos += Vector3(10, 0, 0)
+	store.place_scarecrow(me)
+	_check(is_equal_approx(store.scarecrow_yaws[2], 1.0), "the third scarecrow keeps the placer's yaw")
+	_check(is_equal_approx((main.get_tree().get_nodes_in_group(&"bought_scarecrow")[2] as Node3D).rotation.y, 1.0), "the model turns to the yaw")
+	var SaveS = load("res://game/core/save.gd")  # runtime load: a -s script compiles without the autoloads
+	var saved: Dictionary = SaveS.build(main.get_tree())
+	_check(saved.store.crows[2].size() == 4 and is_equal_approx(float(saved.store.crows[2][3]), 1.0), "the save holds the yaw")
+	saved.store.crows = [[1.0, 0.0, 2.0]]
+	SaveS._apply_store(farm, saved.store, main)
+	_check(store.scarecrows.size() == 1 and store.scarecrow_yaws == [0.0], "an old save loads as yaw 0")
 	var ceiling: int = farm.plot_ceiling()
 	while store.buy(me, &"plot_pair") == &"":
 		pass
