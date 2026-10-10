@@ -203,6 +203,55 @@
       "metres": 15
     },
     {
+      "id": "wander_min_hop_m",
+      "source": "placeholder",
+      "cite": "doc 03 section 4 (Lurk wanders between cover points); P5-39: the next lurk point is at least this far away, so it never re-picks the spot it stands on",
+      "kind": "distance",
+      "metres": 8
+    },
+    {
+      "id": "door_bang_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 6 (Bang time: 3 s of banging before it enters a dark building)",
+      "kind": "timer",
+      "seconds": 3
+    },
+    {
+      "id": "stalk_hold_near_m",
+      "source": "placeholder",
+      "cite": "doc 03 section 4 (stalk: closes slowly, just out of sight); P5-39: the nearest a stalk's hiding spot comes to the sensed target, reached as stalk_max_s runs out",
+      "kind": "distance",
+      "metres": 9
+    },
+    {
+      "id": "stalk_hold_far_m",
+      "source": "placeholder",
+      "cite": "doc 03 section 4 (stalk); P5-39: the farthest hiding spot a stalk starts from; past sight_night_m, so it starts unseen by its own rule",
+      "kind": "distance",
+      "metres": 18
+    },
+    {
+      "id": "stalk_repick_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 4 (stalk); P5-39: a stalk picks a new hiding spot this often, creeping closer each time",
+      "kind": "timer",
+      "seconds": 6
+    },
+    {
+      "id": "stalk_rest_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 4.2 (stalk to lurk on stalk_max_s); P5-39: after giving up a stalk it leaves that player alone this long, so it does not re-stalk the same player at once",
+      "kind": "timer",
+      "seconds": 30
+    },
+    {
+      "id": "retreat_min_m",
+      "source": "placeholder",
+      "cite": "doc 03 section 4 (retreat: back to cover); P5-39: a retreat runs to a random cover point at least this far off, away from the target, not always the farthest one",
+      "kind": "distance",
+      "metres": 30
+    },
+    {
       "id": "noise_step_walk",
       "source": "placeholder",
       "cite": "doc 03 section 3.1",

@@ -24,6 +24,9 @@ func request(peer: int, verb: StringName, id: String) -> void:
 	holds[peer] = {"verb": verb, "target": target, "progress": 0.0, "hold_s": Interactable.hold_seconds(verb, StringName(st_role(peer)), target),
 			"started": Log.now()}
 	target.on_start(verb, peer)
+	var gone := _on_target_gone.bind(target)  # Q-345 (3): one guard for every reader of `holds`
+	if not target.tree_exiting.is_connected(gone):
+		target.tree_exiting.connect(gone)
 	var pos: Vector3 = farm.pstate(peer).pos  # P5-23: everyone sees the farmer's `interact` animation (the emote channel, no sound)
 	Net.to_peers(&"apply_emote", [peer, &"interact", pos])
 	Net.apply_received.emit(&"emote", [peer, &"interact", pos])
@@ -42,8 +45,17 @@ func _resolve(id: String) -> Node:
 
 
 func _release(h: Dictionary) -> void:
-	if h.target is FlagSpot:
+	if is_instance_valid(h.target) and h.target is FlagSpot:
 		h.target.free()
+
+
+## Q-345 (3): a hold target leaving the tree (a trap target freed when its trap goes) ends its holds before it
+## is freed, so nothing reading `holds` (trap_race, sabotage, cart, scares) meets a freed target. FlagSpots are
+## not in the tree; `_release` frees them.
+func _on_target_gone(target: Node) -> void:
+	for p in holds.keys():
+		if holds[p].target == target:
+			cancel(p, &"target_gone")
 
 
 func cancel(peer: int, reason: StringName = &"released", notify: bool = true) -> void:

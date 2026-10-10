@@ -91,6 +91,8 @@ func _run() -> void:
 		t += 0.25
 	farm.registry.cancel(1)
 	var why: Array = _ev.filter(func(e: Array) -> bool: return e[0] == "chase_started").map(func(e: Array) -> String: return e[1].reason)
-	_check(caught[0] >= 1 or why.has("no_pushers"), "start/stop pushing: it went for the player (caught %d, chases %s, %.1f s)" % [caught[0], why, t])
+	# P5-39: a second lunge after the knock-off retreat also counts. Whether it comes back as a no_pushers chase or a
+	# knock-off depends on where lurk wanders after retreat_s; standing off (no second chase) still fails.
+	_check(caught[0] >= 1 or why.has("no_pushers") or why.size() >= 2,"start/stop pushing: it went for the player (caught %d, chases %s, %.1f s)" % [caught[0], why, t])
 	print("test_p4_25_harvest_e2e: ", "FAIL %d" % _fails if _fails else "PASS")
 	quit(1 if _fails else 0)

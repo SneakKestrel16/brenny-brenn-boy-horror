@@ -45,9 +45,11 @@ func _ready() -> void:
 	_death = get_parent().get_node("Death")
 	_registry = get_parent().get_node("Farm").registry
 	_creature.trap_sprung.connect(_on_sprung)
-	_creature.caught.connect(func(p: int) -> void:  # P5-33: a night pin has no clock; the creature's catch kills
+	# P5-33: a night pin has no clock; the creature's catch kills. AI-IMPROVE-01 (Q-345 1): a day race still
+	# running after nightfall ends on the catch too (it only catches at night), not later by its clock.
+	_creature.caught.connect(func(p: int) -> void:
 		for id in races.keys():
-			if races[id].victim == p and is_inf(float(races[id].deadline)):
+			if races[id].victim == p:
 				_lose(id, races[id]))
 	Net.request_received.connect(func(what: StringName, peer: int, _a: Array) -> void:
 		if what != &"farm_state":
@@ -193,7 +195,7 @@ func on_pry_done(id: String, peer: int) -> void:
 	_result(id, r, true, r.deadline - r.t, r.t - maxf(r.hold_t, 0.0))
 	slow(v)
 	shake(v)
-	_loosen(id, v, "pried")
+	_loosen(id, peer, "pried")  # `by` is who pried it: the victim or the helper (Q-345 4)
 	if is_finite(r.deadline):  # a night pin: the creature hunts on by its senses
 		_creature.force_state(&"lurk", &"trap_race_survived", v)
 

@@ -145,6 +145,13 @@ var _taint := false  ## P3-07: Taint tracking and leavings on (full farm, or pha
 var _trail: Dictionary = {}  ## Tainted peer -> [{position, t}] tonight, oldest first
 var _track_t: Dictionary = {}  ## peer -> _now of its last tracked fix
 var _leave_m := 0.0  ## lurk and stalk metres walked since the last stain
+var _hold := Vector3.INF  ## P5-39: the hiding spot a night stalk creeps to, INF for none
+var _hold_t := -INF  ## P5-39: _now when it picked _hold
+var _hold_side := 1.0  ## P5-39: the side a stalk circles to when no cover hides it (+1 or -1, per stalk)
+var _rest: Dictionary = {}  ## P5-39: peer -> _now until which it will not stalk that player again
+var _banged := -1  ## P5-39: the dark building (rect index) it banged on and may enter, -1 for none
+var _bang_until := -INF  ## P5-39: _now when the bang ends
+var _bang_next := -INF  ## P5-39: _now of the next bang sound
 
 # client only
 var _target_pos := Vector3.ZERO
@@ -191,9 +198,11 @@ func _ready() -> void:
 	_num[&"day_gap_s"] = float(Data.value(&"ai_director", &"lures", &"day_gap_s"))
 	for id in [&"lurk_speed_mps", &"stalk_speed_mps", &"chase_speed_mps"]:
 		_num[id] = float(Data.value(&"creature", id, &"speed_mps"))
-	for id in [&"lure_wait_s", &"stalk_max_s", &"chase_commit_s", &"retreat_s", &"hearing_memory_s", &"chase_lose_quiet_s", &"chase_tell_s"]:
+	for id in [&"lure_wait_s", &"stalk_max_s", &"chase_commit_s", &"retreat_s", &"hearing_memory_s", &"chase_lose_quiet_s", &"chase_tell_s",
+			&"door_bang_s", &"stalk_repick_s", &"stalk_rest_s"]:
 		_num[id] = float(Data.value(&"creature", id, &"seconds"))
-	for id in [&"reach_m", &"sight_night_m", &"sight_day_m", &"sight_still_crouch_m", &"scripted_standoff_m", &"trap_lure_m"]:
+	for id in [&"reach_m", &"sight_night_m", &"sight_day_m", &"sight_still_crouch_m", &"scripted_standoff_m", &"trap_lure_m", &"wander_min_hop_m",
+			&"stalk_hold_near_m", &"stalk_hold_far_m", &"retreat_min_m"]:
 		_num[id] = float(Data.value(&"creature", id, &"metres"))
 	_num[&"corn_damp_mult"] = float(Data.value(&"creature", &"corn_damp_mult", &"mult"))
 	for f in [&"weight_dead", &"weight_alive", &"weight_own", &"weight_stranger"]:
@@ -284,7 +293,8 @@ func _physics_process(delta: float) -> void:
 	if _log and _log_t >= 5.0:
 		_log_t = 0.0
 		Log.event(&"creature_debug", {"state": String(state), "position": _v(global_position), "goal": null if _goal == Vector3.INF else _v(_goal),
-			"memory": _memory.size(), "seen": _seen.keys(), "night_t": snappedf(_night_t, 0.1)})
+			"memory": _memory.size(), "seen": _seen.keys().filter(func(p: int) -> bool: return _now - float(_seen[p].t) < 1.0),  # in sight now, not ever
+			"night_t": snappedf(_night_t, 0.1)})
 	_send_t += delta
 	if _send_t >= 1.0 / SEND_HZ:
 		_send_t = 0.0
@@ -369,6 +379,7 @@ func _harvest_moon(delta: float) -> void:
 	if cart == null or cart.act < cart.PUSH:
 		_hunt(delta)
 		return
+	_hold = Vector3.INF  # P5-39: acts 2 and 3 steer by _goal; an act 1 stalk's hiding spot would outlive it
 	if cart.act == cart.DONE:
 		_bite_cart = false
 		if state != &"retreat":
@@ -497,6 +508,9 @@ func _hunt(delta: float) -> void:
 				var p := int(heard.peer)
 				if _try_lure(p):
 					return
+				if _resting(p):
+					_wander()
+					return
 				if not _dir.allow(&"stalk", p):
 					# P5-33 (CEO STOP 6, "more drawn to noise"): out of build-up stalks it still walks to what it
 					# heard, without a target; fading or relaxing it keeps to its region (section 11.2)
@@ -507,6 +521,17 @@ func _hunt(delta: float) -> void:
 					return
 				_dir.spend(&"stalk", p)
 				_set_state(&"stalk", &"heard_" + String(heard.kind), p)
+			elif _in_sight() != 0:
+				# AI-IMPROVE-01 (doc 03 section 4.2 "heard, seen or Tainted"): a player in sight and out of the
+				# light is sensed too (silent players stood in plain view were never stalked). No lure from sight,
+				# and no walking up to a seen player the AI Director holds back (it would stand on them in lurk).
+				var p := _in_sight()
+				if not _resting(p) and _dir.allow(&"stalk", p):
+					_search_until = -1.0
+					_dir.spend(&"stalk", p)
+					_set_state(&"stalk", &"seen", p)
+				else:
+					_wander()  # keeps a search's goal (it only picks with no goal)
 			elif _search_until >= _now and _goal != Vector3.INF:
 				pass  # searching the last sensed position (section 5)
 			else:
@@ -530,8 +555,15 @@ func _hunt(delta: float) -> void:
 				_dir.spend(&"chase", target)  # chases only at peak (doc 03 section 11.2); else it holds the stalk
 				_set_state(&"chase", &"seen" if seen else (&"sprint" if sprint else &"close"), target)
 			elif _t_state >= _num[&"stalk_max_s"]:
+				# P5-39: it gave up, so it leaves: no walking on to where the target was (_goal), and no re-stalking
+				# the same player the next frame (it stood 10 m off one player through stalk after stalk)
 				_memory.clear()
+				_rest[target] = _now + _num[&"stalk_rest_s"]
 				_set_state(&"lurk", &"stalk_max", 0)
+				_goal = Vector3.INF
+			elif not _scripted and (_hold == Vector3.INF or _now - _hold_t >= _num[&"stalk_repick_s"]):
+				_hold = _stalk_hold(sensed)
+				_hold_t = _now
 		&"chase":
 			_chase_t += delta
 			var seen := _seen.has(target) and _now - float(_seen[target].t) < 0.2
@@ -545,7 +577,7 @@ func _hunt(delta: float) -> void:
 				_goal = sensed
 			if _alive(target) and _sheltered(Game.players[target].pos):  # P4-25: before the catch, so no kill in the light
 				_end_chase(&"lit_building", &"lit_building")
-			elif _alive(target) and _t_state >= _num[&"chase_tell_s"] and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
+			elif _alive(target) and _t_state >= _num[&"chase_tell_s"] and _now >= _bang_until and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
 				var kill: bool = _dir.allow(&"kill", target)  # D-115: at the town stand only on a won roll
 				if kill:
 					caught.emit(target)
@@ -557,6 +589,22 @@ func _hunt(delta: float) -> void:
 				_set_state(&"lurk", &"retreat_done", 0)
 			else:
 				_goal_retreat()
+
+
+## AI-IMPROVE-01: the nearest living player seen in the last 0.5 s (the stalk's "seen" window) and not sheltered,
+## else 0.
+func _in_sight() -> int:
+	var best := 0
+	for p in _seen:
+		if _now - float(_seen[p].t) < 0.5 and _alive(p) and not _sheltered(Game.players[p].pos) \
+				and (best == 0 or global_position.distance_to(_seen[p].position) < global_position.distance_to(_seen[best].position)):
+			best = p
+	return best
+
+
+## P5-39: it gave up stalking `p` less than `stalk_rest_s` ago.
+func _resting(p: int) -> bool:
+	return _now < float(_rest.get(p, -INF))
 
 
 func _end_chase(how: StringName, reason: StringName) -> void:
@@ -633,6 +681,9 @@ func _set_state(s: StringName, reason: StringName, p_target: int) -> void:
 	target = p_target
 	_t_state = 0.0
 	_race_mps = 0.0
+	_hold = Vector3.INF
+	_hold_t = -INF
+	_hold_side = 1.0 if _rng.randf() < 0.5 else -1.0
 	if s == &"chase" and from != &"chase":
 		_chase_t = 0.0
 		_lose_t = 0.0
@@ -1298,10 +1349,20 @@ func _move(_delta: float) -> void:
 	elif _night_t < 0.0:
 		_goal = _dir.day_cover(_marker(&"creature_cover", DAY_COVER))
 	var goal := _goal if _goal == Vector3.INF else _shut_out(_goal)
-	var d := Vector3.INF if goal == Vector3.INF else goal - global_position
 	var stop := ARRIVE_M
-	if state == &"stalk" and target != 0:
+	if state == &"stalk" and _hold != Vector3.INF:
+		goal = _shut_out(_hold)  # P5-39: a night stalk creeps between hiding spots, not straight at the target
+	elif state == &"stalk" and target != 0:
 		stop = _num[&"scripted_standoff_m"] if _scripted else STALK_STANDOFF_M
+	if goal != Vector3.INF:
+		goal = _bang_first(goal)
+	if _now < _bang_until:
+		velocity = Vector3.ZERO
+		if _now >= _bang_next:  # doc 03 section 6: every peer hears it bang on the door
+			_bang_next = _now + 1.0  # placeholder: one bang a second
+			_send_lure(["door_bang", "sound:door_fake", _door_step(_banged, 0.0), -1, &"none", false])
+		return
+	var d := Vector3.INF if goal == Vector3.INF else goal - global_position
 	if _scripted and state == &"stalk" and d != Vector3.INF and Vector2(d.x, d.z).length() < stop - ARRIVE_M:
 		d = -d  # the target walked closer: back off to stay out of sight (doc 03 section 2)
 	elif d == Vector3.INF or Vector2(d.x, d.z).length() < stop:
@@ -1386,6 +1447,55 @@ func _shut_out(to: Vector3) -> Vector3:
 	return to
 
 
+## P5-39, doc 03 section 6 ("Dark buildings: enterable through the door; it always bangs first"): a goal in a dark
+## building it is outside of becomes the step outside its door; there it bangs for `door_bang_s` (_move holds it
+## still and sends the sound to every peer), then it may go in and out until it leaves the building for good.
+## It walked into the dark barn and killed the bots sheltering there without a sound (P5-39 seed 2, nights 1 and 3).
+func _bang_first(to: Vector3) -> Vector3:
+	if _night_t < 0.0 or _race_mps > 0.0 or _lit():
+		_banged = -1  # power back: _shut_out drives it out, and the next dark entry bangs again
+		return to
+	var at := Vector2(global_position.x, global_position.z)
+	var goal := Vector2(to.x, to.z)
+	if _banged >= 0 and not _rects[_banged].grow(DOOR_STEP_M + 1.0).has_point(at) and not _rects[_banged].has_point(goal):
+		_banged = -1  # it left and is not going back in
+	for i in _rects.size():
+		if i == _banged or not _rects[i].has_point(goal) or _rects[i].has_point(at):
+			continue
+		var step := _door_step(i, DOOR_STEP_M)
+		if at.distance_to(Vector2(step.x, step.z)) <= ARRIVE_M + 0.5:
+			_banged = i
+			_bang_until = _now + _num[&"door_bang_s"]
+			_bang_next = _now
+			Log.event(&"creature_door_bang", {"building": _rect_names[i], "position": _v(step), "state": String(state),
+				"target": target if target != 0 else null, "seconds": _num[&"door_bang_s"]})
+		return step
+	return to
+
+
+## P5-39, doc 03 section 4 (`stalk`: "closes on a sensed target slowly, just out of sight"): the spot a night stalk
+## creeps to next. It walked the straight line at the target and stood 10 m off in the open for all of stalk_max_s.
+## A ring round the sensed position `at`, from `stalk_hold_far_m` when the stalk starts down to `stalk_hold_near_m` as
+## stalk_max_s runs out; of the ring points on the creature's side, the nearest one that a wall or the corn hides
+## from a standing player's eye at `at`; else the point 45 degrees to this stalk's side, so it circles in.
+func _stalk_hold(at: Vector3) -> Vector3:
+	var r := lerpf(_num[&"stalk_hold_far_m"], _num[&"stalk_hold_near_m"], clampf(_t_state / _num[&"stalk_max_s"], 0.0, 1.0))
+	var from := Vector3(global_position.x - at.x, 0.0, global_position.z - at.z)
+	from = Vector3.BACK if from.length() < 0.1 else from.normalized()
+	var eye := at + Vector3.UP * EYE_M
+	var best := Vector3.INF
+	var best_d := INF
+	for i in range(-5, 6):  # 16 points round the ring; the 11 within 112.5 degrees of the creature's side
+		var p := at + from.rotated(Vector3.UP, TAU * i / 16.0) * r
+		var d := p.distance_to(global_position)
+		if d < best_d and _outdoor(p) and not _in_lit_doorway(p) and _blocked(eye, p + Vector3.UP * EYE_M, 1 | 16):
+			best = p
+			best_d = d
+	if best == Vector3.INF:
+		best = at + from.rotated(Vector3.UP, _hold_side * PI / 4.0) * r
+	return best if _outdoor(best) else at + from * r
+
+
 ## P4-25 (OPEN_ISSUES item 7): it spent the CEO's whole day 2 in the barn. By day it lives in the corn ring (doc 01
 ## "The Creature", doc 03 section 4.2, doc 04 section 3), so at dawn the host puts it back at its day cover.
 func _to_corn() -> void:
@@ -1413,30 +1523,47 @@ func _scarecrow_in_way(dir: Vector3) -> bool:
 
 
 ## Lurk: walk between cover points and trap spots in its region (doc 03 section 4): the AI Director's wander
-## region when it set one (section 11.6; its centre when the region has no such points), else near what it heard.
+## region when it set one (section 11.6; points within REGION_M of it when the region has none), else near what it
+## heard. AI-IMPROVE-01: never a point within `wander_min_hop_m` of where it stands (it parked on the empty
+## town_road region's centre for whole nights, re-picking the spot it stood on).
 func _wander() -> void:
 	if _goal != Vector3.INF:
 		return
-	var pts := get_tree().get_nodes_in_group(&"creature_cover") + get_tree().get_nodes_in_group(&"trap_spots")
+	var here := global_position
+	var pts := (get_tree().get_nodes_in_group(&"creature_cover") + get_tree().get_nodes_in_group(&"trap_spots")).filter(
+			func(n: Node3D) -> bool: return n.global_position.distance_to(here) >= _num[&"wander_min_hop_m"])
+	var near: Array = []
 	if _dir.wander_region:
 		var rect: Rect2 = _dir.region_rect(_dir.wander_region)
-		var inside := pts.filter(func(n: Node3D) -> bool: return rect.has_point(Vector2(n.global_position.x, n.global_position.z)))
-		_goal = (inside[_rng.randi() % inside.size()] as Node3D).global_position if inside else Vector3(rect.get_center().x, 0.0, rect.get_center().y)
-		return
-	var near := pts.filter(func(n: Node3D) -> bool: return _last_heard != Vector3.INF and n.global_position.distance_to(_last_heard) <= REGION_M)
+		var flat := func(n: Node3D) -> Vector2: return Vector2(n.global_position.x, n.global_position.z)
+		near = pts.filter(func(n: Node3D) -> bool: return rect.has_point(flat.call(n)))
+		if near.is_empty():
+			var grown := rect.grow(REGION_M)
+			near = pts.filter(func(n: Node3D) -> bool: return grown.has_point(flat.call(n)))
+	elif _last_heard != Vector3.INF:
+		near = pts.filter(func(n: Node3D) -> bool: return n.global_position.distance_to(_last_heard) <= REGION_M)
 	if not near.is_empty():
 		pts = near
-	_goal = (pts[_rng.randi() % pts.size()] as Node3D).global_position
+	if not pts.is_empty():
+		_goal = (pts[_rng.randi() % pts.size()] as Node3D).global_position
 
 
+## P5-39: a random cover point at least `retreat_min_m` off and farther from the target's last sensed position than
+## from the creature, so it breaks away from whoever drove it off; else the farthest cover point. It always ran to
+## the same farthest point, one straight line across the farm, whatever drove it off.
 func _goal_retreat() -> void:
 	if _goal != Vector3.INF:
 		return
+	var from := _sensed_pos(target, {}) if target != 0 else Vector3.INF
 	var far := global_position
-	for n in get_tree().get_nodes_in_group(&"creature_cover"):
-		if (n as Node3D).global_position.distance_to(global_position) > far.distance_to(global_position):
-			far = n.global_position
-	_goal = far
+	var away: Array = []
+	for n: Node3D in get_tree().get_nodes_in_group(&"creature_cover"):
+		var p := n.global_position
+		if p.distance_to(global_position) > far.distance_to(global_position):
+			far = p
+		if p.distance_to(global_position) >= _num[&"retreat_min_m"] and (from == Vector3.INF or p.distance_to(from) > p.distance_to(global_position)):
+			away.append(p)
+	_goal = far if away.is_empty() else away[_rng.randi() % away.size()]
 
 
 # --- helpers -------------------------------------------------------------------------------------
@@ -1538,7 +1665,7 @@ func _on_apply(what: StringName, args: Array) -> void:
 				state_changed.emit(state, body)
 		&"lure":
 			_hear_lure(args)
-			if _walker and not String(args[0]).begins_with("scare_"):  # a scare voice is not a lure test
+			if _walker and not String(args[0]).begins_with("scare_") and args[0] != "door_bang":  # a scare voice or a bang is not a lure test
 				_test_lure_heard(args[2])
 		&"trap_changed":  # every peer: the Creature sends `set`, TrapRace the later states
 			_show_clue(args[0], args[1], args[2] == &"set")

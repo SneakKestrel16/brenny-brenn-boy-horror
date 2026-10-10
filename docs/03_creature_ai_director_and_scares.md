@@ -218,6 +218,30 @@ placeholder player speeds (Q-016).
 - **Drawn to noise (P5-33, CEO STOP 6).** In `lurk` during a night build-up, a noise it hears that
   does not start a stalk (the AI Director's budget is spent) still sends it walking to the heard
   position, with no target. In `fade` and `relax` it keeps to its region.
+- **Seen in lurk (P5-39, as built).** The `lurk` to `stalk` row's "seen" applies on its own:
+  with nothing heard, a living player in sight within the last 0.5 s and not sheltered (not in a lit
+  building or lit doorway, section 6) starts a stalk when the AI Director allows one (reason `seen`).
+  Sight never starts a lure, and a seen player the AI Director holds back is not walked up to.
+  Before this, lurk reacted to sound only, so a silent player in plain view was never stalked.
+- **Wander points (P5-39, as built).** A lurk wander point is a cover point or trap spot at
+  least `wander_min_hop_m` (creature.json, placeholder 8 m) from the creature. When the AI Director's
+  wander region holds no such point (`town_road` holds none), it picks among points within 25 m of
+  the region instead of parking on the region's centre. Inference: 8 m is about one marker spacing;
+  playtests settle it.
+- **Stalk hiding spots (P5-39, as built).** A night `stalk` no longer walks the straight line at the
+  sensed position and stands 10 m off in the open. Every `stalk_repick_s` (placeholder 6 s) it picks a
+  spot on a ring round the target's **sensed** position: `stalk_hold_far_m` (placeholder 18 m, past
+  `sight_night_m`) at the start, shrinking to `stalk_hold_near_m` (placeholder 9 m) as `stalk_max_s`
+  runs out. Of the ring points on its own side, it takes the nearest that a wall or the corn hides from
+  a standing player's eye there; with none hidden, the point 45 degrees to one side (picked per stalk),
+  so it circles in. The scripted stalk (section 18) keeps its fixed standoff.
+- **Giving up a stalk (P5-39, as built).** When `stalk_max_s` passes it drops its goal (it used to
+  walk on to where the target was) and does not stalk that player again for `stalk_rest_s`
+  (placeholder 30 s); it re-stalked the same player the next frame, standing off them stalk after
+  stalk. Lures still apply in the rest.
+- **Retreat (P5-39, as built).** A retreat runs to a random cover point at least `retreat_min_m`
+  (placeholder 30 m) off and farther from the target's last sensed position than from the creature;
+  with none, the farthest cover point (the old rule, which sent every retreat the same way).
 - **Crows** never change a state tell (doc 01 "Ambience"): crows are a scare, not a state.
 
 ## 5. Losing a chase
@@ -262,6 +286,13 @@ Doc 01 "Nights".
 - The "everyone inside" test is: every living player inside a building for the last 20 s
   (`placeholder`, `everyone_inside_s`).
 - The AI Director's phase profiles are not allowed to override these rules.
+- **Bang first (P5-39, as built).** At night, when its goal is inside a dark building it is outside
+  of, it walks to the step 2 m outside the door, logs `creature_door_bang`, and stands there for
+  `door_bang_s` (creature.json, 3 s) while every peer hears `cre_door_bang` at the door once a second
+  (placeholder rate). Then it may go in and out until it leaves the building. A chase cannot catch
+  during the bang. `door_bang_radius_m` is not a separate number: the bang's reach is the sound's
+  own falloff in the Soundscape catalog (`cre_door_bang`, max 90 m). Before P5-39 the bang was never
+  built, and it walked into the dark barn and killed the sheltering players without a sound.
 
 ## 7. Day deaths and the trap race
 
