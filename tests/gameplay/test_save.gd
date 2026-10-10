@@ -91,6 +91,21 @@ func _process(delta: float) -> bool:
 	_check(game.roles.get("uid_a") == "scout", "roles restored")
 	_check(Save.pending.is_empty(), "pending cleared")
 
+	# P4-39: the resume's flare refill (step 7) must not leave a flare_reloaded line for the next Dawn Report
+	var rep: Node = null
+	for c in main.get_children():
+		if c.get_script() == load("res://game/ui/dawn_report.gd"):
+			rep = c
+	_check(rep != null, "Main has a DawnReport")
+	if rep:
+		var rs: Dictionary = s.duplicate(true)
+		rs.store = {"team": {"flare_gun": 1}, "flare": 0}
+		rep._events.clear()
+		Save.pending = rs
+		Save.apply_pending(main)
+		_check(farm.store.flare_shots > 0, "the resume reloaded the flare gun (%d)" % farm.store.flare_shots)
+		_check(not rep._events.any(func(e: Array) -> bool: return e[0] == "flare_reloaded"), "no stale flare_reloaded in the report buffer")
+
 	# P4-15 hook: the tally goes by uid
 	var t := {"disarmed": {1: 3}, "coins": {1: 40}}
 	var ts: Dictionary = Save.tally_state(t)

@@ -74,6 +74,9 @@ func _ready() -> void:
 
 func _on_logged(name: StringName, data: Dictionary) -> void:
 	var n := String(name)
+	if n == "save_loaded":  # P4-39: the resume's step 7 (flare refill) ran before this; those lines belong to no report
+		_events.clear()
+		return
 	if n not in KEEP:
 		return
 	var d := data.duplicate()
