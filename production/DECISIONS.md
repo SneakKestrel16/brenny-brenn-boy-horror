@@ -1124,3 +1124,9 @@ D-160 is a status-only commit subject (batch 1 in progress) with no entry. Rulin
 Q-254: next-season savings (25% of spare coins, rounded down) are capped at 60 coins. Doc 01 "Next season" and
 `data/next_season.json` cite it. Rounding down stays a placeholder.
 **Why:** CEO, 2026-10-09: "yes cap it 60".
+
+### D-163 · 2026-10-09 · CEO, Director · Dev gate hash
+Q-261: the CEO's machine hash is in `DevGate.HASHES` (`game/core/dev_gate.gd`). Dev toys (P5-10) and the imposter
+dev setting (P5-11) open on that PC only. The print script output matched on the Director's run, and
+`test_dev_gate.gd` prints PASS (gate open). More PCs need one more hash each.
+**Why:** CEO, 2026-10-09, pasted the hash.

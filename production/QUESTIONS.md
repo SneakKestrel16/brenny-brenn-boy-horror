@@ -1447,7 +1447,7 @@ client-applied; Hoarding `carry_extra_slots` is host-validated (pick-up is host-
 role stays visible through the role card; Artist and Gameplay to confirm. (4) `data.gd` TABLES needs
 `next_season`, `creature_traits`, `cosmetics`, `quirks`, `imposter`. Settled by: the P5-04, P5-05, P5-06 handoffs.
 
-### Q-261 · 2026-10-09 · Gameplay Programmer -> CEO · FOR CEO · open
+### Q-261 · 2026-10-09 · Gameplay Programmer -> CEO · FOR CEO · answered
 P5-10 (dev toys) and P5-11 (imposter mode) open only on your PC. The gate compares a SHA-256 of your machine id
 with a list in `game/core/dev_gate.gd` (`DevGate.HASHES`), which is empty until you answer. Please run this once,
 in Git Bash from the repo root, and paste the last line (a 64-character hex hash; it is not your machine id and
@@ -1457,6 +1457,9 @@ cannot be turned back into it):
 
 The Director then pastes it into `DevGate.HASHES`. Add a hash for every PC you want the toys on. Until then
 `toy ...` answers "unknown command" everywhere. Settled by: the hash, pasted in.
+
+**Answer (CEO, 2026-10-09):** hash given (run from PowerShell); the Director put it in `DevGate.HASHES` (D-163). `test_dev_gate.gd` on that PC prints PASS (gate open).
+
 
 ### Q-262 · 2026-10-09 · Gameplay Programmer -> Game Designer · open
 P5-10 placeholders doc 01 does not give (listed in doc 05 section 25): disco 45 s, nuke 14 s, big heads 60 s, low

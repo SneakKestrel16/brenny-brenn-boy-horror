@@ -14,7 +14,7 @@ extends RefCounted
 ## guard against accidents and stray `--dev` runs, not against someone with the repo. What would settle it:
 ## the CEO asking for a secret (a salt kept outside the repo).
 
-const HASHES: PackedStringArray = []  ## the CEO's machine hashes, lowercase hex; empty until Q-261 is answered
+const HASHES: PackedStringArray = ["ec07b347a582a4161c1403d3194a621636f1ac43daffd3138db8aaf8a01a886a"]  ## the CEO's machine hashes, lowercase hex (Q-261, D-163)
 const TEST_ARG := "--dev-gate-test-hash="
 
 
