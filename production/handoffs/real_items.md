@@ -195,3 +195,7 @@ was first built with a whole-file gate and came out silent for A and B; it is no
 | ui_click | A | |
 | ui_confirm | A | |
 | ui_deny | C | |
+| ui_coins | B | |
+| ui_stamp | C | |
+| ui_award_reveal | A | |
+| ui_shop_bell | C | |
