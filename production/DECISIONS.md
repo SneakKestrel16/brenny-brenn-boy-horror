@@ -988,3 +988,16 @@ playable".
 **How to apply:** P4-18 closes on the automated checks only: each P4 task reviewed, a 4-instance run over ENet,
 headless with no new errors. Then STOP 5. The economy pass is a later task; nobody tunes prices against the sim
 until it is opened.
+### D-149 · 2026-10-09 · CEO · Real recordings for every sound; FilmCow SFX library approved (D-005)
+Every game sound is redone from real recordings of its real-life counterpart (an animal from that animal, the
+boar signature from a boar and a dragged chain), with 3 options per sound for the CEO to choose. Sources: Freesound
+CC0 (D-066) and the FilmCow Royalty Free SFX Library (https://filmcow.itch.io/filmcow-sfx, `license.pdf`):
+royalty-free, commercial use allowed, no credit required, not for national government, law enforcement or hate-group
+projects. Redistributing the library as a library is not allowed; shipping processed sounds inside the game is.
+**Why:** CEO, 2026-10-09 CEO listen: lurk signatures "redo make them sound as close as they can to what the monster is
+based on, pull from public libraries and give me 3 options", animals "bad base them off real life animals", then
+"base all of the sounds on the real life counterpart also pull up the filmcow sound pack and see if you can use any".
+**How to apply:** The CEO's request approves FilmCow under D-005. Downloads stay outside the repo
+(`C:\Users\Ockey\fc_dl\recorded\`); only the processed wavs and a source list enter the repo. Log every source with
+its file name or Freesound id and license in doc 08 section 13. No recording of a person's voice or name enters the
+repo without the CEO's approval (D-067 precedent).
