@@ -231,7 +231,7 @@ func _radio(speaker: int) -> VoiceEmitter:
 		var s := (load(STATIC) as AudioStreamWAV).duplicate() as AudioStreamWAV
 		s.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		s.loop_begin = 0
-		s.loop_end = s.data.size() / 2
+		s.loop_end = int(round(s.get_length() * s.mix_rate))  # data is QOA-compressed: its size is not the frame count (Q-249)
 		var layer := AudioStreamPlayer.new()
 		layer.name = "RadioStatic"
 		layer.stream = s

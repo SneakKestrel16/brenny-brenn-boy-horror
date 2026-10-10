@@ -104,7 +104,7 @@ static func attach_crackle(voice: Node, tell: StringName, bus: StringName) -> No
 	var s := (load(CRACKLE) as AudioStreamWAV).duplicate() as AudioStreamWAV
 	s.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	s.loop_begin = 0
-	s.loop_end = s.data.size() / 2
+	s.loop_end = int(round(s.get_length() * s.mix_rate))  # data is QOA-compressed: its size is not the frame count (Q-249)
 	var layer := _layer(voice, s, bus, CRACKLE_DB)
 	layer.name = "Crackle"
 	return layer

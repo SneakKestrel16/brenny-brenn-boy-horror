@@ -192,7 +192,7 @@ func _stream(id: String, loop: bool = false) -> AudioStream:
 		s = s.duplicate()
 		s.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		s.loop_begin = 0
-		s.loop_end = s.data.size() / (2 * (2 if s.stereo else 1))
+		s.loop_end = int(round(s.get_length() * s.mix_rate))  # data is QOA-compressed: its size is not the frame count (Q-249)
 	_cache[id] = s
 	return s
 
