@@ -659,9 +659,18 @@ collider edge, not its centre:
   gap x 28..32 for the walk), field B's north side (z -11, gap x 70..74), the moonflower bed's west,
   south and east sides (north open), and two wings beside the farm gate (x 104.5, z -20..-8.5 and
   -1.5..10).
-- **Paths** (packed dirt, visual only): the 3 m cart route path (section 6.1) and 1.6 m side paths:
-  barn door to well, well to farmhouse, well to shed, farmhouse to pumpkin, barn to pen, crate, and
-  crate to moonflowers.
+- **Paths** (packed dirt, visual only, no collision, 2 cm high; P5-21, CEO: every structure leads to
+  another and the stray barn-back path to the pen is gone): the 3 m cart route path (section 6.1) and
+  1.6 m side paths, all in `PATHS` in `build_farm.py`. Network, each a straight leg or two:
+  barn door (-2.5, 1.3) to well (-25, 9); well to farmhouse door (-45, 1); well to shed door (-15, 25);
+  shed door to fuel drum (-10, 26); farmhouse to Prize Pumpkin (-46, 31); generator (-11, -5.5) down to
+  the barn-to-well path; well north to the pen gate (-24, -27); barn door east (2.5, 1.3) to (10, 1.5), then
+  to the cart route at (10, 8.5); crate (73.5, 5) east to (90, 5), then north to the route at (90, -10.8);
+  crate (72.5, 5.2) to the moonflower bed (61, 17.8). The gate and town stand sit on the route lane. So the network is
+  two connected groups, east and west, that meet across the open ground in front of the barn door; every
+  building and prop is on one. Each strip reaches 0.8 m (half its width) past its end points, so the barn-door paths start at
+  x = +-2.5 and none enters the 1.2 m doorway lane; none touches a field, plot, corn block or wall, and the
+  parked cart at (5, 6) stays clear of every side path.
 - **Signs** (post with a 2.6 m label that faces the camera and darkens at night): FIELD A (21.5, 0.5),
   FIELD B (63.5, -8), MOONFLOWERS (55, 17), STORE (75, 6.5), TOWN (102, -10), PRIZE PUMPKIN (-42, 28),
   TOOL SHED (-11, 23.5), PEN (-20.5, -25.5), FARMHOUSE (-39, 3), WELL (-22, 6.5).

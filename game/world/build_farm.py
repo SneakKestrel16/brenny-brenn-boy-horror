@@ -139,10 +139,13 @@ TREES = ([(f"Orchard{i + 1}", x, z, "round") for i, (x, z) in enumerate(
          + [(f"West{i + 1}", x, z, "pine") for i, (x, z) in enumerate(((-56, -34), (-51, -29), (-47, -37), (-59, -25), (-53, -41)))]
          + [(f"SouthGrove{i + 1}", x, z, "round") for i, (x, z) in enumerate(((-27, 47), (-22, 51), (-19, 44)))])
 PATHS = [  # side paths, 1.6 m; the 3 m cart route path is drawn from ROUTE in generate()
-         ("ToWell", [(0, 1), (-25, 9)], 1.6), ("ToHouse", [(-25, 9), (-45, 1)], 1.6),
-         ("ToShed", [(-25, 11), (-15, 25)], 1.6), ("ToPumpkin", [(-45, 1), (-44, 20), (-46, 31)], 1.6),
-         ("ToPen", [(-1, 1), (-13, 0), (-13, -24), (-23, -27)], 1.6),
-         ("ToCrate", [(72, 2), (72, 4.4)], 1.6), ("ToMoon", [(71, 5.6), (61, 18)], 1.6)]
+         # P5-21: every structure joins the network; each strip reaches w/2 = 0.8 m past its end points, so the barn-door paths start at x +-2.5, z 1.3 to stay out of the 1.2 m door lane
+         ("ToWell", [(-2.5, 1.3), (-25, 9)], 1.6), ("ToHouse", [(-25, 9), (-45, 1)], 1.6),
+         ("ToShed", [(-25, 11), (-15, 25)], 1.6), ("ToDrum", [(-15, 25), (-10, 25), (-10, 26)], 1.6),
+         ("ToPumpkin", [(-45, 1), (-44, 20), (-46, 31)], 1.6),
+         ("ToGen", [(-11, -5.5), (-11, 4.5)], 1.6), ("ToPen", [(-25, 9), (-24, -27)], 1.6),
+         ("ToRoute", [(2.5, 1.3), (10, 1.5), (10, 8.5)], 1.6),
+         ("ToCrate", [(73.5, 5), (90, 5), (90, -10.8)], 1.6), ("ToMoon", [(72.5, 5.2), (61, 17.8)], 1.6)]
 FENCES = [("FieldA_N", 23, -14, 28, -14), ("FieldA_N2", 32, -14, 37, -14), ("FieldA_S", 23, 0, 28, 0),
           ("FieldA_S2", 32, 0, 37, 0), ("FieldB_N", 65, -11, 70, -11), ("FieldB_N2", 74, -11, 79, -11),
           ("Moon_W", 56, 18, 56, 26), ("Moon_S", 56, 26, 64, 26), ("Moon_E", 64, 18, 64, 26),

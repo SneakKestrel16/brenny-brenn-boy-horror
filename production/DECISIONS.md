@@ -1219,3 +1219,10 @@ Rulings: Q-301 accept (a loaded season or host takeover re-rolls; the uid stays 
 (the toggle stays on below 4 players, inert). Q-303 accept the cuts; follow-up row P5-25 adds `pegboard_mark` and kit
 holds, the CEO picks keys. Q-304 accept (QA rule in `check_logs.py`). Q-305 built as the CEO ruled.
 **Why:** QA PASS (handoffs/P5-11.md "QA re-review"); reruns on main pass.
+
+### D-175 · 2026-10-09 · Director · P5-21 merged
+P5-21 (CEO: every structure leads to another by a path; the stray path behind the barn to the pen removed) passed QA
+on the second review. The first failed on strips reaching 0.8 m past their ends into the barn door lane, shed walls and
+Plot26; end points moved. The network is two groups, east and west, meeting across the open ground in front of the
+barn door: accepted, so the door lane stays clear. Doc 04 s14.2 wording corrected by the Director at merge.
+**Why:** QA PASS (handoffs/P5-21.md "QA re-review"); farm regenerates byte-identical on main.

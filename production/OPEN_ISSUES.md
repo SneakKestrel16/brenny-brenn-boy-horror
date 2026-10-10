@@ -463,3 +463,9 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 - **`check_logs.py` rule for forced imposter sessions** (Q-304): treat `imposter_picked` with `forced: true` like a
   `dev_toy` session. Owner: QA.
 - **Imposter pick on a new season**: covered by P5-24.
+
+## Found at the P5-21 review (QA, 2026-10-09)
+
+- **ToHouse1 runs over props** (older than P5-21): the Farmhouse sign post (0.53 m) and the Windpump mast (0.25 m)
+  stand on the strip. Owner: Level.
+- **Prize Pumpkin path ends on bare grass** until the patch is planted. Owner: Level (cosmetic).
