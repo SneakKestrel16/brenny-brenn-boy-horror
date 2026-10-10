@@ -1448,3 +1448,8 @@ Acceptance:
   list given 2026-10-10); this spec is filled in from the pick.
 - Everything is local to that player's peer (like hallucinations), so no one else's game changes and no honest signal
   turns into a lie for others. Roles never harm or reveal the creature (doc 01 Roles).
+- CEO pick (2026-10-10): the goal is to scare that player as much as possible. In: (1) darker world: their flashlight
+  and lamps dimmer and flickering, fog closes in sooner; (3) about twice as many hallucinations: fake silhouettes,
+  fake whispers, fake teammate voices; (5) sixth sense perk: a chill when the real creature is near, which
+  hallucinations also trigger, so it is never proof. Out: louder creature, creature favours them, fear pays.
+  Further scares from the Director's second list are added here once the CEO picks.
