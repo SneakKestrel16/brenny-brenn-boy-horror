@@ -996,7 +996,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-11 | Gameplay | Imposter mode and its hidden dev setting (doc 01 "Imposter mode", D-043, D-044) | in progress | P5-02, P5-10 gate |
 | P5-12 | 3D Artist, Technical Artist | Overall upgrade of every model; farmer rig, animations and tint slots (D-154) | done (QA PASS, D-159) | P5-01 |
 | P5-13 | Gameplay | Wire the upgraded models in: creature glb for the capsule (Q-150), farmer rig, unused models | in progress | P5-12, P5-03 |
-| P5-14 | 3D Artist | Missing models: buildings (barn, shed, farmhouse, well, fences, gates, doors) (Q-266) | in progress | P5-12 |
+| P5-14 | 3D Artist | Missing models: buildings (barn, shed, farmhouse, well, fences, gates, doors) (Q-266) | done (QA PASS, D-170) | P5-12 |
 | P5-15 | 3D Artist | Missing models: traps (all kinds), pegboard, tools (hoe, shovel, fuel can, whistle) (Q-266) | done (QA PASS, D-169) | P5-12 |
 | P5-16 | 3D Artist | Missing models: crop growth stages, corn (Q-266) | done (QA PASS, D-166) | P5-12 |
 | P5-17 | 3D Artist | Missing models: crow, hands, road items, ragdoll, ghost shell (Q-266) | done (QA PASS, D-168) | P5-12 |

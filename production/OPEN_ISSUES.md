@@ -419,3 +419,9 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   at scale 1.0; offset the pegboard so hook y meets the `Pegboard` marker; regenerate `Slot1..5` from `Hook1..5`.
   The rust pan #8A5A3A must not read as creature ember at night. Owner: Gameplay (model wiring task).
 - **Pegboard outlines are circles** while a hung bear is closed (cosmetic). Owner: 3D Artist.
+
+## Found at the P5-14 review (QA, 2026-10-09)
+
+- **Barn door look.** A sliding-door rail sits above hinged leaves; pick one. Owner: 3D Artist.
+- **Overhangs without collision.** Farmhouse chimney (x 6..7.2), porch posts (to z +2.3) and the barn hoist beam
+  (to z +1.0) are outside the gray-box collision. Owner: Level Designer, with the model wiring task.

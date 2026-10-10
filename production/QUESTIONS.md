@@ -1520,3 +1520,26 @@ P5-15 bear trap is built to doc 07 s11.4 (open 0.58 x 0.62 m, closed 0.26 wide).
 ### Q-313 · 2026-10-09 · 3D Artist -> Gameplay / World · answered
 `trap_pit_open` is a hole shell 1.5 m deep; the farm ground mesh covers it, so the hole is invisible. Needs a hole cut in the ground (or the pit swapped in with the ground patch hidden). Settled by: the ground owner at wiring time.
 **Answer (Director, D-169):** closed by the `Mouth` disc in `trap_pit_open`.
+
+### Q-306 · 2026-10-09 · 3D Artist -> Technical Artist · answered
+P5-14 doors are 3.0 m wide double leaves, 3.3 m (barn), 2.5 m (shed), 2.6 m (farmhouse) tall. Doc 07 s11 says
+1.2-2 x 2.2 m. Reason: the gray-box door gap in `game/world/build_farm.py` `building()` is 3 m wide, full wall height,
+for all three buildings; a narrower door leaves a hole beside it. Also the scarecrow is 2.23 m, so a 2.2 m opening is too
+low. Please update doc 07 s11 (barn/shed/farmhouse door rows) and s15 to these sizes. Settled by: doc 07 edit, or a
+different gap size (then Gameplay and the 3D Artist both change).
+
+### Q-307 · 2026-10-09 · 3D Artist -> Gameplay · answered
+Placement rules for the P5-14 models, for whoever swaps them in (no game code changed in P5-14): buildings and doors
+take the gray-box node transform as is (origin = door threshold); `prop_well` at the well x/z with y 0 (gray-box is
+y 0.5); pen fences: per section n = round(length / 3) `prop_fence_segment`, X scale length / (3 n), yaw 90 on the W/E
+sections; `prop_fence_gate` at `PenGate`; `prop_farm_gate` at `FarmGate` with yaw 90 (gray-box posts run along Z, model
+along X). Door open state is host-owned: rotate `LeafL`/`LeafR` about Y (pivots are at the jambs, x = -1.5 and +1.5).
+Reference implementation: `tools/blender/p5_14_shots.gd` `_swap_in()`. Settled by: Gameplay task that does the swap.
+
+### Q-308 · 2026-10-09 · 3D Artist -> Technical Artist · answered
+Window glow and porch lights: building models carry empty nodes `WindowGlow_1..n` (position of each pane, 0.2 m proud
+of the wall, facing out) and `PorchLightMount`; panes themselves are dark. `prop_window_glow` and `prop_porch_light`
+(doc 07 s11) can be placed at those empties. Question: should the glow card sit on the empty or does the shader need
+the pane quad? Settled by: Technical Artist choosing, 10-minute change.
+
+**Answer (Director, 2026-10-09):** Q-306 accepted, 3 m doors match the gray-box gap. Q-307 accepted: hide gray-box meshes only, keep collision, leaves visual-only, yaw from host door state. Q-308 accepted: glow card on the empty.

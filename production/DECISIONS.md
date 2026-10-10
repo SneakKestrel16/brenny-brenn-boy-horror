@@ -1170,3 +1170,11 @@ rings inside the frame, and the hoe shot turned to show the blade. Rulings: Q-31
 doc 07; Q-312 one pegboard, `Hook1..5` govern and the wiring task regenerates the farm `Slot1..5` markers; Q-313
 closed by the `Mouth` disc. `model_shots.gd` merges P5-15's `--prim` with P5-17's `--before`.
 **Why:** QA PASS with fixes (handoffs/P5-15.md "QA review").
+
+### D-170 · 2026-10-09 · Director · P5-14 merged
+P5-14 (building models: barn, shed, farmhouse, well, fences, gates, doors) passed QA with fixes, all made before
+merge: door braces and knobs kept inside the leaf, `WindowGlow_n` empties face outward with pane sizes in the
+handoff, doc 07 s11 and s15 synced. Rulings: Q-306 accept the 3 m doors (they match the gray-box gap); Q-307
+accept: hide the gray-box meshes only, keep every collision shape, door leaves visual-only, leaf yaw from the
+host-owned door state; Q-308 the glow card sits on the empty.
+**Why:** QA PASS with fixes (handoffs/P5-14.md "QA review").

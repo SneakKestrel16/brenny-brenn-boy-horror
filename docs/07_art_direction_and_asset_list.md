@@ -428,9 +428,9 @@ follow section 2.
 
 | Name | Dimensions | Phase | Source |
 |---|---|---|---|
-| `bldg_barn.glb` | 16 x 20 x 9 (x -8..8, z -20..0) | P1 | doc 04 s3 |
-| `bldg_shed.glb` | 6 x 5 x 3.2, pegboard inside back wall | P1 | doc 04 s3 |
-| `bldg_farmhouse.glb` | 12 x 10 x 7 | P2 | doc 04 s3 |
+| `bldg_barn.glb` | 16 x 20 x 9 (x -8..8, z -20..0); as built (P5-14): 17.2 x 21.5 x 9.04 with eaves and trim, 3,156 tris | P1 | doc 04 s3 |
+| `bldg_shed.glb` | 6 x 5 x 3.2, pegboard inside back wall; as built (P5-14): 6.8 x 6.1 x 3.44, 1,080 tris, `Pegboard` empty at the back wall, the board is a separate model | P1 | doc 04 s3 |
+| `bldg_farmhouse.glb` | 12 x 10 x 7; as built (P5-14): 13.7 x 13.0 x 7.0 with porch and chimney, 2,332 tris | P2 | doc 04 s3 |
 | `bldg_generator_house.glb` (optional; a lean-to over the generator) | 3 x 2 x 2.4 | P1 | inference |
 | `bldg_town_stand.glb` | 3 x 2 x 2.8 | P4 | doc 04 s3 |
 | `bldg_church.glb` (silhouette only, distant, with a bell tower) | 10 x 20 x 14 | P3 | doc 01 "Church bell" |
@@ -441,18 +441,18 @@ follow section 2.
 |---|---|---|---|
 | `prop_generator.glb` | 2 x 1 x 1.2 | P1 | doc 04 s3; dial gauge, hum visual |
 | `prop_fuel_drum.glb` | 1 diameter x 1.1 | P1 | doc 04 s3 |
-| `prop_well.glb` | 2 diameter x 2.2 | P1 | doc 04 s3 |
+| `prop_well.glb` | 2 diameter x 2.2; as built (P5-14): 2.41 x 2.08 x 2.23, 628 tris | P1 | doc 04 s3 |
 | `prop_pegboard.glb` | 1.6 x 0.1 x 1.2 | P1 | painted outlines for each tool (doc 01) |
 | `prop_sell_box.glb` | 1.2 x 0.8 x 1 | P1 | DD Phase 1 (40,20), doc 04 s9 |
 | `prop_shipping_crate.glb` | 2 x 1 x 1.2 (as built, P5-12: 2.02 x 1.11 x 1.04, 552 tris) | P2 | doc 04 s3 |
 | `prop_fence_segment.glb` | 3 x 0.1 x 1.2 | P1 | pen fence 12 x 10 m |
-| `prop_fence_gate.glb` | 2 x 0.1 x 1.2 | P1 | pen gate |
-| `prop_farm_gate.glb` | 6 x 0.3 x 2.2 | P2 | doc 04 s3 |
+| `prop_fence_gate.glb` | 2 x 0.1 x 1.2; as built (P5-14): 2.02 x 0.14 x 1.29, `Leaf` pivots at the hinge | P1 | pen gate |
+| `prop_farm_gate.glb` | 6 x 0.3 x 2.2; as built (P5-14): 6.4 x 0.4 x 2.28, `LeafL` and `LeafR` pivot at the posts; spans X, so the gray-box line along Z needs yaw 90 | P2 | doc 04 s3 |
 | `prop_road_sign.glb` | 0.4 x 0.1 x 2 | P2 | |
 | `prop_lantern_hook.glb` | 0.2 x 0.2 x 0.4 | P1 | for hanging lanterns |
 | `prop_porch_light.glb` | 0.2 x 0.2 x 0.3 | P1 | has `LightRig` |
 | `prop_window_glow.glb` | 1 x 0.05 x 1 | P1 | emissive quad (not a light) |
-| `prop_door_barn.glb`, `prop_door_shed.glb`, `prop_door_farmhouse.glb` | 1.2 to 2 x 0.1 x 2.2 | P1 to P2 | hinged, host-owned open state |
+| `prop_door_barn.glb`, `prop_door_shed.glb`, `prop_door_farmhouse.glb` | 3.0 wide double leaf (P5-14, Q-306: matches the 3 m gray-box gap), 3.3 (barn), 2.5 (shed), 2.6 (farmhouse) tall; nodes `LeafL`, `LeafR`, pivots at the jambs (x -1.5, +1.5), swing about Y | P1 to P2 | hinged, host-owned open state |
 | `prop_flag.glb` | 0.5 x 0.05 x 1.2 | P3 | placeable marker (doc 01) |
 | `prop_scarecrow_field.glb` | 0.8 x 0.8 x 2 | P1 | start scarecrow (doc 04 s7: 2 at start) |
 | `prop_scarecrow_player.glb` | 0.8 x 0.8 x 2 | P2 | store item |
@@ -645,7 +645,7 @@ animations, tint and Taint material slots; `tools/blender/build_p5_12.py`), P5-1
 `tool_flare_gun` (now 0.18 high, grip on the ground), `tool_shed_lock` (round shackle), `tool_scrap`,
 `tool_seed_packet_*` (crimped top, one drawn crop each), `prop_shipping_crate`, `prop_scarecrow_player`,
 `prop_cart_pumpkin_slot` and `_bitten` (staves, rope-free), `creature_scarecrow` and its smear (level arms),
-`prop_cart` (wheels split, round 16-sided rims), all with sizes and node names unchanged; `pumpkin_prize_*` (eight files: 12 ribs, dimpled top, curved stem; sizes
+`prop_cart` (wheels split, round 16-sided rims), all with sizes and node names unchanged; P5-14 (`tools/blender/build_p5_14.py`) built `bldg_barn`, `bldg_shed`, `bldg_farmhouse` (exterior and interior in one model, empties `Door`, `WindowGlow_n`, `PorchLightMount`), `prop_well`, `prop_fence_segment`, `prop_fence_gate`, `prop_farm_gate` and the three door models; `pumpkin_prize_*` (eight files: 12 ribs, dimpled top, curved stem; sizes
 unchanged), `pumpkin_patch` (mound, edge stones, vines, leaves, flowers; 1,840 tris), `crop_plot` (tilled ridges,
 overlapping boards, corner posts), `prop_cart` (rimmed iron tyres, 8 spokes, plank sides with gaps, slatted deck,
 yoke; layout, wheel centres and the `LanternSocket` and `PumpkinSlot` Empties unchanged), `prop_cart_lantern`,
@@ -670,5 +670,5 @@ non-CC0 asset was used, so nothing here needs CEO approval.
 
 Unchanged since P4-16 (P5-12 reviewed them and left them): the gaunt, boar and corn husk creatures (passed P4-19,
 seen only in glimpses, about 1,000 of 5,000 tris each), the hats (only the import script was fixed), `tool_lantern*`,
-`pumpkin_*`. Not built yet: the rest of s11 (barn, shed, farmhouse, well, fences, gates, pegboard, traps, crops,
-corn, crow, hoe, shovel, fuel can, whistle, hands, doors, road items, ragdoll, ghost shell); listed in Q-266.
+`pumpkin_*`. Not built yet: the rest of s11 (pegboard, traps, crops,
+corn, crow, hoe, shovel, fuel can, whistle, hands, road items, ragdoll, ghost shell); listed in Q-266 (P5-14 built the buildings group).
