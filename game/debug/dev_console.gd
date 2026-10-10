@@ -21,7 +21,7 @@ const MENU := [
 	["Shaken", "shaken {p}"], ["flag", "flag {p}"], ["whistle", "whistle {p}"], ["wave", "emote wave {p}"],
 	["lurk", "creature lurk {p}"], ["stalk", "creature stalk {p}"], ["chase", "creature chase {p}"],
 	["retreat", "creature retreat {p}"], ["jumpscare", "scare jumpscare {p}"], ["whisper", "whisper {p}"],
-	["hallucination", "scare hallucination {p}"],
+	["hallucination", "scare hallucination {p}"], ["nuke", "toy nuke"], ["nuke player", "toy nuke {p}"],
 ]
 const HELP := """Commands (host only unless marked):
   help                      this list (any peer)
@@ -256,7 +256,7 @@ func run(line: String) -> String:
 	var args := a.slice(1)
 	match cmd:
 		"help":
-			return HELP + ("\n  toy <name>   dev toy: shrink disco nuke low_gravity big_heads confetti chicken" if DevGate.unlocked() else "")
+			return HELP + ("\n  toy <name> [peer]   dev toy (nuke: blast centres on that player): shrink disco nuke low_gravity big_heads confetti chicken" if DevGate.unlocked() else "")
 		"clear":
 			_out.clear()
 			return ""
@@ -312,7 +312,12 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? unknown command '%s' (help)" % cmd
 			if a.is_empty():
 				return "? toy shrink|disco|nuke|low_gravity|big_heads|confetti|chicken"
-			return main.get_node("DevToys").run(StringName(a[0]))
+			var who := 0
+			if a.size() > 1:  # P5-41: `toy nuke <player>` centres the blast on that player
+				who = _peer_arg(a, 1)
+				if who == 0:
+					return "? no such player '%s'" % a[1]
+			return main.get_node("DevToys").run(StringName(a[0]), who)
 		"imposter":  # P5-11 hidden dev setting (D-044): closed unless DevGate.unlocked(); host only; peers see nothing different
 			if not DevGate.unlocked() or not Game.is_host():
 				return "? unknown command '%s' (help)" % cmd

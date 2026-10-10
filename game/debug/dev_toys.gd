@@ -21,6 +21,8 @@ const LOW_GRAVITY := 0.2  ## placeholder
 const BALL_Y := 14.0
 const NUKE_PUSH_S := 1.2  ## the blast reaches the bodies this long after the glow starts
 const NUKE_RAGDOLL_S := 4.0
+const NUKE_RADIUS := 60.0  ## m: players (and the creature) farther than this from the blast are not knocked down (inference: a playtest settles it)
+const NUKE_THROW := 2.5  ## strength at the centre; times the knockdown's 6 m arc is a 15 m throw
 const NUKE_GLOW_ALPHA := 0.30  ## top of the warm screen tint; reached in 5 s, so at most 0.09 per second
 const DISCO_HUE_RATE := 0.4  ## rad/s of the hue drift (a 16 s cycle)
 const DISCO_SWEEP := 0.5  ## rad/s the beams sweep round (a 12 s lap)
@@ -40,11 +42,17 @@ var _rig: Node3D  ## disco: ball and beams
 var _beams: Array[SpotLight3D] = []
 var _music: AudioStreamPlayer3D
 var _overlay: StandardMaterial3D  ## disco: the creature's steady tint
-var _glow: ColorRect  ## nuke
+var _glow: Control  ## nuke
 var _glow_layer: CanvasLayer
 var _nuke_t := 0.0
 var _cloud: Node3D
-var _cloud_mat: StandardMaterial3D
+var _cloud_mat: ShaderMaterial
+var _dust_mat: ShaderMaterial
+var _stem: MeshInstance3D
+var _cap: MeshInstance3D
+var _roll: MeshInstance3D
+var _ring: MeshInstance3D
+var _puffs: Array[MeshInstance3D] = []
 var _blast := Vector3.ZERO
 var _pushed := false
 
@@ -65,7 +73,8 @@ func _exit_tree() -> void:
 # --- host ----------------------------------------------------------------------------------------
 
 ## Host: starts toy `toy` for everyone. Returns the reply the dev console prints.
-func run(toy: StringName) -> String:
+## `target` (a peer id, nuke only) centres the blast on that player; 0 keeps the middle of the corn.
+func run(toy: StringName, target := 0) -> String:
 	if not Game.is_host():
 		return "host only"
 	if not DevGate.unlocked():
@@ -74,7 +83,11 @@ func run(toy: StringName) -> String:
 		return "? toy %s" % "|".join(TOYS)
 	var secs: float = SECONDS[toy]
 	var pos: Vector3 = Game.players.get(Game.local_peer(), {}).get("pos", Vector3.ZERO)
-	Log.event(&"dev_toy", {"toy": String(toy), "seconds": secs, "player": Game.local_peer()})
+	if toy == &"nuke":  # the host picks the blast centre and sends it, so every peer centres it the same way
+		var who := _player(target) if target > 0 else null
+		pos = who.global_position if who else _corn_middle(pos)
+		pos.y = 0.0
+	Log.event(&"dev_toy", {"toy": String(toy), "seconds": secs, "player": Game.local_peer(), "target": target})
 	Net.to_peers(&"apply_dev_toy", [toy, secs, pos])
 	Net.apply_received.emit(&"dev_toy", [toy, secs, pos])  # the host is its own client
 	return "%s on%s" % [toy, " for %.0f s" % secs if secs > 0.0 else " until dawn"]
@@ -258,57 +271,143 @@ func _disco(safe: bool) -> void:
 
 # --- nuke ----------------------------------------------------------------------------------------
 
-func _start_nuke(pos: Vector3) -> void:
-	_blast = pos
+## Over the corn: the middle of its blocks (`fallback` when there are none).
+func _corn_middle(fallback: Vector3) -> Vector3:
 	var blockers := get_parent().get_node_or_null("World/CornBlockers")
-	if blockers and blockers.get_child_count() > 0:  # over the corn: the middle of its blocks
-		_blast = Vector3.ZERO
-		for c in blockers.get_children():
-			_blast += (c as Node3D).global_position
-		_blast /= blockers.get_child_count()
+	if blockers == null or blockers.get_child_count() == 0:
+		return fallback
+	var sum := Vector3.ZERO
+	for c in blockers.get_children():
+		sum += (c as Node3D).global_position
+	return sum / blockers.get_child_count()
+
+
+## How hard the blast throws something `d` metres from the centre: 0 outside NUKE_RADIUS, else falling off
+## linearly. Multiplies the 6 m arc of the knockdown (`Player.ragdoll` and `_creature_pose`), so 2.5 near the
+## centre is a 15 m throw.
+func _nuke_strength(d: float) -> float:
+	return NUKE_THROW * clampf(1.0 - d / NUKE_RADIUS, 0.0, 1.0)
+
+
+func _start_nuke(pos: Vector3) -> void:
+	_blast = pos  # the host chose it (a targeted player's spot, or the middle of the corn)
 	_blast.y = 0.0
 	_pushed = false
+	if Game.is_host():  # the throw outruns the speed check: let every peer's frames through until it is over
+		for peer in Game.players:
+			Game.players[peer]["free_until"] = Time.get_ticks_msec() + int((NUKE_PUSH_S + NUKE_RAGDOLL_S + 0.5) * 1000.0)
 	_cloud = Node3D.new()
 	_cloud.position = _blast
-	_cloud_mat = StandardMaterial3D.new()
-	_cloud_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_cloud_mat.albedo_color = Color(0.3, 0.18, 0.12, 0.9)
-	_cloud_mat.emission_enabled = true
-	_cloud_mat.emission = Color(1.0, 0.5, 0.15)  # steady: no energy change
-	_cloud_mat.emission_energy_multiplier = 0.6
-	var stem := MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = 4.0
-	cyl.bottom_radius = 7.0
-	cyl.height = 40.0
-	stem.mesh = cyl
-	stem.position.y = 20.0
-	stem.material_override = _cloud_mat
-	_cloud.add_child(stem)
-	var cap := MeshInstance3D.new()
-	var sp := SphereMesh.new()
-	sp.radius = 16.0
-	sp.height = 32.0
-	cap.mesh = sp
-	cap.scale = Vector3(1.0, 0.6, 1.0)
-	cap.position.y = 44.0
-	cap.material_override = _cloud_mat
-	_cloud.add_child(cap)
-	_cloud.scale = Vector3.ONE * 0.05
+	# P5-41: flat-shaded low-poly mushroom: flared stem, a domed cap with a rolling rim and puffs, a dust ring.
+	_cloud_mat = ShaderMaterial.new()
+	_cloud_mat.shader = load("res://game/debug/nuke_cloud.gdshader")
+	_cloud_mat.set_shader_parameter(&"base_y", _blast.y)
+	_dust_mat = _cloud_mat.duplicate()
+	_dust_mat.set_shader_parameter(&"rim_heat", 0.85)
+	_stem = _nuke_part(_nuke_cyl(), _cloud_mat)
+	_cap = _nuke_part(_nuke_ball(), _cloud_mat)
+	_roll = _nuke_part(_nuke_torus(), _cloud_mat)
+	_ring = _nuke_part(_nuke_torus(), _dust_mat)
+	_puffs.clear()
+	for i in 7:
+		_puffs.append(_nuke_part(_nuke_ball(), _cloud_mat))
 	get_parent().add_child(_cloud)
-	var tw := create_tween()
-	tw.tween_property(_cloud, "scale", Vector3.ONE, 6.0).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	var layer := CanvasLayer.new()  # under the dev console (layer 100)
 	layer.layer = 90
-	_glow = ColorRect.new()
-	_glow.color = Color(1.0, 0.6, 0.25, 0.0)  # warm orange: never white, never red
-	_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_glow.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var grad := Gradient.new()  # warm orange, stronger at the horizon; never white or red
+	grad.colors = PackedColorArray([Color(1.0, 0.6, 0.25, 0.35), Color(1.0, 0.6, 0.25, 1.0)])
+	var gt := GradientTexture2D.new()
+	gt.gradient = grad
+	gt.fill_from = Vector2(0.0, 0.0)
+	gt.fill_to = Vector2(0.0, 1.0)
+	gt.width = 4
+	gt.height = 64
+	var tr := TextureRect.new()
+	tr.texture = gt
+	tr.stretch_mode = TextureRect.STRETCH_SCALE
+	tr.modulate.a = 0.0
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tr.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_glow = tr
 	layer.add_child(_glow)
 	add_child(layer)
 	_glow_layer = layer
 	_play(_rumble(), _blast, 5.0, 20.0)
 	_nuke_t = 0.0
+	_nuke_shape(0.0)
+
+
+func _nuke_part(mesh: Mesh, mat: Material) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_cloud.add_child(mi)
+	return mi
+
+
+func _nuke_cyl() -> CylinderMesh:
+	var m := CylinderMesh.new()  # unit height, flared base
+	m.top_radius = 0.5
+	m.bottom_radius = 1.0
+	m.height = 1.0
+	m.radial_segments = 9
+	m.rings = 7
+	return m
+
+
+func _nuke_ball() -> SphereMesh:
+	var m := SphereMesh.new()  # unit radius, few facets
+	m.radius = 1.0
+	m.height = 2.0
+	m.radial_segments = 9
+	m.rings = 5
+	return m
+
+
+func _nuke_torus() -> TorusMesh:
+	var m := TorusMesh.new()  # centre radius 0.75, tube radius 0.25
+	m.inner_radius = 0.5
+	m.outer_radius = 1.0
+	m.rings = 12
+	m.ring_segments = 6
+	return m
+
+
+## Poses the cloud at `t` seconds: the stem climbs over 7 s, the cap rides its top and spreads over 9 s, the dust
+## ring runs out along the ground, then everything cools and sinks a little while it fades (14 s).
+func _nuke_shape(t: float) -> void:
+	if not is_instance_valid(_cloud):
+		return
+	var rise := 1.0 - pow(1.0 - clampf(t / 7.0, 0.0, 1.0), 3.0)  # fast at first, slowing
+	var spread := 1.0 - pow(1.0 - clampf((t - 0.6) / 8.4, 0.0, 1.0), 2.5)
+	var stem_h := maxf(0.5 + 46.0 * rise, 0.5)
+	var stem_r := 4.0 + 5.0 * rise
+	_stem.scale = Vector3(stem_r, stem_h, stem_r)
+	_stem.position.y = stem_h * 0.5
+	var cap_r := 4.0 + 22.0 * spread
+	var cap_y := stem_h + cap_r * 0.05
+	_cap.scale = Vector3(cap_r, cap_r * 0.55, cap_r)
+	_cap.position.y = cap_y
+	var tube := cap_r * 0.3  # the rolling rim, turned over the cap's edge
+	_roll.scale = Vector3(cap_r * 0.95 / 0.75, tube / 0.25 * 0.8, cap_r * 0.95 / 0.75)
+	_roll.position.y = cap_y - cap_r * 0.12
+	_roll.rotation.y = t * 0.12
+	for i in _puffs.size():
+		var a := TAU * i / _puffs.size() + t * 0.18
+		var r := cap_r * (0.72 + 0.1 * sin(t * 0.9 + i * 2.1))
+		var pr := cap_r * (0.28 + 0.05 * sin(t * 0.7 + i))
+		_puffs[i].scale = Vector3.ONE * pr
+		_puffs[i].position = Vector3(cos(a) * r, cap_y + cap_r * (0.1 + 0.12 * sin(t * 0.8 + i * 1.7)), sin(a) * r)
+	var ring_r := 6.0 + 22.0 * (1.0 - pow(1.0 - clampf(t / 9.0, 0.0, 1.0), 2.0))
+	_ring.scale = Vector3(ring_r / 0.75, 1.6, ring_r / 0.75)
+	_ring.position.y = 1.0
+	var heat := 1.0 - 0.85 * smoothstep(1.5, 11.0, t)
+	var fade := 1.0 - smoothstep(10.0, 14.0, t)
+	for m: ShaderMaterial in [_cloud_mat, _dust_mat]:
+		m.set_shader_parameter(&"heat", heat)
+		m.set_shader_parameter(&"fade", fade)
+		m.set_shader_parameter(&"top_h", stem_h + cap_r * 1.2)
 
 
 func _nuke(safe: bool, delta: float) -> void:
@@ -316,16 +415,26 @@ func _nuke(safe: bool, delta: float) -> void:
 	# One slow bump: up over 5 s, holding, down over 6 s. The steepest part moves 0.09 alpha per second (D-046).
 	var k := smoothstep(0.0, 5.0, _nuke_t) * (1.0 - smoothstep(8.0, 14.0, _nuke_t))
 	if is_instance_valid(_glow):
-		_glow.color.a = NUKE_GLOW_ALPHA * k
+		_glow.modulate.a = NUKE_GLOW_ALPHA * k
 		_glow.visible = not safe  # safe mode: no nuke glow (doc 01)
-	if _cloud_mat:
-		_cloud_mat.albedo_color.a = 0.9 * (1.0 - smoothstep(10.0, 14.0, _nuke_t))
+	_nuke_shape(_nuke_t)
 	if not _pushed and _nuke_t >= NUKE_PUSH_S:
 		_pushed = true
-		_each_player(func(p: Node) -> void: p.ragdoll(_outward(p.global_position), NUKE_RAGDOLL_S))
+		for peer in Game.players:
+			var p := _player(peer)
+			if p == null:
+				continue
+			var d := Vector2(p.global_position.x - _blast.x, p.global_position.z - _blast.z).length()
+			var thr := _nuke_strength(d)
+			if thr <= 0.0:
+				continue  # outside the blast radius
+			p.ragdoll(_outward(p.global_position) * thr, NUKE_RAGDOLL_S)
+			if Game.is_host():
+				Log.event(&"nuke_hit", {"peer": peer, "dist_m": snappedf(d, 0.1), "throw_m": snappedf(6.0 * thr, 0.1)})
 		var cr := _creature()
-		if cr:
-			var out := _outward(cr.global_position)
+		if cr and _nuke_strength(Vector2(cr.global_position.x - _blast.x, cr.global_position.z - _blast.z).length()) > 0.0:
+			var cd := Vector2(cr.global_position.x - _blast.x, cr.global_position.z - _blast.z).length()
+			var out := _outward(cr.global_position) * _nuke_strength(cd)
 			var local := cr.global_transform.basis.inverse() * out
 			for part in _creature_parts():
 				_stash(part)
@@ -346,7 +455,7 @@ func _creature_pose(k: float, part: Node3D, local: Vector3) -> void:
 ## Flat direction from the blast to `at` (a random one when they coincide).
 func _outward(at: Vector3) -> Vector3:
 	var d := Vector3(at.x - _blast.x, 0.0, at.z - _blast.z)
-	return d.normalized() if d.length() > 0.1 else Vector3.RIGHT.rotated(Vector3.UP, randf() * TAU)
+	return d.normalized() if d.length() > 0.1 else Vector3.RIGHT  # fixed, so every peer throws the targeted player the same way
 
 
 # --- confetti ------------------------------------------------------------------------------------

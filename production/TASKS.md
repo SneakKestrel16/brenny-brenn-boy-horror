@@ -1023,7 +1023,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-38 | Technical Artist | Optimise the game: measure doc 07 s10 budget, fix hotspots (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-39 | AI Programmer | Creature AI improvements; Q-345 fixes (CEO STOP 6) | in review | P5-33 |
 | P5-40 | 3D | New farmer model from quality sample B (CEO STOP 6) | done (QA PASS) | P5-08 |
-| P5-41 | Technical Artist | Better nuke dev-toy look (CEO STOP 6) | in progress | P5-08 |
+| P5-41 | Technical Artist | Better nuke dev-toy look (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-42 | Gameplay | Big heads toy texture issue (CEO STOP 6) | done (QA PASS) | P5-35 |
 | P5-43 | Gameplay | Dev command: whisper scare on one player (CEO STOP 6) | done (QA PASS) | P5-36 |
 | P5-44 | Gameplay | Screen messages go off screen (CEO STOP 6) | done (QA PASS) | P5-08 |

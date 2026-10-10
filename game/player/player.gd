@@ -51,6 +51,11 @@ var _crouch_all := true  ## crouched for the whole interval
 var _target_pos := Vector3.ZERO
 var _autowalk := false  ## QA: `-- --autowalk` walks in a circle with no input (multi-instance tests)
 var _t := 0.0
+var _launch_v := Vector3.ZERO  ## P5-41 nuke throw: flat velocity held until landing
+var _launch_up := 0.0  ## pending upward kick
+var _lock_t := 0.0  ## input locked for this long
+var _launch_age := 0.0
+var _launch_from := Vector3.ZERO
 var _eye := EYE_STAND  ## smoothed eye height; the head bob rides on it
 var _bob := 0.0  ## head bob phase
 var _sprint_on := false  ## toggle_sprint (D-047): sprint stays on until you stop, run dry or crouch
@@ -202,12 +207,20 @@ func dance_end() -> void:
 	_apply_height(crouching)
 
 
-## P5-10 nuke: thrown `dir` (world, flat) and back over `secs`, tumbling, as a body and as a gentle camera roll.
-## Visual only: the position the host and the others track never moves.
+## P5-10 nuke: tumble for `secs`, as a body and as a gentle camera roll. P5-41: the local player is also really
+## launched along `dir` (world, flat; length times 6 m is the throw range) and lands where the throw takes them;
+## everyone else sees that through the normal position sync. Input is locked for `secs`.
 func ragdoll(dir: Vector3, secs: float) -> void:
 	if _toy_tw:
 		_toy_tw.kill()
-	var ld := global_transform.basis.inverse() * dir
+	if is_local and dir.length() > 0.01:
+		var up := 8.0
+		_launch_v = dir.normalized() * dir.length() * 6.0 / (2.0 * up / GRAVITY)  # range over the air time
+		_launch_up = up
+		_lock_t = secs
+		_launch_age = 0.0
+		_launch_from = global_position
+	var ld := Vector3.ZERO
 	var base := 0.0
 	_toy_tw = create_tween()
 	_toy_tw.tween_method(_ragdoll_pose.bind(ld, base), 0.0, 1.0, secs)
@@ -219,7 +232,6 @@ func ragdoll(dir: Vector3, secs: float) -> void:
 
 func _ragdoll_pose(k: float, ld: Vector3, base: float) -> void:
 	var arc := sin(k * PI)
-	_mesh.position = Vector3(ld.x * 6.0 * arc, base + 2.5 * arc, ld.z * 6.0 * arc)
 	_mesh.rotation.x = k * TAU * 2.0
 	_cam.rotation.z = 0.35 * arc
 
@@ -453,8 +465,9 @@ func _local(delta: float) -> void:
 		yaw = cy if not _pushing else yaw + angle_difference(_cart_yaw, cy)
 		_cart_yaw = cy
 	_pushing = slot != Vector3.INF
-	if still or pinned or _pushing:
+	if still or pinned or _pushing or _lock_t > 0.0:
 		dir = Vector2.ZERO
+	_lock_t = maxf(_lock_t - delta, 0.0)
 	var sprint_rec := Data.record(&"labor", &"sprint")
 	if exhausted and stamina >= RESUME_S:
 		exhausted = false
@@ -472,9 +485,20 @@ func _local(delta: float) -> void:
 	var wish := (global_transform.basis * Vector3(dir.x, 0, dir.y)).normalized() * speed
 	if _pushing:  # P4-32: held at the handle slot, moving with the cart (the host pins the same spot)
 		wish = Vector3(slot.x - global_position.x, 0.0, slot.z - global_position.z) / delta
+	if _launch_v != Vector3.ZERO:  # P5-41 nuke throw: carried until they land
+		_launch_age += delta
+		if _launch_age > 0.2 and is_on_floor():
+			Log.event(&"nuke_land", {"peer": peer, "from": _launch_from.snapped(Vector3.ONE * 0.1), "to": global_position.snapped(Vector3.ONE * 0.1),
+					"moved_m": snappedf(Vector2(global_position.x - _launch_from.x, global_position.z - _launch_from.z).length(), 0.1)})
+			_launch_v = Vector3.ZERO
+		else:
+			wish = _launch_v
 	velocity.x = wish.x
 	velocity.z = wish.z
-	if jump_ok and is_on_floor() and not Game.console_open and Input.is_physical_key_pressed(KEY_SPACE):
+	if _launch_up > 0.0:
+		velocity.y = _launch_up
+		_launch_up = 0.0
+	elif jump_ok and is_on_floor() and not Game.console_open and Input.is_physical_key_pressed(KEY_SPACE):
 		velocity.y = JUMP_V  # P5-10 low gravity only
 	elif is_on_floor():
 		velocity.y = 0.0

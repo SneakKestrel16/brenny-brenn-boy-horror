@@ -206,7 +206,7 @@ func submit(peer: int, f: Dictionary) -> void:
 		var dt := maxf((now - st.t_ms) / 1000.0, (f.seq - st.seq) / SEND_HZ)
 		var mode := &"crouch" if f.crouch else (&"sprint" if f.sprint else &"walk")
 		var max_speed := Data.speed(mode) * float(st.get("speed_mult", 1.0))
-		if ghost or _qa_free or slot != Vector3.INF:
+		if ghost or _qa_free or slot != Vector3.INF or now < int(st.get("free_until", 0)):  # free_until: a dev-toy nuke throw (P5-41)
 			max_speed = 1000.0  # ponytail: ghosts fly free until Phase 3 gives them a ghost speed; a pusher's slot is host-set
 		var r := SpeedCheck.check(st.pos, f.pos, dt, max_speed)
 		if r.violation:
