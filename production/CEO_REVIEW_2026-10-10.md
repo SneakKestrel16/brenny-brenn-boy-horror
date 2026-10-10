@@ -26,6 +26,7 @@ without a revert.
 | D-12 | If a player shuts the door again right after the creature opens it to leave, the creature still walks through the shut door (it ignores door collision, P5-27). Should a shut door ever hold the creature in or out? | It ignores door collision, as built in P5-27; it bangs and opens the door in normal play | creature.gd `_bang_first`, P5-55 QA round 4 |
 | D-13 | Smarter creature makes the game easier for bots (Q-356). It now lurks and walks through corn (open time 806 s to 129 s of a 900 s night), but corn muffles its hearing and keeps it away from where players work. Bot seasons, seeds 1-6, old vs new: deaths 23 to 7, finales lost 4 of 6 to 1 of 6 | New behaviour on. To soften, lower `lurk_open_cost_mult` in data/creature.json (0 = old behaviour); not yet measured | P5-56 handoff, Q-356 |
 | D-14 | Different behaviour per creature body (Q-355)? Doc 01 says all bodies "hunt identically", so not built | Identical | Q-355 |
+| D-15 | Whistle note: doc 11 says "shed shelf"; it is pinned on the shed back wall (P5-48) | Back wall | data/lore.json, P5-48 handoff |
 
 ## 2. Changes made (commit, what, how to revert)
 
@@ -38,6 +39,7 @@ without a revert.
 | P5-55 | 4c229d3 | Doors: creature opens a shut door instead of walking through; open door leaves are solid; nothing usable through walls; bots use the barn doorway | `git revert 4c229d3` |
 | P5-51 | eaa2284 | More corn inside the farm (weave blocks and nine new cover points) so the creature can move through it, not only round the edges | `git revert eaa2284` |
 | P5-56 | 644a47b | Creature AI: lurks through corn on routes, waits in cover, avoids repeats, searches nearby cover after losing a chase, sets night traps on busy paths; stuck guard and Harvest Moon fix (D-13). Each of the five changes reverts by setting its number in data/creature.json to 0 | `git revert 644a47b` |
+| P5-48 | a5dc8ce | Lore in game: road sign and bank notice at the gate, intro line, Courier masthead, ten notes on cards pinned to farm surfaces, archive clippings, win lines (D-15) | `git revert a5dc8ce` |
 
 ## 3. Tests run and what we did
 
@@ -51,3 +53,4 @@ without a revert.
 - **P5-51 corn: two Opus QA rounds, PASS.** Round 1 found the stalk test could never fail; fixed. Tests on main: import 0 ERROR, parse_check 217/0, grep_rules clean, check_farm PASS, check_corn_creature PASS, test_p5_51 PASS. Open (Q-354, AI task later): on bot nights the creature still spends most of the night in the open clearing (806 of 900 s); 8 of 15 stalk test points can't fail.
 - **P5-56 creature AI: Opus QA PASS, merged with new behaviour on.** Tests on main: import 0 ERROR, parse_check 218/0, grep_rules clean, test_p5_56, test_p5_39 and door-walk PASS. QA notes, not fixed: the stuck guard only logs and does not free the creature from the pen fence (an old stall, logged up to 234 times in some seasons); a follow-up should route round fences.
 - **Caps lifted (CEO, evening):** no agent or CPU/RAM limit. All paused work resumed in parallel: P5-48 lore (QA round 2 fixes), P5-57 bots, P5-58 creature pick, P5-59 textures, P5-60 emotes, P5-61 signs.
+- **P5-48 lore: Opus QA round 2 PASS.** QA moved the shed_door card 13 cm off the shed corner. Tests on main: import 0 ERROR, parse_check 222/0, test_lore and test_data PASS, grep_rules 0 violations. Open: road sign posts have no collision (players walk through); the TOWN arch label overlaps the BRENN FARM board from the gate view (P5-61 to fix).
