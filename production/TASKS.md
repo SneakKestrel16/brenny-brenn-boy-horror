@@ -1038,6 +1038,13 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-53 | Gameplay | Horror role: everything is scarier for that player (CEO STOP 6) | todo | P5-37, CEO picks ideas |
 | P5-54 | Gameplay Programmer | Fix `tests/gameplay/test_roles.gd` failing on main: "client took Ready back" at line 87 (found in P5-37 QA) | done (QA PASS) | - |
 | P5-55 | Gameplay Programmer | Closed doors block players (CEO saw walk-through) and interactions work reliably (CEO STOP 6) | todo | - |
+| P5-56 | AI Programmer | Creature AI as smart as possible: senses, hunting, traps, lures, per-body behaviour; every design change listed in the CEO review doc with a revert (CEO 2026-10-10) | todo | P5-39 |
+| P5-57 | AI Programmer | Overall AI: bot teammates and the AI Director play better (CEO 2026-10-10) | todo | - |
+| P5-58 | Gameplay Programmer | Dev option in the lobby to pick the creature body; test each creature body end to end (CEO 2026-10-10) | todo | - |
+| P5-59 | Technical Artist | Improve textures and materials across the farm, buildings, props, creatures (CEO 2026-10-10) | todo | P5-50 |
+| P5-60 | Gameplay Programmer | More emotes (CEO 2026-10-10) | todo | P5-45 |
+| P5-61 | Level Designer | Physical signs instead of floating words: every world Label3D sits on a board, post or paper (CEO 2026-10-10) | todo | P5-48 |
+| P5-62 | QA | Full test sweep on main after the batch; fix or file every failure (CEO 2026-10-10) | todo | P5-48 to P5-61 |
 | P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | done (QA PASS) | P5-02 to P5-07, P5-09 to P5-29 |
 
 ### P5-02 Phase 5 design and data
