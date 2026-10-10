@@ -144,6 +144,7 @@ func _label(t: String) -> void:
 	var l := Label.new()
 	l.text = t
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # P5-44
 	_box.add_child(l)
 
 

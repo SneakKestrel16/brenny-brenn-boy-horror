@@ -109,6 +109,7 @@ func _label(t: String, size: int) -> Label:
 	var l := Label.new()
 	l.text = t
 	l.add_theme_font_size_override(&"font_size", size)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # P5-44: a long refusal wraps inside the 720 px box
 	_box.add_child(l)
 	return l
 

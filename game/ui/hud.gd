@@ -37,23 +37,30 @@ var _t := 0.0
 func _ready() -> void:
 	layer = 10
 	_top = _label(Vector2(16, 12), 20)
+	UiText.fit(_top, 560, -1)  # P5-44: every message wraps inside the safe margins (ui_text.gd)
+	_top.offset_top = 12
 	_prompt = _label(Vector2.ZERO, 26)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_prompt.offset_top = -170
+	_prompt.offset_bottom = -110  # P5-44: sits above the hotbar and grows upward, so a long line never runs off the bottom
+	_prompt.offset_top = -145
+	_prompt.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_prompt.offset_left = -300
 	_prompt.offset_right = 300
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiText.fit(_prompt, 600)
 	_banner = _label(Vector2.ZERO, 34)
 	_banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	_banner.offset_top = 90
 	_banner.offset_left = -420
 	_banner.offset_right = 420
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UiText.fit(_banner, 720)  # narrower than the screen: clear of the minimap at 1280
 	_hint = _label(Vector2.ZERO, 22)
 	_hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)  # P4-32: left edge, clear of the hold prompt
 	_hint.offset_left = 16
 	_hint.offset_right = 536
 	_hint.offset_top = -190
+	UiText.fit(_hint, 520, -1)
 	_hint.text = "CONTROLS\n%s  move\n%s  sprint (runs out, and it is loud)\n%s  crouch (quiet)\n%s  stand still (silent)\nHold %s  work the thing you look at (cans: pick up)
 %s  put a can down\nHold %s  plant a flag where you look\n%s  whistle (carries far)\nHold %s  emote (move the mouse, let go)\n%s  free the mouse" % [
 			_move_keys(), _key(&"sprint"), _key(&"crouch"), _key(&"go_still"), _key(&"interact"), _key(&"drop"), _key(&"alt_use"),
@@ -248,7 +255,10 @@ func _show_hotbar(slots: Array) -> void:
 		box.add_child(l)
 		_hotbar.add_child(box)
 	for i in slots.size():
-		(_hotbar.get_child(i).get_child(0) as Label).text = "%s\n%s" % slots[i]
+		var sl := _hotbar.get_child(i).get_child(0) as Label
+		sl.text = "%s\n%s" % slots[i]
+		sl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # P5-44: the row shares the screen width, each slot wraps
+		sl.custom_minimum_size.x = UiText.slot_width(slots.size(), 220.0, 18.0, get_viewport().get_visible_rect().size.x)
 
 
 func _verb_text(verb: StringName) -> String:

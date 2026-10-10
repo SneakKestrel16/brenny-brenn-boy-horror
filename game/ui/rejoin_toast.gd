@@ -20,8 +20,10 @@ static func show_line(text: String, tree: SceneTree) -> void:
 	l.add_theme_color_override(&"font_shadow_color", Color.BLACK)
 	l.add_theme_constant_override(&"shadow_offset_x", 2)
 	l.add_theme_constant_override(&"shadow_offset_y", 2)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t.add_child(l)
 	tree.root.add_child(t)
+	UiText.fit(l, 800)  # P5-44: wraps inside the safe margins
 	Log.event(&"rejoin_line", {"line": text})
 	var tw := t.create_tween()
 	tw.tween_interval(SHOW_S)

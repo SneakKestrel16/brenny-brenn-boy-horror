@@ -104,7 +104,9 @@ func _ready() -> void:
 	_toast.add_theme_color_override(&"font_outline_color", Color.BLACK)
 	_toast.add_theme_constant_override(&"outline_size", 8)
 	_toast.visible = false
+	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_toast)
+	UiText.fit(_toast, 900)  # P5-44: a long host message wraps inside the safe margins
 	Net.apply_received.connect(func(what: StringName, args: Array) -> void:
 		if what == &"dev_message":
 			_show_message(args[0]))

@@ -415,6 +415,7 @@ func _heading(parent: Control, text: String) -> void:
 	h.text = text
 	h.add_theme_font_size_override(&"font_size", 20)
 	h.add_theme_color_override(&"font_color", EMBER)
+	h.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # P5-44: the 300 px panels
 	parent.add_child(h)
 
 

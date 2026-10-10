@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/qa/qa_p5_44_46.gd" id="1"]
+
+[node name="QaP544" type="Node"]
+script = ExtResource("1")

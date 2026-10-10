@@ -246,13 +246,18 @@ func set_target(pos: Vector3, p_yaw: float, p_pitch: float, crouch: bool) -> voi
 		_apply_height(crouch)
 
 
+## Turn the view by a mouse motion in pixels. The setting is read on every call, so the settings slider applies live (P5-46).
+func look(relative: Vector2) -> void:
+	var s := float(Settings.get_value(&"mouse_sensitivity"))
+	yaw -= relative.x * s
+	pitch = clampf(pitch + relative.y * s * (1.0 if bool(Settings.get_value(&"invert_y")) else -1.0), -1.5, 1.5)  # D-047 invert Y
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_local:
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		var s := float(Settings.get_value(&"mouse_sensitivity"))
-		yaw -= event.relative.x * s
-		pitch = clampf(pitch + event.relative.y * s * (1.0 if bool(Settings.get_value(&"invert_y")) else -1.0), -1.5, 1.5)  # D-047 invert Y
+		look(event.relative)
 	elif event.is_action_pressed(&"crouch") and bool(Settings.get_value(&"toggle_crouch")):
 		_set_crouch(not crouching)
 	elif event.is_action_pressed(&"sprint") and bool(Settings.get_value(&"toggle_sprint")) and not Game.console_open:

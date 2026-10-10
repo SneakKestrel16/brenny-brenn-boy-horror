@@ -18,6 +18,8 @@ const VOICE_COPY := {  ## doc 06 s11 (D-146)
 			+ " and the Dawn Report can replay them. The recording light shows while any are kept; review or delete" \
 			+ " them from the pause menu.",
 }
+const SENS_MIN := 0.1  ## P5-46: slider range as a multiple of the default look speed (inference: no doc 01 number)
+const SENS_MAX := 3.0
 const DISCORD_LINE := "The creature can't hear Discord, and you can't hear where your friends are."
 
 var tabs: TabContainer
@@ -28,6 +30,7 @@ var _voice_note: Label
 var _preset: OptionButton
 var _scale: HSlider
 var _shadow: OptionButton
+var _sens: HSlider  ## P5-46 mouse sensitivity, a multiple of the default
 
 
 func _ready() -> void:
@@ -129,8 +132,9 @@ func _row(page: Control, label: String, c: Control) -> void:
 	if c is HSlider:  # value text beside every slider
 		var v := Label.new()
 		v.custom_minimum_size.x = 56
-		v.text = _fmt(c.value, c.step)
-		c.value_changed.connect(func(x: float) -> void: v.text = _fmt(x, c.step))
+		var sfx := str(c.get_meta(&"suffix", ""))  # P5-46: "x" after the sensitivity multiple
+		v.text = _fmt(c.value, c.step) + sfx
+		c.value_changed.connect(func(x: float) -> void: v.text = _fmt(x, c.step) + sfx)
 		h.add_child(v)
 	page.add_child(h)
 
@@ -294,6 +298,16 @@ func _comfort_tab() -> void:
 	p.add_child(_check(&"toggle_holds", "Toggle holds (press to start a hold, press again to stop)"))
 	p.add_child(_check(&"toggle_sprint", "Toggle sprint"))
 	p.add_child(_check(&"invert_y", "Invert mouse Y"))
+	# P5-46: the slider is a multiple of the default look speed (0.1x to 3.0x); the stored value stays radians per pixel.
+	var base := float(Settings.DEFAULTS["mouse_sensitivity"])
+	_sens = HSlider.new()
+	_sens.min_value = SENS_MIN
+	_sens.max_value = SENS_MAX
+	_sens.step = 0.05
+	_sens.value = clampf(float(Settings.get_value(&"mouse_sensitivity")) / base, SENS_MIN, SENS_MAX)
+	_sens.set_meta(&"suffix", "x")
+	_sens.value_changed.connect(func(m: float) -> void: _commit(&"mouse_sensitivity", m * base))
+	_row(p, "Mouse sensitivity", _sens)
 	_row(p, "Menu text size", _slider(&"ui_text_scale", 0.8, 1.5, 0.05))
 	var note := Label.new()
 	note.text = "Per-player voice volume and mute are in the pause menu."

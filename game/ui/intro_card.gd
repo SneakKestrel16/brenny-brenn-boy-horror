@@ -31,7 +31,7 @@ func _ready() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.add_child(center)
 	var box := VBoxContainer.new()
-	box.custom_minimum_size.x = 820
+	box.custom_minimum_size.x = minf(820.0, get_viewport().get_visible_rect().size.x - 2.0 * UiText.MARGIN)  # P5-44
 	box.add_theme_constant_override(&"separation", 10)
 	center.add_child(box)
 	_label(box, TITLE, 56, Color(0.95, 0.8, 0.4))

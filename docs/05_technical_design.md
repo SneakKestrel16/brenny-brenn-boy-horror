@@ -880,7 +880,9 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   `changed(key)`. `SettingsApply` (`game/core/settings_apply.gd`, a node on the root made by `Settings`)
   pushes every key to the engine at boot and on each change. Display and graphics keys apply only
   once the player has set them (`Settings.is_set`), so launch flags and the QA window tiling still work.
-  Keys: `mouse_sensitivity`, `fov` (read live by the local Player), `toggle_crouch`, `reduce_scares`
+  Keys: `mouse_sensitivity` (radians per pixel, default 0.0025; the Comfort tab slider shows it as a
+  multiple of the default, 0.1x to 3.0x in 0.05 steps, applies live because `Player.look` reads it on
+  every mouse motion, and saves on change; P5-46), `fov` (read live by the local Player), `toggle_crouch`, `reduce_scares`
   (default false; `Soundscape` softens stingers and sudden creature cues, read live; accessibility,
   inference: no doc 01 number), `push_to_talk` (Voice reads it live), `voice_gain_db`, `player_name`,
   the six volume sliders `vol_master`, `vol_music`, `vol_sfx`, `vol_ambience`, `vol_voice`, `vol_ui`

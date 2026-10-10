@@ -39,6 +39,7 @@ func _process(delta: float) -> void:
 			_label.add_theme_constant_override("outline_size", 6)
 			_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP, Control.PRESET_MODE_MINSIZE, 60)
 			layer.add_child(_label)
+			UiText.fit(_label, 700)  # P5-44; fit owns the horizontal anchors
 			_bar = ProgressBar.new()
 			_bar.custom_minimum_size = Vector2(240, 18)
 			_bar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 140)
