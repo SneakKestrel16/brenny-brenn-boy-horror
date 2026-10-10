@@ -201,7 +201,7 @@ ONE = {  # name -> {option: (audio, rms dB, fade-in, fade-out)}
 # ---- build --------------------------------------------------------------------------------------------------------
 SIG_DB = {"gaunt": (-36.1, -35.7, -33.3, -28.0), "scarecrow": (-25.2, -25.4, -25.8, -21.7),
           "boar": (-20.6, -21.5, -21.3, -18.3), "husk": (-20.3, -20.9, -19.3, -19.3)}  # current _01 _02 _03 _chase
-CHASE = {"gaunt": "B", "scarecrow": "A", "boar": "A", "husk": "B"}  # the option ranked first per body (handoff)
+CHASE = {"gaunt": "C", "scarecrow": "A", "boar": "A", "husk": "B"}  # the CEO picks (real_creature.md)
 GAP = np.zeros(int(0.6*R))
 BODY_HP = {"gaunt": 150, "scarecrow": 80, "boar": 45, "husk": 300}  # rumble below each body's band (doc 08 s6: coat 90-140 Hz, hoof 60-90 Hz)
 def finish(a, db, fi, fo, is_loop=False):

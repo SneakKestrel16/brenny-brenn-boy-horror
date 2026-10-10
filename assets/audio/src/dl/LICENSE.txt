@@ -20,3 +20,43 @@ freesound_456802.mp3  https://freesound.org/people/Breviceps/sounds/456802/  Bre
 freesound_667579.mp3  https://freesound.org/people/Yoyodaman234/sounds/667579/  Yoyodaman234  "Bat Screech"  CC0
 freesound_346694.mp3  https://freesound.org/people/deleted_user_2104797/sounds/346694/  deleted_user_2104797  "Body fall_02.wav"  CC0
 freesound_635052.mp3  https://freesound.org/people/sillygrizzlies/sounds/635052/  sillygrizzlies  "Panicked Running Footsteps on Grass"  CC0
+
+CEO picks of 2026-10-09 (D-149). Each file is the unchanged Freesound HQ preview; each page shows "Creative Commons 0" and no remix chain outside CC0 (442906 is a remix of CC0 352698). Used by the creature and item sounds listed in docs/08 section 13.2 and 13.3. FilmCow Recorded SFX sources (D-149) are not in the repo.
+freesound_621977.mp3  https://freesound.org/s/621977/  rydra_wong  "Multiple Bones Cracking"  CC0
+freesound_831713.mp3  https://freesound.org/s/831713/  BugginOut.wav  "Click Beetle"  CC0
+freesound_158746.mp3  https://freesound.org/s/158746/  felix.blume  "A pig grunting, grumbling and falling asleep (France, Limousin)"  CC0
+freesound_434881.mp3  https://freesound.org/s/434881/  TA-AT  "small gourd shakers"  CC0
+freesound_610143.mp3  https://freesound.org/s/610143/  Michel1980  "dried seedpods" (recorded through a Morphagene, may be processed)  CC0
+freesound_832436.mp3  https://freesound.org/s/832436/  felix.blume  "fox night"  CC0
+freesound_244982.mp3  https://freesound.org/s/244982/  ani_music  "wing/flag flap"  CC0
+freesound_352698.mp3  https://freesound.org/s/352698/  Jofae  "Angry Pig Oinking"  CC0
+freesound_191513.mp3  https://freesound.org/s/191513/  Hitrison  "chain drag floor"  CC0
+freesound_854169.mp3  https://freesound.org/s/854169/  FOSSarts  "large dog chewing bone"  CC0
+freesound_634005.mp3  https://freesound.org/s/634005/  Soundburst  "fox screams"  CC0
+freesound_411694.mp3  https://freesound.org/s/411694/  deoking  "door kick"  CC0
+freesound_755839.mp3  https://freesound.org/s/755839/  Sami_Zadoud  "green corn leaves"  CC0
+freesound_127385.mp3  https://freesound.org/s/127385/  vigorish  "seedpods popping"  CC0
+freesound_442906.mp3  https://freesound.org/s/442906/  qubodup  "Pig Oink" (remix of CC0 352698)  CC0
+freesound_568995.mp3  https://freesound.org/s/568995/  strongbot  "metal whistle.wav"  CC0
+freesound_242867.mp3  https://freesound.org/s/242867/  Reitanna  "blowing out candle.wav"  CC0
+freesound_524205.mp3  https://freesound.org/s/524205/  JovianSounds  "Radio Sign Off / Squelch"  CC0
+freesound_701327.mp3  https://freesound.org/s/701327/  SEF7  "Walkie Talkie power on"  CC0
+freesound_612722.mp3  https://freesound.org/s/612722/  3questionmarks  "walkie_talkie_beep.wav"  CC0
+freesound_683031.mp3  https://freesound.org/s/683031/  mpuffenbarger  "Thump.mp3"  CC0
+freesound_470710.mp3  https://freesound.org/s/470710/  I.fekry  "traditional stamp.wav"  CC0
+freesound_709925.mp3  https://freesound.org/s/709925/  Squidems  "Service bell louder"  CC0
+freesound_223343.mp3  https://freesound.org/s/223343/  jalastram  "1_Coins.ogg"  CC0
+freesound_110739.mp3  https://freesound.org/s/110739/  clesquir  "Radio static"  CC0
+freesound_316682.mp3  https://freesound.org/s/316682/  Alex_hears_things  "sparkler_fuse_nm.wav"  CC0
+freesound_543685.mp3  https://freesound.org/s/543685/  Nox_Sound  "Footsteps_Wood_Walk_Mono.wav"  CC0
+freesound_452633.mp3  https://freesound.org/s/452633/  kyles  "footsteps boots shoes dirt gravel walk short stop scuff.wav"  CC0
+freesound_644245.mp3  https://freesound.org/s/644245/  fractionalist  "Steel Spring Bear Trap"  CC0
+freesound_404434.mp3  https://freesound.org/s/404434/  Duesenbert  "Bottle_Rocket_3.wav"  CC0
+freesound_577320.mp3  https://freesound.org/s/577320/  TRP  "Tricycle wheel squeek.wav"  CC0
+freesound_456803.mp3  https://freesound.org/s/456803/  Breviceps  "Chicken clucking"  CC0
+freesound_316920.mp3  https://freesound.org/s/316920/  Rudmer_Rotteveel  "Chicken Single Alarm Call"  CC0
+freesound_344972.mp3  https://freesound.org/s/344972/  mrmunk  "Pig in slop squealing"  CC0
+freesound_163727.mp3  https://freesound.org/s/163727/  felix.blume  "Cow mooing in south of France (Limousin)"  CC0
+freesound_59245.mp3  https://freesound.org/s/59245/  Zozzy  "z-moo01.wav"  CC0
+freesound_827111.mp3  https://freesound.org/s/827111/  TheKingOfGeeks360  "Bovines - Cattle; Loud Bellow from Hereford Bull"  CC0
+freesound_194899.mp3  https://freesound.org/s/194899/  lolamadeus  "Distressed Mother Cow and Calves.wav"  CC0 (source of the alt/ cow panic only)

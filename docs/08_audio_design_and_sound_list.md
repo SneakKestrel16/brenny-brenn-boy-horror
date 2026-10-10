@@ -918,63 +918,92 @@ and B and C for the presence avoid them. Rejected as human voice or unclear chai
 (mouth), 190595 dog snarl (voice, reversed), 170454 growl (voice), 470900 and 844096 breathing (voice), 350414
 (derived from a sound outside the checked chain).
 
-### 13.2 Creature sounds from real recordings: candidates, not yet picked (D-149)
+### 13.2 Creature sounds from real recordings: CEO picks installed (D-149)
 
-D-149 asks for the creature sounds rebuilt from real recordings of what each body is based on, three options per
-sound. `tools/audio/real_creature.py` builds them into `logs/listen/real_creature/` (git-ignored); nothing in
-`assets/audio/` changes until the CEO picks. Sources are the FilmCow Recorded SFX library (D-149) and Freesound
-HQ previews whose page says CC0 (D-066; every page and remix chain checked). The Freesound mp3s are not in the
-repo yet: they go to `assets/audio/src/dl/` with their `LICENSE.txt` lines only for the options the CEO picks.
-Full table with processing and flags: `production/handoffs/real_creature.md`.
+CEO listen of 2026-10-09 picked one option per sound; the picks are installed in `assets/audio/` under the
+existing names, lengths within one frame of the old ones (+/- 64 samples, loops 4.000 s) and RMS unchanged
+(table in `production/handoffs/install_picks.md`). Built by `tools/audio/real_creature.py`, seeded, so a rerun
+gives the same files (`uv run --no-project --with numpy --with soundfile python -I tools/audio/real_creature.py`).
+Sources: FilmCow Recorded SFX (D-149, library outside the repo, file names given) and Freesound CC0 (the
+unchanged previews and their `LICENSE.txt` lines are in `assets/audio/src/dl/`; pages and remix chains checked).
+`https://freesound.org/s/<id>/`. Full processing table: `production/handoffs/real_creature.md`.
 
-| Sound | A | B | C |
+**The gaunt signature is a stand-in.** The CEO took option C "for now": it is not the best, and a better real
+source is to be found later. The CEO wants all creature sounds redone later (see `production/OPEN_ISSUES.md`),
+so every row below can change.
+
+| Sound id | Source id and author | Licence | Cut |
 |---|---|---|---|
-| gaunt sig | knuckle cracks: [500797](https://freesound.org/s/500797/) khenshom, [390962](https://freesound.org/s/390962/) lucantunes | FilmCow `marionette movement sounds` + tongue clicks [146339](https://freesound.org/s/146339/) MoltenMustafa | bone/branch snaps [621977](https://freesound.org/s/621977/) rydra_wong + click "beetle" [831713](https://freesound.org/s/831713/) BugginOut.wav |
-| scarecrow sig | FilmCow `flag 1, 3-7` | cape [701647](https://freesound.org/s/701647/) IENBA + flag [386796](https://freesound.org/s/386796/) RichieMcMullen | wing flap [244982](https://freesound.org/s/244982/) ani_music + FilmCow `umbrella opening 1-6`, `fiber bundle moved 1-2` |
-| boar sig | FilmCow `chain 3`, `land in dirt 1-4`, `body fall with lots of bass` + pig [158746](https://freesound.org/s/158746/) felix.blume | chain drag [191513](https://freesound.org/s/191513/) Hitrison + angry pig [352698](https://freesound.org/s/352698/) Jofae + FilmCow `footstep dirt` | FilmCow `metal dragged on floor`, `body fall with lots of bass` + chain [235959](https://freesound.org/s/235959/) mffm + wild boars [612995](https://freesound.org/s/612995/) felix.blume |
-| husk sig | timber rattlesnake [855914](https://freesound.org/s/855914/) TheKingOfGeeks360 | gourd shakers [434881](https://freesound.org/s/434881/) TA-AT + seed pods [610143](https://freesound.org/s/610143/) Michel1980 | FilmCow `glass full of beads 3, 9, 17` + seed pods [127385](https://freesound.org/s/127385/) vigorish |
-| jumpscare (per body) | fox [634005](https://freesound.org/s/634005/) Soundburst / FilmCow flag / [612995](https://freesound.org/s/612995/) / [855914](https://freesound.org/s/855914/) + corn [755839](https://freesound.org/s/755839/) Sami_Zadoud | cat hiss [485952](https://freesound.org/s/485952/) aunrea / [701647](https://freesound.org/s/701647/) / [352698](https://freesound.org/s/352698/) / [434881](https://freesound.org/s/434881/) + corn [454368](https://freesound.org/s/454368/) kyles | fox [832436](https://freesound.org/s/832436/) felix.blume / [244982](https://freesound.org/s/244982/) / boar [425241](https://freesound.org/s/425241/) Garuda1982 + [764944](https://freesound.org/s/764944/) Mastersoundboy2005 / FilmCow `harpoon rattle` + [613567](https://freesound.org/s/613567/) |
-| gnaw | dog gnawing bone [260880](https://freesound.org/s/260880/) YOH | large dog chewing bone [854169](https://freesound.org/s/854169/) FOSSarts | dog eating chicken wing [861818](https://freesound.org/s/861818/) qubodup |
-| lunge | corn [613567](https://freesound.org/s/613567/) + FilmCow body fall | FilmCow `crashing through debris 3`, `woosh 5`, body fall | corn [755839](https://freesound.org/s/755839/) + FilmCow `swoosh 4`, `land in dirt 3` |
-| flare hit | fox scream [634005](https://freesound.org/s/634005/) + FilmCow `land in dirt 3` | fox [832436](https://freesound.org/s/832436/) + FilmCow body fall | cat hiss [485952](https://freesound.org/s/485952/) + fox [634005](https://freesound.org/s/634005/) + FilmCow body fall |
-| door bang _01-_03 | FilmCow `door knock 1-3` + body fall | door kick [411694](https://freesound.org/s/411694/) deoking + [452609](https://freesound.org/s/452609/) kyles | [623701](https://freesound.org/s/623701/) mediatheksuche + FilmCow `closet door close`, `screen door close` |
-| corn part _01-_03 | green corn leaves [755839](https://freesound.org/s/755839/) Sami_Zadoud | corn field [613567](https://freesound.org/s/613567/) zazz.sound.design | FilmCow `bushes 3, 8, 15` + `branch moved 2, 5, 7` |
-| presence swell | dog [461839](https://freesound.org/s/461839/) (installed, CEO pick) | pig breathing [439216](https://freesound.org/s/439216/) matschulat | donkey breathing [170567](https://freesound.org/s/170567/) felix.blume |
+| `cre_gaunt_sig_01..03` (stand-in) | 621977 rydra_wong "Multiple Bones Cracking"; 831713 BugginOut.wav "Click Beetle" (foley of a flicked clipboard, not a beetle) | CC0 | 5 snaps 0.2 s + 7 clicks 0.1 s, high-pass 250-300 Hz, no low thump, lurk gaps 0.3-0.65 s |
+| `cre_gaunt_sig_chase` (stand-in) | same two | CC0 | same grains on a 4.0 s circle, gaps 0.06-0.14 s (about 10/s), seamless loop |
+| `cre_scarecrow_sig_01..03`, `_chase` | FilmCow `flag 1`, `flag 3`-`flag 7` | FilmCow (D-149) | first 0.35 s of each snap, 0.8x, high-pass 60 Hz, low-pass 14 kHz, single snaps 0.45-0.9 s apart; chase 10 per 4 s |
+| `cre_boar_sig_01..03`, `_chase` | 158746 felix.blume (pig grunt); FilmCow `chain 3`, `land in dirt 1-4`, `body fall with lots of bass 1, 2, 4, 5` | CC0, FilmCow | chain drags 0.7 s; hoof = dirt landing 0.6x low-passed 600 Hz + bass slice low-passed 250 Hz; grunts 0.85x; chase 10 strides per 4 s |
+| `cre_husk_sig_01..03`, `_chase` | 434881 TA-AT (gourd shakers); 610143 Michel1980 (dried seedpods; may be processed through a Morphagene) | CC0 | shaker 1.5-5.8 s high-pass 400 Hz + pods 7.0-9.25 s at 0.5, levelled, shaken at 17 Hz (doc 08 s6 14-22 Hz rule, imposed in code) |
+| `cre_jumpscare_hit_gaunt` | 832436 felix.blume (fox, 0.8x); 621977 rydra_wong; FilmCow `body fall with lots of bass`; the approved 635052 steps | CC0, FilmCow | scare at 0.3 s, thud at 0.92 s, steps from 1.36 s |
+| `cre_jumpscare_hit_scarecrow` | 244982 ani_music (flap, 0.7x); FilmCow `flag 6`, `fiber bundle moved 1`, bass body fall; 635052 steps | CC0, FilmCow | same timing |
+| `cre_jumpscare_hit_boar` | 352698 Jofae (angry pig squeal); 191513 Hitrison (chain drag); FilmCow bass body fall; 635052 steps | CC0, FilmCow | same timing |
+| `cre_jumpscare_hit_husk` | FilmCow `harpoon rattle`, bass body fall; 613567 zazz.sound.design (corn, x4); 127385 vigorish (seedpods popping); 635052 steps | CC0, FilmCow | same timing |
+| `cre_gnaw` | 854169 FOSSarts "large dog chewing bone" | CC0 | loudest 2.5 s, high-pass 60 Hz |
+| `cre_lunge` | 613567 zazz.sound.design (corn 8.0-8.5 s, x4); FilmCow bass body fall 2 | CC0, FilmCow | rush, thud at 0.45 s |
+| `cre_flare_hit` | 634005 Soundburst (fox scream); FilmCow `land in dirt 3` (0.7x) | CC0, FilmCow | shriek, recoil thud at 0.72 s |
+| `cre_door_bang_01` | 411694 deoking (door kick); 452609 kyles (heavy door kick) | CC0 | 1.6 s kick, variant 1 of 3 (`_02`, `_03` built but not installed, see below) |
+| `cre_corn_part_01..02` | 755839 Sami_Zadoud "green corn leaves" | CC0 | one brush per stalk, 0.05-0.10 s apart, RMS -20 dB, soft-limited to peak about -12 dBFS (CEO: softer, one sound per stalk) |
+| `cre_presence_swell` | 461839 15GPanskaCepelak_Adam (sleeping dog), unchanged since CEO listen 4 | CC0 | see section 13 table |
 
-The jumpscares keep the approved 0.3 s lead and the running steps of `cre_jumpscare_hit` (635052) and add a
-FilmCow `body fall with lots of bass` thud at 0.92 s. Flags: 146339 is a human mouth (tongue clicks, no voice);
-831713 is foley (a flicked clipboard), not a beetle; 610143 was recorded through a Morphagene and may be processed.
-No husk source pulses at 14 to 22 Hz on its own (envelope peaks 3 to 8 Hz; the rattlesnake buzzes at 53 Hz), so
-every husk option is levelled and shaken at 17 to 19 Hz in code (section 6 rule; measured env peak 17.0 to 19.0 Hz
-against 3.4 Hz for the corn stand-in).
+Not installed: `cre_door_bang_02/03` and `cre_corn_part_03` exist as candidates in `logs/listen/real_creature/`;
+`Soundscape` loads one door variant and two corn variants (`n` in `game/audio/soundscape.gd`), so they have no
+files to replace. Adding the files and raising `n` is a follow-up. The old `cre_jumpscare_hit` stays as fallback.
 
-### 13.3 Real-recording options for animals, items, radio and UI (D-149): candidates, not yet picked
+### 13.3 Real-recording picks installed: animals, items, radio and UI (D-149)
 
-CEO direction D-149: base every animal and item sound on its real-life counterpart. Three options per sound were
-cut from real recordings by `tools/audio/real_animals_items.py` into `logs/listen/real_items/` (git-ignored); none
-is installed, and the generated `.scd` versions stay current until the CEO picks. The full per-option table (cuts,
-filters, descriptions) and the listening order are in `production/handoffs/real_items.md`. Sources:
+CEO listen of 2026-10-09 picks, built by `tools/audio/real_animals_items.py` (`build`, sources cached outside
+the repo) and installed over the old sound ids; loop files keep their exact length (flare hiss 2.001 s, cart
+squeak 3.001 s, radio static and crackle 4.001 s, seamless). Other one-shots changed length with the real
+recording (the listen candidates already did); each file is mono 48 kHz 16 bit, peak at most -1 dBFS except where
+the CEO asked for a lower peak (cart squeak, peak -9.1). Per-option cuts: `production/handoffs/real_items.md`.
+All Freesound sources are CC0 1.0 (previews in `assets/audio/src/dl/`); FilmCow is the D-149 library, not in the repo.
 
-- **FilmCow Recorded SFX** (library approved in D-149): footstep dirt, footstep grass and leaves, footstep leaves,
-  body fall, body fall with lots of bass, crashing through debris, land in dirt, land in leaves, clothes ruffle,
-  clothing movement, flag, glass clink, air duster, beep, tube tv turn off, light switch off, mouse click, switch
-  press, knob clicky turn, ding, glass ding, clicky button, door knock, punch soft thud, table hit.
-- **Freesound, CC0 1.0** (each page checked, remix chains included; `https://freesound.org/s/<id>/`):
-  animals 456803 Breviceps, 316920 and 316921 Rudmer_Rotteveel, 494613 roboroo, 232495 tom_woysky,
-  158746 and 163727 felix.blume, 652361 nomerodin1, 442906 qubodup (remix of 352698), 352698 Jofae,
-  344972 mrmunk, 260640 TheAcidRomance, 59245 Zozzy, 401636 Mystikuum, 513565 spurioustransients,
-  827111 TheKingOfGeeks360, 194899 lolamadeus; items 163455 LeMudCrab, 404434 Duesenbert, 151713 bowlingballout,
-  348766 and 348767 frankelmedico, 316682 Alex_hears_things, 635488 kyles, 577320 TRP, 389687 Shamewap,
-  644245 fractionalist, 278203 ThePriest909 (from CC0 83374, 83454), 752070 qubodup (from CC0 38747, 426774,
-  752065), 461697 and 504626 leonelmail, 853591 Wigglesworth, 242867 Reitanna, 204531 peridactyloptrix,
-  255835 neild101, 35397 marvman, 568995 strongbot, 452633 kyles, 682127 HenKonen, 613567 zazz.sound.design,
-  543685 Nox_Sound, 523273 MrFossy, 521589 Fission9; radio 154654 crcavol, 760245 and 760335 LukaCafuka,
-  110739 clesquir, 454259 kyles, 701314, 701326 and 701327 SEF7, 612722 3questionmarks, 524205 JovianSounds,
-  47646 ReadeOnly; UI 847350 ilyaShevelev, 223343 jalastram, 336481 Faulkin, 470710 I.fekry, 448474 eddies2000,
-  683031 mpuffenbarger, 709925 Squidems, 57743 3bagbrew, 192761 ryuuzan.
+| Sound id | Source id and author | Cut |
+|---|---|---|
+| `sfx_animal_chicken_01..03` | 456803 Breviceps "Chicken clucking" | 0.05-0.95, 0.75-1.75, 4.55-5.35 s; high-pass 150 Hz |
+| `sfx_animal_panic_01` (chicken) | 316920 Rudmer_Rotteveel "Chicken Single Alarm Call" | whole |
+| `sfx_animal_pig_01..02` | 442906 qubodup "Pig Oink" (remix of CC0 352698) + 352698 Jofae | whole; 1.5-2.2 s; high-pass 60 Hz |
+| `sfx_animal_panic_02` (pig) | 344972 mrmunk "Pig in slop squealing" | 3.1-4.3 s |
+| `sfx_animal_cow_01..02` | 163727 felix.blume + 59245 Zozzy | 0.25-2.35 s low-passed 3.5 kHz; whole low-passed 4 kHz |
+| `sfx_animal_panic_03` (cow) | 827111 TheKingOfGeeks360 "Loud Bellow from Hereford Bull" | 0-2.7 s |
+| `sfx_flare_shot` | 404434 Duesenbert "Bottle_Rocket_3.wav" | 8.2-9.4 s, launch and report |
+| `sfx_flare_hiss_loop` | 316682 Alex_hears_things "sparkler_fuse_nm.wav" | from 4.0 s, high-pass 150 Hz, loop 2 s |
+| `sfx_cart_squeak_loop` | 577320 TRP "Tricycle wheel squeek.wav" | from 1.95 s, loop 3 s, soft-limited 2 dB and trimmed -6 dB (CEO: peak too loud): RMS -16.8, peak -9.1 |
+| `sfx_beartrap_snap` | 644245 fractionalist "Steel Spring Bear Trap" | 0.78-1.75 s |
+| `sfx_pit_fall` | FilmCow `crashing through debris 2` + `land in dirt 1` | land at 0.45 s |
+| `sfx_lantern_blow_out` | 242867 Reitanna "blowing out candle.wav" + FilmCow `glass clink 1` | 0.25-0.8 s, clink at 0.45 s, gain 0.25; a person's breath, no voice |
+| `sfx_whistle` | 568995 strongbot "metal whistle.wav" | 12.75-13.7 s |
+| `sfx_step_dirt_01..06` | 452633 kyles | six strongest footfall onsets |
+| `sfx_step_corn_01..06` | FilmCow `footstep grass and leaves 1..6` | trim, fade |
+| `sfx_step_wood_01..06` | 543685 Nox_Sound "Footsteps_Wood_Walk_Mono.wav" | six strongest footfall onsets |
+| `sfx_emote_cloth` | FilmCow `flag 1` | trim, fade |
+| `sfx_ragdoll_thud_01..02` | FilmCow `body fall 1`, `body fall 2` | trim, fade |
+| `vox_radio_static_loop` | 110739 clesquir "Radio static" | from 20 s, band-pass 300-3400 Hz, loop 4 s |
+| `vox_crackle_loop` | 316682 Alex_hears_things | from 4.0 s, clicks only (1.5-4 kHz transients over 1.8x the 0.1 s level), loop 4 s |
+| `vox_radio_squelch_on` | 612722 3questionmarks "walkie_talkie_beep.wav" | 0.62-0.99 s |
+| `vox_radio_squelch_off` | 524205 JovianSounds "Radio Sign Off / Squelch" | 0-0.22 s |
+| `vox_radio_low_battery` | 701327 SEF7 "Walkie Talkie power on" | 0-0.42 s |
+| `vox_radio_dead` | FilmCow `tube tv turn off 1` | 0.05-0.5 s |
+| `ui_click` | FilmCow `mouse click 1` | trim |
+| `ui_confirm` | FilmCow `ding 1` | 0.45 s |
+| `ui_deny` | FilmCow `table hit 1` | trim |
+| `ui_coins` | 223343 jalastram "1_Coins.ogg" | whole |
+| `ui_stamp` | 683031 mpuffenbarger "Thump.mp3" | whole |
+| `ui_award_reveal` | 470710 I.fekry "traditional stamp.wav" + 709925 Squidems "Service bell louder" | stamp from 0.4 s; bell from 1.3 s at 0.3 s, gain 0.45 |
+| `ui_shop_bell` | 709925 Squidems "Service bell louder" | struck at 0 and 0.28 s |
 
-No voices (the radio options are static, squelch and tones only); lantern options A and B hold a person's breath,
-no vocalisation. When the CEO picks, each installed sound gets a row in the section 13 table.
+**Alternates, not loaded by game code** (CEO: may switch later), in `assets/audio/alt/` under the same file names:
+`alt/sfx_animal_panic_02.wav` (pig panic option C: 352698 Jofae, angry squeal-grunt, 2.3-3.35 s) and
+`alt/sfx_animal_panic_03.wav` (cow panic option C: 194899 lolamadeus "Distressed Mother Cow and Calves.wav",
+126.4-129.4 s, high-pass 50 Hz). To switch, copy the alt file over the file of the same name in `assets/audio/`.
+
+No voices (the radio sounds are static, squelch and tones only). Not installed: every option the CEO did not pick.
+
 
 ## 14. Listening list for the CEO
 
