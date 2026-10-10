@@ -250,6 +250,7 @@ func _admit(id: int, rejoin: bool = false) -> void:
 	Game.players[id] = {"rejoin": true} if rejoin else {}
 	to_peers(&"apply_session_state", [Game.session_id, Log.now(), Data.phase1, Data.hash_value, Game.difficulty, Game.in_lobby], [id])
 	to_peers(&"apply_group_settings", [Game.difficulty, Game.streamer_safe], [id])  # P4-11
+	to_peers(&"apply_next_season", [Game.season_no, Game.traits, false], [id])  # P5-04: a joiner learns the campaign's season
 	to_peers(&"apply_roster", [Game.players.keys(), profiles])
 	for p in Game.players:  # the newcomer learns everyone's voice setting (P2-10)
 		if p != id:
@@ -382,6 +383,12 @@ func apply_session_state(p_session_id: String, host_t: float, p_phase1: bool, da
 @rpc("authority", "call_remote", "reliable")
 func apply_match_start() -> void:
 	Game.apply_match_start()
+
+
+## P5-04 (doc 01 "Next season"): the campaign's season number and gained trait ids; `reload` starts the new season's Main.
+@rpc("authority", "call_remote", "reliable")
+func apply_next_season(season: int, traits: Array, reload: bool) -> void:
+	Game.apply_next_season(season, traits, reload)
 
 
 ## P4-11 (doc 01 "Difficulty and group settings"): the host's lobby choice.

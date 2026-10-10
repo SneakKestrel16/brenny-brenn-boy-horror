@@ -121,6 +121,11 @@ func _build() -> void:
 		"streamer_safe": Game.streamer_safe}  # the lobby's group option (P4-11); `--streamer-safe` sets its default
 	var report := Logic.build(_events, ctx, tpl)
 	_events.clear()
+	report.season = Game.season_no  # P5-04
+	report.trait_line = ""
+	if Game.trait_report_pending and not Game.traits.is_empty():  # the new trait's line, once (doc 03 s22.1)
+		report.trait_line = String(Data.record(&"creature_traits", StringName(Game.traits[-1])).get("report_line", ""))
+	Game.trait_report_pending = false
 	Net.to_peers(&"apply_dawn_report", [report])
 	_show(report)
 
@@ -139,7 +144,9 @@ func _show(report: Dictionary) -> void:
 		c.queue_free()
 	_pending.clear()
 	_label("THE HARROW COUNTY GAZETTE", 30, INK, HORIZONTAL_ALIGNMENT_CENTER)
-	_label("Day %d" % int(report.day), 16, INK, HORIZONTAL_ALIGNMENT_CENTER)
+	_label("Season %d  Day %d" % [int(report.get("season", 1)), int(report.day)], 16, INK, HORIZONTAL_ALIGNMENT_CENTER)
+	if not String(report.get("trait_line", "")).is_empty():
+		_label(report.trait_line, 15, RED_INK, HORIZONTAL_ALIGNMENT_CENTER)
 	_box.add_child(HSeparator.new())
 	for row: Array in report.ledger:  # [label, coins, red]; shown as applied, never applied here
 		var h := HBoxContainer.new()

@@ -106,6 +106,7 @@ func _host_end() -> void:
 	if _cart() != null:
 		lost = lost or not _cart_out()
 	# else no CartRoute (Phase 1 farm, unit tests): no cart, so a paid debt with no Harvest Moon wipe wins
+	Game.season_lost = lost  # P5-04: only a won season carries
 	var res := Logic.build(_tally, {"names": names, "players": Game.players.keys(), "day": Clock.day}, tpl, lost)
 	if Game.quirks_on:  # P5-09 (D-161): every quirk is named at season end, from the host's table
 		for p: int in names:  # current names win; players who left keep the last name `Quirks.sync` saw
@@ -140,6 +141,18 @@ func show_card(res: Dictionary) -> void:
 			var l := _label(q, 16, INK, HORIZONTAL_ALIGNMENT_LEFT)
 			l.modulate.a = 0.0
 			_pending.append(l)
+	_box.add_child(HSeparator.new())
+	if lost:
+		_label("Nothing carries over.", 14, INK, HORIZONTAL_ALIGNMENT_CENTER)  # placeholder copy
+	elif Game.season_no >= Campaign.seasons_max():
+		_label("The farm is yours. The campaign is over.", 14, INK, HORIZONTAL_ALIGNMENT_CENTER)  # placeholder copy
+	elif Game.is_host():  # P5-04 (doc 01 "Next season"): the host starts it
+		var n := Button.new()
+		n.text = "Start season %d" % (Game.season_no + 1)
+		n.pressed.connect(Game.start_next_season)
+		_box.add_child(n)
+	else:
+		_label("Waiting for the host to start season %d." % (Game.season_no + 1), 14, INK, HORIZONTAL_ALIGNMENT_CENTER)
 	var b := Button.new()
 	b.text = "Back to menu"
 	b.pressed.connect(Game.leave_session)

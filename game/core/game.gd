@@ -38,6 +38,11 @@ var season_uids: Array = []  ## host: a loaded save sets the season's player uid
 var roles: Dictionary = {}  ## host: player_uid -> role id, kept for the season so a rejoiner keeps theirs (P4-09; the save is P4-10)
 var quirks_on := OS.get_cmdline_user_args().has("--quirks")  ## group option (doc 01 Quirks, D-158): off by default, host picks in the lobby (`--quirks` for QA); saved with the season
 var quirks: Dictionary = {}  ## host: player_uid -> quirk id, kept for the season so a rejoiner keeps theirs (P5-09)
+var season_no := 1  ## P5-04 (doc 01 "Next season"): which season of the campaign this is; every peer mirrors it, the save keeps it
+var traits: Array = []  ## P5-04: creature trait ids gained so far (doc 03 s22), kept to the campaign's end; clients only print them in the Dawn Report
+var carry: Dictionary = {}  ## host: what the finished season hands the next (Campaign.build_carry), applied once by Save.apply_pending
+var season_lost := true  ## host: the finished season's result (SeasonAwards); only a won season can start the next
+var trait_report_pending := false  ## host: the new season's first Dawn Report prints the trait's `report_line` once
 var console_open := false  ## the dev console or a menu has the keyboard (D-031); Player and HoldController ignore game input
 var free_mouse := OS.get_cmdline_user_args().has("--free-mouse")  ## test runs never capture the mouse (multi.py passes it)
 
@@ -193,6 +198,10 @@ func load_season(ref: String, port: int = Net.DEFAULT_PORT) -> Error:
 	roles = s.get("roles", {}).duplicate()
 	quirks = s.get("quirks", {}).duplicate()
 	difficulty = StringName(str(s.get("difficulty", "normal")))
+	season_no = int(s.get("season_no", 1))  # P5-04: the campaign's season and gained traits come back with the save
+	traits = s.get("traits", []).duplicate()
+	Data.apply_traits(traits)
+	Quirks.season_n = season_no  # P5-09: the quirk draw seed follows the loaded season
 	for k in s.get("game", {}):  # group options (streamer-safe) before the lobby opens, so joiners get them at admit
 		if get(k) != null:
 			set(k, s.game[k])
@@ -202,11 +211,62 @@ func load_season(ref: String, port: int = Net.DEFAULT_PORT) -> Error:
 		Save.pending = {}
 		season_id = ""
 		season_uids = []
+		season_no = 1  # the load set them (and the overrides) before the host failed
+		traits = []
+		Data.clear_overrides()
 	return err
 
 
 func _go_main() -> void:
 	get_tree().change_scene_to_file.call_deferred(LOBBY_SCENE if in_lobby else MAIN_SCENE)
+
+
+## Host (P5-04, doc 01 "Next season"): the finished season was won and the campaign has another.
+func can_start_next_season() -> bool:
+	return is_host() and Clock.season_over and not season_lost and season_no < Campaign.seasons_max()
+
+
+## Host: starts the next season of the campaign. Upgrades, plots and savings carry (doc 02 s21); the creature gains a
+## trait (doc 03 s22); Main reloads on every peer, so the rest resets (doc 02 s21.3). Returns false if it may not start.
+func start_next_season() -> bool:
+	if not can_start_next_season():
+		return false
+	carry = Campaign.build_carry(get_tree())
+	season_no += 1
+	season_id = "%s_s%d" % [session_id, season_no]  # a new save folder: the won season's final save stays as it was
+	var seed_n := seed_value if seed_value != 0 else hash(session_id)  # as the creature body (Creature._pick_body)
+	var gained := Campaign.draw_trait(seed_n, season_no, traits)
+	if gained != "" and season_no >= int(Campaign.rule(&"campaign").get("first_trait_season", 2)):
+		traits.append(gained)
+		Log.event(&"trait_gained", {"season": season_no, "trait": gained, "seed": seed_n})
+		trait_report_pending = true
+	Data.apply_traits(traits)
+	Save.pending = {}
+	Save.own_by_uid = {}
+	Save.battery_by_uid = {}
+	Save.tally_left = {}
+	apply_next_season(season_no, traits, true)
+	Net.to_peers(&"apply_next_season", [season_no, traits, true])
+	for p in players:
+		players[p] = {"voice_setting": voice_setting_of(p)}
+	Quirks.reroll(season_no)  # P5-09: quirks are redrawn each season; reroll runs Roles.sync
+	Clock.start()
+	return true
+
+
+## Every peer, from the host (`Net.apply_next_season`): the season number and trait list; `reload` also starts the new
+## season's Main. A joiner gets it without `reload` at admit. Clients keep the trait list only for the Dawn Report.
+func apply_next_season(p_season: int, p_traits: Array, reload: bool) -> void:
+	season_no = p_season
+	traits = p_traits.duplicate()
+	if not reload:
+		return
+	console_open = false
+	Clock.season_over = false
+	if not is_host():
+		for p in players:
+			players[p] = {"voice_setting": voice_setting_of(p)}
+	_go_main()
 
 
 ## Hook for P2-03 (doc 06 s12 step 5): true once every clip is pre-shared. Start waits for it.
@@ -314,6 +374,13 @@ func leave_session(reason: StringName = &"left") -> void:
 	quirks.clear()
 	quirks_on = false
 	Quirks.mine = &""
+	Quirks.season_n = 1
+	season_no = 1
+	traits = []
+	carry = {}
+	season_lost = true
+	trait_report_pending = false
+	Data.clear_overrides()
 	Save.pending = {}
 	Save.own_by_uid = {}
 	Save.battery_by_uid = {}

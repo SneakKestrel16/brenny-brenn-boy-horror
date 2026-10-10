@@ -242,7 +242,7 @@ func fire_flare(peer: int) -> StringName:
 	_flare_ready_ms = Time.get_ticks_msec() + int(reload * 1000.0)  # P4-09: the Warden reloads faster
 	NoiseBus.emit_kind(&"flare", st.pos, peer)
 	var cr := get_tree().get_first_node_in_group(&"creature")
-	var hit: bool = cr != null and cr.global_position.distance_to(st.pos) <= float(Data.value(&"creature", &"noise_flare", &"radius_m")) and cr.flare_hit(float(e.retreat_s))
+	var hit: bool = cr != null and cr.global_position.distance_to(st.pos) <= float(Data.value(&"creature", &"noise_flare", &"radius_m")) and cr.flare_hit(float(Data.value(&"creature", &"retreat_after_flare_s", &"seconds")))  # P5-04: thick_hide overrides it
 	Log.event(&"flare_fired", {"player": peer, "hit": hit, "left": flare_shots})
 	_send()
 	return &""

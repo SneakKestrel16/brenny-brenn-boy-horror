@@ -6,7 +6,8 @@ extends Node
 
 const TABLES: Array[StringName] = [&"season", &"labor", &"crops", &"pumpkin", &"debt", &"medical_bill",
 		&"player_scaling", &"difficulty", &"store", &"ramp_up", &"traps", &"taint", &"roles",
-		&"creature", &"sabotage", &"ai_director", &"voice_lines", &"dawn_report_templates", &"rejoin_lines", &"quirks"]
+		&"creature", &"sabotage", &"ai_director", &"voice_lines", &"dawn_report_templates", &"rejoin_lines",
+		&"next_season", &"creature_traits", &"cosmetics", &"quirks", &"imposter"]  # Phase 5 (P5-04 registers all five)
 ## Phase 1 content: loaded only with --phase1 (P1-01 handoff; Director approval pending).
 const PHASE1_TABLE := &"phase1"
 ## Must exist for Phase 1 (P1-01 wrote these). The rest load when present.
@@ -27,6 +28,7 @@ var hash_value := 0  ## of all loaded file text; the host sends it so a client c
 var phase1 := not OS.get_cmdline_user_args().has("--no-phase1")  ## P2-24: Phase 1 night data loads by default; `--no-phase1` opts out (`--phase1` still accepted)
 var _tables: Dictionary = {}  ## table -> {id: record}
 var _order: Dictionary = {}  ## table -> Array[Dictionary] in file order
+var _undo: Array = []  ## P5-04: [dict, key, existed, old] per applied trait override, undone in reverse
 
 
 func _ready() -> void:
@@ -48,6 +50,7 @@ func _ready() -> void:
 func load_dir(dir: String, with_phase1: bool = false) -> bool:
 	_tables.clear()
 	_order.clear()
+	_undo.clear()
 	errors.clear()
 	var texts := ""
 	var names: Array[StringName] = TABLES.duplicate()
@@ -103,6 +106,49 @@ func load_text(table: StringName, text: String) -> bool:
 	_tables[table] = by_id
 	_order[table] = list
 	return errors.size() == before
+
+
+## P5-04 (doc 03 s22.2): gained creature traits as data overrides, host only. Idempotent: it undoes the last set first,
+## so the records go back to the files' numbers. `Data.value` / `record` read the live records, so every reader sees them.
+func apply_traits(ids: Array) -> void:
+	clear_overrides()
+	for id in ids:
+		for o: Dictionary in _tables.get(&"creature_traits", {}).get(StringName(id), {}).get("overrides", []):
+			_override(o)
+
+
+func clear_overrides() -> void:
+	for i in range(_undo.size() - 1, -1, -1):
+		var u: Array = _undo[i]
+		if u[2]:
+			u[0][u[1]] = u[3]
+		else:
+			u[0].erase(u[1])
+	_undo.clear()
+
+
+## One `overrides` entry: records picked by `id`, `days` [first, last] (ramp_up `day`) or `where_kind`; `field` may be a
+## dotted path; `op` set|add|mul. A null base (ramp_up day 7 `pit_4p`) stays null; `new: true` lets `set` add a field.
+func _override(o: Dictionary) -> void:
+	for r: Dictionary in _order.get(StringName(o.table), []):
+		var day := int(r.get("day", -1))
+		var hit: bool = (o.has("id") and r.id == o.id) or (o.has("days") and day >= int(o.days[0]) and day <= int(o.days[1])) \
+				or (o.has("where_kind") and r.get("kind") == o.where_kind)
+		if not hit:
+			continue
+		var path: PackedStringArray = String(o.field).split(".")
+		var d: Dictionary = r
+		for i in path.size() - 1:
+			d = d[path[i]]
+		var k: String = path[path.size() - 1]
+		var old: Variant = d.get(k)
+		if old == null and not (o.op == "set" and (d.has(k) or bool(o.get("new", false)))):
+			continue
+		_undo.append([d, k, d.has(k), old])
+		match o.op:
+			"set": d[k] = o.value
+			"add": d[k] = old + o.value
+			"mul": d[k] = old * o.value
 
 
 func has_table(table: StringName) -> bool:

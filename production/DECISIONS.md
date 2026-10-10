@@ -1178,3 +1178,11 @@ handoff, doc 07 s11 and s15 synced. Rulings: Q-306 accept the 3 m doors (they ma
 accept: hide the gray-box meshes only, keep every collision shape, door leaves visual-only, leaf yaw from the
 host-owned door state; Q-308 the glow card sits on the empty.
 **Why:** QA PASS with fixes (handoffs/P5-14.md "QA review").
+
+### D-171 · 2026-10-09 · Director · P5-04 merged
+P5-04 (next season: carry-over, savings, debt growth, one new creature trait, saved and loaded) passed QA with
+fixes, all made before merge. At merge the new season redraws P5-09 quirks (`Quirks.reroll`) and a load restores
+the quirk seed's season. Rulings: Q-271 AI Programmer task, base percentage the Game Designer's; Q-272 drop
+`splice_master` from the pool until the splice handles more than two segments; Q-273 harmless; Q-274 accept the
+`net.gd` edit; Q-275 roles re-pick through the lobby is a follow-up task, end copy stays a placeholder.
+**Why:** QA PASS with fixes (handoffs/P5-04.md "QA review").

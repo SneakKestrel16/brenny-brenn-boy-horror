@@ -127,7 +127,7 @@ func _process(delta: float) -> void:
 	_t += delta
 	var left := maxf(Clock.length_of(Clock.phase) - Clock.t_phase, 0.0)
 	var farm := get_tree().get_first_node_in_group(&"farm")
-	_top.text = "Day %d  %s  %d:%02d left\nCoins %d%s" % [Clock.day, PHASE_TEXT.get(Clock.phase, String(Clock.phase)),
+	_top.text = "Season %d  Day %d  %s  %d:%02d left\nCoins %d%s" % [Game.season_no, Clock.day, PHASE_TEXT.get(Clock.phase, String(Clock.phase)),
 			int(left) / 60, int(left) % 60, farm.coins if farm else 0,
 			_status()]
 	_bar.max_value = player.sprint_max()  # Taint and Shaken shorten the sprint (P3-07)

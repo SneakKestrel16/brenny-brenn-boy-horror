@@ -41,6 +41,7 @@ one is new it is a technical limit and tagged `placeholder`.
 23. [Answers to open questions](#23-answers-to-open-questions)
 24. [Questions raised](#24-questions-raised)
 25. [Dev gate and dev toys (P5-10)](#25-dev-gate-and-dev-toys-p5-10)
+26. [Next season and creature traits (P5-04)](#26-next-season-and-creature-traits-p5-04)
 
 ---
 
@@ -1404,3 +1405,17 @@ Doc 01 "Hidden dev setting" and "Dev toys" (D-044, D-045, D-046). Code: `game/co
 | `chicken` | until dawn | The host's tools squeak: each `hold_done` on the host broadcasts `squeak`, every peer plays a rubber-chicken squeak. |
 
 Durations other than doc 01's 60 s, the 0.2 gravity, the 1.7 pitch and the sound designs are placeholders for a listen and play test. Sounds are generated at run time (no files, no recordings). Tests: `tests/gameplay/test_dev_gate.gd` (gate closed by default, open with the test hash, `Squeaky` adds and removes one effect) and `tests/net/test_dev_toys_sync.gd` (2 instances: a host `toy shrink` reaches a client; see its header for the command). `tests/qa/test_harness.py` covers the `check_logs.py` skip.
+
+## 26. Next season and creature traits (P5-04)
+
+Source: doc 01 "Next season", [doc 02](02_systems_and_economy.md) section 21, [doc 03](03_creature_ai_director_and_scares.md) section 22. Numbers are in `data/next_season.json` and `data/creature_traits.json`; `Data.TABLES` also registers `cosmetics`, `quirks` and `imposter` for the parallel Phase 5 tasks.
+
+- **Flow.** A won season ends as in section 15 (`SeasonAwards._host_end` sets `Game.season_lost`). On the card the host gets "Start season N+1" (only if `Game.can_start_next_season()`: host, `Clock.season_over`, not lost, `season_no < campaign.seasons_max`), clients see a waiting line. `Game.start_next_season()` (host): `Campaign.build_carry` reads the live nodes, `season_no += 1`, a new `season_id` (`<session_id>_sN`, so the won season's final save is untouched), the trait draw and `Data.apply_traits`, then `apply_next_season(season, traits, reload)` to every peer and `Game._go_main()` reloads Main. The host's `Clock.start()` begins day 1.
+- **Carry.** `Campaign` (`game/core/campaign.gd`, static helpers) keeps upgrades (store records with `upgrade: true`, except `plot_pair`), the bought plots, and savings at 25% of the spare coins, rounded down, capped at 60 (doc 02 s21.2). `Save.apply_pending` calls `Campaign.apply_carry` in the new Main when `Game.carry` is set: store state, plots (never past `Farm.plot_ceiling()` of the new headcount), the flare gun refill, the savings coins (reason `savings`), then the `season_started` log event. Everything else resets with the Main reload (crops, traps, taint, generator, walkie batteries, scrap).
+- **Debt.** Season 2 and 3 read `next_season.json` `season_N` (`Campaign.debt_base`), by headcount. `Debt.total_for` and `Debt.first_of` use it when `Game.season_no > 1`; season 1 and the short season are unchanged. A join or leave still re-scales owed by headcount (`Debt._headcount_changed`).
+- **Traits.** `Campaign.draw_trait(seed, season, gained)` is uniform among the traits not yet gained, seeded by `hash("seed:season")`; the seed is `Game.seed_value`, or `hash(session_id)` when 0 (as `Creature._pick_body`). A trait is gained from `campaign.first_trait_season` on. `Data.apply_traits(ids)` applies each trait's `overrides` to the live records and remembers an undo list (`clear_overrides`): fields picked by `id`, `days` (ramp-up day range) or `where_kind`; `field` may be a dotted path; ops `set`, `add`, `mul`; a null base stays null. Overrides run on the host only; clients keep the trait id list for the Dawn Report. Apply them before the Main reload: the creature and AI Director cache some values in `_ready`. A new body is picked each season by P4-13.
+- **RPC.** `apply_next_season(season: int, traits: Array, reload: bool)` (host to clients, reliable). A joiner gets it with `reload` false from `Net._admit`.
+- **Display.** The HUD top line starts "Season N". The Dawn Report card says "Season N  Day D" and prints the new trait's `report_line` once, on the first report of the season (`report.trait_line`).
+- **Save.** The dawn save adds `season_no` and `traits`; `Game.load_season` restores both and re-applies the overrides.
+- **Log events.** `trait_gained` {season, trait, seed} once per season start; `season_started` {season, savings, spare, coins, plots, plots_carried, upgrades, headcount, traits}.
+- **Tests.** `tests/gameplay/test_next_season.gd` (overrides, draw, savings, plots clamp, season debt) and the 2-instance `tests/net/test_p5_04_e2e.gd` (header has the command). Open points: Q-271 to Q-275.

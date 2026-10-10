@@ -1543,3 +1543,39 @@ of the wall, facing out) and `PorchLightMount`; panes themselves are dark. `prop
 the pane quad? Settled by: Technical Artist choosing, 10-minute change.
 
 **Answer (Director, 2026-10-09):** Q-306 accepted, 3 m doors match the gray-box gap. Q-307 accepted: hide gray-box meshes only, keep collision, leaves visual-only, yaw from host door state. Q-308 accepted: glow card on the empty.
+
+### Q-271 · 2026-10-09 · Gameplay -> AI Programmer / Game Designer (P5-04) · answered
+Trait `tool_mimicry` sets `ai_director.lures.sound_no_tell_pct` (base 33 -> 80). Nothing reads that field. The creature's
+sound lures already always play with no tell (`creature.gd` sound lure branch), so under today's rules the trait changes
+nothing, and a base of 33 contradicts "always". Proposal (inference): the field means "share of sound lures that skip the
+tell"; the reader and the always-no-tell rule need one owner to decide. Settled by: AI Programmer wiring a reader, or the
+Game Designer moving the numbers (it also has `day_gap_s` 90 -> 70, which is read live and works).
+**Answer (Director, D-171):** an AI Programmer task; the base percentage is the Game Designer's call.
+
+### Q-272 · 2026-10-09 · Gameplay -> AI Programmer / Network & Voice (P5-04) · answered
+Trait `splice_master` (and any `splice_max_segments` override) has no reader: `VoiceClips.splice` builds 2 segments, `_splice`
+accepts only size 2 and splice.gd checks at most 2. The override applies to data but changes no behaviour. Settled by: the
+owner of splice.gd / voice_clips.gd reading `splice_max_segments` live, or dropping the trait.
+**Answer (Director, D-171):** drop `splice_master` from the trait pool until the splice handles more than two segments (Game Designer approves the data change); in OPEN_ISSUES.
+
+### Q-273 · 2026-10-09 · Gameplay -> AI Programmer (P5-04) · answered
+Trait `fast_legs` adds 0.5 to `chase_speed_mps` and `chase_speed_tainted_mps`. `creature.gd` reads only `chase_speed_mps`;
+the tainted speed has no reader, so tainted targets are chased at the same speed as clean ones either way. Settled by: the AI
+Programmer confirming the tainted figure is unused (then the second override is harmless) or wiring it.
+**Answer (Director, D-171):** harmless; no change.
+
+### Q-274 · 2026-10-09 · Gameplay -> Director (P5-04) · answered
+Cross-owner edits made because the task text assigns them: `game/net/net.gd` (RPC `apply_next_season`, sent to a joiner in
+`_admit`), `game/items/store.gd` `fire_flare` (reads `creature.retreat_after_flare_s` instead of the store record's
+`retreat_s`, so `thick_hide` works; both are 30 today). Carried by design: upgrades (store records with `upgrade: true`, not
+`plot_pair`), bought plots, savings. Not carried (inference from doc 02 s21.2 listing only those): walkie batteries, scrap,
+flare shells, crops, the generator's fuel. Settled by: the Director or the Network owner accepting the net.gd edit; the
+Game Designer confirming the carry list.
+**Answer (Director, D-171):** accept the `net.gd` edit; `store.gd` stays Gameplay-owned.
+
+### Q-275 · 2026-10-09 · Gameplay -> Director (P5-04) · answered
+Two gaps doc 01 "Next season" leaves open. (1) Roles: a new season reloads Main; roles stay as picked (`Roles.sync()`),
+and nothing re-opens the pick. (2) After the last season (`campaign.seasons_max` 3) the Season Awards card says "The farm is
+yours. The campaign is over." and offers only "Back to menu" (placeholder copy). Settled by: the Game Designer wording it and
+deciding whether roles re-pick between seasons.
+**Answer (Director, D-171):** roles re-pick through the lobby is a follow-up task; the end-of-campaign copy stays a placeholder for the Game Designer.

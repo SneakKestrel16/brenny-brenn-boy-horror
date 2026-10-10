@@ -77,7 +77,7 @@ static func build(tree: SceneTree, final: bool = false) -> Dictionary:
 		"headcount": farm.headcount, "coins": farm.coins, "final_extra": farm.final_extra, "free_scrap": farm.free_scrap,
 		"plots": plots,
 		"store": {"team": team, "own": own, "scrap": store.scrap_bought, "flare": store.flare_shots, "crows": crows, "plots": store.plots.duplicate()},
-		"roles": Game.roles.duplicate(), "quirks": Game.quirks.duplicate(), "uids": uids(),
+		"roles": Game.roles.duplicate(), "quirks": Game.quirks.duplicate(), "uids": uids(), "season_no": Game.season_no, "traits": Game.traits.duplicate(),
 		"extras": {}, "game": {},
 	}
 	var pz: Node = farm.targets.get("prize_pumpkin")
@@ -267,6 +267,8 @@ static func apply_pending(main: Node) -> void:
 		return
 	_track(main)
 	if pending.is_empty():
+		if not Game.carry.is_empty():  # P5-04: a new season of the campaign
+			Campaign.apply_carry(main)
 		return
 	var s := pending
 	pending = {}

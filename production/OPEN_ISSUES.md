@@ -425,3 +425,15 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 - **Barn door look.** A sliding-door rail sits above hinged leaves; pick one. Owner: 3D Artist.
 - **Overhangs without collision.** Farmhouse chimney (x 6..7.2), porch posts (to z +2.3) and the barn hoist beam
   (to z +1.0) are outside the gray-box collision. Owner: Level Designer, with the model wiring task.
+
+## Found at the P5-04 review (QA, 2026-10-09)
+
+- **Roles are not re-pickable between seasons.** Route the next season through the lobby (`in_lobby = true`,
+  carry applied at match start); that also gives the quirk re-roll and P5-11's `Imposter.pick` per season a home.
+  Owner: Gameplay (follow-up task).
+- **No save until season 2's first dawn.** A crash before it loses the carry. Owner: Gameplay.
+- **Trait seed after a load is not reproducible.** Owner: Gameplay / AI Programmer.
+- **`splice_master` trait** stays out of the pool until the splice handles more than two segments (Q-272).
+  Owner: Game Designer (data), AI Programmer.
+- **P5-04 e2e client check is weak** (passes on reload plus one trait). Owner: QA.
+- **Docs 05 section 26** is P5-04's; P5-11 also claims a section 26 and must renumber at its merge. Owner: Director.

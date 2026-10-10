@@ -45,6 +45,8 @@ static func total_for(pcts: Array, cur: int, players: int) -> int:
 	if short_season():
 		var s: Dictionary = Data.record(&"difficulty", &"short_season")
 		base = int(s.get("debt_total_4p_by_players", {}).get(str(players), s.debt_total_4p))
+	elif Campaign.debt_base(Game.season_no, players) > 0:
+		base = Campaign.debt_base(Game.season_no, players)  # P5-04 (doc 02 s21.4): later seasons read next_season.json
 	var n := days()
 	var sum := 0
 	for p in pcts.slice(0, n):
@@ -53,10 +55,13 @@ static func total_for(pcts: Array, cur: int, players: int) -> int:
 
 
 ## First payment of `total`; 0 in the short season (one payment, at the end).
-static func first_of(total: int) -> int:
+static func first_of(total: int, players: int = 0) -> int:
 	if short_season():
 		return 0
 	var d: Dictionary = Data.record(&"debt", &"season")
+	var den := Campaign.debt_base(Game.season_no, players if players > 0 else Game.player_count())
+	if den > 0:  # doc 02 s21.4: in season 2 and 3 the denominator is the headcount's own base
+		return rhu(int(Campaign.rule(StringName("season_%d" % Game.season_no)).first_payment_4p) * total, den)
 	return rhu(int(d.first_payment_4p) * total, int(d.total_4p))
 
 
