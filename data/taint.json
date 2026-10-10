@@ -5,7 +5,7 @@
     {
       "id": "taint",
       "source": "doc01",
-      "cite": "doc 02 section 13; doc 01 The Taint; causes doc 03 section 8; cure hold is labor.json wash",
+      "cite": "doc 02 section 13; doc 01 The Corruption; causes doc 03 section 8; cure hold is labor.json wash",
       "sprint_mult": 0.6,
       "pry_mult": 1.5,
       "footstep_radius_mult": 1.5,
@@ -19,7 +19,7 @@
     {
       "id": "shaken",
       "source": "doc01",
-      "cite": "doc 02 section 13; doc 01 The Taint (60 s)",
+      "cite": "doc 02 section 13; doc 01 The Corruption (60 s)",
       "sprint_mult": 0.6,
       "duration_s": 60,
       "restarts_on_new_cause": true,
@@ -31,7 +31,7 @@
     {
       "id": "stacking",
       "source": "placeholder",
-      "cite": "doc 02 section 13: Taint and Shaken multiply (sprint x0.36)",
+      "cite": "doc 02 section 13: Corruption and Shaken multiply (sprint x0.36)",
       "rule": "multiply"
     }
   ]

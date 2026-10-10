@@ -13,7 +13,7 @@ runs on the host.
 
 ## Responsibilities
 - Implement doc 03 on the creature side: hearing (including transmitted voice volume) and
-  short-range sight, with **hunting driven only by what the creature senses** (plus Taint).
+  short-range sight, with **hunting driven only by what the creature senses** (plus Corruption).
 - Behavior states Lurk, Lure, Stalk, Chase and Retreat with their readable audio tells (the state is
   replicated; ambience runs locally on clients).
 - Trap setting at night, pegboard theft, sabotage with the daily disturbance budget.

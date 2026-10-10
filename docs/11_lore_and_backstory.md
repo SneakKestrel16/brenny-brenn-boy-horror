@@ -110,8 +110,8 @@ Team-facing. These are reasons behind existing doc 01 rules, for writers, artist
 | **Shed lock broken from day 5** | Jeremy's lock never kept him out either. |
 | **The wild corn can't be cut** | It grew overnight around the trap and has never been cut since. |
 | **Moonflowers** | They first bloomed in the ring the morning after. They glow in the dark, open only at night, and turn bad if left standing at dawn. |
-| **Taint (black, oily hands)** | Whatever the corn is now, it gets on you. It can follow what it has touched. |
-| **The well cures Taint** | Jill's well. She scrubbed his hands at it before every supper. The pump is loud, and he always came running at the sound. |
+| **Corruption (black, oily hands)** | Whatever the corn is now, it gets on you. It can follow what it has touched. |
+| **The well cures Corruption** | Jill's well. She scrubbed his hands at it before every supper. The pump is loud, and he always came running at the sound. |
 | **Dusk: the bell rings three times** | The festival bell from 1958, rung every dusk since so the Brenn boy knows to come in. |
 | **The Prize Pumpkin is gnawed** | He's hungry. |
 | **The wrong count** | He wants to be counted with the farmhands, so he borrows a hat. |
@@ -162,7 +162,7 @@ Short handwritten notes from 1958, pinned where the verb is first met. Jeremy's 
 |---|---|---|
 | Pegboard | Pegboard, traps | "Every hook gets a trap. Empty outline means it's out there. If it's not on the board, it's in the corn. — Jeremy" |
 | Shed door | Disarm | "Kneel still and take your time with them. They don't care who steps in. — Jeremy" |
-| Well | Wash Taint | "Wash up before supper. Whatever's on your hands, the corn can follow it. Pump's loud. — Jill" |
+| Well | Wash Corruption | "Wash up before supper. Whatever's on your hands, the corn can follow it. Pump's loud. — Jill" |
 | Generator | Refuel | "Keep it running. It don't come in where the lights are. — Jeremy" |
 | Fuel drum | Fuel | "Drum's full. The walk's the hard part." |
 | Town stand | Sell | "Turnips sell steady. Count your coins twice. Pa says the bank does. — Julia" |

@@ -10,7 +10,9 @@ config_version=5
 
 [application]
 
-config/name="Brenny Brenn Boy Horror"
+config/name="Farmer's Delight"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="Godot/app_userdata/Brenny Brenn Boy Horror"
 config/version="dev"
 config/description="2 to 4 player online co-op farming horror. See docs/01_design_doc.md."
 run/main_scene="res://game/core/boot.tscn"

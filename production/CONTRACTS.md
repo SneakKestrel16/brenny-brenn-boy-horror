@@ -123,7 +123,7 @@ single-player is not done.
 | AI Director, tension meter, scare and lure scheduling | Host | Never runs on clients |
 | Traps, pegboard, flags | Host | |
 | Economy: money, prices, selling, bills, payments, debt | Host | No client-side selling |
-| Taint, Shaken, deaths, respawns | Host | |
+| Corruption, Shaken, deaths, respawns | Host | |
 | Generator fuel, lights, doors | Host | |
 | Crops and plots | Host | |
 | Festival cart and Prize Pumpkin | Host | |
@@ -194,7 +194,7 @@ A message not on that list needs Director approval and a DECISIONS entry.
   [doc 05 section 8](../docs/05_technical_design.md#8-the-noise-interface):
   `emit(position: Vector3, radius_m: float, kind: StringName, source_peer: int)` (raw, radius final),
   `emit_kind(kind, position, source_peer, mult = 1.0)` (looks up the radius in `creature.json`,
-  applies Taint and quiet-can multipliers) and `emit_voice(position, volume_byte, source_peer)`
+  applies Corruption and quiet-can multipliers) and `emit_voice(position, volume_byte, source_peer)`
   (converts the one-byte voice volume to a radius). Signal `noise_emitted` is what the creature
   connects to. The AI Programmer's confirmation is Q-019.
 - **Soundscape (D-020):** autoload `Soundscape` (`game/audio/soundscape.gd`, Audio Designer), runs on
@@ -237,7 +237,7 @@ file is authoritative for gameplay events.
 
 `t` is seconds since session start. Events needed for the doc 01 measures (minimum):
 `hold_completed` (verb, seconds), `lure_played`, `lure_result` (worked = moved more than 10 m toward
-the source within 8 s), `trap_sprung`, `trap_race_result` (solo, tainted, pried_at_once, survived,
+the source within 8 s), `trap_sprung`, `trap_race_result` (solo, corrupted, pried_at_once, survived,
 seconds_spare), `death`, `money_changed`, `inside_at_night` (seconds), `spatial_audio_trial`.
 Full list and field names: [doc 05 section 18](../docs/05_technical_design.md). Host-written
 `trap_race_result` and `inside_at_night` carry `data.player` (D-018). `lure_result.within_s` is

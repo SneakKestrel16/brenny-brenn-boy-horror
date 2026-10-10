@@ -17,7 +17,7 @@ run; no render code exists yet, so nothing in section 10 has been measured).
 5. Darkness that is scary but playable
 6. Fog and post-processing
 7. Materials and shaders
-8. Characters, Taint, ragdoll and ghost look
+8. Characters, Corruption, ragdoll and ghost look
 9. Dawn Report card style
 10. Corn rendering and the 4-player budget
 11. Asset list
@@ -61,11 +61,11 @@ resource, so a re-grade is one file.
 | Lit light (lantern, porch, window) | warm amber `#FFB45A` | the same, and it must be the brightest thing in frame |
 | Moonflower glow | pale cyan `#7FE6D8` | same |
 | Ghost / spirit | cold white-blue `#BFD8FF` | same |
-| Taint | oil black `#0A0710` with a purple sheen `#3A1F4A` | same |
+| Corruption | oil black `#0A0710` with a purple sheen `#3A1F4A` | same |
 | Creature eyes and ember | orange-red `#FF5A1F` | same |
 
 Rule: no object is pure black or pure white. Rule: only these things ever glow at night: warm light
-sources, moonflowers, and Taint-free spirit tones, plus two fixed exceptions that are part of the
+sources, moonflowers, and Corruption-free spirit tones, plus two fixed exceptions that are part of the
 creature's tell: the creature's ember eyes and the corn husk heart. Nothing else glows. If something
 else glows, players will misread it.
 
@@ -200,7 +200,7 @@ therefore absolute.
   - The recording light and a staged lantern blow-out stay steady (doc 06).
   - Post-processing never pulses brightness (no flash, no strobe, no lightning). The only full-screen
     brightness changes are the ones the clock phase and the cut-to-black on a lunge (section 8).
-  - The Taint overlay and screen smudge change slowly and are not light.
+  - The Corruption overlay and screen smudge change slowly and are not light.
 - **As built (P3-09).** `LightFlicker.play(rig) -> bool` (a static call on the `LightRig`; the host
   resolves `light_id` to the rig in `ghost_powers.gd`) runs the pattern above: 30% of the rig's own
   level, 0.25 s steps, `#BFD8FF`, colour back over 0.1 s, then the override is cleared so dimming and
@@ -261,7 +261,7 @@ cannot see a creature at 25 m. Both are required (doc 01 "Nights", "Light is the
      tired players lose edge vision a little.
   4. Film grain: very light by day (0.02), stronger at night (0.06). Static noise, not animated
      brightness.
-  5. Taint overlay (section 8).
+  5. Corruption overlay (section 8).
 - **No bloom flares or lens flares on lights.** Bloom is subtle (threshold 1.2, intensity 0.25) so the
   lit sources feel warm; a pulsing bloom would imitate a flicker, so bloom intensity never changes at
   runtime.
@@ -283,7 +283,7 @@ a new material needs a reason.
 | `mat_crop_wilted` | standard, droops via vertex offset, desaturated | "wrinkled leaf" for a thirsty crop, a mesh shape, not a glow |
 | `mat_emissive_warm` | unshaded emissive | window glow cards, lantern glass |
 | `mat_moonflower` | emissive `#7FE6D8`, steady, 3 m `OmniLight3D` | glow is constant, no pulse (section 4.3) |
-| `mat_taint_surface` | oil-black sheen, slow noise scroll (not brightness) | Taint objects, unpicked moonflower once rotted (doc 01) |
+| `mat_taint_surface` | oil-black sheen, slow noise scroll (not brightness) | Corruption objects, unpicked moonflower once rotted (doc 01) |
 | `mat_glass_lantern` | emissive amber, a flame mesh with its own vertex wobble | flame moves, the light does not |
 | `mat_ghost_rim` | rim light shader, `#BFD8FF` | glow on the creature seen by ghosts (doc 05 s14) |
 | `mat_paper` | paper texture, no lighting | Dawn Report card |
@@ -291,22 +291,22 @@ a new material needs a reason.
 Rule: no material animates emission or light energy faster than 0.5 Hz. Wind, sway and scrolling use
 vertex offsets or UV scroll, which are position or texture changes, not brightness changes.
 
-## 8. Characters, Taint, ragdoll and ghost look
+## 8. Characters, Corruption, ragdoll and ghost look
 
 - **Farmer.** Same body for every player, tinted overalls per player colour (6 colours, D-159). Visible
-  sleeves and hands in first person (the Taint stain needs them). Third-person body for other
+  sleeves and hands in first person (the Corruption stain needs them). Third-person body for other
   players, standing at 1.8 m. Cosmetics (hats, overalls) are DD Phase 5 and out of scope.
   **Exception (D-144):** one fixed hat per role is in now, as a role marker rather than a cosmetic
   (`hat_<role_id>.glb`, s11.7). Picked hats and other cosmetics stay Phase 5.
-- **Taint stain on hands and sleeves** (doc 01 "Taint"): black oily stains climbing from fingers
+- **Corruption stain on hands and sleeves** (doc 01 "Corruption"): black oily stains climbing from fingers
   toward the elbow as a `taint_level` shader parameter on the hand and sleeve material, in steps tied
-  to the Taint stages in doc 02. Visible to all (doc 01), so the third-person body uses the same
+  to the Corruption stages in doc 02. Visible to all (doc 01), so the third-person body uses the same
   material. For the local player, doc 05 s10 adds a faint dark smudge and fog at the screen edge.
   A **colour-blind-safe cue** is the shape: stains are dark and glossy against matte cloth, with a
   hard edge pattern, readable in greyscale (inference; settled by testing a greyscale screenshot).
   *As built (P3-08):* `game/render/taint_look.gd`. Until `tool_hands.glb` exists, two capsule
-  forearms with `taint_hands.gdshader` hang under each player's camera and show only while Tainted.
-  `taint_level` is fixed at 1, because doc 01 says a second Taint changes nothing, so the "stages"
+  forearms with `taint_hands.gdshader` hang under each player's camera and show only while Corrupted.
+  `taint_level` is fixed at 1, because doc 01 says a second Corruption changes nothing, so the "stages"
   above are unsettled (Game Designer). The local player also gets `taint_screen.gdshader`, a
   CanvasLayer at layer 5 that fades in over 3 s (`placeholder`). Ground sources use
   `taint_ground.gdshader`: an oil puddle for leavings and a seed scatter for strange seeds. The dead
@@ -507,7 +507,7 @@ follow section 2.
 | `tool_flare_gun.glb` | 0.25 x 0.05 x 0.18 | P3 |
 | `tool_shed_lock.glb` | 0.1 x 0.05 x 0.15 | P3 |
 | `tool_whistle.glb` | 0.08 x 0.03 x 0.03 | P3 |
-| `tool_hands.glb` (first-person arms with sleeves; Taint material slot) | 0.5 x 0.15 x 0.15 | P1 |
+| `tool_hands.glb` (first-person arms with sleeves; Corruption material slot) | 0.5 x 0.15 x 0.15 | P1 |
 
 ### 11.4 Traps (`trap`)
 
@@ -532,7 +532,7 @@ follow section 2.
 | `crop_turnip_wilted.glb`, `crop_turnip_rotten.glb` | 0.4 high | P1 |
 | `crop_pumpkin_stage0.glb` to `_stage3.glb`, `_wilted`, `_rotten` | up to 0.8 | P2 |
 | `crop_moonflower_stage0.glb` to `_stage2.glb`, `_wilted` | up to 0.6 | P2 |
-| `crop_moonflower_taint.glb` (unpicked at dawn becomes a Taint object) | 0.6 | P3 |
+| `crop_moonflower_taint.glb` (unpicked at dawn becomes a Corruption object) | 0.6 | P3 |
 | `pumpkin_prize_giant.glb` | 3 diameter x 2.4 | P4 |
 | `pumpkin_prize_large.glb` | 2 diameter x 1.6 | P4 |
 | `pumpkin_prize_medium.glb` | 1.2 diameter x 1 | P4 |
@@ -612,7 +612,7 @@ from doc 02 (inference; settled by the Game Designer if the pen holds other spec
   acceptable until real ones land.
 - **P2:** farmhouse, field B, pumpkins, moonflower bed and glow, crate, pig and cow, scarecrow body,
   doors, ragdoll, tripwire, farm gate, wilting and rotting variants.
-- **P3:** Taint, ghosts, flags, whistle, walkie-talkie, flare, church silhouette, Dawn Report card,
+- **P3:** Corruption, ghosts, flags, whistle, walkie-talkie, flare, church silhouette, Dawn Report card,
   boar and corn husk creatures, Harvest Moon sky.
 - **P4:** Prize Pumpkin sizes, patch, cart, store items, town stand, bright lantern.
 - **P5:** cosmetics, live clips, next season. Out of scope.
@@ -672,7 +672,7 @@ download is run. Build script: `tools/blender/build_p4_40.py` (run line in its d
 `animal_chicken` (hen: breast, neck, comb, wattle, wings, fanned tail, toed legs; 716 tris), `char_farmer`
 (P5-40, CEO-approved 2026-10-10: the farmer style changed from the P5-12 blocky body to the smoother, fuller-haired "B" body: shaped torso,
 head with hair and ears, bib overalls with pocket, buttons and straps, cuffs, boots; 3,600 tris; same 12-bone rig, 9
-animations, tint and Taint material slots, front -Z, origin at the feet, 1.80 m; `tools/blender/build_farmer_hq.py`, which supersedes
+animations, tint and Corruption material slots, front -Z, origin at the feet, 1.80 m; `tools/blender/build_farmer_hq.py`, which supersedes
 `build_p5_12.build_farmer`; the ragdoll is the same body in its `lie` pose, 3,600 tris; the five overalls cosmetics are refitted to it by
 `build_p5_06.refit`, 188 to 780 tris each), P5-12 also rebuilt in Blender
 `tool_watering_can` and `_quiet` (ribbed body, rose, cloth wrap), `tool_walkie_talkie`, `tool_walkie_battery`,
@@ -692,7 +692,7 @@ P5-26 status of the s11 rows it named: built in P5-15/P5-17 (`trap_tripwire` set
 `trap_tripwire_sprung` (260 tris, 0.33 x 3.06 x 0.81 m), `prop_scarecrow_field` (648 tris, 0.85 x 0.72 x 2.06 m),
 `prop_window_glow` (36 tris, 0.94 x 0.04 x 0.94 m, `mat_emissive_warm`). Placement notes: `production/handoffs/P5-26.md`.
 
-P5-32 (CEO STOP 6): all 17 crop files of s11.5 (turnip, pumpkin, moonflower, every stage plus wilted, rotten, taint)
+P5-32 (CEO STOP 6): all 17 crop files of s11.5 (turnip, pumpkin, moonflower, every stage plus wilted, rotten, `taint`)
 rebuilt by `tools/blender/build_p5_32.py` with folded curved leaves, lobed pumpkin leaves, ribbed fruit, flowers, layered
 moonflower petals; 46 to 656 tris (class "mid", 800), same names, node `Crop`, origins and materials. Corn unchanged.
 Handoff `production/handoffs/P5-32.md`.

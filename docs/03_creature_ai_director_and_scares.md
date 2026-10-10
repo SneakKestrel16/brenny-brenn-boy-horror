@@ -14,7 +14,7 @@ Builds on [doc 02](02_systems_and_economy.md) (numbers), [doc 04](04_farm_layout
 5. Losing a chase
 6. Light rules
 7. Day deaths and the trap race
-8. Taint and Shaken, creature side
+8. Corruption and Shaken, creature side
 9. Night traps (9.1 As built, P2-05)
 10. Sabotage and the disturbance budget
 11. The AI Director
@@ -37,7 +37,7 @@ Builds on [doc 02](02_systems_and_economy.md) (numbers), [doc 04](04_farm_layout
   tunes; `inference` is my reading of doc 01, with what would settle it.
 - **Nothing here is invented silently.** Doc 01 gives almost no creature distances or speeds, so
   most numbers in sections 3, 4 and 7 are `placeholder`. They sit in data (section 19), not code.
-- **Host only.** The creature, the AI Director, traps, Taint, deaths and every roll in this doc run
+- **Host only.** The creature, the AI Director, traps, Corruption, deaths and every roll in this doc run
   on the host (peer 1) (CONTRACTS section 5). Clients get states and one-shot messages (doc 06
   section 7). Close calls resolve in the victim's favour; lag never kills (doc 01 "Close calls").
 - **Dependency on Q-016.** Walk 3.0, crouch 1.2 and sprint 5.0 m/s are doc 02 `placeholder`s
@@ -66,7 +66,7 @@ Doc 01 "The Creature > Bodies": the host picks one body per season. All four hun
 
 ## 3. Senses
 
-Doc 01 "Senses": hearing is the main sense; sight is short range; Taint is tracked from much
+Doc 01 "Senses": hearing is the main sense; sight is short range; Corruption is tracked from much
 further. Hunting uses only these (doc 01 "AI Director > Hunting and presentation").
 
 ### 3.1 Noise kinds and hearing radii
@@ -83,12 +83,12 @@ except the rows marked.
 | `step_crouch` | 0 m (silent) | doc 01 "Hiding verbs": crouch-walking is silent |
 | `step_sprint` | 30 m | placeholder |
 | `step_sprint_corn` | 40 m | placeholder (doc 01 "Senses": sprint in corn is heard) |
-| Tainted footsteps | radius x1.5 | doc 01 "The Taint" ("heard 50% further"); doc 02 section 13 |
+| Corrupted footsteps | radius x1.5 | doc 01 "The Corruption" ("heard 50% further"); doc 02 section 13 |
 | `tool_till`, `tool_plant`, `tool_water`, `tool_harvest` | 15 m | placeholder |
 | `tool_water` with quiet watering can | x0.5, so 7.5 m | placeholder (doc 02 section 10 names the can; this doc sets the radius) |
 | `tool_shovel`, `tool_pry`, `tool_repair` | 25 m | placeholder |
 | `tool_disarm` (kneeling still) | 8 m | placeholder (doc 01 "Night Traps": disarm kneeling still) |
-| `well_pump` | 45 m | placeholder (doc 01 "Senses": named as a heard sound; the cure is "noisy", doc 01 "The Taint") |
+| `well_pump` | 45 m | placeholder (doc 01 "Senses": named as a heard sound; the cure is "noisy", doc 01 "The Corruption") |
 | `door` | 20 m | placeholder |
 | `generator_dead` | 80 m | placeholder (doc 01 "Nights": dead generator, "sound carries") |
 | `bells` (tripwire bells rung) | 60 m | placeholder (doc 01 "Night Traps": loud) |
@@ -129,31 +129,31 @@ Corn damping does not apply to `step_sprint_corn`; its 40 m already includes the
 - **Stillness** is the host's own check on received transforms: under 0.2 m moved over 1 s
   (`placeholder`, doc 01 "Hiding verbs: go still").
 
-### 3.3 Taint tracking
+### 3.3 Corruption tracking
 
-Doc 01 "The Taint": the creature tracks a Tainted player "from much further".
+Doc 01 "The Corruption": the creature tracks a Corrupted player "from much further".
 
 | Value | Number | Source |
 |---|---|---|
-| Taint tracking radius | 60 m | placeholder |
-| Tracking works | day and night, through corn | doc 01 "The Taint" (inference: "tracked", not "seen") |
-| Night trail | a Tainted player's path is followable by the creature for 20 s of age | doc 01 "The Taint" (follow trail at night); 20 s placeholder |
-| Cue to the player | black stains underfoot and a wet heartbeat | doc 01 "The Taint" |
-| Ground effect: dead crows and strange seeds | stay Taint sources; touching Taints | doc 01 "Daytime Threats" |
+| Corruption tracking radius | 60 m | placeholder |
+| Tracking works | day and night, through corn | doc 01 "The Corruption" (inference: "tracked", not "seen") |
+| Night trail | a Corrupted player's path is followable by the creature for 20 s of age | doc 01 "The Corruption" (follow trail at night); 20 s placeholder |
+| Cue to the player | black stains underfoot and a wet heartbeat | doc 01 "The Corruption" |
+| Ground effect: dead crows and strange seeds | stay Corruption sources; touching Corrupts | doc 01 "Daytime Threats" |
 
 - Tracking gives a **position** to the creature's senses. It is a sense, so it is legal for
   hunting (section 11.6).
-- Taint costs and cure are doc 02 section 13: sprint x0.6, footsteps x1.5, pry x1.5, cure 10 s at
+- Corruption costs and cure are doc 02 section 13: sprint x0.6, footsteps x1.5, pry x1.5, cure 10 s at
   the well (noisy).
 
 **As built (P3-07).** `creature.gd` `_track_taint()` runs from `_sense` at night only; day tracking
-waits for a creature that hunts by day. Within `taint_tracking_radius_m` (60 m) a Tainted living
+waits for a creature that hunts by day. Within `taint_tracking_radius_m` (60 m) a Corrupted living
 player's true position is the fix. Further out, the creature follows the night trail once it comes
 within 3 m of one of its points, homing on the point 3 steps newer; the trail keeps one point per
 second for `taint_trail_s` (20 s). Trail step 1 s, pickup 3 m and lead 3 are placeholders in
 `creature.gd`; the rule is `creature_logic.gd` `taint_fix` (unit test
 `tests/creature/test_creature_logic.gd`). A fix enters the hearing memory every 0.1 s as kind
-`taint` with margin 0, so any real noise wins the pick and a Tainted chase never goes quiet
+`taint` with margin 0, so any real noise wins the pick and a Corrupted chase never goes quiet
 (section 5). Washing or death drops the trail at once. Tracking and leavings are off on the
 Phase 1 farm unless `phase1.json` `taint_enabled` is set. The debug state shows `taint_trails`.
 
@@ -188,7 +188,7 @@ placeholder player speeds (Q-016).
 | `stalk_speed_mps` | 2.5 | still slower than walking, so a player can leave |
 | `trap_race_speed_mps` | 3.5 | section 7 |
 | `chase_speed_mps` | 5.5 | just above sprint (5.0), so a sprint buys time but a 6 s sprint cannot escape alone; breaking line of sight does |
-| `chase_speed_tainted_mps` | 5.5 | unchanged: Taint hurts the player, not the creature |
+| `chase_speed_tainted_mps` | 5.5 | unchanged: Corruption hurts the player, not the creature |
 | `lure_wait_s` | 8 | doc 01 "Voice mimicry": a lure works if the target moves over 10 m toward within 8 s |
 | `stalk_max_s` | 25 | then it commits or gives up |
 | `chase_commit_s` | 6 | minimum chase before it can lose interest |
@@ -201,7 +201,7 @@ placeholder player speeds (Q-016).
 | From | To | Condition |
 |---|---|---|
 | `lurk` | `lure` | the AI Director grants a lure (section 12), or the creature hears a lone player and picks a lure (night) |
-| `lurk` | `stalk` | a target sensed (heard, seen or Tainted) and the AI Director's phase allows presence |
+| `lurk` | `stalk` | a target sensed (heard, seen or Corrupted) and the AI Director's phase allows presence |
 | `lure` | `stalk` | lure worked (target moved 10 m toward within 8 s) |
 | `lure` | `lurk` | lure failed |
 | `stalk` | `chase` | target seen, or heard sprinting, or at night the target's **sensed** position is within 12 m; by day only inside a day death or a trap race (section 7) |
@@ -262,9 +262,9 @@ reach a lit building**.
   may run during it.
 - When a chase is lost the creature goes to the last sensed position, searches for `memory` seconds
   (section 3.1) and returns to `lurk`.
-- **Any Tainted player cannot lose a chase by quiet alone:** Taint tracking keeps giving the
-  creature a position (section 3.3). They must reach a lit building or wash the Taint. This is a
-  consequence of doc 01 "The Taint" and "Senses" (inference; settle it in a Phase 1 playtest).
+- **Any Corrupted player cannot lose a chase by quiet alone:** Corruption tracking keeps giving the
+  creature a position (section 3.3). They must reach a lit building or wash off the Corruption. This is a
+  consequence of doc 01 "The Corruption" and "Senses" (inference; settle it in a Phase 1 playtest).
 
 ## 6. Light rules
 
@@ -300,11 +300,11 @@ Doc 01 "Day Deaths": a day death is out until dawn plus the medical bill (doc 02
 There are exactly two ways to die by day; the AI Director varies the thresholds a little each day
 but never adds a condition.
 
-### 7.1 Death 1: alone and Tainted in the deep corn
+### 7.1 Death 1: alone and Corrupted in the deep corn
 
 All four must hold (doc 01 "Day Deaths (1)"):
 
-1. The player is **Tainted**.
+1. The player is **Corrupted**.
 2. The player is **alone**: no teammate within earshot.
 3. The player is **deep in corn**.
 4. The creature is in `stalk` on that player and reaches `reach_m` (the close-call check, doc 06
@@ -323,7 +323,7 @@ A player hunted by day while fitting only some conditions is stalked and may be 
 
 Doc 01 "Day Deaths (2)": a bear trap springs by day; the creature's signature sound approaches
 from a set distance; prying free leaves you alive and Shaken; failing kills; a teammate shortens
-the pry. Tuned so **a solo, untainted player who pries at once survives with a few seconds to
+the pry. Tuned so **a solo, uncorrupted player who pries at once survives with a few seconds to
 spare** (doc 01 "Day Deaths (2)").
 
 **Formula.** `spare_s = start_distance_m / approach_speed_mps - pry_s`. The player survives when
@@ -331,9 +331,9 @@ spare** (doc 01 "Day Deaths (2)").
 
 | Input | Number | Source |
 |---|---|---|
-| `pry_s`, solo untainted | 4 s | doc 02 section 2.1 (placeholder) |
-| `pry_s`, Tainted | 4 x 1.5 = 6 s | doc 02 section 13 (placeholder) |
-| `pry_s`, with a teammate | 4 x 0.6 = 2.4 s (3.6 s Tainted) | doc 02 section 2.1 (`labor.json` `pry.helped_mult`) |
+| `pry_s`, solo uncorrupted | 4 s | doc 02 section 2.1 (placeholder) |
+| `pry_s`, Corrupted | 4 x 1.5 = 6 s | doc 02 section 13 (placeholder) |
+| `pry_s`, with a teammate | 4 x 0.6 = 2.4 s (3.6 s Corrupted) | doc 02 section 2.1 (`labor.json` `pry.helped_mult`) |
 | `approach_speed_mps` | 3.5 | placeholder (section 4.1) |
 | `start_distance_m`, normal | 32 | placeholder, derived below (25 before P5-33) |
 | `start_distance_m`, deep trap | 25 | placeholder, derived below (18 before P5-33) |
@@ -341,7 +341,7 @@ spare** (doc 01 "Day Deaths (2)").
 **Derivation.** The first target spare was 3 s ("a few seconds", doc 01): 3.5 x (4 + 3) = 24.5,
 rounded up to 25 m. In the CEO's STOP 6 playtest (P5-33, `logs/playtest_20261009/`) every race
 killed at 7.7 s, before a teammate could arrive or the victim could read the warning ("kills so
-quickly and randomly"). The target is now 5 s of spare for a solo untainted player who pries at
+quickly and randomly"). The target is now 5 s of spare for a solo uncorrupted player who pries at
 once, so a teammate a few metres away can still run over and help: 3.5 x (4 + 5) = 31.5, rounded
 up to **32 m**, giving `spare_s` = 32 / 3.5 - 4 = **5.14 s**. A deep trap keeps its 7 m lead over
 the normal one: **25 m**, giving 25 / 3.5 - 4 = **3.14 s**. Both are placeholders
@@ -351,19 +351,19 @@ Worked table (normal start 32 m, deep 25 m; speed 3.5):
 
 | Case | Pry | Normal spare | Deep spare | Outcome | Doc 01 loss reason |
 |---|---|---|---|---|---|
-| Solo, untainted, pries at once | 4 s | +5.14 | +3.14 | survive | the target |
-| Solo, untainted, hesitates 2 s | 4 s + 2 s | +3.14 | +1.14 | survive | "hesitation" |
-| Solo, untainted, hesitates 4 s | 4 s + 4 s | +1.14 | -0.86 | lives normal, dies deep | "hesitation", "deep trap" |
-| Solo, Tainted, pries at once | 6 s | +3.14 | +1.14 | survive | "Taint" (slower pry) |
-| Solo, Tainted, hesitates 2 s | 6 s + 2 s | +1.14 | -0.86 | lives normal, dies deep | "Taint", "hesitation", "deep trap" |
-| With a teammate, untainted | 2.4 s | +6.74 | +4.74 | survive | "a teammate shortens the pry" |
-| With a teammate, Tainted | 3.6 s | +5.54 | +3.54 | survive | |
+| Solo, uncorrupted, pries at once | 4 s | +5.14 | +3.14 | survive | the target |
+| Solo, uncorrupted, hesitates 2 s | 4 s + 2 s | +3.14 | +1.14 | survive | "hesitation" |
+| Solo, uncorrupted, hesitates 4 s | 4 s + 4 s | +1.14 | -0.86 | lives normal, dies deep | "hesitation", "deep trap" |
+| Solo, Corrupted, pries at once | 6 s | +3.14 | +1.14 | survive | "Corruption" (slower pry) |
+| Solo, Corrupted, hesitates 2 s | 6 s + 2 s | +1.14 | -0.86 | lives normal, dies deep | "Corruption", "hesitation", "deep trap" |
+| With a teammate, uncorrupted | 2.4 s | +6.74 | +4.74 | survive | "a teammate shortens the pry" |
+| With a teammate, Corrupted | 3.6 s | +5.54 | +3.54 | survive | |
 
 - **Hesitation** is the time from spring to starting the pry hold (the host measures it).
 - **AI Director bend.** The AI Director may vary `start_distance_m` between 29 and 35 m at normal
   and between 22 and 28 m at deep (placeholder, `trap_race_bend_m` +/- 3), picked at dawn. At 29 m
-  a solo untainted player has 4.29 s spare; at 35 m, 6.0 s. It never adds conditions and never
-  moves a solo untainted immediate prier at a normal trap below 2 s of spare (the floor;
+  a solo uncorrupted player has 4.29 s spare; at 35 m, 6.0 s. It never adds conditions and never
+  moves a solo uncorrupted immediate prier at a normal trap below 2 s of spare (the floor;
   placeholder `trap_race_min_spare_s`). The floor does not apply to deep traps: they are meant to
   be tighter (25 m gives 3.14 s; the 22 m bend gives 2.29 s).
 - **Nightmare** widens the bend range to +/- 5 m but keeps the floor at 1 s; no voice tells; the
@@ -401,28 +401,28 @@ was 66 to 72 m away or in `lurk`. The victim had to aim at the trap to pry it. N
 - **HUD.** The victim sees "CAUGHT IN A TRAP. It is coming: N s" with the seconds left (day) or
   "It can hear you" (night). Every teammate sees "A FRIEND IS CAUGHT IN A TRAP, N m away".
 
-## 8. Taint and Shaken, creature side
+## 8. Corruption and Shaken, creature side
 
 Effects on the player are doc 02 section 13. What the creature does:
 
-| Cause of Taint | Where it comes from | Source |
+| Cause of Corruption | Where it comes from | Source |
 |---|---|---|
-| Creature leavings | black stains on the ground left by `lurk` and `stalk` passes, one per 20 m walked (placeholder) | doc 01 "The Taint" |
+| Creature leavings | black stains on the ground left by `lurk` and `stalk` passes, one per 20 m walked (placeholder) | doc 01 "The Corruption" |
 | A stolen tool | picking it up | doc 01 "Daytime Threats" |
-| An item left in the field at dusk | the item turns Tainted until picked up | doc 01 "The Taint" |
-| An unpicked moonflower | at dusk | doc 01 "The Taint" |
+| An item left in the field at dusk | the item turns Corrupted until picked up | doc 01 "The Corruption" |
+| An unpicked moonflower | at dusk | doc 01 "The Corruption" |
 | Dead crows and strange seeds | disturbance sources from day 3 | doc 01 "Daytime Threats", "Ramp-up" |
 
-- **Hallucinations are more frequent for a Tainted player** (doc 01 "The Taint"), and more
-  frequent late in the season (section 13). Rate multiplier x2 while Tainted (placeholder).
-- **Taint never comes from a jumpscare** (doc 01 "Jumpscares").
-- **Shaken** comes from jumpscares and surviving a trap race (doc 01 "The Taint"), never Taints.
-- **Taint leaves a night trail** (section 3.3).
+- **Hallucinations are more frequent for a Corrupted player** (doc 01 "The Corruption"), and more
+  frequent late in the season (section 13). Rate multiplier x2 while Corrupted (placeholder).
+- **Corruption never comes from a jumpscare** (doc 01 "Jumpscares").
+- **Shaken** comes from jumpscares and surviving a trap race (doc 01 "The Corruption"), never Corrupts.
+- **Corruption leaves a night trail** (section 3.3).
 
 **As built (P3-07).** Leavings: while `lurk` or `stalk` walks at night, every `leavings_every_m`
 (20 m) calls `Taint.add_source(&"leavings", pos)` (`game/player/taint.gd`); touching one within
-0.8 m Taints (placeholder). Leavings are removed at dawn (inference; doc 01 is silent). A can the
-creature moves (`creature_move_cans`) Taints its next taker (`stolen_tool`); a can left more than
+0.8 m Corrupts (placeholder). Leavings are removed at dawn (inference; doc 01 is silent). A can the
+creature moves (`creature_move_cans`) Corrupts its next taker (`stolen_tool`); a can left more than
 4 m from home at dusk does the same (`field_item_at_dusk`, inference: the creature's can rule).
 Dead crows and strange seeds have the source kinds and a dev command (`taint_source`) but no
 sabotage spawns them yet (Q-061). Moonflowers are not built. The x2 hallucination rate is not
@@ -517,10 +517,10 @@ Every disturbance has a fix; none is fatal on its own. Count per day is doc 02 s
 | Disturbance id | Effect | Fix | Clue left | Cost points | Source |
 |---|---|---|---|---|---|
 | `trample` | a plot is trampled at dawn: crops lost, replant | replant | footprints | 2 | doc 01 "Daytime Threats" (1 per night; 2 if nobody outside; +1 dead generator, doc 02 section 14) |
-| `stolen_tool` | a tool vanishes and reappears creepy, often beside an armed trap; picking it up Taints | wash, buy back (the tool is lost until found) | claw marks | 2 | doc 01 "Daytime Threats" |
+| `stolen_tool` | a tool vanishes and reappears creepy, often beside an armed trap; picking it up Corrupts | wash, buy back (the tool is lost until found) | claw marks | 2 | doc 01 "Daytime Threats" |
 | `broken_fence` | animals escape the pen | round up, far from the group | claw marks | 3 | doc 01 "Daytime Threats" |
-| `dead_crow` | Taint source on the ground | bury with a shovel (4 s, placeholder) or wash | feathers | 1 | doc 01 "Taint sources" |
-| `strange_seeds` | Taint source in a plot | pull them (3 s, placeholder) | footprints | 1 | doc 01 "Taint sources" |
+| `dead_crow` | Corruption source on the ground | bury with a shovel (4 s, placeholder) or wash | feathers | 1 | doc 01 "Corruption sources" |
+| `strange_seeds` | Corruption source in a plot | pull them (3 s, placeholder) | footprints | 1 | doc 01 "Corruption sources" |
 | `scarecrow_moved` | a scarecrow stands elsewhere facing the farmhouse; never dangerous | none needed | none | 0 (free, daily, section 13) | doc 01 "Scare moments" |
 | `pumpkin_gnaw` | the Prize Pumpkin drops one size | none this season (a lost size stays) | teeth marks | 3 | doc 01 "Daytime Threats" |
 | `generator_kill` | the generator is left dead | refuel, 6 s (doc 02 section 14) | none | 4 | doc 01 "Nights" |
@@ -529,7 +529,7 @@ Every disturbance has a fix; none is fatal on its own. Count per day is doc 02 s
   budget is 1 and can only be `trample` or `stolen_tool` ("evidence of sabotage only", doc 01
   "Day arc"). The cost points above are `placeholder`s and `sim` tunes them against the clearing
   rates (doc 01 "Targets").
-- **The pool opens by day,** matching doc 02 section 11: Taint sources from day 3; pumpkin gnaw
+- **The pool opens by day,** matching doc 02 section 11: Corruption sources from day 3; pumpkin gnaw
   from day 3; generator kill from day 4; fences from day 2 (placeholder: doc 01 lists fences
   without a day).
 - **Placing.** Each disturbance is placed by the AI Director in a region, not at a player's
@@ -574,7 +574,7 @@ Every disturbance has a fix; none is fatal on its own. Count per day is doc 02 s
 
 The AI Director is the pacing system (doc 01 "AI Director"). It runs only on the host. It decides
 **when and where** the creature gets presence, which scares and lures play, and which players they
-land on. **It is limited:** hunting uses only the creature's senses and Taint; the AI Director may
+land on. **It is limited:** hunting uses only the creature's senses and Corruption; the AI Director may
 nudge hunting to a **region**, never a position; presentation (lure targeting, scare timing,
 hallucinations) may use true positions (doc 01 "Hunting and presentation").
 
@@ -841,14 +841,14 @@ model** (doc 01 "Make them land").
 
 | Scare | What happens | Cost to the player | Build-up | Public or private | Count as big | Source |
 |---|---|---|---|---|---|---|
-| Jumpscare | a day lunge: ragdoll, dropped items, then the creature vanishes | Shaken 60 s; never Taints | insects cut, wind drops | private to the target + the screen of those in view | yes | doc 01 "Jumpscares" |
+| Jumpscare | a day lunge: ragdoll, dropped items, then the creature vanishes | Shaken 60 s; never Corrupts | insects cut, wind drops | private to the target + the screen of those in view | yes | doc 01 "Jumpscares" |
 | Disarm lunge | when a player kneels to disarm a trap, a lunge cuts to black | Shaken 60 s if on a day trap | silence | private | yes | doc 01 "Scare moments" |
 | The trap | a prying player looks up and sees it watching | none besides the pry | the signature sound approaches | private | yes | doc 01 "Scare moments" |
 | The shed | the player is inside the shed, the door slams | locked 5 s (placeholder) | a bang outside | private | yes | doc 01 "Scare moments" |
 | The whisper | a teammate's voice right behind the player while the teammate is across the field | none | silence | private | yes | doc 01 "Scare moments" |
 | Your own voice | very rare, once a season at most per player | none | silence | private | yes | doc 01 "Scare moments" |
 | Fake-out | a crow bursts from the corn | none | rustle | public | no | doc 01 "Scare moments" |
-| Hallucination | from day 5; a distant silhouette | no knockdown, no cost; Tainted players see more (x2) | insects cut | private | yes | doc 01 "Ramp-up" (day 5), "The Taint" |
+| Hallucination | from day 5; a distant silhouette | no knockdown, no cost; Corrupted players see more (x2) | insects cut | private | yes | doc 01 "Ramp-up" (day 5), "The Corruption" |
 | Wrong count | rare; an extra farmer in a teammate's hat at the corn edge | none | silence | private | yes | doc 01 "Scare moments" |
 | Scarecrow moved | a new spot each morning, facing the farmhouse; never dangerous | none | none | public | no | doc 01 "Scare moments" |
 | Whistle | an honest warning whistle (Nightmare keeps it honest) | none | none | world | no | doc 01 "Nightmare" |
@@ -903,7 +903,7 @@ record by `opens_day` and `from_third` and applies `tainted_mult`.
   `scare_dropped` (`kind`, `target`, `why`), sends nothing and spends no budget: the hush lifts on its
   own. Otherwise it spends the budget, sends the scare (played at once), applies the cost and logs `scare`.
 - **Cost.** a jumpscare (and a disarm lunge) calls
-  `TrapRace.shake` (Shaken 60 s, never Taint) and the AI Director's `jumpscare(peer)` (meter -30, a 45 s
+  `TrapRace.shake` (Shaken 60 s, never Corruption) and the AI Director's `jumpscare(peer)` (meter -30, a 45 s
   relax). A jumpscare drops the held can. The shovel and a held trap are not dropped (not built).
   The shed's "locked 5 s" is a 5 s freeze through `player.shake(5, 0)` (placeholder until a door lock
   exists); a Shaken it interrupts carries on for its remaining time afterwards.
@@ -1000,7 +1000,7 @@ cart counts out only if it is past the fields (x > 78, doc 04 sec 6).
   (doc 02 section 8).
 - **The body.** A death leaves a ragdoll at the place (the victim's last position) until dawn. At
   dawn it is removed (doc 01 shows no rule; placeholder; settle by playtest). A body is
-  **not** a Taint source (inference: doc 01 lists the sources and does not include it).
+  **not** a Corruption source (inference: doc 01 lists the sources and does not include it).
 - **Finding a body** is not a scare. It lets the others see where the death was and reads in the
   Dawn Report (section 17).
 - **Cause of death** stored for the Dawn Report: `trap_race`, `deep_corn`, `night_chase`,
@@ -1130,7 +1130,7 @@ sound, scripted traps and pits, generic voice lines from the corn, **no AI Direc
 | Ambience | scripted `lurk`, `stalk`, `chase` ambience cues | doc 01 "Build Plan" |
 | Voice lines | generic "stranger" lines (section 16) from `crow_01`, `_03`, `_06`, `_07`, `_09` corn edges | doc 01 "Build Plan" |
 | Lure gate | at least 30% of lures make the target walk toward them | doc 01 "Build Plan" |
-| Taint | off (no Taint in Phase 1) | placeholder |
+| Corruption | off (no Corruption in Phase 1) | placeholder |
 | AI Director | none | doc 01 "Build Plan" |
 | Trap race | on the trap race formula (section 7) with fixed distance 25 m | section 7 |
 | Day traps | scripted at `trap_03` for the day race test | placeholder |
@@ -1143,7 +1143,7 @@ Field suffixes are `_s`, `_m`, `_mps`, `_pct`, `_mult`.
 
 | File | Contains |
 |---|---|
-| `creature.json` | bodies (`id`, `signature_sound`, `quirk`), speeds and timers (section 4.1), hearing radii (3.1), sight (3.2), Taint tracking (3.3) |
+| `creature.json` | bodies (`id`, `signature_sound`, `quirk`), speeds and timers (section 4.1), hearing radii (3.1), sight (3.2), Corruption tracking (3.3) |
 | `sabotage.json` | disturbance pool (10.1): `id`, `cost_points`, `opens_day`, `fix`, `clue`, `fix_hold_s` |
 | `ai_director.json` | tension meter (11.1), profiles (11.2), day arc (11.3), scare rules (11.4), trap race (`start_distance_m`, `deep_start_distance_m`, `bend_m`, `min_spare_s`) |
 | `voice_lines.json` | the lines, stranger lines and sound lures (16) |
@@ -1160,14 +1160,14 @@ distances (doc 02 hold question).
 - "Deep" is a ring location only (doc 04 sec 2); a player standing in a field is never "deep".
 - The AI Director's variation moves thresholds, never adds a condition.
 - Hunting reads `sensed`; presentation reads `true`. Mixing them is the likeliest bug.
-- A Tainted player cannot lose a chase by quiet alone.
+- A Corrupted player cannot lose a chase by quiet alone.
 - The crow burst is public and does not count as a big scare; a hallucination is private and does.
 - The lantern blows out, never flickers; only ghosts flicker.
 
 ## 21. Questions raised
 
 See Q-018 in `production/QUESTIONS.md`: AI Programmer buildability review (sensing tick, region
-graph, corn pathing, Noise API); placeholder speeds depend on Q-016; the Tainted-quiet reading
+graph, corn pathing, Noise API); placeholder speeds depend on Q-016; the Corrupted-quiet reading
 (section 5); "bodies" read as the dead player's body (section 15); the splice cut rule.
 
 ## 22. Season traits (DD Phase 5)
@@ -1206,12 +1206,12 @@ exist yet; the AI Programmer adds it (Q-255).
 | `tool_mimicry` | Sound lures carry no tell more often; day lures come more often | `sound_no_tell_pct` new field, 80 (voice lures keep their third); `day_gap_s` 90 to 70 | doc 01 "Next season" (name); numbers placeholder |
 | `more_pits` | One more pit on days 2 to 6 | `pit_4p` +1 on `ramp_up` `day_2` to `day_6` (headcount scaling applies as for the ramp-up). Pits need no stolen supply (9.1) | doc 01 "Next season" (name); number placeholder |
 | `keen_ears` | Every creature noise radius x1.25. The voice formula (3.1) is unchanged; the radius it multiplies grows | `radius_m` x1.25 on every `noise` record | placeholder |
-| `fast_legs` | Chase speed +0.5 m/s | 5.5 to 6.0 (Tainted chase speed +0.5 too). Player sprint stays 5.0, so a sprinter loses ground at 1.0 m/s. The trap race (7) speed is unchanged (Director decision, P5-02 QA); the sim does not model the chase change | placeholder |
+| `fast_legs` | Chase speed +0.5 m/s | 5.5 to 6.0 (Corrupted chase speed +0.5 too). Player sprint stays 5.0, so a sprinter loses ground at 1.0 m/s. The trap race (7) speed is unchanged (Director decision, P5-02 QA); the sim does not model the chase change | placeholder |
 | `long_eyes` | Sees farther | `sight_day_m` +5, `sight_night_m` +5. The 40 m lit-lantern spot (3.2) is unchanged | placeholder |
 | `lock_breaker` | The shed lock breaks sooner | `shed_lock` `broken_from_day` 5 to 3 | placeholder |
 | `thick_hide` | A flare scares it off for less time | `retreat_after_flare_s` 30 to 20 | placeholder |
 | `extra_hands` | One more disturbance a day on days 4 to 6 | `disturbances_4p` +1 on `day_4` to `day_6` | placeholder |
-| `taint_nose` | Tracks Taint from farther and for longer | tracking radius 60 to 80 m; trail 20 to 30 s | placeholder |
+| `taint_nose` | Tracks Corruption from farther and for longer | tracking radius 60 to 80 m; trail 20 to 30 s | placeholder |
 | `splice_master` | Splices three segments, not two | `splice_max_segments` new field, 2 to 3 (needs P5-03's segment list) | placeholder; 12.1 |
 
 ### 22.3 What a trait never does

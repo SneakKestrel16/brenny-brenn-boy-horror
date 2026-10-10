@@ -19,7 +19,7 @@ section 14.
 5. [Creature state tells](#5-creature-state-tells)
 6. [Body signatures](#6-body-signatures)
 7. [Voice tells and the voice mix](#7-voice-tells-and-the-voice-mix)
-8. [Player states: Taint, still, Shaken](#8-player-states-taint-still-shaken)
+8. [Player states: Corruption, still, Shaken](#8-player-states-corruption-still-shaken)
 9. [Dusk bell, generator, whistle](#9-dusk-bell-generator-whistle)
 10. [Runtime API (`Soundscape`)](#10-runtime-api-soundscape)
 11. [Sound list](#11-sound-list)
@@ -131,7 +131,7 @@ All `placeholder`. Every WAV is peak-normalised to -1 dBFS (D-015), so the per-s
 | Generator hum | -24 at 5 m | heard across the yard |
 | Creature signature, Chase | -12 | "loud" (doc 01) |
 | Chase sting | -8 peak-ish | the loudest event in the game |
-| Taint heartbeat | -20 (was -32; CEO listens 2 and 3 doubled it twice) | "faint" (doc 01), local only |
+| Corruption heartbeat | -20 (was -32; CEO listens 2 and 3 doubled it twice) | "faint" (doc 01), local only |
 
 ## 3. Spatial rules
 
@@ -181,7 +181,7 @@ radii are doc 03 section 3.1 (all `placeholder` there). Audible range is about 1
   the step position: inside a building footprint is `wood`, inside a corn area is `corn`, else `dirt`.
   The sprint level counts from the midpoint of walk and sprint speed (`data/labor.json`). Sound only:
   the host's Noise is unchanged.
-- **Tainted footsteps** (+50% heard, doc 01 "The Taint"): `max_distance` and `unit_size` x1.5, plus the
+- **Corrupted footsteps** (+50% heard, doc 01 "The Corruption"): `max_distance` and `unit_size` x1.5, plus the
   wet overlay `sfx_step_taint_wet_*` at -10 dB under the normal step.
 
 ## 4. Ambience layers
@@ -240,7 +240,7 @@ Fade times are `placeholder`. `base` is the layer's level for the current phase.
 | `lurk` after a chase is lost | returns over 8 s (inference: doc 01 names retreat only; a lost chase also returns to Lurk) | over 10 s | base | | the layers must not stay off in a state that has no tell |
 - **Idea, not decided** (CEO, 2026-10-08): when the creature goes for the kill, a heartbeat sound effect
   might warn the target. It needs a new sound, because `sfx_taint_heartbeat` and
-  `sfx_still_heartbeat_loop` already mean Taint and Still. Tracks playtest issue 8 in
+  `sfx_still_heartbeat_loop` already mean Corruption and Still. Tracks playtest issue 8 in
   `production/OPEN_ISSUES.md`.
 
 - **Stalk to Chase** keeps the bed off with no extra cue, then the sting lands on a silent
@@ -438,13 +438,13 @@ the same bus and range class; a fake is only wrong by place.
 
 Pattern generation (cadence, picking variants) is in `game/audio/lure_sounds.gd`.
 
-## 8. Player states: Taint, still, Shaken
+## 8. Player states: Corruption, still, Shaken
 
 | State | Sound | Rule |
 |---|---|---|
-| **Taint** (doc 01 "The Taint": "a faint wet heartbeat in your audio") | `sfx_taint_heartbeat` (exists, 70 bpm), non-positional, local only, `SFX`; -20 dB (`TAINT_DB`; was -32, then -26 at listen 2); `pitch_scale` follows Taint intensity (1.0 to 1.3; the 4-beat loop is an exact period). As built (P3-08): Taint is on/off, so the pitch stays 1.0; the beat ducks 8 dB while the chase heartbeat (10.5) plays | everyone sees black hands; **only the tainted player hears the heartbeat** (it is "in your audio") |
-| **Still** (doc 01 "Go still": "while your heartbeat rises") | `sfx_still_heartbeat_loop`, a dry close thump (timbre distinct from the wet Taint beat); `pitch_scale` 1.0 rising to 1.7 and volume -34 to -22 dB over the still time | local only. If Tainted and still, both play and the Taint beat ducks 8 dB |
-| **Shaken** (doc 01 "Shaken": never Taints; doc 07 gives it no visual) | `sfx_shaken_ring`: a thin ~4 kHz ring decaying over 4 s, `Master` low-pass 6 kHz for the first 10 s of the 60 s | local only (inference: doc 01 gives it no cue; doc 07 leaves it to audio) |
+| **Corruption** (doc 01 "The Corruption": "a faint wet heartbeat in your audio") | `sfx_taint_heartbeat` (exists, 70 bpm), non-positional, local only, `SFX`; -20 dB (`TAINT_DB`; was -32, then -26 at listen 2); `pitch_scale` follows Corruption intensity (1.0 to 1.3; the 4-beat loop is an exact period). As built (P3-08): Corruption is on/off, so the pitch stays 1.0; the beat ducks 8 dB while the chase heartbeat (10.5) plays | everyone sees black hands; **only the corrupted player hears the heartbeat** (it is "in your audio") |
+| **Still** (doc 01 "Go still": "while your heartbeat rises") | `sfx_still_heartbeat_loop`, a dry close thump (timbre distinct from the wet Corruption beat); `pitch_scale` 1.0 rising to 1.7 and volume -34 to -22 dB over the still time | local only. If Corrupted and still, both play and the Corruption beat ducks 8 dB |
+| **Shaken** (doc 01 "Shaken": never Corrupts; doc 07 gives it no visual) | `sfx_shaken_ring`: a thin ~4 kHz ring decaying over 4 s, `Master` low-pass 6 kHz for the first 10 s of the 60 s | local only (inference: doc 01 gives it no cue; doc 07 leaves it to audio) |
 | **Prying** (doc 01 "trap race") | `sfx_pry_strain` for the hold; rising pitch near completion | gives the player feedback for the race |
 | **Carrying a teammate** | slow heavy footsteps (`sfx_step_dirt` at -3 dB, pitch 0.85) + `sfx_cloth_carry` | "slowly and noisily" (doc 01) |
 
@@ -598,8 +598,8 @@ marked. Rows tagged **(real)** are Freesound CC0 recordings since D-066 (section
 | `sfx_emote_cloth` | 0.70 s | -24.5 | cloth rustle under wave, point and shrug (P3-11) |
 | `ui_paper_slide` **(real)** | 0.48 s | -20.8 | CEO listen 4 pick (option C): one sheet scritching across wood, 0.6-10 kHz, no room (section 13); played at -10.4 dB |
 
-- **Taint heartbeat (Q-060).** `Soundscape` polls `Game.players[local].tainted` every frame; no
-  `set_local_state` call from `Player` is needed. While Tainted and alive it loops `sfx_taint_heartbeat`
+- **Corruption heartbeat (Q-060).** `Soundscape` polls `Game.players[local].tainted` every frame; no
+  `set_local_state` call from `Player` is needed. While Corrupted and alive it loops `sfx_taint_heartbeat`
   (non-positional, `SFX`, -20 dB), local only. Log `audio_taint_heartbeat {on}`.
 - **Scares (P3-05 wiring in `game/ai_director/scares.gd`, AI Programmer).** Build-up: `hush(seconds)`
   (section 4.4 rule 1), plus `cre_door_bang` for the shed. Jumpscare: `cre_jumpscare_hit` (2D; the body
@@ -612,7 +612,7 @@ marked. Rows tagged **(real)** are Freesound CC0 recordings since D-066 (section
   it too). The Dawn Report low-pass is built in P4-17 (section 10.7).
 - **Logs.** `audio_play {id}` for every `play_3d`/`play_2d` (footsteps excepted), `audio_hush {seconds}`,
   `audio_taint_heartbeat {on}`.
-- **Not done:** `ui_paper_rustle`, `sfx_crow_flap`, a third corn part and ragdoll thud, Taint pitch.
+- **Not done:** `ui_paper_rustle`, `sfx_crow_flap`, a third corn part and ragdoll thud, Corruption pitch.
 
 ### 10.7 Phase 4 as built (P4-17)
 
@@ -828,7 +828,7 @@ is generic farm stock and changes without touching the list shape.
 | ID | Bus | Dim | Len | Loop | P | Generated by |
 |---|---|---|---|---|---|---|
 | `sfx_taint_heartbeat` | S | M | 3.43 | yes | 1 | **exists** (`assets/audio/src/sfx_taint_heartbeat.scd`): wet low double thump, 70 bpm x 4 beats |
-| `sfx_still_heartbeat_loop` | S | M | 3 | yes | 1 | dry close "tum-tum" at 60 bpm x 3, a tighter attack than Taint's |
+| `sfx_still_heartbeat_loop` | S | M | 3 | yes | 1 | dry close "tum-tum" at 60 bpm x 3, a tighter attack than Corruption's |
 | `sfx_shaken_ring` | S | M | 4 | no | 3 | 4 kHz sine with slow decay + faint 8 kHz overtone |
 | `ui_click`, `ui_confirm`, `ui_deny` | U | M | 0.1 to 0.35 | no | 1 | short wood tick, up-chirp, down-chirp (sine) |
 | `ui_paper_slide`, `ui_paper_rustle` | U | M | 0.5 | no | 3 | `ui_paper_slide` **real** (section 13): one sheet scritching across wood (Dawn Report); `ui_paper_rustle` not built |
@@ -1082,7 +1082,7 @@ because these carry the game:
 7. The generator spin-down and low-fuel pitch drop (no sputter).
 8. The stranger lines: are they scary, or silly? Decide Q-031.
 9. Phase 2 (P2-08): the chase sting and the four chase signatures; the rising chase heartbeat (keep it or cut it?); a clip with echo, pitch up/down and no crackle against one with none; the barn bed in the lobby. (The lantern blow-out and door bang in the recording went with D-146.)
-10. Phase 3 (P3-08), section 10.6: the wet Taint heartbeat (`taint 2` in the dev console); each scare
+10. Phase 3 (P3-08), section 10.6: the wet Corruption heartbeat (`taint 2` in the dev console); each scare
     with `scare <kind> 2` for `jumpscare`, `disarm_lunge`, `shed`, `hallucination`, `wrong_count`, and
     `scare fake_out` with a player outdoors; the crow caws (`kill 2`, then `ghost caw 2`); the scream and the
     cloth (`emote scream 2`, `emote wave 2`); the paper slide (`phase dawn`). Is the scream scary or silly? CEO listen 3 redo: jumpscare hit,

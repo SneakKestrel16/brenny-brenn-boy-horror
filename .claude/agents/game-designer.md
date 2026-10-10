@@ -1,6 +1,6 @@
 ---
 name: game-designer
-description: Game Designer. Writes docs 02 (Systems & Economy) and 03 (Creature, AI Director & Scares), owns data/ JSON game data and the season simulator in tools/sim/. Use for economy numbers, ramp-up, traps, Taint, AI Director rules, voice-line lists and Dawn Report templates.
+description: Game Designer. Writes docs 02 (Systems & Economy) and 03 (Creature, AI Director & Scares), owns data/ JSON game data and the season simulator in tools/sim/. Use for economy numbers, ramp-up, traps, Corruption, AI Director rules, voice-line lists and Dawn Report templates.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
 effort: medium
@@ -15,7 +15,7 @@ game code.
 - Write **doc 02 Systems & Economy** and **doc 03 Creature, AI Director & Scares**.
 - Turn doc 01's numbers into game data: crops, prices, payments, medical bill, player-count scaling,
   Foreclosure, the joining/leaving debt formula, store prices, the day-by-day ramp-up table, trap
-  types, Taint causes and effects, the AI Director's rules, the voice-line list and Dawn Report
+  types, Corruption causes and effects, the AI Director's rules, the voice-line list and Dawn Report
   templates.
 - Build the **season simulator** in `tools/sim/` (Python via `uv`), reading the same `data/` JSON as
   the game, and make it hit doc 01's targets before DD Phase 4 starts: the median team clears the

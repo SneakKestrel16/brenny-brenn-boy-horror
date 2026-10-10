@@ -40,7 +40,7 @@
     {
       "id": "wash",
       "source": "doc01",
-      "cite": "doc 01 The Taint: about 10 seconds of noisy pumping",
+      "cite": "doc 01 The Corruption: about 10 seconds of noisy pumping",
       "kind": "hold",
       "hold_s": 10
     },
@@ -147,7 +147,7 @@
     {
       "id": "clear_plot",
       "source": "placeholder",
-      "cite": "doc 02 2.1; doc 01 The Taint: touching Taints",
+      "cite": "doc 02 2.1; doc 01 The Corruption: touching Corrupts",
       "kind": "hold",
       "hold_s": 3
     },

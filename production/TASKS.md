@@ -84,7 +84,7 @@ Acceptance:
 - Turns doc 01 numbers into data tables: crops, prices, growth, payments, medical bill, player-count
   scaling (80% / 60%, rounded up), Foreclosure, the joining/leaving debt formula (reproduces doc 01's
   worked example: 1,077 total, 211 first payment), store prices (sim-set items marked), ramp-up,
-  trap types, Taint causes and effects, Shaken, Prize Pumpkin sizes and payouts, roles, labor
+  trap types, Corruption causes and effects, Shaken, Prize Pumpkin sizes and payouts, roles, labor
   (hold seconds per verb, plots per player derivation).
 - Every number cites its doc 01 section or is marked `sim` or `placeholder`.
 - Proposed JSON schemas for CONTRACTS section 6.
@@ -107,9 +107,9 @@ Acceptance:
 Owner: Game Designer (AI Programmer consulted through QUESTIONS.md).
 Output: `docs/03_creature_ai_director_and_scares.md`.
 Acceptance:
-- Senses with numbers (hearing radii per noise kind, sight range, Taint tracking), behavior states
+- Senses with numbers (hearing radii per noise kind, sight range, Corruption tracking), behavior states
   and transitions with their audio tells, losing a chase, light rules, day deaths and the trap race
-  (tuned so a solo, untainted player who pries at once survives with a few seconds spare), sabotage
+  (tuned so a solo, uncorrupted player who pries at once survives with a few seconds spare), sabotage
   and the disturbance budget, the AI Director (tension meter, phase profiles, day arc, scare rules,
   private events, sanctuary, region-only nudges), jumpscares, hallucinations, fake-outs, Harvest
   Moon acts, bodies, the voice-line list and Dawn Report templates.
@@ -375,10 +375,10 @@ playtest" 1, 4, 5, 6, 9 to 12).
 
 ---
 
-## DD Phase 3: Ghosts, the AI Director, Taint and the Dawn Report
+## DD Phase 3: Ghosts, the AI Director, Corruption and the Dawn Report
 
 Approved by the CEO 2026-10-08 (D-058). Source: doc 01 "Build Plan > Phase 3": dead
-players' voices favored; the AI Director, day arc and jumpscares; Taint and Shaken; ghosts with flicker
+players' voices favored; the AI Director, day arc and jumpscares; Corruption and Shaken; ghosts with flicker
 and crow; whistle, flags and the Dawn Report. **Done when** (doc 01): the dead stay engaged, the living
 argue over a static voice, and someone laughs at the Dawn Report. Checked in 2 sessions, one tester who
 hasn't read doc 01, plus log measures (doc 09). **STOP 4** after P3-13: closed by the CEO without human
@@ -397,13 +397,13 @@ that belong to Phase 4, so these wait: the `harvest_moon` profile and acts (doc 
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
 | P3-01 | Director | Between-phase review: OPEN_ISSUES, settle what Phase 3 needs, write acceptance for the rows below | done (D-059) | — |
-| P3-02 | Game Designer | Phase 3 data (doc 03 s19): Director profiles and tension meter, day arc, scare rules, disturbance budget, Taint and Shaken numbers, Dawn Report templates (doc 03 s8, s10, s11, s13, s17) | done (D-060) | P3-01 |
+| P3-02 | Game Designer | Phase 3 data (doc 03 s19): Director profiles and tension meter, day arc, scare rules, disturbance budget, Corruption and Shaken numbers, Dawn Report templates (doc 03 s8, s10, s11, s13, s17) | done (D-060) | P3-01 |
 | P3-03 | AI Programmer | Dead players' voices favored in lure choice (doc 03 s12.1; weights from `ai_director.json` `lures`) | done | P3-02 |
 | P3-04 | AI Programmer | AI Director: tension meter, profiles, day arc, region nudges, private events, debug (doc 03 s11); it budgets lures in place of `DAY_LURE_GAP_S` | done | P3-02 |
 | P3-05 | AI Programmer, Audio Designer | Jumpscares, fake-outs, hallucinations (doc 03 s13), spent by the Director | done | P3-04 |
 | P3-06 | AI Programmer | Sabotage from the disturbance budget (doc 03 s10, D-034) | done | P3-04 |
-| P3-07 | Gameplay, AI Programmer | Taint and Shaken: player side and the well (doc 05 s10), creature tracking (doc 03 s3.3, s8); Taint is off since Phase 1 | done | P3-02 |
-| P3-08 | Technical Artist, Audio Designer | Taint stain and Taint heartbeat; scare and Director sounds (doc 07, doc 08) | done | P3-05, P3-07 |
+| P3-07 | Gameplay, AI Programmer | Corruption and Shaken: player side and the well (doc 05 s10), creature tracking (doc 03 s3.3, s8); Corruption is off since Phase 1 | done | P3-02 |
+| P3-08 | Technical Artist, Audio Designer | Corruption stain and Corruption heartbeat; scare and Director sounds (doc 07, doc 08) | done | P3-05, P3-07 |
 | P3-09 | Gameplay, Technical Artist | Ghosts: lantern flicker, crow possession and corn rustle (doc 01 "Ghosts", doc 05 s14, doc 03 s13, doc 07) | done | P3-01 |
 | P3-10 | Network & Voice, Audio Designer | Ghost voice: the ghost static chain on dead players' voice to the living and on dead-voice lures (doc 06 s9, D-011); today ghost voice is muted (OPEN_ISSUES playtest 9) | done (CEO listen of the static pending) | P3-09 |
 | P3-11 | Gameplay | Whistle and emotes (doc 05 s14); recheck whistle placement by ear (OPEN_ISSUES P2-01 review 1) | done (by-ear test pending a tester, OPEN_ISSUES) | P3-01 |
@@ -416,7 +416,7 @@ Hunting reads `sensed`, presentation reads `true` (doc 03 s20); the review check
 
 ### P3-02 Phase 3 data
 Owner: Game Designer. Output: `data/ai_director.json`, `sabotage.json`, `dawn_report_templates.json`
-with schemas (doc 03 s19), Taint and Shaken numbers (doc 02 s13), approved in CONTRACTS s6.
+with schemas (doc 03 s19), Corruption and Shaken numbers (doc 02 s13), approved in CONTRACTS s6.
 Acceptance:
 - `ai_director.json`: tension meter inputs, range, thresholds and phase timers (doc 03 s11.1);
   `day` and `night` profiles (s11.2); day arc thirds as fractions of `day_s`, not 180 s fixed
@@ -424,7 +424,7 @@ Acceptance:
 - `sabotage.json`: the pool rows built in Phase 3 (`trample`, `stolen_tool`, `dead_crow`,
   `strange_seeds`, `scarecrow_moved`, `generator_kill`), each with a `fix`; `Data` test fails a
   record with no `fix` (doc 03 s10.1).
-- Taint causes, effects and cure, and Shaken length, in one table (doc 05 s10 names `taint.json`;
+- Corruption causes, effects and cure, and Shaken length, in one table (doc 05 s10 names `taint.json`;
   pick it or `creature.json`, and fix the other doc).
 - `dawn_report_templates.json`: doc 03 s17.1 to s17.3 and s17.5 (season awards wait for Phase 4).
 - Hallucination opens on day 5 (doc 03 s13): say how a 2-day test session reaches it.
@@ -456,8 +456,8 @@ Acceptance:
 Owner: AI Programmer (logic), Audio Designer (build-up and stingers). Output: `game/creature/`,
 `game/ai_director/`, `game/audio/`.
 Acceptance:
-- Jumpscare (Shaken 60 s, never Taint), the whisper, the shed, wrong count, your own voice,
-  hallucination (day 5 on, x2 for Tainted), crow fake-out, scarecrow moved; rules and placement as
+- Jumpscare (Shaken 60 s, never Corruption), the whisper, the shed, wrong count, your own voice,
+  hallucination (day 5 on, x2 for Corrupted), crow fake-out, scarecrow moved; rules and placement as
   doc 03 s13. Disarm lunge and "the trap" too if the trap race code allows it; else say so.
 - Private scares go to one peer only (`apply_scare` with target slot, doc 06 s7); public ones to all.
 - Each scare logs `scare` with `kind`, `target`, `big`, `private`; the build-up (insects cut,
@@ -470,27 +470,27 @@ Acceptance:
 - The Director spends the day's disturbance count (doc 02 s11) from `sabotage.json`; days 1-2
   only `trample` or `stolen_tool`; pool opens by day (doc 03 s10).
 - Placed by region, never at a player; each leaves its clue and has its fix (replant, bury 4 s,
-  pull 3 s, refuel); a stolen tool lands by an armed trap 60% and Taints on pickup.
+  pull 3 s, refuel); a stolen tool lands by an armed trap 60% and Corrupts on pickup.
 - Trample at dawn per doc 03 s10 (1, 2 if nobody outside 30 s, +1 dead generator, unattended cap +3).
 - Logs `disturbance_placed` and `disturbance_fixed`; `dawn_summary.farm_damage` filled.
 
-### P3-07 Taint and Shaken
+### P3-07 Corruption and Shaken
 Owner: Gameplay (player side, well), AI Programmer (creature side). Output: `game/player/`,
 `game/interaction/`, `game/creature/`.
 Acceptance:
-- Host-owned Taint flag with a cause; `apply_taint_changed`; sprint x0.6, pry x1.5, steps x1.5
+- Host-owned Corruption flag with a cause; `apply_taint_changed`; sprint x0.6, pry x1.5, steps x1.5
   (`NoiseBus` already reads `tainted`); `wash` hold 10 s at the well clears it and emits `well_pump`.
 - Causes built this phase: creature leavings, stolen tool, item left in the field at dusk, dead crow,
   strange seeds (doc 03 s8). A moonflower cause waits if moonflowers are not built; say so.
-- Shaken 60 s after a jumpscare or a survived trap race; stacks with Taint (x0.36). Never Taints.
-- Creature tracks a Tainted player within 60 m and follows a 20 s night trail (doc 03 s3.3).
+- Shaken 60 s after a jumpscare or a survived trap race; stacks with Corruption (x0.36). Never Corrupts.
+- Creature tracks a Corrupted player within 60 m and follows a 20 s night trail (doc 03 s3.3).
 - Logs `taint_changed` (peer, on, cause) and `shaken` (peer, seconds).
 
-### P3-08 Taint and scare look and sound
+### P3-08 Corruption and scare look and sound
 Owner: Technical Artist, Audio Designer. Output: `game/render/`, `game/audio/`, `assets/audio/`.
 Acceptance:
-- Taint shows as hand smudges and a faint screen fog for the Tainted player, black stains underfoot
-  (doc 05 s10, doc 07); the wet heartbeat plays only for the Tainted player (doc 08).
+- Corruption shows as hand smudges and a faint screen fog for the Corrupted player, black stains underfoot
+  (doc 05 s10, doc 07); the wet heartbeat plays only for the Corrupted player (doc 08).
 - Scare build-up cues and stingers for P3-05 kinds (doc 08). No day music (CEO).
 - Every new sound gets a CEO listen before it ships (D-0xx as P2-08); list them in the handoff.
 
@@ -539,7 +539,7 @@ Acceptance:
 
 ### P3-13 Phase 3 review
 Owner: QA. Acceptance: review each P3 row against the above; 4-instance run with bots and one dead
-bot; `check_logs.py` reports tension, scares per player (gap and count rule), Taint and Shaken,
+bot; `check_logs.py` reports tension, scares per player (gap and count rule), Corruption and Shaken,
 ghost actions; doc 09 Phase 3 gate. Carried: Phase 1 lure 30%, Phase 2 recorded-voice and trap sweep
 measures (D-057), OPEN_ISSUES Open Issue 4 (bodies).
 
@@ -963,7 +963,7 @@ Acceptance:
 - Darkness per doc 07 s5: ambient floor 0.25, no auto exposure, silhouette rule, brightness slider
   range kept.
 - Fog and post stack per doc 07 s6 in order: filmic tone map, per-phase colour grade, vignette, static
-  grain, Taint overlay; bloom fixed (threshold 1.2, intensity 0.25).
+  grain, Corruption overlay; bloom fixed (threshold 1.2, intensity 0.25).
 - Creature materials and textures for the P4-19 bodies; `mat_ghost_rim` on the ghost view (doc 07 s7,
   s8).
 - The flicker rule holds (doc 07 s4.3, s13): nothing pulses, nothing animates brightness above 0.5 Hz.
@@ -1005,7 +1005,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-20 | Gameplay | Players type their own name in the lobby before start (CEO 2026-10-09: "not everyone shows up as farmer") | done (QA PASS, D-173) | |
 | P5-21 | Level Designer | Paths connect every structure to another; remove the stray path behind the barn to the animal pen (CEO 2026-10-09) | done (QA PASS, D-175) | P5-18 |
 | P5-22 | Gameplay | Wire the P5-14 to P5-17 models: buildings, traps, pegboard, tools, crops, corn, crows, hands, road items, ragdoll, ghost shell | done (re-QA PASS, D-181) | P5-13 |
-| P5-23 | Gameplay | Wire the primitives left by P5-13 (Q-283): Taint look, Taint sleeves, `interact` animation, cart lantern glass, store scarecrows, scarecrow facing | done (QA PASS, D-184) | P5-13 |
+| P5-23 | Gameplay | Wire the primitives left by P5-13 (Q-283): Corruption look, Corruption sleeves, `interact` animation, cart lantern glass, store scarecrows, scarecrow facing | done (QA PASS, D-184) | P5-13 |
 | P5-24 | Gameplay | Next season through the lobby: roles re-picked, quirk reroll, `Imposter.pick`, season-start save (P5-04 follow-up) | done (QA PASS, D-178) | P5-04, P5-11 |
 | P5-25 | Gameplay | Imposter `pegboard_mark` and interaction holds for the kit (Q-303) | done (QA PASS, D-179) | P5-11 |
 | P5-26 | 3D | Missing models: trap_tripwire, field scarecrow, perched crow, clue decals, window glow, lit road lamp, hoe, whistle | done (QA PASS, D-182) | P5-14 |
@@ -1017,9 +1017,9 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-32 | 3D | Better crop models: every crop and growth stage (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-33 | AI Programmer | Creature AI: more drawn to noise, targets players more often at night; bear trap deaths too quick and random; crows seen more often (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-34 | Gameplay | Barn how-to-play signboard; intro scene with the situation and the goal (CEO STOP 6) | done (QA PASS) | P5-08 |
-| P5-35 | Gameplay | Player models break when Taint shows (CEO STOP 6) | done (QA PASS) | P5-08 |
+| P5-35 | Gameplay | Player models break when Corruption shows (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-36 | Gameplay | Dev console: message one player; dev menu for the common commands, typed commands kept (CEO STOP 6) | done (QA PASS) | P5-08 |
-| P5-37 | Director | Rename: Taint to Corrupted in every doc and all player-facing text; game named "Farmer's Delight" (CEO STOP 6) | todo | P5-30 to P5-36 |
+| P5-37 | Director | Rename: Taint to Corrupted in every doc and all player-facing text; game named "Farmer's Delight" (CEO STOP 6) | done (QA PASS) | P5-30 to P5-36 |
 | P5-38 | Technical Artist | Optimise the game: measure doc 07 s10 budget, fix hotspots (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-39 | AI Programmer | Creature AI improvements; Q-345 fixes (CEO STOP 6) | done (QA PASS) | P5-33 |
 | P5-40 | 3D | New farmer model from quality sample B (CEO STOP 6) | done (QA PASS) | P5-08 |
@@ -1042,7 +1042,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 Owner: Game Designer. Output: doc 02, doc 03, `data/`, `tools/sim/`; handoff note.
 Acceptance:
 - Doc 02 "Next season": carry-over (upgrades, plots, spare coins at 25% as savings, doc 01), debt growth
-  per season as numbers, what resets (crops, Taint, deaths, roles re-picked or kept), how many seasons.
+  per season as numbers, what resets (crops, Corruption, deaths, roles re-picked or kept), how many seasons.
 - Doc 02 store rows for cosmetic hats and overalls: prices, sold only once the season's debt is paid
   (doc 01 "Store"), kept across seasons, no gameplay effect.
 - Doc 03 "Season traits": a list of creature traits, one gained per season (doc 01 examples: better tool
@@ -1186,8 +1186,8 @@ Acceptance:
 ### P5-23 Wire the P5-13 leftover primitives
 Owner: Gameplay Programmer. Output: game code, handoff note.
 Acceptance:
-- Q-283 items left after P5-05 (hats) and P5-22 (death corpse) use the farmer rig or models: Taint look
-  (`tool_hands`), `mat_farmer_sleeves` for Taint, the `interact` animation on interact, cart lantern glass.
+- Q-283 items left after P5-05 (hats) and P5-22 (death corpse) use the farmer rig or models: Corruption look
+  (`tool_hands`), `mat_farmer_sleeves` for Corruption, the `interact` animation on interact, cart lantern glass.
 - The store's scarecrow preview (`store.gd` `_show_scarecrows`) uses `prop_scarecrow_player.glb`, not a cylinder.
 - Placed and moved scarecrows face the yaw the host sends (`scarecrow_moved` `yaw`, P5-22 OPEN_ISSUES).
 - The big-head dev toy stays a sphere. Two-instance run and smoke pass.
@@ -1291,10 +1291,10 @@ Acceptance:
 - An intro scene before the first day of a new season: what the situation is and what the goal is (doc 01 premise
   and win condition). Skippable; shown once per new save. Text and voice rules as doc 01; no captions (CEO).
 
-### P5-35 Player models break when tainted
+### P5-35 Player models break when corrupted
 Owner: Gameplay Programmer. Output: game code, handoff note.
 Acceptance:
-- The CEO saw farmer models break when Taint shows. Reproduce windowed at each Taint stage (`taint_look.gd`, P5-23,
+- The CEO saw farmer models break when Corruption shows. Reproduce windowed at each Corruption stage (`taint_look.gd`, P5-23,
   `farmer_body.gd`), on host and client, with hats and cosmetics. Fix the cause. Screenshots before and after.
 
 ### P5-36 Dev console messages and dev menu

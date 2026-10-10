@@ -110,7 +110,7 @@ func _ready() -> void:
 func _status() -> String:
 	var out := ""
 	if bool(Game.players.get(Game.local_peer(), {}).get("tainted", false)) and not player.ghost:
-		out += "\nTainted: wash at the well"
+		out += "\nCorrupted: wash at the well"
 	if player.shaken_s > 0.0:
 		out += "\nShaken: out of breath for %d s" % ceili(player.shaken_s)
 	if Quirks.mine != &"" and not player.ghost:

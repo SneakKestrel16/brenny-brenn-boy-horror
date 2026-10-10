@@ -25,7 +25,7 @@ one is new it is a technical limit and tagged `placeholder`.
 7. [The interaction-hold framework](#7-the-interaction-hold-framework)
 8. [The Noise interface](#8-the-noise-interface)
 9. [Farming, tools and carrying](#9-farming-tools-and-carrying)
-10. [Taint, Shaken and the well](#10-taint-shaken-and-the-well)
+10. [Corruption, Shaken and the well](#10-corruption-shaken-and-the-well)
 11. [Traps from the player side, flags and defenses](#11-traps-from-the-player-side-flags-and-defenses)
 12. [Generator and lights](#12-generator-and-lights)
 13. [The festival cart](#13-the-festival-cart)
@@ -82,7 +82,7 @@ shared state.
 | Economy | Coins, sell, buy, payments, debt | Nothing | `apply_money_changed`, `apply_payment` |
 | Tools, carrying | Item ownership, carried teammate | Held-item visuals | `apply_item_given`, `apply_item_moved`, `apply_carry` |
 | Noise | Every emission (section 8) | None; clients never emit | none (host-internal) |
-| Taint, Shaken | State, timers, wash | Visuals, speed multiplier from `apply_*` | `apply_taint_changed`, `apply_shaken` |
+| Corruption, Shaken | State, timers, wash | Visuals, speed multiplier from `apply_*` | `apply_taint_changed`, `apply_shaken` |
 | Traps, pegboard, flags, defenses | State, springing, race, placement checks | Placement preview, input | `apply_trap_changed`, `apply_trap_race`, `apply_pegboard_changed`, `apply_flags`, `apply_defense_changed` |
 | Generator, lights, doors | Fuel, repair, light state, door state | Light rendering | `apply_generator`, `apply_lights`, `apply_door` |
 | Cart, Prize Pumpkin | Position, push, "out" check | Push input | `apply_cart` |
@@ -188,7 +188,7 @@ Game numbers live in `data/*.json` and the season simulator reads the same files
 section 17). `Data` is the only loader.
 
 - **Files** (CONTRACTS section 6, doc 02 appendix, doc 03 section 19): `season, labor, crops,
-  pumpkin, debt, medical_bill, player_scaling, difficulty, store, ramp_up, traps, taint, roles,
+  pumpkin, debt, medical_bill, player_scaling, difficulty, store, ramp_up, traps, `taint`, roles,
   creature, sabotage, ai_director, voice_lines, dawn_report_templates`. The files do not exist yet; the Game Designer creates them from the doc 02 and 03
   appendices when DD Phase 1 starts. Until a file exists the code that needs it fails loudly in
   `Data` (below), never silently with a default.
@@ -218,7 +218,7 @@ section 17). `Data` is the only loader.
   in one place reaches the game and the simulator. The placeholders are doc 02 section 2.2's walk
   3.0, crouch 1.2, sprint 5.0 m/s for 6 s refilling over 10 s.
 - **Multipliers** (doc 02 section 2.3) are applied by code that reads them from their own tables:
-  helped pry `helped_mult` in `labor.json`, Tainted pry in `taint.json`, role multipliers in
+  helped pry `helped_mult` in `labor.json`, Corrupted pry in `taint.json`, role multipliers in
   `roles.json`. They multiply.
 - **Hot reload:** not supported; `Data` loads once at startup. A debug command (`--data-dir <path>`)
   points at another folder for the simulator and QA to run alternate numbers (`placeholder`).
@@ -253,17 +253,17 @@ Clients own movement and camera (doc 01 "Authority"). The controller is a `Chara
 (capsule 1.8 m tall, eye 1.65 m; CONTRACTS section 3) driven by the local input.
 
 - **Movement.** Walk, crouch-walk and sprint speeds come from `Data.speed()` (section 4). Modifiers
-  multiply the maximum: Tainted sprint x0.6 (`taint.json`, doc 02 section 13), Shaken sprint x0.6
+  multiply the maximum: Corrupted sprint x0.6 (`taint.json`, doc 02 section 13), Shaken sprint x0.6
   for 60 s, Shaken and bear-trap slow walk x0.6 for 60 s (doc 01 "Night Traps"), carrying a teammate
   slows by the `carry` record (a data value; none is given in doc 01, `placeholder` in `labor.json`).
-  Stacking Taint and Shaken is x0.36 on sprint (doc 02 section 13).
+  Stacking Corruption and Shaken is x0.36 on sprint (doc 02 section 13).
 - **Sprint stamina.** Sprint runs at most `max_s` (6 s) and refills over `refill_s` (10 s) (doc 02
   section 2.2). The refill is linear; sprint can restart once it is above 0 (inference: doc 02 gives
-  no minimum; a Tainted player recovers on the same clock; settled by DD Phase 1 feel). Stamina is
+  no minimum; a Corrupted player recovers on the same clock; settled by DD Phase 1 feel). Stamina is
   client state; the host never needs it, and checks speed instead (below).
 - **Host speed sanity check** (doc 06 section 6, keeping DD Phase 1 free of rubber-banding): the host
   receives `move` frames, computes the speed between frames and compares it with the maximum for the
-  player's current state from the host's own view of that state (Taint, Shaken, trap slow, carrying),
+  player's current state from the host's own view of that state (Corruption, Shaken, trap slow, carrying),
   plus 20%. A violation is logged (`speed_violation`) and the relayed position is clamped; a jump
   over 3 times the maximum sends `apply_teleport`. These are doc 06's `placeholder` limits.
 - **Crouch.** Held (toggle is a setting). It is the crouch-walk speed and the `crouch` flag in
@@ -323,10 +323,10 @@ table and live in `data/labor.json`; this doc repeats none of them.
    failure sends `apply_refused(verb, reason)` to the sender only and logs `hold_refused`.
 3. **Run (host).** The host creates an `ActiveHold { player, verb, target, progress, rate,
    started_at }` and each physics tick adds `delta * rate / hold_s`. `rate` is
-   `1 / (product of multipliers)` evaluated every tick, so a mid-hold change (a helper arrives, Taint
+   `1 / (product of multipliers)` evaluated every tick, so a mid-hold change (a helper arrives, Corruption
    starts) changes the speed from then on, without restarting. Multipliers: `helped_mult` for pry when
    another living player holds `request_pry` on the same trap within 3 m (doc 03 section 7, `helped` 
-   x0.6), Tainted x1.5 on pry only, role multipliers (Mechanic x0.6 on `repair_generator`, `refuel`,
+   x0.6), Corrupted x1.5 on pry only, role multipliers (Mechanic x0.6 on `repair_generator`, `refuel`,
    `repair_fence`; Tracker x0.6 on `disarm_bear`), all from their own tables (doc 02 section 2.3).
 4. **Cancel.** The hold ends without effect if: the client sends `request_hold_cancel`, the player
    leaves `range_m` plus 0.5 m (`placeholder`), the target becomes invalid, the verb's `labor.json`
@@ -379,7 +379,7 @@ func emit_voice(position: Vector3, volume_byte: int, source_peer: int) -> void
   (for example `step_crouch`) does not fire the signal; it only bumps the debug counter.
 - **`emit_kind`** is what gameplay code calls: it looks up the base radius in `creature.json`
   (`noise_radius` records, doc 03 section 3.1 and section 19) by `kind`, multiplies by `mult` and the
-  Taint multiplier (x1.5 on footsteps, doc 03 section 3.1; read from `taint.json` through `Game`),
+  Corruption multiplier (x1.5 on footsteps, doc 03 section 3.1; read from `taint.json` through `Game`),
   then calls `emit`. The quiet watering can is `mult = 0.5` on `tool_water` (doc 03 section 3.1).
   **Who owns the radius table** is `creature.json` (the Game Designer's number, the AI Programmer's
   consumer); `NoiseBus` only reads it.
@@ -404,7 +404,7 @@ Who calls it, per source:
 
 | Source | Emitter | Kind | Notes |
 |---|---|---|---|
-| Footsteps | Host movement handler, once per stride from `move` frames (section 6) | `step_*` | Tainted x1.5; crouch radius 0 |
+| Footsteps | Host movement handler, once per stride from `move` frames (section 6) | `step_*` | Corrupted x1.5; crouch radius 0 |
 | Tool holds | `Interactable.complete` of the verb | `tool_till/plant/water/harvest` 15 m, `tool_shovel/pry/repair` 25 m, `tool_disarm` 8 m | Quiet can x0.5; all emit at completion; `tool_shovel`, `tool_pry` and `tool_repair` also emit once at hold start (AI Programmer, Q-019) |
 | Well | Wash and fill-can at the well | `well_pump` 45 m | |
 | Doors | Door handler | `door` 20 m | |
@@ -431,7 +431,7 @@ dawn (section 17) from `crops.json` (doc 02 section 5).
   `plant` is the first day crop). The host refuses `wrong_crop`, `locked_crop` (`unlock_day`, and
   `first_payment_made` until `Debt.first_made`, set at the first-payment dawn, is true; P4-07) and
   `no_seeds`, and uses one of the team's seeds at planting (`Store.use_seed`; no coins, D-093). A day crop grows one day per watered day (`grow_days`); a
-  bed crop ripens when night falls if watered. At dawn a night crop left unpicked is `dead` (and Taints when
+  bed crop ripens when night falls if watered. At dawn a night crop left unpicked is `dead` (and Corrupts when
   `dead_plot_taints`), an unripe one `wilted`; `clear_plot` removes either. `plot_changed` has no crop
   argument, so the crop rides in the state string (`ripe:pumpkin`, Q-085).
 - **Plant, water, harvest** are holds (section 7). Planting needs a seed in the team's stock (D-093); watering needs a full
@@ -503,38 +503,38 @@ dawn (section 17) from `crops.json` (doc 02 section 5).
   `walkie_talkie`/`walkie_battery` are stocked; P4-14 builds the radio.
 - `seizable()` lists the bought upgrades; `seize(id)` takes one away (P4-07 calls both).
 
-## 10. Taint, Shaken and the well
+## 10. Corruption, Shaken and the well
 
-- **Taint** (doc 01 "The Taint"; effects table in `taint.json`, doc 02 section 13): host-owned flag
-  per player with a cause (`dead_plot`, `trap_pit`, and so on from doc 02). While Tainted: sprint
+- **Corruption** (doc 01 "The Corruption"; effects table in `taint.json`, doc 02 section 13): host-owned flag
+  per player with a cause (`dead_plot`, `trap_pit`, and so on from doc 02). While Corrupted: sprint
   x0.6, pry x1.5, footsteps x1.5 on the Noise radius, and the creature tracks the player within 60
   m with a 20 s night trail (doc 03 section 3). `apply_taint_changed(peer, on, cause)` informs
   clients, who show it as dark smudges on the hands and a faint fog on screen (visual detail is doc
   07's).
 - **Washing** is the `wash` hold, 10 s at the well (doc 01, doc 02 section 2.1), emits `well_pump`
-  (45 m) and clears Taint on completion. The well is the only place; it is a normal `Interactable`.
+  (45 m) and clears Corruption on completion. The well is the only place; it is a normal `Interactable`.
 - **Shaken** (doc 01 "Day deaths"): 60 s of sprint x0.6 after surviving a trap race (doc 03 section
-  7); host timer, `apply_shaken(peer, seconds)`. Stacks with Taint (x0.36, doc 02 section 13).
-- Taint and Shaken are applied on the host and mirrored for the multiplier; the host's speed check
+  7); host timer, `apply_shaken(peer, seconds)`. Stacks with Corruption (x0.36, doc 02 section 13).
+- Corruption and Shaken are applied on the host and mirrored for the multiplier; the host's speed check
   (section 6) uses the host's copy.
 
 **As built (P3-07).** `game/player/taint.gd` (node `Taint`, group `taint`) owns the flag: host
 `set_taint(peer, on, cause)` writes `Game.players[peer].tainted` and `taint_cause`, logs
-`taint_changed`, and sends `apply_taint_changed`; a second Taint while Tainted changes nothing and
-logs nothing (doc 01). Taint ends with `wash` (cause `well`), at dawn (cause `dawn`), or on death
-(cause `death`; inference: a ghost is never Tainted, doc 01 names only washing and dawn). Causes
+`taint_changed`, and sends `apply_taint_changed`; a second Corruption while Corrupted changes nothing and
+logs nothing (doc 01). Corruption ends with `wash` (cause `well`), at dawn (cause `dawn`), or on death
+(cause `death`; inference: a ghost is never Corrupted, doc 01 names only washing and dawn). Causes
 built: touching a source on the ground within 0.8 m (`leavings`, `dead_crow`, `strange_seeds`;
 `add_source` / `remove_source`, `apply_taint_source`, placeholder marks; 0.8 m is a placeholder),
 picking up a stolen can (`stolen_tool`) and picking up a can left more than 4 m from its home at
 dusk (`field_item_at_dusk`; inference: "in the field" uses the creature's can rule,
-`items/cans.gd`). A can Taints its next taker once, then is clean (`can_tainted` logs the mark).
+`items/cans.gd`). A can Corrupts its next taker once, then is clean (`can_tainted` logs the mark).
 Moonflowers wait for their task. Leavings are removed at dawn (inference; doc 01 is silent).
-Every peer shows the Tainted player's body black (placeholder for the hands art) and the local
-HUD prints "Tainted: wash at the well" (tester text until the hands model and heartbeat, Q-060).
-The wash hold is offered at the well only while the local player is Tainted (refusal
+Every peer shows the Corrupted player's body black (placeholder for the hands art) and the local
+HUD prints "Corrupted: wash at the well" (tester text until the hands model and heartbeat, Q-060).
+The wash hold is offered at the well only while the local player is Corrupted (refusal
 `not_tainted`). Pry: `hold_registry.gd` multiplies by `taint.json` `pry_mult`; `trap_race.gd`
 counts the race's pry time the same way. Sprint: `player.sprint_max()` is `labor.json`
-`sprint.max_s` times `taint.json` `sprint_mult` (Taint) times `shaken.sprint_mult` (Shaken), so
+`sprint.max_s` times `taint.json` `sprint_mult` (Corruption) times `shaken.sprint_mult` (Shaken), so
 the two stack to x0.36; the HUD bar uses it as its maximum.
 
 Shaken (P3-07) is only the sprint cut: `trap_race.gd` `shake(peer)` runs `taint.json`
@@ -552,7 +552,7 @@ Traps are host-owned (doc 03 section 8). The player side is:
   to traps, which are static; the race fairness is the half-RTT credit in section 7). A sprung trap
   sends `apply_trap_changed` and starts the race: `apply_trap_race(victim, trap, deadline, start
   distance)` to everyone, so the other players can come and help (doc 01 "Night Traps").
-- **Prying free.** `request_pry` hold (4 s solo, x1.5 Tainted, x0.6 helped, doc 03 section 7);
+- **Prying free.** `request_pry` hold (4 s solo, x1.5 Corrupted, x0.6 helped, doc 03 section 7);
   completion frees the player and starts Shaken. Failing the deadline is `death` with cause
   `trap_race`.
 - **Disarming and filling (built, P2-11).** All are `request_hold` verbs (section 7), not separate
@@ -564,7 +564,7 @@ Traps are host-owned (doc 03 section 8). The player side is:
   can set that kind again. Noises: `disarm_bear` emits `tool_disarm` (8 m) at completion; `fill_pit`
   emits `tool_shovel` (25 m) at start and completion (the section 8 table). `place_flag` and `hang_trap`
   emit nothing: neither has a kind in doc 03 section 3.1 (placeholder, *inference*; the AI Programmer
-  can add `noise_flag` / `noise_hang`). Not built: the Tracker x0.6, the kneeling-still check, Taint,
+  can add `noise_flag` / `noise_hang`). Not built: the Tracker x0.6, the kneeling-still check, Corruption,
   `request_cut_tripwire` / `cut_bells`.
 - **The shovel.** Taken and hung back at the pegboard (`take_shovel` / `return_shovel`, 0.3 s, both
   placeholders in `INSTANT_S`). It is a flag on the player (`Game.players[peer].shovel`), not an item
@@ -1011,7 +1011,7 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   P4-22 hotbar lists what the local player holds, with a use hint; it points at nothing.
 - **Accessibility** (inference, unscoped in doc 01): there are no voice subtitles at all (D-019): a
   missing speaker name on a creature fake would expose it and defeat the "wrong place" tell. A
-  colour-blind option for the Taint visual. Settled by the CEO if it matters.
+  colour-blind option for the Corruption visual. Settled by the CEO if it matters.
 
 ## 17. Save at dawn
 
@@ -1053,7 +1053,7 @@ can host it. Never voice.
   `Save.GAME_FLAGS` (`streamer_safe`, `no_live_clips`) are saved if they exist. The generator is found by
   group `generator_logic` (group `generator` is the world mesh). Per-player data is keyed by `player_uid`
   (store ownership, walkie battery, awards tally). Not saved, by inference: bags and inventory (the
-  dawn cash-in empties bags), the animal pen (animals return at dawn), the Taint id. The final dawn's
+  dawn cash-in empties bags), the animal pen (animals return at dawn), the Corruption id. The final dawn's
   save is marked `over` and is not loadable. `--load=<season_id|path>` hosts a save from the command line.
   The Load Season list in the main menu shows saves of this profile; a uid not in the save is refused
   with "You were not in that season.". Roles lock once a season has uids (`Game.season_uids`).
@@ -1137,10 +1137,10 @@ the QA changes.
 | `session_start` / `session_end` | host | `session_id`, `build_id`, `players` (peer ids), `season_id`, `difficulty`, `phase1` (bool), `bots` (count) | Context |
 | `day_start` / `phase_changed` | host | `day`, `phase` | Time axis |
 | `close_call` | host | `call_id`, `victim`, `kind` (`lunge`, `kill`, `doorway`), `result` (`hit`, `miss_disagree`, `miss_lit`, `miss_timeout`), `rtt_ms`, `answer_ms` | OPEN_ISSUES 1: a laggy player must be killable. `miss_timeout` vs `miss_disagree` per player RTT is the number that settles it |
-| `taint_changed` | host, and the Tainted client | `player`, `on`, `cause` (a `taint.json` cause, or `well`, `dawn`, `death`, `dev`) | Taint rules |
+| `taint_changed` | host, and the Corrupted client | `player`, `on`, `cause` (a `taint.json` cause, or `well`, `dawn`, `death`, `dev`) | Corruption rules |
 | `shaken` | host, and the Shaken client | `player`, `seconds` | Trap race outcome |
-| `taint_source` | host | `id`, `kind` (`leavings`, `dead_crow`, `strange_seeds`), `on`, `pos` [x, z] | Taint sources placed and removed (P3-07) |
-| `can_tainted` | host | `can`, `cause` (`stolen_tool`, `field_item_at_dusk`) | A can that Taints its next taker (P3-07) |
+| `taint_source` | host | `id`, `kind` (`leavings`, `dead_crow`, `strange_seeds`), `on`, `pos` [x, z] | Corruption sources placed and removed (P3-07) |
+| `can_tainted` | host | `can`, `cause` (`stolen_tool`, `field_item_at_dusk`) | A can that Corrupts its next taker (P3-07) |
 | `trap_changed` | host | `trap_id`, `state` (`set`, `sprung`, `disarmed`, `filled`, `cut`, `loose`, `picked_up`), `by` | Trap use |
 | `trap_plan` | host | `day`, `players`, `plan` (kinds), `supply` (stolen bear traps in hand after nightfall theft), `armed` | Night trap count and bear supply (D-053) |
 | `trap_stolen` | host | `trap` (`held:<peer>` or `board:<slot>`), `from` (`board`, `outdoor`, `dark_building`), `lock`, `day`, `supply`, `player` (hands only) | Pegboard theft (D-053) |
@@ -1247,7 +1247,7 @@ presets for release (inference: settled by the Director when a release preset ex
   overlay in the corner or a full-screen toggle). It draws with `ImmediateMesh`/`Label3D` primitives
   in debug layer 20 so the game camera never sees them.
 - **Draws:**
-  - **Players:** a circle and name per peer, facing arrow, crouch/still/sprint colour, Taint and
+  - **Players:** a circle and name per peer, facing arrow, crouch/still/sprint colour, Corruption and
     Shaken rings, inside-lit-building marker. Ghosts as dim circles.
   - **Creature, true position:** a red filled circle at the creature's real position, with its state
     (`lurk`, `lure`, `stalk`, `chase`, `retreat`), body id, timers, and its current target peer.
@@ -1304,7 +1304,7 @@ that DD Phase 1 builds, in order (each step is playable on its own with 2 instan
 5. **Generator and lights:** one generator, fuel drum, refuel, repair, dimming. No flicker anywhere.
 6. **Go-still** (the host's ring) and crouch noise.
 7. **Scripted creature support:** the host-side `Creature` shell is the AI Programmer's; this doc
-   supplies Taint-free player state (Taint off in Phase 1 per doc 03 "fake it first"), the scripted
+   supplies Corruption-free player state (Corruption off in Phase 1 per doc 03 "fake it first"), the scripted
    trap spots 01 to 06, 15, 16, 19, 22 as the sprung traps with `trap_sprung` and the trap race
    (`request_pry`, `trap_race_result`), death, ghosts (spectate only), and `apply_creature_state`
    ambience hooks (the Audio Designer plays the three layers from the state).
@@ -1316,7 +1316,7 @@ that DD Phase 1 builds, in order (each step is playable on its own with 2 instan
 10. **Bots and the log check**: a bot that walks and does chores (the AI Programmer), and a
     `check_logs.py` run on the 2-player session.
 
-Left for later phases: Taint and washing (Phase 2 or 3 per doc 01), roles, the store beyond turnips,
+Left for later phases: Corruption and washing (Phase 2 or 3 per doc 01), roles, the store beyond turnips,
 the cart, Dawn Report, Season Awards, saves (Phase 2: the first full season), emotes, whistle
 polish, carrying teammates, flags and pegboard. Their message names are reserved in doc 06 section
 7 so they add no transport work.
@@ -1385,7 +1385,7 @@ accordingly.
   `delta`, not `Timer`, so `--quit-after` runs and the simulation agree.
 - **TwoVoIP first headless import crash** (doc 06 section 15): new scenes must not be the cause of
   the import crash QA sees; run the import twice before suspecting your change.
-- **Windows paths in `user://`:** `user://` is `%APPDATA%\Godot\app_userdata\Brenny Brenn Boy Horror`
+- **Windows paths in `user://`:** `user://` is (custom user dir name kept after the P5-37 rename) `%APPDATA%\Godot\app_userdata\Brenny Brenn Boy Horror`
   (QA's print_user_dir, PP-03); logs of 4 instances on one PC share it, so the file is
   `peer_<id>.jsonl` under one session folder (distinct peer ids, no clash). Two sessions in the same
   second would clash on `session_id`: hence the 4 hex digits.
@@ -1409,7 +1409,7 @@ accordingly.
 Raised in `production/QUESTIONS.md` (Q-019 onward):
 
 1. **AI Programmer, Noise interface** (Q-019): confirm section 8's signature, `emit_kind` /
-   `emit_voice` helpers and the `noise_emitted` signal; who applies the Taint and quiet-can
+   `emit_voice` helpers and the `noise_emitted` signal; who applies the Corruption and quiet-can
    multipliers (proposed: `NoiseBus.emit_kind`); the kind list spelling; when tool noises fire (at
    completion, or also at hold start); emote scream as a `voice` 255 emission; the debug accessors
    (`debug_sensed`, `debug_state`); serialisable creature and AI Director save state.
@@ -1484,7 +1484,7 @@ Durations other than doc 01's 60 s, the 0.2 gravity, the 1.7 pitch and the sound
 Source: doc 01 "Next season", [doc 02](02_systems_and_economy.md) section 21, [doc 03](03_creature_ai_director_and_scares.md) section 22. Numbers are in `data/next_season.json` and `data/creature_traits.json`; `Data.TABLES` also registers `cosmetics`, `quirks` and `imposter` for the parallel Phase 5 tasks.
 
 - **Flow.** A won season ends as in section 15 (`SeasonAwards._host_end` sets `Game.season_lost`). On the card the host gets "Start season N+1" (only if `Game.can_start_next_season()`: host, `Clock.season_over`, not lost, `season_no < campaign.seasons_max`), clients see a waiting line. `Game.start_next_season()` (host): `Campaign.build_carry` reads the live nodes, `season_no += 1`, a new `season_id` (`<session_id>_sN`, so the won season's final save is untouched), the trait draw and `Data.apply_traits`, then `apply_next_season(season, traits, reload)` to every peer and every peer loads the lobby; see **Through the lobby (P5-24)** below for the rest (P5-04 reloaded Main and started the clock here; P5-24 replaced that).
-- **Carry.** `Campaign` (`game/core/campaign.gd`, static helpers) keeps upgrades (store records with `upgrade: true`, except `plot_pair`), the bought plots, and savings at 25% of the spare coins, rounded down, capped at 60 (doc 02 s21.2). `Save.apply_pending` calls `Campaign.apply_carry` in the new Main when `Game.carry` is set: store state, plots (never past `Farm.plot_ceiling()` of the new headcount), the flare gun refill, the savings coins (reason `savings`), then the `season_started` log event. Everything else resets with the Main reload (crops, traps, taint, generator, walkie batteries, scrap).
+- **Carry.** `Campaign` (`game/core/campaign.gd`, static helpers) keeps upgrades (store records with `upgrade: true`, except `plot_pair`), the bought plots, and savings at 25% of the spare coins, rounded down, capped at 60 (doc 02 s21.2). `Save.apply_pending` calls `Campaign.apply_carry` in the new Main when `Game.carry` is set: store state, plots (never past `Farm.plot_ceiling()` of the new headcount), the flare gun refill, the savings coins (reason `savings`), then the `season_started` log event. Everything else resets with the Main reload (crops, traps, `taint`, generator, walkie batteries, scrap).
 - **Debt.** Season 2 and 3 read `next_season.json` `season_N` (`Campaign.debt_base`), by headcount. `Debt.total_for` and `Debt.first_of` use it when `Game.season_no > 1`; season 1 and the short season are unchanged. A join or leave still re-scales owed by headcount (`Debt._headcount_changed`).
 - **Traits.** `Campaign.draw_trait(seed, season, gained)` is uniform among the traits not yet gained, seeded by `hash("seed:season")`; the seed is `Game.seed_value`, or `hash(session_id)` when 0 (as `Creature._pick_body`). A trait is gained from `campaign.first_trait_season` on. `Data.apply_traits(ids)` applies each trait's `overrides` to the live records and remembers an undo list (`clear_overrides`): fields picked by `id`, `days` (ramp-up day range) or `where_kind`; `field` may be a dotted path; ops `set`, `add`, `mul`; a null base stays null. Overrides run on the host only; clients keep the trait id list for the Dawn Report. Apply them before the Main reload: the creature and AI Director cache some values in `_ready`. A new body is picked each season by P4-13.
 - **RPC.** `apply_next_season(season: int, traits: Array, reload: bool)` (host to clients, reliable). A joiner gets it with `reload` false from `Net._admit`.

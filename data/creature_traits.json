@@ -88,8 +88,8 @@
     {
       "id": "taint_nose",
       "source": "placeholder",
-      "cite": "doc 03 section 22: Taint tracking radius 60 to 80 m, trail 20 to 30 s",
-      "name": "Taint nose",
+      "cite": "doc 03 section 22: Corruption tracking radius 60 to 80 m, trail 20 to 30 s",
+      "name": "Corruption nose",
       "report_line": "It follows the black stains like a road.",
       "overrides": [
         {"table": "creature", "id": "taint_tracking_radius_m", "field": "metres", "op": "set", "value": 80, "base": 60},

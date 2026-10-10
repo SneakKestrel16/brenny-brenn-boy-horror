@@ -275,7 +275,7 @@ Doc 01 "Networking > Authority" and CONTRACTS section 5, unchanged:
 - **Clients own** their movement and camera. They send transforms at 20 Hz (`placeholder`); the host
   checks speed and checks stillness for "go still" (doc 01 "Hiding verbs") from what it receives.
 - **The host owns** the creature, AI Director, traps, pegboard, economy (no client-side selling),
-  Taint, deaths and the cart, and validates every interaction.
+  Corruption, deaths and the cart, and validates every interaction.
 - **Speed check:** a transform faster than the player's current maximum (sprint, Shaken, bear-trap
   slow) plus 20% (`placeholder`) is logged and relayed clamped. Only a jump over 3 times the maximum
   (`placeholder`) gets `apply_teleport` back. DD Phase 1 never rubber-bands friends over jitter.
@@ -378,7 +378,7 @@ client rolls back its prediction). Doc 05 section 7 (hold framework) uses only t
 | `request_disarm`, `request_pry`, `request_fill_pit`, `request_cut_tripwire` | `apply_trap_changed`, `apply_trap_race` | "Night Traps", "Day deaths" |
 | `request_hang_trap` | `apply_pegboard_changed` | "The tool shed" |
 | `request_place_flag`, `request_remove_flag` | `apply_flags` | "Night Traps > Flags" |
-| `request_wash` | `apply_taint_changed` | "The Taint" |
+| `request_wash` | `apply_taint_changed` | "The Corruption" |
 | `request_refuel`, `request_repair_generator` | `apply_generator` | "Nights > Generator" |
 | `request_door`, `request_repair_fence`, `request_round_up` | `apply_door`, `apply_fence`, `apply_animal` | "Light is the rule", "Daytime Threats" |
 | `request_push_cart(on)` | `apply_cart(loaded, pushers)`, on change only; the transform rides `moves` | "The Harvest Moon" |

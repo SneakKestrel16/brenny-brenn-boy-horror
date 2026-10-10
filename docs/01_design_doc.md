@@ -1,4 +1,6 @@
-# Farming Horror Game: Design Doc 01
+# Farmer's Delight: Design Doc 01
+
+**Game name:** Farmer's Delight. Its `project.godot` `config/name` sets the window title and the main menu title. `config/custom_user_dir_name` keeps the old `Brenny Brenn Boy Horror` folder under `app_userdata`, so saves and logs stay where they were.
 
 Friends grow crops on a farm while something in the corn hunts them. Farming creates the tension horror needs: crops tie you to spots, the work is noisy, and you can't finish it all huddled together.
 
@@ -76,7 +78,7 @@ The creature acts only on what it senses. It never knows positions any other way
   - sprinting through corn;
   - **transmitted in-game voice volume.** A scream gives you away. Only the volume is sent, one byte per voice frame, and nothing is stored.
 - **Sight:** short range. It spots light and open ground; corn blocks its view as it blocks yours.
-- **Taint:** it tracks Tainted players from much further away.
+- **Corruption:** it tracks Corrupted players from much further away.
 
 **Hiding verbs:**
 - **Crouch-walk:** silent and slow.
@@ -107,27 +109,27 @@ The creature acts only on what it senses. It never knows positions any other way
 
 By day the creature kills in only two cases:
 
-1. **Alone, Tainted and deep in the corn.** No teammate within earshot, Tainted (always self-inflicted), and well inside the rows.
+1. **Alone, Corrupted and deep in the corn.** No teammate within earshot, Corrupted (always self-inflicted), and well inside the rows.
 2. **Losing the trap race.** When a bear trap springs by day, the creature's signature starts approaching from a set distance.
    - **Pry free in time:** you live, Shaken.
    - **Fail:** you die.
    - **A teammate** shortens the pry.
-   - **Tuning:** a solo, untainted player who pries at once survives with a few seconds to spare.
-   - **What loses it:** hesitating, being Tainted (slower pry), or a trap deep in the corn.
+   - **Tuning:** a solo, uncorrupted player who pries at once survives with a few seconds to spare.
+   - **What loses it:** hesitating, being Corrupted (slower pry), or a trap deep in the corn.
 
 **Bending:**
 - The AI Director varies "deep", "earshot" and the race start distance a little each day, so the rule can't be measured exactly.
 - It never adds conditions.
 - A day death counts like a night one: out until dawn, and on the medical bill.
 
-### The Taint
+### The Corruption
 
-One state with several causes and one cure. Taint always comes from a player's choice, so black hands mean "you messed up."
+One state with several causes and one cure. Corruption always comes from a player's choice, so black hands mean "you messed up."
 
 **Causes:**
 - touching creature leavings (dead crow, strange seed);
 - picking up a stolen tool;
-- leaving an item in the field at dusk (the item stays Tainted until picked up);
+- leaving an item in the field at dusk (the item stays Corrupted until picked up);
 - touching an unpicked moonflower.
 
 **Effects, until washed or dawn:**
@@ -138,15 +140,15 @@ One state with several causes and one cure. Taint always comes from a player's c
 
 **Cue:** black, oily stains up the hands and sleeves, visible to all, plus a faint wet heartbeat in your audio.
 
-**Cure:** about 10 seconds of noisy pumping at the well. That can draw the creature. All Taint is washable. Being Tainted twice changes nothing.
+**Cure:** about 10 seconds of noisy pumping at the well. That can draw the creature. All Corruption is washable. Being Corrupted twice changes nothing.
 
-**Shaken** is separate. Jumpscares and surviving a trap race cause it. It shortens sprint for 60 seconds, never Taints, and wears off on its own.
+**Shaken** is separate. Jumpscares and surviving a trap race cause it. It shortens sprint for 60 seconds, never Corrupts, and wears off on its own.
 
 ### The AI Director
 
 A tension meter in the spirit of Left 4 Dead. It cycles **build-up → peak → fade → relax**: it backs off after scares and pushes in after quiet stretches. Day, night and Harvest Moon each have their own profile. Presence events per player per phase are tunable.
 
-- **Hunting** (movement, pursuit, trap placement) uses only the creature's senses and Taint. The AI Director may nudge the creature toward a *region*, never a position.
+- **Hunting** (movement, pursuit, trap placement) uses only the creature's senses and Corruption. The AI Director may nudge the creature toward a *region*, never a position.
 - **Presentation** (lure targeting, scare timing, hallucinations) may use true positions.
 - **The debug view** shows sensed and true positions side by side.
 
@@ -305,7 +307,7 @@ The game never says the day is safe; players learn it, and doubt it. A day jumps
 - dropped items;
 - **Shaken** for 60 seconds.
 
-Then the creature vanishes. Jumpscares never Taint.
+Then the creature vanishes. Jumpscares never Corrupt.
 
 **Scare moments:**
 - **Disarm lunge:** stalks part and it lunges at a player kneeling at a trap.
@@ -314,7 +316,7 @@ Then the creature vanishes. Jumpscares never Taint.
 - **The whisper:** a teammate's voice right behind you while they're across the field.
 - **Your own voice:** very rarely, your own voice whispers your name from the corn.
 - **Fake-outs:** something bursts out of the corn, but it's only a crow.
-- **Hallucinations (from day 5):** a private glimpse of it in the field. No knockdown. Tainted players see them more.
+- **Hallucinations (from day 5):** a private glimpse of it in the field. No knockdown. Corrupted players see them more.
 - **The wrong count:** rarely, one farmer too many stands at the corn edge in a teammate's hat, then is gone.
 - **The scarecrow moved:** a farm scarecrow is in a new spot each morning, facing the farmhouse. Never explained, never dangerous.
 
@@ -368,11 +370,11 @@ The creature has a daily disturbance budget, rising over the season. Day 1 might
 
 **Sabotage pool:**
 - **Trampled crops:** one plot a night, two if nobody was outside, plus one if the generator was left dead.
-- **Stolen tools:** a tool turns up somewhere creepy, often beside an armed trap. Picking it up Taints you.
+- **Stolen tools:** a tool turns up somewhere creepy, often beside an armed trap. Picking it up Corrupts you.
 - **Broken fences:** animals escape and must be rounded up far from the group.
 
 **Setting up the night:**
-- **Taint sources:** dead crows and strange seeds.
+- **Corruption sources:** dead crows and strange seeds.
 - **Clues:** footprints, claw marks and moved scarecrows hint where it will hunt.
 
 **Fairness:**
@@ -397,7 +399,7 @@ The creature has a daily disturbance budget, rising over the season. Day 1 might
 - **Labor:** planting, watering and harvesting are each a hold of a few seconds, plus walking. Labor is measured in seconds, and plots per player are derived from that (starting estimate about 6).
 - **Moonflower bed:** 1 plot per player.
   - The best crop per plot and a big share of income, by design, to push people outside at night.
-  - An unpicked moonflower at dawn becomes a Taint object; its plot can't be replanted until someone clears it.
+  - An unpicked moonflower at dawn becomes a Corruption object; its plot can't be replanted until someone clears it.
 - **End of season:** crops still in the ground at the final dawn sell at 50%.
 - **Corn** can't be planted, cut or sold.
 
@@ -479,7 +481,7 @@ Trap counts and the disturbance budget scale to 80% at 3 players and 60% at 2, r
 |---|---|---|---|---|
 | 1 | 1 | 2 bear, 1 pit | Exact | Turnips; Prize Pumpkin planted |
 | 2 | 1 | 2 bear, 2 pits | Exact | |
-| 3 | 2 | 3 bear, 2 pits | Exact | Moonflowers; Taint sources; pumpkin can be damaged; first payment at dawn |
+| 3 | 2 | 3 bear, 2 pits | Exact | Moonflowers; Corruption sources; pumpkin can be damaged; first payment at dawn |
 | 4 | 2 | 3 bear, 2 pits, 1 bell | Spliced | Pumpkins; tripwire bells |
 | 5 | 3 | 4 bear, 3 pits, 1 bell | Spliced | Lock-breaking; hallucinations; flag-moving |
 | 6 | 3 | 5 bear, 3 pits, 2 bells | Spliced | Attacks the light if everyone stays in |
@@ -522,7 +524,7 @@ Trap counts and the disturbance budget scale to 80% at 3 players and 60% at 2, r
 - **Carry over:** upgrades and plots, plus spare coins at 25% as savings, capped at 60 coins (D-162).
 - **The debt grows.**
 - **The creature gains one new trait,** such as better tool mimicry or more pits.
-- **A new season resets** crops, the Prize Pumpkin, Taint, deaths, the medical bill, traps, pegboard stock,
+- **A new season resets** crops, the Prize Pumpkin, Corruption, deaths, the medical bill, traps, pegboard stock,
   fuel, flags, the day count and payments. Roles can be picked again and a new body is picked.
 - **A lost season** (final payment missed) ends the campaign and carries nothing. A missed first payment is
   not a loss. Numbers: doc 02 section 21.
@@ -760,7 +762,7 @@ Only move on when the current phase is fun. Each "done when" is checked in at le
 **Phase 3:**
 - dead players' voices favored;
 - the AI Director, day arc and jumpscares;
-- Taint and Shaken;
+- Corruption and Shaken;
 - ghosts with flicker and crow;
 - whistle, flags and the Dawn Report.
 - **Done when:** the dead stay engaged, the living argue over a static voice, and someone laughs at the Dawn Report.
@@ -803,7 +805,7 @@ Free and open source (MIT), with no royalties.
   - The host screen shows clearly whether UPnP worked.
 - **Authority:**
   - **Clients own** their movement and camera.
-  - **The host owns** the creature, AI Director, traps, pegboard, economy (no client-side selling), Taint, deaths and the cart, and validates every interaction.
+  - **The host owns** the creature, AI Director, traps, pegboard, economy (no client-side selling), Corruption, deaths and the cart, and validates every interaction.
 - **Close calls:** lag-dependent lunges, kills and doorway reaches go to the victim. Lag never kills.
 
 ### Voice
@@ -826,7 +828,7 @@ Free and open source (MIT), with no royalties.
 - **Voices:** your own recordings, plus consenting friends.
 - **Logs:** deaths, sprung traps, lure results, hold and chore times, money, and time spent inside at night. The Dawn Report uses the same logs.
 - **"A lure worked":** the target moved more than 10 m toward the source within 8 seconds. Used for logs, the Dawn Report, the AI Director and the Phase 1 gate.
-- **Trap race:** log whether a solo, untainted player who pries at once survives.
+- **Trap race:** log whether a solo, uncorrupted player who pries at once survives.
 - **Spatial audio (Phase 1 gate):** with headphones, players must be able to place a voice and a whistle at 10, 30 and 60 m.
 - **Debug view:** a top-down map of the creature, its state, sensed versus true positions, the tension meter, traps and players.
 - **Group playtests:** at the end of each phase, logged and (with consent) recorded. Screams and laughs are the design working; bored silence is what to fix.

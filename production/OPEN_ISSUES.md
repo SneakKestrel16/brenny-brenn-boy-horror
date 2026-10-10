@@ -103,7 +103,7 @@ session rechecks them (P2-09, D-034).
    (`flicker`, `crow`, `rustle`, `caw`); QA adds it to doc 09 s13 and `check_logs.py`.
 4. **No dev way to reach day 5**, where hallucinations open (doc 03 s13). The dev console has no day
    command. Settled by P3-05.
-5. **Taint data has two homes.** Settled in P3-02: player effects and causes in `taint.json` (doc 02 A.13),
+5. **Corruption data has two homes.** Settled in P3-02: player effects and causes in `taint.json` (doc 02 A.13),
    creature-side tracking in `creature.json` (doc 03 s19). Different values, one home each; no doc change needed.
 
 ## Found in P3-11 (Gameplay, 2026-10-08)
@@ -208,7 +208,7 @@ Source: the CEO's own play test at STOP 5 (host and one client on one PC). Route
 
 1. **Bot nights are dark nights.** The generator dies in every night of every bot season
    (`generator_dead` 7 of 7). Bots never refuel after 50 s into the night, so they wait in a dark barn. A
-   Tainted bot does not wash at night: one QA season (`qts8_3p`) lost a bot to a `night_chase` inside the
+   Corrupted bot does not wash at night: one QA season (`qts8_3p`) lost a bot to a `night_chase` inside the
    barn. Human seasons would show whether a median team refuels.
 2. **The Prize Pumpkin is judged "sad" in every bot season** (`guarded_nights` 0). The sim's median
    policy assumes `pumpkin_size` "large". This is part of the `sim.py compare` final-dawn gap.
@@ -539,7 +539,7 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 
 - **`interact` plays once** (0.875 s) at the start of a hold, even a long one, and keeps playing after a cancel.
   Owner: Gameplay.
-- **Tainted farmer shows two pairs of arms** to other players: the stained body arms plus the floating forearms from
+- **Corrupted farmer shows two pairs of arms** to other players: the stained body arms plus the floating forearms from
   `taint_look.gd` `_arms`. Owner: Technical Artist.
 - **P5-23 touched files outside Gameplay**: `game/audio/soundscape.gd` (Audio) and `game/render/taint_look.gd`
   (Technical Artist, stale comment). Owners: review on next pass.

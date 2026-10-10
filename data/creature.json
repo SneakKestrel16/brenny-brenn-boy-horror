@@ -149,7 +149,7 @@
     {
       "id": "leavings_every_m",
       "source": "placeholder",
-      "cite": "doc 03 section 8: one black stain per 20 m of lurk or stalk walking (a Taint cause)",
+      "cite": "doc 03 section 8: one black stain per 20 m of lurk or stalk walking (a Corruption cause)",
       "kind": "distance",
       "metres": 20
     },

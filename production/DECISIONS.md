@@ -150,7 +150,7 @@ reading with the fewest new parts that lets two roles build against one file.
 ### D-021 · 2026-10-07 · Director · AI Programmer proposals (Q-018, Q-019)
 
 Accepted as written in the Q-018 and Q-019 answers: Noise API amendments (radius <= 0 emits nothing,
-Taint x1.5 on `step_*` only, tool noise on hold complete plus on start for shovel, pry and repair,
+Corruption x1.5 on `step_*` only, tool noise on hold complete plus on start for shovel, pry and repair,
 scream = `emit_voice` at byte 255); doc 03 edits (corn damping not applied to `step_sprint_corn`;
 home on largest `effective_radius_m - distance_m`; footstep tension capped at +1/s per player;
 stalk-to-chase uses the sensed position and not by day outside day death or trap race; chase lost
@@ -380,7 +380,7 @@ Added (doc 01 "Comfort and convenience settings", doc 05 s16 keys, task P2-15): 
 head-bob slider with a level knockdown camera at off, centre dot, per-player voice volume and mute
 (also mutes the creature's replays of that player, so a mute never exposes a fake), toggle holds
 (same hold times), toggle sprint, invert Y, menu text size. Not added: panic key, scare volume cap,
-colour-blind Taint option. On-screen captions or subtitles for sounds are rejected for good (they
+colour-blind Corruption option. On-screen captions or subtitles for sounds are rejected for good (they
 would give away where sounds come from; D-019) and are not to be raised again. **Why:** CEO.
 
 ### D-048 · 2026-10-08 · CEO · Lobby-only joins, rejoin allowed
@@ -480,7 +480,7 @@ Pumpkin), `broken_fence` (no animals or pen), spliced lure clips (doc 03 s12.1) 
 (store items). The Phase 3 sabotage pool is `trample`, `stolen_tool`, `dead_crow`, `strange_seeds`,
 `scarecrow_moved`, `generator_kill`. P3-09 defines the doc 09 ghost action events and includes corn
 rustle; P3-05 adds a dev command to set the day.
-**Why:** doc 01 "Build Plan > Phase 3" lists the AI Director, sabotage, scares, Taint, dead voices,
+**Why:** doc 01 "Build Plan > Phase 3" lists the AI Director, sabotage, scares, Corruption, dead voices,
 ghosts, whistle, emotes and the Dawn Report; the waiting items depend on Phase 4 content.
 **How to apply:** acceptance for P3-02 to P3-13 is in `production/TASKS.md`.
 
@@ -1051,7 +1051,7 @@ stay, so code keeps loading the upgraded files.
 ### D-155 · 2026-10-09 · CEO · Next season campaign and imposter win (Q-251, Q-252 item 2)
 The CEO approved the P5-02 proposals. Q-251: a campaign is 3 seasons; a won season 3 pays the farm off; a lost
 season (final payment missed) ends the campaign and carries nothing; a missed first payment is not a loss.
-Resets each season: crops, Prize Pumpkin, Taint, deaths, medical bill, traps, pegboard stock, fuel, flags, day
+Resets each season: crops, Prize Pumpkin, Corruption, deaths, medical bill, traps, pegboard stock, fuel, flags, day
 count, payments. Roles are re-pickable and a new body is picked. Q-252 item 2: the imposter wins only when the
 final payment is missed; the first-payment Foreclosure Notice is not an imposter win. Doc 01 "Next season" and
 "Imposter mode" get this wording when P5-02 merges.
@@ -1102,7 +1102,7 @@ tables there.
 
 ### D-159 · 2026-10-09 · CEO, Director · P5-12 merged; six player colours; missing models tasked
 P5-12 (overall model upgrade) passed QA and is merged. The farmer has a 12-bone rig, 9 animations, a `hat` bone,
-`mat_farmer_overalls` (player tint) and `mat_farmer_sleeves` (Taint). QA corrected the handoff: the farmer part
+`mat_farmer_overalls` (player tint) and `mat_farmer_sleeves` (Corruption). QA corrected the handoff: the farmer part
 nodes are now skinned meshes; P5-13 poses bones, not part nodes, and must set LOOP_LINEAR on idle, walk, run and
 crouch. Rulings:
 1. Q-267: six player colours for up to 6 players: red #C04040, blue #4070C0, yellow #D0B040, green #50A050
@@ -1288,7 +1288,7 @@ The lobby shows "Season N" and its right panel scrolls above START.
 **Why:** doc 03 s22.1 prints the trait line once; QA re-review loads of both save kinds confirm it.
 
 ### D-184 · 2026-10-10 · Director · Player-placed scarecrows keep their yaw
-P5-23 wires the P5-13 primitives (Taint look and sleeves, `interact` animation, cart lantern glass, store scarecrows).
+P5-23 wires the P5-13 primitives (Corruption look and sleeves, `interact` animation, cart lantern glass, store scarecrows).
 QA's first review failed it: placed scarecrows all faced yaw 0, so the OCD gaze check was wrong. `store.gd` now keeps
 `scarecrow_yaws`, saves write `[x, y, z, yaw]` (old 3-value saves load yaw 0), and `quirk_watch` `in_gaze` takes the
 yaw. Small edits landed in `soundscape.gd` (Audio) and `taint_look.gd` (Technical Artist).

@@ -168,7 +168,7 @@
     {
       "id": "scare_jumpscare",
       "source": "doc01",
-      "cite": "doc 03 section 13; doc 01 Jumpscares: Shaken, never Taint; not in a trap race or lit building; less likely at the town stand (town_stand.scare_mult, D-115)",
+      "cite": "doc 03 section 13; doc 01 Jumpscares: Shaken, never Corruption; not in a trap race or lit building; less likely at the town stand (town_stand.scare_mult, D-115)",
       "big": true,
       "private": true,
       "opens_day": 1,
@@ -261,7 +261,7 @@
     {
       "id": "scare_hallucination",
       "source": "doc01",
-      "cite": "doc 03 sections 8 and 13; doc 01 Ramp-up (day 5), The Taint (more when Tainted)",
+      "cite": "doc 03 sections 8 and 13; doc 01 Ramp-up (day 5), The Corruption (more when Corrupted)",
       "big": true,
       "private": true,
       "opens_day": 5,

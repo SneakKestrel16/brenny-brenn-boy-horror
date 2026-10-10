@@ -17,7 +17,7 @@ const MENU := [
 	["status", "status"], ["skip phase", "skip"], ["day", "phase day"], ["dusk", "phase dusk"], ["night", "phase night"],
 	["harvest moon", "phase harvest_moon"], ["dawn", "phase dawn"], ["+50 coins", "coins 50"], ["fill fuel", "fuel"],
 	["break gen", "gen damage"], ["fix gen", "gen repair"], ["grow ripe", "grow ripe"], ["debug view", "debug"],
-	["kill", "kill {p}"], ["respawn", "respawn {p}"], ["Taint", "taint {p}"], ["wash", "taint {p} off"],
+	["kill", "kill {p}"], ["respawn", "respawn {p}"], ["Corrupt", "taint {p}"], ["wash", "taint {p} off"],
 	["Shaken", "shaken {p}"], ["flag", "flag {p}"], ["whistle", "whistle {p}"], ["wave", "emote wave {p}"],
 	["lurk", "creature lurk {p}"], ["stalk", "creature stalk {p}"], ["chase", "creature chase {p}"],
 	["retreat", "creature retreat {p}"], ["jumpscare", "scare jumpscare {p}"], ["whisper", "whisper {p}"],
@@ -49,7 +49,7 @@ const HELP := """Commands (host only unless marked):
   kill [peer]               kill a player (default: you)
   respawn [peer]            bring a ghost back (default: you)
   ghost light|crow|rustle|caw [peer] [id]  a ghost power as that ghost, host rules apply (id: light or perch)
-  taint [peer] [off]        Taint a player, or wash them clean with off (default: you)
+  taint [peer] [off]        Corrupt a player, or wash them clean with off (default: you)
   taint_source [kind]       leavings, dead_crow or strange_seeds 2 m north of you (default leavings)
   shaken [peer]             Shaken for taint.json's 60 s (default: you)
   msg <peer> <text>         show a text message on that player's screen only (P5-36)
@@ -470,7 +470,7 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 			if p == 0:
 				return "? no such peer"
 			main.get_node("Taint").set_taint(p, on, &"dev")
-			return "%d %s" % [p, "Tainted" if on else "clean"]
+			return "%d %s" % [p, "Corrupted" if on else "clean"]
 		"taint_source":
 			var kind := StringName(a[0]) if not a.is_empty() else &"leavings"
 			if not kind in [&"leavings", &"dead_crow", &"strange_seeds"]:

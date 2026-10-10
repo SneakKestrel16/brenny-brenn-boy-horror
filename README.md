@@ -1,4 +1,4 @@
-# Brenny Brenn Boy Horror
+# Farmer's Delight
 
 A 2 to 4 player online co-op farming horror game: farm by day, survive the creature in the corn by
 night. Built in Godot 4. The design doc, [docs/01_design_doc.md](docs/01_design_doc.md), is the

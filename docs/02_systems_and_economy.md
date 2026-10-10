@@ -21,7 +21,7 @@ flagged in [Questions raised](#questions-raised), not resolved here.
 10. [Store and items](#10-store-and-items)
 11. [Ramp-up by player count](#11-ramp-up-by-player-count)
 12. [Traps (economy and labor side)](#12-traps-economy-and-labor-side)
-13. [Taint and Shaken](#13-taint-and-shaken)
+13. [Corruption and Shaken](#13-corruption-and-shaken)
 14. [Generator and farm damage](#14-generator-and-farm-damage)
 15. [Roles](#15-roles)
 16. [Difficulty and the short season](#16-difficulty-and-the-short-season)
@@ -38,7 +38,7 @@ flagged in [Questions raised](#questions-raised), not resolved here.
 ## 1. Scope and conventions
 
 Covers doc 01 "Core Loop" (timings and the dawn order), "Night Traps" (counts, clearing, the tool
-shed), "Nights" (generator), "The Taint" and "Shaken", "Death and Respawning > Medical bill",
+shed), "Nights" (generator), "The Corruption" and "Shaken", "Death and Respawning > Medical bill",
 "Daytime Threats" (the trample rule), "Crops", "The Prize Pumpkin", "Season and Numbers" (all of
 it; Next season is DD Phase 5, section 21), "Store", "Roles" and "Difficulty and group settings".
 
@@ -80,12 +80,12 @@ measures them.
 | Water (quiet can) | 5 | placeholder | store item "slower, heard less far" (`01 Store`) |
 | Harvest (incl. moonflowers at night) | 2 | placeholder | "a few seconds" |
 | Fill watering can at the well | 4 | placeholder | well pump is a heard sound (`01 Senses`) |
-| Wash off Taint at the well | 10 | 01 The Taint | "about 10 seconds of noisy pumping" |
+| Wash off Corruption at the well | 10 | 01 The Corruption | "about 10 seconds of noisy pumping" |
 | Water the Prize Pumpkin | 3 | placeholder | same as Water |
 | Sell at the town stand (per trip) | 2 | placeholder | |
 | Buy at the shipping crate (per trip) | 2 | placeholder | |
 | Disarm a bear trap (kneeling still) | 5 | placeholder | "a few seconds" (`01 Night Traps`) |
-| Pry free of a bear trap, solo, untainted | 4 | placeholder | doc 03 sets the race distance against this |
+| Pry free of a bear trap, solo, uncorrupted | 4 | placeholder | doc 03 sets the race distance against this |
 | Fill a pit with a shovel | 4 | placeholder | |
 | Cut tripwire bells | 1 | placeholder | "cheap" (`01 Night Traps`) |
 | Hang a trap on the pegboard | 1 | placeholder | |
@@ -94,12 +94,12 @@ measures them.
 | Refuel the generator | 4 | placeholder | |
 | Repair the generator (uses 1 scrap) | 6 | placeholder | |
 | Repair a fence | 5 | placeholder | |
-| Clear a dead moonflower plot | 3 | placeholder | touching it Taints (`01 The Taint`) |
+| Clear a dead moonflower plot | 3 | placeholder | touching it Corrupts (`01 The Corruption`) |
 | Place a scarecrow | 3 | placeholder | |
 
 **Multipliers on hold time** (all `placeholder`), each stored in one file: a teammate helping a
-pry ×0.6 ("shortens the pry", `01 Day deaths`) in `labor.json` (`pry.helped_mult`); Tainted pry
-×1.5 ("prying is slower", `01 The Taint`) in `taint.json` only (section 13); Mechanic repair and
+pry ×0.6 ("shortens the pry", `01 Day deaths`) in `labor.json` (`pry.helped_mult`); Corrupted pry
+×1.5 ("prying is slower", `01 The Corruption`) in `taint.json` only (section 13); Mechanic repair and
 refuel ×0.6 and Tracker disarm ×0.6 (`01 Roles`, "faster") in `roles.json` only (section 15).
 Multipliers multiply.
 
@@ -280,7 +280,7 @@ matters for trap and disturbance counts (section 11).
   watered on the day they're planted; pumpkins again the next day. Moonflowers are watered when
   planted and harvested that night.
 - **Ripe crops** stay harvestable until picked (placeholder; doc 01 is silent). Moonflowers are the
-  exception: wilted by dawn, and an unpicked one becomes a Taint object whose plot can't be
+  exception: wilted by dawn, and an unpicked one becomes a Corruption object whose plot can't be
   replanted until cleared (`01 Crops`).
 - **End of season:** any crop still in the ground at the final dawn sells at 50% (`01 Crops`):
   turnip 5, pumpkin 14 (exact halves). Inference: ripe or not, since doc 01 says "still in the
@@ -571,7 +571,7 @@ any disabled type: bells count as nothing and are not replaced. Nights 4 to 6 th
 `enabled: true` restores doc 01's counts with no other change. (Placeholder.)
 
 Voice (exact through day 3, spliced from day 4) and the "New" column belong to doc 03 and are not
-scaled. Unlock days used here: moonflowers, Taint sources and pumpkin gnawing day 3; pumpkins and
+scaled. Unlock days used here: moonflowers, Corruption sources and pumpkin gnawing day 3; pumpkins and
 bells day 4; lock-breaking and flag-moving day 5 (`01 Ramp-up`).
 
 **Rounding up favours the creature at 3p and 2p** (inference from the table): 3p gets 4p's
@@ -596,24 +596,24 @@ How traps are placed, sprung and raced is doc 03. What they cost the economy:
 - **`traps.json` `enabled`** (P2-12, added to schema A.12): optional boolean, default true; `false` for
   `tripwire_bells` until bells are built (section 11).
 
-## 13. Taint and Shaken
+## 13. Corruption and Shaken
 
 | State | Effect | Number | Source |
 |---|---|---|---|
-| Taint | sprint runs out 40% sooner | sprint time ×0.6 | 01 The Taint |
-| Taint | prying slower | pry ×1.5 | placeholder |
-| Taint | footsteps heard 50% further | footstep radius ×1.5 | 01 The Taint |
-| Taint | night trail; more hallucinations | doc 03 | 01 The Taint |
-| Taint | cure | 10 s pumping at the well | 01 The Taint |
-| Shaken | shortens sprint for 60 s | sprint time ×0.6 for 60 s | 01 The Taint (60 s); ×0.6 placeholder |
+| Corruption | sprint runs out 40% sooner | sprint time ×0.6 | 01 The Corruption |
+| Corruption | prying slower | pry ×1.5 | placeholder |
+| Corruption | footsteps heard 50% further | footstep radius ×1.5 | 01 The Corruption |
+| Corruption | night trail; more hallucinations | doc 03 | 01 The Corruption |
+| Corruption | cure | 10 s pumping at the well | 01 The Corruption |
+| Shaken | shortens sprint for 60 s | sprint time ×0.6 for 60 s | 01 The Corruption (60 s); ×0.6 placeholder |
 | Bear trap | slow after escaping | walk ×0.6 for 60 s | 01 Night Traps |
 
-- **Taint causes** (`01 The Taint`): creature leavings, a stolen tool, an item left in the field
-  at dusk (the item stays Tainted until picked up), an unpicked moonflower. Taint lasts until
-  washed or dawn; Tainted twice changes nothing.
-- **Shaken causes:** jumpscares and surviving a trap race; never Taints; a new cause restarts the
+- **Corruption causes** (`01 The Corruption`): creature leavings, a stolen tool, an item left in the field
+  at dusk (the item stays Corrupted until picked up), an unpicked moonflower. Corruption lasts until
+  washed or dawn; Corrupted twice changes nothing.
+- **Shaken causes:** jumpscares and surviving a trap race; never Corrupts; a new cause restarts the
   60 s (placeholder).
-- **Stacking:** Taint and Shaken multiply (sprint ×0.36) (placeholder).
+- **Stacking:** Corruption and Shaken multiply (sprint ×0.36) (placeholder).
 
 ## 14. Generator and farm damage
 
@@ -1017,7 +1017,7 @@ quirk and imposter limits.
 - **Death timing sets the first clear.** A death on night 3 fails the first payment; uniform nights
   give 72%, weighting nights by the ramp gives 85% (log row 3).
 - **The final clear is knife-edge in the debt:** 1% of debt is about 6 points of final clear.
-- **Each multiplier lives in one file** (taint pry in `taint.json`, role perks in `roles.json`);
+- **Each multiplier lives in one file** (Corrupted pry in `taint.json`, role perks in `roles.json`);
   a copy in `labor.json` would drift.
 - **Later-season debt is per headcount, not one number** (21.4): carried plots help 4p to 6p and not 2p or 3p.
 - **Season 3's debt barely exceeds season 2's at 4p to 6p** because plots are at the ceiling; do not "fix" it
@@ -1074,7 +1074,7 @@ The cap only touches that top tail (inference; Q-254).
 
 ### 21.3 What resets
 
-Crops and the Prize Pumpkin, Taint and Shaken, deaths and the medical bill (and deferred bills), traps,
+Crops and the Prize Pumpkin, Corruption and Shaken, deaths and the medical bill (and deferred bills), traps,
 pegboard stock, generator fuel, flags, the day counter, payments made and the Foreclosure state. Starting
 coins are the normal `start_coins` plus savings. Source: `placeholder`, because doc 01 lists only what
 carries (Q-251).
@@ -1237,7 +1237,7 @@ are in the cited tables.
 | Hoarding disorder | carry 5; walk and crouch x0.9 (2.7 and 1.08 m/s); sprint unchanged (5.0) | carry 4; 3.0, 1.2 | `01 Quirks`; numbers `placeholder` |
 | Narcolepsy | gets a body 6 s after the last other player at dawn; counts for headcount; daylight, never dangerous | 0 s | `01 Quirks`; 6 s `placeholder` |
 | Grandiose delusions | a bear trap snaps 0.6 s after the step, so they can step out (1 m); the step noise sounds at once | immediate | `01 Quirks`; numbers `placeholder` |
-| OCD | within 6 m of a scarecrow, inside its front 120 degree arc, for 2 s: Shaken for 60 s; per scarecrow per player cooldown 120 s; never Taint | none | `01 Quirks`; numbers `placeholder` |
+| OCD | within 6 m of a scarecrow, inside its front 120 degree arc, for 2 s: Shaken for 60 s; per scarecrow per player cooldown 120 s; never Corruption | none | `01 Quirks`; numbers `placeholder` |
 
 New fields the game needs (Q-255): `light_radius_mult` per player, `voice_radius_mult` per player,
 `shaken_duration_mult`, `sprint_refill_mult`, `walk_speed_mult`, `carry_extra_slots`, `dawn_body_delay_s`,
@@ -1467,7 +1467,7 @@ every id below; values are set in the sections cited.
 ### A.3 `labor.json`
 
 Section 2. Three record kinds: `hold` (a verb's hold), `move` (a speed) and `capacity`. Role and
-Taint multipliers are not here (sections 13 and 15).
+Corruption multipliers are not here (sections 13 and 15).
 
 ```json
 {
@@ -2118,7 +2118,7 @@ Section 13. Records `taint`, `shaken` and `stacking`; doc 03 adds causes.
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/taint.schema.json",
-  "title": "Taint and Shaken effects (doc 02 section 13)",
+  "title": "Corruption and Shaken effects (doc 02 section 13)",
   "type": "object",
   "additionalProperties": false,
   "required": ["table", "schema_version", "records"],

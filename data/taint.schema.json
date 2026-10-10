@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/taint.schema.json",
-  "title": "Taint and Shaken effects (doc 02 section 13, A.13; causes added in P3-02)",
+  "title": "Corruption and Shaken effects (doc 02 section 13, A.13; causes added in P3-02)",
   "type": "object",
   "additionalProperties": false,
   "required": ["table", "schema_version", "records"],

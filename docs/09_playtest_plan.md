@@ -100,7 +100,7 @@ Director).
 | The living argue over a static voice | A dead teammate's voice or a faked dead voice plays in static | `lure_played.ghost` = true and `owner_dead` (P3-03; `check_logs.py` counts both); observer counts a spoken argument about whether it was real | At least one argument per session, and at least one tester used the flicker as the tiebreaker (doc 01 "The dead-voice twist") |
 | Someone laughs at the Dawn Report | The Dawn Report shown at dawn | `dawn_report_shown` (P3-12) proves it was shown; the laugh is the observer's | Observer logs at least one laugh per session |
 | The AI Director, day arc, jumpscares | Day arc thirds; at most one big scare per player per day; never two on the same player within 2 minutes (doc 01 "Rules") | `tension` every 10 s (`value`, `phase`, `profile`), `creature_state`, `scare` (`kind`, `target`, `big`, `private`, `third`), `scare_dropped` (`why`), `disturbance_placed` | `check_logs.py` scare rules PASS: per player at most one big scare a day, no two big or private scares within 120 s (`ai_director.json` `scare_rules`), none in day third 1; scares forced from the dev console are counted apart. Sabotage kinds only from their `opens_day` (`data/sabotage.json`) |
-| Taint and Shaken | Cause each once | `taint_changed` (`player`, `on`, `cause`), `shaken` (`player`, `seconds`) | Cause and cure as doc 01 states; `check_logs.py` lists any Taint on a player within 2 s after a `shaken` (Shaken never Taints) |
+| Corruption and Shaken | Cause each once | `taint_changed` (`player`, `on`, `cause`), `shaken` (`player`, `seconds`) | Cause and cure as doc 01 states; `check_logs.py` lists any Corruption on a player within 2 s after a `shaken` (Shaken never Corrupts) |
 | Do the four bodies feel different? | Open Issue 4; each session uses a different body | none. Blocked at P3-13: the build always uses `body_gaunt` (OPEN_ISSUES "Found at the P3-13 review" item 1) | Debrief: can the tester name the body by sound alone? Written into OPEN_ISSUES |
 
 ### DD Phase 4
@@ -148,7 +148,7 @@ three doc 01 measures plus tallies.
 | Dead and ghost lures (DD Phase 3) | `lure_played` `owner_dead`, `ghost` | count of each | Done (P3-13) |
 | AI Director tension | `tension` (`value`, `phase`, `profile`) | samples, value range, gap between samples (doc 09 s3 asks every 10 s), phases and profiles seen | Done (P3-13) |
 | Scare rules | `scare`, `scare_dropped`, `dev_command` | per player count, big, private, closest gap; violations of one big a day, 120 s, day third 1; a scare within 5 s after a dev `scare` command is forced and not judged (*inference*: 3 s build-up plus margin) | Done (P3-13) |
-| Taint and Shaken | `taint_changed`, `shaken` | Taints by cause, cures by cause, Shaken lengths; Taint within 2 s after Shaken flagged (*inference*: the window) | Done (P3-13) |
+| Corruption and Shaken | `taint_changed`, `shaken` | Corrupts by cause, cures by cause, Shaken lengths; Corruption within 2 s after Shaken flagged (*inference*: the window) | Done (P3-13) |
 | Sabotage | `sabotage_plan`, `disturbance_placed`, `disturbance_fixed`, `trample` | plans, kinds by day, fixes by verb, dawn trample; kinds placed before their `opens_day` listed | Done (P3-13) |
 | Dawn Report shown | `dawn_report_shown` | count | Done (P3-13) |
 | Sim comparison (doc 02 s18.5) | `dawn_summary`, `payment_made`, `season_lost`, `season_awards_shown` | `uv run --no-project python -I tools/sim/sim.py compare <host logs>`: per dawn 2 to 8, live median bank as % of the next scheduled payment against the sim median (same player count and difficulty), each within 15 points; first and final clear reported, not gated. *Inference:* the denominator is the scheduled payment with no penalty or deferred bill (the sim logs no per-run `owed`) | Done (P4-18; moved into `tools/sim/compare.py`, Q-156) |
@@ -224,9 +224,9 @@ are OPEN_ISSUES "Found at the P2-01 review" 1.
 
 ## 6. Trap race check
 
-Doc 01 "Testing": "log whether a solo, untainted player who pries at once survives." Doc 01 "Day
+Doc 01 "Testing": "log whether a solo, uncorrupted player who pries at once survives." Doc 01 "Day
 deaths": that player "survives with a few seconds to spare". Doc 03 section 7.2: normal start 25 m,
-speed 3.5 m/s, solo untainted pry 4 s, so 3.14 s spare; bend 22 to 28 m with a 2 s floor (all
+speed 3.5 m/s, solo uncorrupted pry 4 s, so 3.14 s spare; bend 22 to 28 m with a 2 s floor (all
 `placeholder` there).
 
 **Procedure.** A tester springs a bear trap by day and pries at once (hold started within 0.5 s of the
@@ -234,15 +234,15 @@ spring, doc 03 section 7.2). Cases to run per session, at least 3 each:
 
 | Case | Expect (doc 03 section 7.2) |
 |---|---|
-| Solo, untainted, pries at once, normal trap | survives; `seconds_spare` between 2.0 and 4.0 |
+| Solo, uncorrupted, pries at once, normal trap | survives; `seconds_spare` between 2.0 and 4.0 |
 | Same, deep trap | survives; spare about 1.14 (0.29 to 2.0 across the bend) |
 | Solo, hesitates 2 s | lives normal, dies deep |
-| Solo, Tainted | lives normal (1.14 s), dies deep. Needs Taint (Phase 2 or 3), skip in Phase 1 |
+| Solo, Corrupted | lives normal (1.14 s), dies deep. Needs Corruption (Phase 2 or 3), skip in Phase 1 |
 | With a teammate | survives with more spare than solo |
 
 **Pass.** `check_logs.py` section "Trap race":
 
-- **Every** solo, untainted, pried-at-once race at a normal trap survived. One death in that subset is a
+- **Every** solo, uncorrupted, pried-at-once race at a normal trap survived. One death in that subset is a
   failure and goes to the Game Designer as a tuning bug; the checker lists those deaths.
 - Minimum `seconds_spare` in that subset at least 2.0 s at a normal trap (doc 03 `trap_race_min_spare_s`,
   `placeholder`).
@@ -315,7 +315,7 @@ playtest problem into `production/OPEN_ISSUES.md`.
 - [ ] Clients own only their movement and camera; crouch and still are checked by the host from
       transforms.
 - [ ] Interactions are `request_*` to the host, validated, then `apply_*` back. No `rpc()` outside `Net`.
-- [ ] Creature, AI Director, traps, pegboard, economy, Taint, deaths, generator, crops, cart, clock run on
+- [ ] Creature, AI Director, traps, pegboard, economy, Corruption, deaths, generator, crops, cart, clock run on
       the host only.
 - [ ] Close calls are resolved in the victim's favour.
 - [ ] The feature works from a client.

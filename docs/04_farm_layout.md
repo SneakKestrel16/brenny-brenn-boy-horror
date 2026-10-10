@@ -104,7 +104,7 @@ out.
 | Pegboard | (-15, 30.5), inside on the back wall | | faces the door | "The tool shed > Pegboard" |
 | Generator | (-11, -6), 3 m off the barn's west wall | 2 × 1 m | | "Nights > Generator"; "From day 6 ... bangs the barn doors while circling to the generator" ("Light is the rule") |
 | Fuel drum | (-10, 27), beside the shed door | 1 m | | "the drum by the shed is free and infinite; the walk is the cost" ("Nights") |
-| Well | (49, -20), P5-47 (was (-25, 10)) | 2 m | | "Taint > Cure", "Senses > Hearing" (well pump) |
+| Well | (49, -20), P5-47 (was (-25, 10)) | 2 m | | "Corruption > Cure", "Senses > Hearing" (well pump) |
 | Shipping crate and store | (72, 5) | 2 × 1 m | | "Crops" (field B "by the shipping crate"), "Store" ("Bought by the shipping crate") |
 | Town stand | (120, -5) | 3 × 2 m | | "Core Loop" (sell at the town stand), "AI Director > Town stand" |
 | Farm gate | (105, -5), in the clearing's east fence | 6 m wide | | "Nights > Length", "Winning and losing" |
@@ -544,7 +544,7 @@ coordinates, so nothing moves when DD Phase 2 widens it:
   markers. Cover_03 (47, -4) lies 1 m inside the temporary east wall, so it is also usable in Phase 1.
 - **Out:** farmhouse, field B, moonflower bed, Prize Pumpkin, shipping crate, town stand, gate,
   cart route, strips 1 and 3.
-- In Phase 1 the well stays in the yard (-25, 10), 7 m from the temporary west wall, as in the first draft; only the full farm moves it between the fields (P5-47). Taint isn't in Phase 1 (doc 01 "Build Plan > Phase 3"), so only
+- In Phase 1 the well stays in the yard (-25, 10), 7 m from the temporary west wall, as in the first draft; only the full farm moves it between the fields (P5-47). Corruption isn't in Phase 1 (doc 01 "Build Plan > Phase 3"), so only
   watering refills are affected.
 
 ## 10. Doc 01 elements checklist

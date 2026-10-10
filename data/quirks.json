@@ -89,7 +89,7 @@
     {
       "id": "ocd",
       "source": "doc01",
-      "cite": "doc 01 Quirks: walking under the scarecrow's gaze makes them Shaken. Numbers placeholder. Shaken is the taint.json record (60 s, restarts on a new cause), never Taint. A scarecrow's gaze is its front arc",
+      "cite": "doc 01 Quirks: walking under the scarecrow's gaze makes them Shaken. Numbers placeholder. Shaken is the taint.json record (60 s, restarts on a new cause), never Corruption. A scarecrow's gaze is its front arc",
       "name": "OCD",
       "sources": {"effects": "placeholder"},
       "effects": {"scarecrow_gaze_m": 6, "scarecrow_gaze_arc_deg": 120, "scarecrow_gaze_dwell_s": 2, "scarecrow_gaze_cooldown_s": 120}
