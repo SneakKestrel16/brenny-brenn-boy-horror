@@ -1031,3 +1031,11 @@ list. Next season and cosmetics wait for P5-02, since doc 02 leaves both out of 
 no "done when"; the Director's proposal is Q-250 for the CEO. STOP 6 follows P5-08.
 **Why:** CEO request; doc 01 "Build Plan > Phase 5" is the source.
 
+### D-153 · 2026-10-09 · CEO · Quirks, Dev toys and Imposter mode join Phase 5
+Doc 01 places Quirks, Dev toys and Imposter mode "after DD Phase 4" in no phase. The CEO put all three in
+DD Phase 5: rows P5-09 (Quirks), P5-10 (Dev toys) and P5-11 (Imposter mode). The Game Designer sets quirk
+numbers and the imposter kit inside P5-02. Dev toys need no design numbers, so P5-10 starts now and builds the
+D-044 machine-hash gate that P5-11's dev setting reuses.
+**Why:** CEO, 2026-10-09, asked whether the mental illness options and dev trolls were in this phase, then said
+yes to adding them (Imposter mode included).
+

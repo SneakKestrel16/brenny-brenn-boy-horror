@@ -991,7 +991,10 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-05 | Gameplay | Cosmetics: store items once the debt is paid, equip, synced, saved | todo | P5-02 |
 | P5-06 | 3D Artist, Technical Artist | Cosmetic hats and overalls models and tint slots (doc 07 s8) | todo | P5-02 |
 | P5-07 | Audio Designer | Phase 5 sounds: season-start sting, cosmetic purchase, splice join check (doc 08) | todo | P5-02, P5-03 |
-| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors; doc 09 Phase 5 gate | todo | all above |
+| P5-09 | Gameplay, AI Programmer | Quirks group option: ten quirks, one random per player per season (doc 01 "Quirks", D-052) | todo | P5-02 |
+| P5-10 | Gameplay, Network & Voice | Dev toys behind the machine-hash gate (doc 01 "Dev toys", D-044, D-045) | todo | P5-01 |
+| P5-11 | Gameplay | Imposter mode and its hidden dev setting (doc 01 "Imposter mode", D-043, D-044) | todo | P5-02, P5-10 gate |
+| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-11 |
 
 ### P5-02 Phase 5 design and data
 Owner: Game Designer. Output: doc 02, doc 03, `data/`, `tools/sim/`; handoff note.
@@ -1056,4 +1059,43 @@ Acceptance:
 - Reviews each P5 task against its block.
 - 4-instance run over ENet across a season end into season 2; headless with no new errors.
 - No measured gate: Phase 5 is done when the CEO says so (Q-250). QA lists what to try at STOP 6.
+
+### P5-09 Quirks
+Owner: Gameplay Programmer (player effects), AI Programmer (lure weighting, hallucinations). Output: `game/`,
+tests; handoff note. Numbers: P5-02 doc 02 and `data/` (doc 01 numbers are placeholders).
+Acceptance:
+- Lobby group option, off by default; with it on, each player gets one random quirk per season from the ten
+  in doc 01 "Quirks", host seeded and logged; real disorder names (D-052).
+- Each player sees only their own quirk; others learn it by watching. Kept on reconnect and in the save.
+- Every quirk effect works as doc 01 lists; none lets anyone see the creature clearly, harm it, or fake an
+  honest signal. Paranoia's fake footstep plays on that player only.
+- Photosensitivity rules hold (doc 01 "Photosensitivity safety").
+- 2-instance ENet test with Quirks on; headless, no new errors.
+
+### P5-10 Dev toys
+Owner: Gameplay Programmer (toys, gate), Network & Voice Programmer (squeaky voices). Output: `game/`, tests;
+handoff note.
+Acceptance:
+- The D-044 gate: works only when the host machine's `OS.get_unique_id()` hash matches one baked into the
+  game; only the hash goes in the repo, never the raw ID; `--dev` or a debug build elsewhere does not unlock
+  it. No menu shows the toys. The CEO supplies the hash (a FOR CEO question with a one-line command).
+- The seven toys in doc 01 "Dev toys"; the host runs them and every peer sees the result.
+- Toys never touch the save, coins, debt or deaths; a session that used one logs `dev_toy` and
+  `check_logs.py` measures skip it.
+- Photosensitivity rules hold: disco lights sweep and never flicker; the nuke is a slow warm glow; safe mode
+  shows no disco lights and no nuke glow.
+- 2-instance ENet test with a test hash; headless, no new errors.
+
+### P5-11 Imposter mode
+Owner: Gameplay Programmer. Output: `game/`, tests; handoff note. Kit: P5-02 doc 02.
+Acceptance:
+- Lobby toggle, off by default; with it on, a placeholder 50% chance of one imposter, picked secretly by the
+  host at match start after roles are locked; the imposter keeps their role and perks.
+- Only the imposter's own client learns it; no other peer's state, logs sent to it, or UI can expose it.
+- The imposter wins on foreclosure; everyone else wins as normal. Their kit (false signals, open gates and
+  doors) per P5-02; they never kill.
+- The Dawn Report reveals the imposter, or that there was none, at season end.
+- Rejoining keeps imposter status (doc 01 "Rejoining").
+- The hidden dev setting (D-044) forces an imposter and picks who, behind the P5-10 gate.
+- 2-instance and 4-instance ENet tests; headless, no new errors.
 
