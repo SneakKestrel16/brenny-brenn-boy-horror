@@ -427,6 +427,25 @@ func waiting() -> bool:
 
 # --- Playback -----------------------------------------------------------------------------------
 
+## Host, the creature's splice (doc 03 s12.1): the head of `owner_peer`'s clip `a` up to its word break, then the
+## tail of clip `b` from its word break. [] if either clip is missing or too short to cut.
+func splice(owner_peer: int, a: String, b: String) -> Array:
+	var pa := packets(owner_peer, a)
+	var pb := packets(owner_peer, b)
+	if a == b or pa.size() < 2 or pb.size() < 2:
+		return []
+	var ca := VoiceSplice.word_break(_sizes(pa))
+	var cb := VoiceSplice.word_break(_sizes(pb))
+	return [[a, 0, ca], [b, cb, pb.size() - cb]]
+
+
+static func _sizes(pk: Array) -> PackedInt32Array:
+	var out := PackedInt32Array()
+	for p: PackedByteArray in pk:
+		out.append(p.size())
+	return out
+
+
 ## Clip ids `owner_peer` has shared, complete on this machine (own clips: this machine's memory).
 func clip_ids(owner_peer: int) -> Array:
 	if owner_peer == Game.local_peer():
@@ -438,11 +457,19 @@ func clip_ids(owner_peer: int) -> Array:
 	return out
 
 
-## The clip's Opus packets, or [] if this machine doesn't hold it. Lures push these into a fresh
-## `AudioStreamOpus`; check `Game.replays_voice(owner)` first (doc 06 s11 "Coverage").
-func packets(owner_peer: int, clip_id: String) -> Array:
-	var data: Variant = _own.get(clip_id) if owner_peer == Game.local_peer() else _store.get(owner_peer, {}).get(clip_id, {}).get("data")
-	return decode(data).get("packets", []) if data != null else []
+## The Opus packets of a clip id or a splice spec (`VoiceSplice`), or [] if this machine doesn't hold every
+## clip or a segment runs past its clip. Lures push these into a fresh `AudioStreamOpus`; check
+## `Game.replays_voice(owner)` first (doc 06 s11 "Coverage"). A splice is the segments back to back.
+func packets(owner_peer: int, spec: String) -> Array:
+	var out := []
+	for s: Array in VoiceSplice.parse_spec(spec):
+		var data: Variant = _own.get(s[0]) if owner_peer == Game.local_peer() else _store.get(owner_peer, {}).get(s[0], {}).get("data")
+		var pk: Array = decode(data).get("packets", []) if data != null else []
+		var count: int = pk.size() - s[1] if s[2] < 0 else s[2]
+		if pk.is_empty() or s[1] + count > pk.size():
+			return []
+		out.append_array(pk.slice(s[1], s[1] + count))
+	return out
 
 
 ## Plays a clip flat (the pause menu's review). Returns the player, or null if the clip isn't here.
@@ -476,10 +503,10 @@ func play_packets(pk: Array, bus: StringName = &"VoiceBase", owner_peer: int = 0
 	return p
 
 
-## Stops `owner_peer`'s playing clip `clip_id` ("" = all of theirs).
+## Stops `owner_peer`'s playing clip `clip_id` ("" = all of theirs), and any splice that uses it.
 func stop(owner_peer: int, clip_id: String = "") -> void:
 	for e in _playing.duplicate():
-		if e[0] == owner_peer and (clip_id.is_empty() or e[1] == clip_id):
+		if e[0] == owner_peer and (clip_id.is_empty() or e[1] == clip_id or clip_id in VoiceSplice.spec_ids(e[1])):
 			_drop(e[2])
 
 

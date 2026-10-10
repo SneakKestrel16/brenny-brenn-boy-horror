@@ -687,7 +687,7 @@ Doc 01 "Voice mimicry". Playback is doc 06's `apply_lure`; **choosing** is here.
 | Dead-voice twist | night lures in a dead player's voice are world sounds, with the ghost's static; static plus flicker = real | doc 01 "Ghosts" |
 | Dead voices | used more often than live voices | doc 01 "Voice mimicry" |
 | Exactness | exact clips through day 3; spliced clips from day 4 | doc 01 "Ramp-up" |
-| Splice | joins two recorded lines, cut at the word break (the clip's own silence gap, or the middle of the clip if none); a lure reuses at most 2 segments | doc 01 "Ramp-up" (splicing); the cut rule is a placeholder. Live-speech splicing is DD Phase 5 and out of scope |
+| Splice | joins two live clips of one owner, cut at the word break (the clip's own silence gap, or the middle of the clip if none); a lure reuses at most 2 segments: the head of the chosen clip up to its break, then the tail of another clip of the same owner from its break | doc 01 "Ramp-up" (splicing), "Build Plan > Phase 5" (spliced clips from live speech, P5-03); the cut rule is a placeholder (section 12.4) |
 | Position | the source is the point the creature wants the target to go **to**: in a trap spot (day) or toward a cover point (night) | doc 01 "Voice mimicry" (inference) |
 | The 15 m rule | day lures need a source position 15 m or more from every teammate of the target. Pairs in one field are always within 15 m (doc 04 sec 8.3), so field lures come from the corn edge on the far side; the yard's generator and well are 23 m and 32 m from corn, so yard lures come from yard corn edges | doc 04 sec 8.3 |
 
@@ -740,16 +740,32 @@ Doc 01 "Voice mimicry". Playback is doc 06's `apply_lure`; **choosing** is here.
   included (`apply_lure` is `call_remote`, so the host plays its share locally).
 - **Tells.** Voice lures (clip, stranger): a third none, else one of `echo`, `pitch_up`,
   `pitch_down`, `no_crackle`. Sound lures: none (inference: tells are voice giveaways).
-- **Exactness.** Exact clips only; splicing (day 4 on) is not built. `lure_played` logs `day` and
-  `exact: true`.
-- **Wire.** `apply_lure.source` stays a String: `"stranger"`, `"sound:<sound_id>"` or
-  `"clip:<owner_peer>:<clip_id>"` (doc 06 section 7 describes a dictionary; raised in P2-04's
-  handoff). Each hearer checks the owner's setting at play time and plays the clip from its store
+- **Exactness.** Days 1 to 3 play exact clips. From the first day whose `ramp_up.json` `voice` is
+  `spliced` (day 4, doc 01 "Ramp-up"), every clip lure whose owner has 2 or more clips on the host
+  is spliced (P5-03): the chosen clip's head up to its word break, then the tail of another of the
+  same owner's clips (picked at random) from its word break. Only that owner's clips are used, so a
+  splice obeys the same voice setting as an exact clip (doc 01 "Voice settings"); an owner with one
+  clip gets the exact clip. The extra random draw happens only on the splice path, so days 1 to 3
+  keep their seed stream.
+- **Word break** (`VoiceSplice.word_break`, placeholder): the middle of the longest run of 2 or more
+  frames whose Opus packet is no bigger than half the clip's median packet, ignoring the first and
+  last 5 frames (the talk-start pre-roll and the voice activity hang); no such run, the middle of
+  the clip. Packet size stands in for loudness, an inference: variable-bitrate Opus spends few
+  bytes on silence, and TwoVoIP has no standalone decoder to measure the samples. A listening test
+  of spliced lures would settle the thresholds.
+- **Wire.** `apply_lure.source` stays a String: `"stranger"`, `"sound:<sound_id>"`,
+  `"clip:<owner_peer>:<clip_id>"` for an exact clip, or `"clip:<owner_peer>:<spec>"` for a splice,
+  where `<spec>` is `<clip_id>@<first_frame>+<frame_count>` segments joined by commas (at most 2;
+  for example `clip:1:live_1@0+75,live_0@30+31`). Doc 06 section 12 describes a dictionary with a
+  segment list; the string carries the same list (raised in P2-04's and P5-03's handoffs). A
+  hearer refuses a malformed spec or a segment past its clip's end (`lure_skipped`, `missing`). Each hearer checks the owner's setting at play time and plays the clip from its store
   at the source on the tell's bus (`VoiceChain`), positional like a voice (`VoiceEmitter` unit size
   and range); a clip freed on Off stops at once (`lure_stopped`); a missing one logs `lure_skipped`.
 - **Logs.** `lure_played`: `lure_id`, `kind` (`clip`, `sound`, `stranger`), `owner`, `line_id`,
   `clip_id`, `sound_id`, `target`, `heard_by` (the target, or -1 for everyone), `position`, `tell`,
-  `ghost`, `day`, `exact`. `lure_result` as Phase 1. `lure_fooled` when a clip lure worked.
+  `ghost`, `day`, `exact` (false for a splice), `segments` (`[[clip_id, first_frame, frame_count]]`:
+  one whole-clip segment for an exact clip lure, two for a splice, null for other kinds). The Dawn
+  Report replays a splice from these logged segments, so it plays the same cut. `lure_result` as Phase 1. `lure_fooled` when a clip lure worked.
   `check_logs.py` reports recorded (clip) against generic (stranger and sound) rates, read not gated
   (doc 09 section 3).
 - **QA flag.** `-- --creature-walk` walks the local player round the yard and turns it toward half

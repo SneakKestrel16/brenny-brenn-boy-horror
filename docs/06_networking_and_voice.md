@@ -914,8 +914,8 @@ Doc 01 "Voice > Lures": "clips are sent to every peer at session start, so a lur
 | Field | Meaning |
 |---|---|
 | `lure_id` | Unique per session; shared by the `lure_played` and `lure_result` log events (D-012) and the Dawn Report |
-| `source` | Either `{owner_slot, line_id, segments}` for a live clip, or `{sound_id}` for faked footsteps, watering cans, hoes, generic "stranger" voices (doc 01 "Material", "Habits") and DD Phase 1's generic voice lines from the corn (doc 01 "Build Plan > Phase 1") |
-| `segments` | List of `(clip_id, first_frame, frame_count)`. One whole-clip segment for exact clips (days 1 to 3); several for spliced clips from day 4 (doc 01 "Ramp-up" table). Choosing splice points is doc 03's |
+| `source` | A String (as built; this section first described a dictionary). `"clip:<owner_peer>:<clip_id>"` for an exact live clip, `"clip:<owner_peer>:<segments>"` for a spliced one, `"sound:<sound_id>"` for faked footsteps, watering cans and hoes (doc 01 "Material", "Habits"), or `"stranger"` for the generic voice lines from the corn (doc 01 "Build Plan > Phase 1") |
+| `segments` | `<clip_id>@<first_frame>+<frame_count>` per segment, joined by commas, all clips of the one owner (`VoiceSplice.segments_spec`). An exact clip (days 1 to 3) sends the bare clip id, read as one whole-clip segment; a splice (day 4 on, doc 01 "Ramp-up" table) sends exactly 2 segments, for example `live_1@0+75,live_0@30+31`. A hearer refuses a malformed list, more than 2 segments or a segment past its clip's end, and logs `lure_skipped` (`missing`). Choosing splice points is doc 03's (section 12.4) |
 | `position` | Where the creature plays it from |
 | `target_slot` | The target for day lures (sent **only** to that peer), or -1 for night and chase lures (sent to all, a world sound) (doc 01 "Who hears a lure") |
 | `tell` | `none`, `echo`, `pitch_up`, `pitch_down`, `no_crackle` (section 9) |
@@ -926,11 +926,16 @@ Doc 01 "Voice > Lures": "clips are sent to every peer at session start, so a lur
   by reference; every peer already holds the clips, so the replay plays locally, with the same tell
   and chain, following each owner's current setting: **Off players appear as text plus sound**
   (doc 01 "Voice settings > Coverage"), the sound being the footsteps or tools the creature faked
-  for them.
+  for them. A spliced lure replays from the `segments` its `lure_played` logged, so the report
+  plays the same cut the target heard (P5-03).
 - Clip frames are pushed into a fresh `AudioStreamOpus` on the creature's `VoiceEmitter` and played
   through the chain; TwoVoIP has no standalone PCM decoder, so this is the only way to play a clip,
   and it is the same decode path as live voice. A splice resets nothing: the decoder runs across
   segment joins, which may add a faint glitch at each join (inference; heard in DD Phase 2).
+- **Tests (P5-03):** `tests/net/test_splice.gd` checks the segment list and the word break;
+  `tests/net/test_p5_03_e2e.gd` is the two-instance run (its header has the `multi.py` command):
+  the host's synthetic `--voice-wav` voice cuts live clips, a day-4 lure in that voice is spliced,
+  plays on the target client only, and the client's Dawn Report replays the same segments.
 
 ## 13. Bandwidth
 
@@ -1001,7 +1006,7 @@ input per copy, simulated latency and packet loss. QA's `tools/qa/multi.py` laun
 | `voice_stats` | per speaker every 10 s and when the speaker leaves: `speaker` (peer id), `bus` (the chain this listener hears them through now, e.g. `VoiceBase`, `VoiceGhost`; P3-10), `static` (the ghost static layer is on), `received`, `lost` (concealed by PLC), `late`, `decoded`, `loss`, `talk_spurts`, `underflow_ms`, `overflow_ms` |
 | `voice_capture` | once when capture starts: `input` (`mic` or `wav`; the WAV's file name is never logged), `mix_rate`, `push_to_talk` |
 | `voice_sent` | this machine's mic every 10 s: `input` (`mic`, `wav`, `off`), `encoded`, `sent`, `bytes`, `talk_spurts`, `push_to_talk`, `relayed` (host only: frames through the relay, its own included). No volume values |
-| `lure_played` | `lure_id`, `kind` (`clip`, `sound`, `stranger`), `owner` (peer id, or null for a stranger lure), `line_id` (`live` for a live clip, a stranger line id, or null), `clip_id` (or null), `sound_id` (or null), `target` (peer id, or null for a world lure), `position` (`[x, y, z]`), `tell`, `ghost`. No audio, no volume |
+| `lure_played` | `lure_id`, `kind` (`clip`, `sound`, `stranger`), `owner` (peer id, or null for a stranger lure), `line_id` (`live` for a live clip, a stranger line id, or null), `clip_id` (or null), `sound_id` (or null), `target` (peer id, or null for a world lure), `position` (`[x, y, z]`), `tell`, `ghost`, `exact` (false for a splice), `segments` (`[[clip_id, first_frame, frame_count]]` for a clip lure, else null). No audio, no volume |
 | `clip_manifest` | `owner`, `clips`, `bytes`: on the owner when it shares, and on every machine that applies one |
 | `clip_received` | `owner`, `clip_id`, `line_id`, `bytes`, `frames`: a clip is complete in memory |
 | `clip_refused` | `owner`, `reason` (`bad_entry`, `too_many`, `too_big`, `bad_data`), and the counts or `clip_id` |

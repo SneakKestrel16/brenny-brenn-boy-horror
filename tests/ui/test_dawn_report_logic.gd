@@ -80,6 +80,12 @@ func _init() -> void:
 		["lure_result", {"lure_id": "lure_9", "moved_m": 5.0}], ["dawn_summary", {"day": 1, "coins": 0}]]
 	var rp: Dictionary = _sec(Logic.build(off, ctx, tpl), "best_impression").replays[0]
 	_check(rp.source == "sound:step_walk_fake" and rp.off_text == "Ben said something.", "off player: sound plus text")
+	# P5-03: a splice replays its logged segments, the same cut it played
+	var sp: Array = [["lure_played", {"lure_id": "lure_4", "kind": "clip", "owner": 2, "line_id": "live", "clip_id": "live_1", "target": 1,
+		"heard_by": 1, "tell": "pitch_up", "exact": false, "segments": [["live_1", 0, 30], ["live_4", 22, 41]]}],
+		["lure_result", {"lure_id": "lure_4", "moved_m": 6.0}], ["dawn_summary", {"day": 4, "coins": 0}]]
+	rp = _sec(Logic.build(sp, ctx, tpl), "best_impression").replays[0]
+	_check(rp.source == "clip:2:live_1@0+30,live_4@22+41" and rp.tell == "pitch_up", "splice replay source: %s" % rp.source)
 	print("test_dawn_report_logic: %s" % ("PASS" if _fails == 0 else "%d FAILED" % _fails))
 	quit(0 if _fails == 0 else 1)
 

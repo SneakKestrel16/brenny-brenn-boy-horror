@@ -699,8 +699,8 @@ func _try_day_lure() -> void:
 
 ## Doc 03 section 12. Presentation: reads true positions. Picks whose voice (12.1), the source (12.1 the
 ## 15 m rule, 12.2 a place the voiced teammate could not be), one tell or none, then plays it: by day to the
-## target only, by night as a world sound. Exact clips only: splicing (day 4 on) is not built, so `exact`
-## is always true and `day` is logged.
+## target only, by night as a world sound. From the first `spliced` day of `ramp_up.json` (doc 01 "Ramp-up":
+## day 4) a clip lure splices two of its owner's clips (P5-03, `_splice`); before that, or with one clip, exact.
 func _lure_at(p: int, day: bool) -> bool:
 	var v := _choose_voice(p)
 	var src := _lure_source(p, day, int(v.owner))
@@ -726,13 +726,16 @@ func _lure_at(p: int, day: bool) -> bool:
 		"sound":
 			source = "sound:" + String(v.sound_id)
 		"clip":
-			source = "clip:%d:%s" % [v.owner, v.clip_id]
+			v.segments = _splice(int(v.owner), v.clip_id)
+			var spliced: bool = v.segments.size() > 1
+			source = "clip:%d:%s" % [v.owner, VoiceSplice.segments_spec(v.segments) if spliced else v.clip_id]
 	var pos: Vector3 = Game.players[p].pos
 	_lure = {"lure_id": lure_id, "target": p, "position": src, "start_d": src.distance_to(pos), "moved_m": 0.0, "t0": _now,
 		"recorded_line": v.get("line_id") if v.kind == "clip" else null}
 	Log.event(&"lure_played", {"lure_id": lure_id, "kind": v.kind, "owner": v.owner if int(v.owner) != 0 else null,
 		"line_id": v.get("line_id"), "clip_id": v.get("clip_id"), "sound_id": v.get("sound_id"), "target": p,
-		"heard_by": p if day else -1, "position": _v(src), "tell": String(tell), "ghost": ghost, "day": Clock.day, "exact": true,
+		"heard_by": p if day else -1, "position": _v(src), "tell": String(tell), "ghost": ghost, "day": Clock.day,
+		"exact": v.get("segments", []).size() < 2, "segments": v.get("segments"),
 		"owner_dead": int(v.owner) != 0 and Game.is_ghost(int(v.owner))})
 	_send_lure([lure_id, source, src, p if day else -1, tell, ghost])
 	return true
@@ -754,6 +757,22 @@ func _choose_voice(p: int) -> Dictionary:
 			var id: String = clips[_rng.randi() % clips.size()]
 			opts.append({"kind": "clip", "owner": q, "clip_id": id, "line_id": VoiceClips.LIVE_LINE})
 	return opts[_rng.rand_weighted(w)]
+
+
+## Doc 03 s12.1 "Exactness" and "Splice" (P5-03): on a `spliced` day (ramp_up.json `voice`), `clip_id` joined to
+## another clip of the same owner at the word break (`VoiceClips.splice`), so only clips that owner's setting
+## already lets this lure use. Else the whole clip as one segment. Draws from `_rng` only when splicing, so
+## days 1 to 3 keep their seed stream.
+func _splice(owner: int, clip_id: String) -> Array:
+	var whole := [[clip_id, 0, Voice.clips.packets(owner, clip_id).size()]]
+	var row: Dictionary = Data.record(&"ramp_up", StringName("day_%d" % clampi(Clock.day, 1, 7))) if Data.has_table(&"ramp_up") else {}
+	if row.get("voice") != "spliced":
+		return whole
+	var others: Array = Voice.clips.clip_ids(owner).filter(func(c: String) -> bool: return c != clip_id)
+	if others.is_empty():
+		return whole
+	var segs: Array = Voice.clips.splice(owner, clip_id, others[_rng.randi() % others.size()])
+	return segs if segs.size() == 2 else whole
 
 
 ## The source point (doc 03 section 12.1 "Position"): a trap spot by day, a crow corn edge or cover point by
@@ -845,7 +864,7 @@ func _hear_lure(args: Array) -> void:
 ## Doc 06 section 11: a clip freed (its owner went Off or left) stops at once.
 func _on_clip_freed(owner: int, clip_id: String) -> void:
 	for e in _clip_lures.duplicate():
-		if e[0] == owner and (clip_id.is_empty() or e[1] == clip_id):
+		if e[0] == owner and (clip_id.is_empty() or clip_id in VoiceSplice.spec_ids(e[1])):
 			_drop_clip_lure(e[2])
 			Log.event(&"lure_stopped", {"owner": owner, "clip_id": e[1]})
 

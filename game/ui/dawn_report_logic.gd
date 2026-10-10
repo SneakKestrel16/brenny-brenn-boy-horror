@@ -214,8 +214,10 @@ static func _lure_fields(l: Dictionary, names: Dictionary, ctx: Dictionary) -> D
 ## A lure reference for the replay (no audio): every peer plays its own copy of the clip (doc 05 section 15).
 static func _replay(l: Dictionary, f: Dictionary, names: Dictionary, templates: Dictionary) -> Dictionary:
 	var source := "stranger"
-	if l.kind == "clip":
-		source = "clip:%d:%s" % [int(l.owner), l.clip_id]
+	if l.kind == "clip":  # a splice (P5-03) replays its logged segments, the same cut it played
+		var segs: Variant = l.get("segments")
+		var spliced: bool = segs is Array and segs.size() > 1
+		source = "clip:%d:%s" % [int(l.owner), VoiceSplice.segments_spec(segs) if spliced else l.clip_id]
 	elif l.kind == "sound":
 		source = "sound:" + str(l.sound_id)
 	var owner: int = int(l.owner) if l.get("owner") != null else 0
