@@ -987,15 +987,15 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-01 | Director | Scope review: settle what P5-04 to P5-07 depend on; done-when proposal (Q-250) | done (D-152) | — |
 | P5-02 | Game Designer | Doc 02 next season and cosmetics, doc 03 season traits; `data/` JSON; sim runs season 2 and 3 | done (QA PASS, D-158) | P5-01 |
 | P5-03 | Network & Voice, AI Programmer | Spliced lures from live clips, day 4 on (doc 03 s12.1 splice row, doc 06 "A lure") | done (QA PASS, D-156) | P5-01 |
-| P5-04 | Gameplay, AI Programmer | Next season: carry-over, savings, debt growth, one new creature trait, saved and loaded | todo | P5-02 |
+| P5-04 | Gameplay, AI Programmer | Next season: carry-over, savings, debt growth, one new creature trait, saved and loaded | in progress | P5-02 |
 | P5-05 | Gameplay | Cosmetics: store items once the debt is paid, equip, synced, saved | todo | P5-02 |
-| P5-06 | 3D Artist, Technical Artist | Cosmetic hats and overalls models and tint slots (doc 07 s8) | todo | P5-02 |
-| P5-07 | Audio Designer | Phase 5 sounds: season-start sting, cosmetic purchase, splice join check (doc 08) | todo | P5-02, P5-03 |
-| P5-09 | Gameplay, AI Programmer | Quirks group option: ten quirks, one random per player per season (doc 01 "Quirks", D-052) | todo | P5-02 |
+| P5-06 | 3D Artist, Technical Artist | Cosmetic hats and overalls models and tint slots (doc 07 s8) | in progress | P5-02 |
+| P5-07 | Audio Designer | Phase 5 sounds: season-start sting, cosmetic purchase, splice join check (doc 08) | in progress | P5-02, P5-03 |
+| P5-09 | Gameplay, AI Programmer | Quirks group option: ten quirks, one random per player per season (doc 01 "Quirks", D-052) | in progress | P5-02 |
 | P5-10 | Gameplay, Network & Voice | Dev toys behind the machine-hash gate (doc 01 "Dev toys", D-044, D-045) | done (QA PASS, D-157; hash Q-261) | P5-01 |
 | P5-11 | Gameplay | Imposter mode and its hidden dev setting (doc 01 "Imposter mode", D-043, D-044) | todo | P5-02, P5-10 gate |
 | P5-12 | 3D Artist, Technical Artist | Overall upgrade of every model; farmer rig, animations and tint slots (D-154) | done (QA PASS, D-159) | P5-01 |
-| P5-13 | Gameplay | Wire the upgraded models in: creature glb for the capsule (Q-150), farmer rig, unused models | todo | P5-12, P5-03 |
+| P5-13 | Gameplay | Wire the upgraded models in: creature glb for the capsule (Q-150), farmer rig, unused models | in progress | P5-12, P5-03 |
 | P5-14 | 3D Artist | Missing models: buildings (barn, shed, farmhouse, well, fences, gates, doors) (Q-266) | todo | P5-12 |
 | P5-15 | 3D Artist | Missing models: traps (all kinds), pegboard, tools (hoe, shovel, fuel can, whistle) (Q-266) | todo | P5-12 |
 | P5-16 | 3D Artist | Missing models: crop growth stages, corn (Q-266) | todo | P5-12 |
