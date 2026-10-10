@@ -47,7 +47,9 @@ var trait_report_pending := false  ## host: the new season's first Dawn Report p
 var colours: Dictionary = {}  ## host: player key (uid, else "peer<id>") -> farmer colour slot, kept for the season so a rejoiner keeps theirs if it is free (P5-13, D-165)
 var colour_slots: Dictionary = {}  ## peer -> colour slot (index into FarmerBody.COLOURS): the host's table, mirrored on clients by `Roles.apply`
 var console_open := false  ## the dev console or a menu has the keyboard (D-031); Player and HoldController ignore game input
-var free_mouse := OS.get_cmdline_user_args().has("--free-mouse")  ## test runs never capture the mouse (multi.py passes it)
+## Test runs never capture the mouse: `--free-mouse` (multi.py passes it) or the Dummy audio driver every
+## test run uses (real play never does). `--grab` overrides both for a manual session.
+var free_mouse := not OS.get_cmdline_user_args().has("--grab") and (OS.get_cmdline_user_args().has("--free-mouse") or AudioServer.get_driver_name() == "Dummy")
 
 
 func _ready() -> void:
@@ -57,6 +59,12 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		quit()
+
+
+## Captures the mouse for play, never in a headless or test run (`free_mouse`).
+func capture_mouse() -> void:
+	if DisplayServer.get_name() != "headless" and not free_mouse:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 ## `--free-mouse`: undo any capture (Player, pause menu) so a test window never holds the mouse.

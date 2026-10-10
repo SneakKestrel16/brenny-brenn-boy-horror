@@ -110,8 +110,7 @@ func _ready() -> void:
 	layer.add_child(_label)
 	add_child(layer)
 	_trials = _build_trials()
-	if DisplayServer.get_name() != "headless":
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Game.capture_mouse()
 	_show("SPATIAL AUDIO TEST\nWear stereo headphones, left on left.\nEach trial plays ONE sound ONCE.\nTurn to face it, then press the number of the post it came from (1 nearest ... 4 farthest).\n\nEnter to start (%d trials)" % _trials.size())
 	if _auto:
 		_start_next.call_deferred()

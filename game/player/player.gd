@@ -90,8 +90,7 @@ func _ready() -> void:
 		_mesh.visible = false
 		stamina = float(Data.value(&"labor", &"sprint", &"max_s"))
 		_autowalk = OS.get_cmdline_user_args().has("--autowalk")
-		if DisplayServer.get_name() != "headless":
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		Game.capture_mouse()
 		Net.teleport_received.connect(func(p: Vector3) -> void: global_position = p)
 		var hc := Node.new()
 		hc.set_script(preload("res://game/interaction/hold_controller.gd"))

@@ -69,8 +69,7 @@ def build_command(godot: str, index: int, common: str, own: str, headless: bool,
     if frames:
         cmd += ["--quit-after", str(frames)]
     cmd += engine
-    if not grab:
-        game.append("--free-mouse")  # test windows never capture the developer's mouse
+    game.append("--grab" if grab else "--free-mouse")  # test windows never capture the developer's mouse; --grab beats the Dummy-audio rule
     if index > 1 and not any(g.startswith("--profile=") for g in game):
         game.append(f"--profile=p{index}")  # own player uid per copy, else roles and saves collide (doc 06 s5)
     cmd += ["--", *game]

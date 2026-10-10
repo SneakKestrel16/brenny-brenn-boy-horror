@@ -63,6 +63,6 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		Game.console_open = false
 		if not Game.in_lobby:
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			Game.capture_mouse()
 		Log.event(&"intro_skipped", {})
 		queue_free()

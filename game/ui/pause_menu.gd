@@ -47,8 +47,8 @@ func set_open(on: bool) -> void:
 	if on:
 		_rebuild()
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif DisplayServer.get_name() != "headless" and not Game.in_lobby:  # the lobby is a menu screen (P4-23)
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif not Game.in_lobby:  # the lobby is a menu screen (P4-23)
+		Game.capture_mouse()
 
 
 func _rebuild() -> void:

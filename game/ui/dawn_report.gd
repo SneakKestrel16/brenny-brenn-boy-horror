@@ -235,8 +235,7 @@ func _close() -> void:
 	_stop_replays()
 	_root.visible = false
 	Game.console_open = false
-	if DisplayServer.get_name() != "headless":
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Game.capture_mouse()
 
 
 ## A clip replays in its owner's voice only if streamer-safe is off, the owner's current setting is

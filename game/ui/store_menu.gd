@@ -60,8 +60,8 @@ func set_open(on: bool) -> void:
 		_rebuild()
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		Log.event(&"store_menu", {"open": true})
-	elif DisplayServer.get_name() != "headless" and not Game.free_mouse:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	else:
+		Game.capture_mouse()
 
 
 func _rebuild() -> void:
