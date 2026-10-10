@@ -5,11 +5,24 @@ extends CanvasLayer
 ## the session run on the host only (CONTRACTS section 5); a client gets "host only". Every command is
 ## logged as `dev_command`, so a playtest log shows when the session was changed by hand.
 ## `--dev-exec="phase night; coins 50"` runs commands once the session starts (scripted QA runs).
+## P5-36: the panel's left column is a mouse-driven dev menu (buttons for the common commands, a player picker for
+## the ones that take a peer, a message box); every button just runs the same typed command line.
 ## Removed (or compiled out) before release: tracked in DECISIONS D-031.
 
 const TOGGLE_KEY := KEY_QUOTELEFT
 const PHASES: Array[StringName] = [&"day", &"dusk", &"night", &"harvest_moon", &"dawn"]
 const CREATURE_STATES: Array[StringName] = [&"lurk", &"stalk", &"chase", &"retreat"]
+## [label, command]; `{p}` becomes the picked player's peer id. Anything else stays typed.
+const MENU := [
+	["status", "status"], ["skip phase", "skip"], ["day", "phase day"], ["dusk", "phase dusk"], ["night", "phase night"],
+	["harvest moon", "phase harvest_moon"], ["dawn", "phase dawn"], ["+50 coins", "coins 50"], ["fill fuel", "fuel"],
+	["break gen", "gen damage"], ["fix gen", "gen repair"], ["grow ripe", "grow ripe"], ["debug view", "debug"],
+	["kill", "kill {p}"], ["respawn", "respawn {p}"], ["Taint", "taint {p}"], ["wash", "taint {p} off"],
+	["Shaken", "shaken {p}"], ["flag", "flag {p}"], ["whistle", "whistle {p}"], ["wave", "emote wave {p}"],
+	["lurk", "creature lurk {p}"], ["stalk", "creature stalk {p}"], ["chase", "creature chase {p}"],
+	["retreat", "creature retreat {p}"], ["jumpscare", "scare jumpscare {p}"], ["whisper", "scare whisper {p}"],
+	["hallucination", "scare hallucination {p}"],
+]
 const HELP := """Commands (host only unless marked):
   help                      this list (any peer)
   status                    phase, time, coins, fuel, creature, players (any peer)
@@ -39,6 +52,7 @@ const HELP := """Commands (host only unless marked):
   taint [peer] [off]        Taint a player, or wash them clean with off (default: you)
   taint_source [kind]       leavings, dead_crow or strange_seeds 2 m north of you (default leavings)
   shaken [peer]             Shaken for taint.json's 60 s (default: you)
+  msg <peer> <text>         show a text message on that player's screen only (P5-36)
   debug                     toggle the debug view (F3)
   clear                     clear this console (any peer)"""
 
@@ -48,6 +62,10 @@ var _in: LineEdit
 var _history: PackedStringArray = []
 var _hist_i := 0
 var _mouse_before := Input.MOUSE_MODE_CAPTURED
+var _picker: OptionButton
+var _msg_in: LineEdit
+var _toast: Label
+var _toast_t := 0.0
 
 
 static func enabled() -> bool:
@@ -58,9 +76,13 @@ func _ready() -> void:
 	layer = 100
 	_panel = PanelContainer.new()
 	_panel.anchor_right = 1.0
-	_panel.offset_bottom = 300.0
+	_panel.offset_bottom = 460.0
+	var row := HBoxContainer.new()
+	_panel.add_child(row)
+	row.add_child(_build_menu())
 	var box := VBoxContainer.new()
-	_panel.add_child(box)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(box)
 	_out = RichTextLabel.new()
 	_out.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_out.scroll_following = true
@@ -73,10 +95,95 @@ func _ready() -> void:
 	box.add_child(_in)
 	add_child(_panel)
 	_panel.visible = false
+	_toast = Label.new()  # P5-36: a message from the host, on this screen only
+	_toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_toast.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_toast.offset_bottom = -80.0
+	_toast.add_theme_font_size_override(&"font_size", 26)
+	_toast.add_theme_color_override(&"font_outline_color", Color.BLACK)
+	_toast.add_theme_constant_override(&"outline_size", 8)
+	_toast.visible = false
+	add_child(_toast)
+	Net.apply_received.connect(func(what: StringName, args: Array) -> void:
+		if what == &"dev_message":
+			_show_message(args[0]))
 	_print("Dev console. Type help. %s" % ("You are the host." if Game.is_host() else "You are a client: most commands are host only."))
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--dev-exec="):
 			_exec_later.call_deferred(a.substr("--dev-exec=".length()))
+
+
+func _build_menu() -> Control:
+	var col := VBoxContainer.new()
+	_picker = OptionButton.new()
+	_picker.tooltip_text = "Player for the commands that take one"
+	col.add_child(_picker)
+	var sc := ScrollContainer.new()
+	sc.custom_minimum_size = Vector2(330, 0)
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(sc)
+	var grid := GridContainer.new()
+	grid.columns = 3
+	sc.add_child(grid)
+	for item: Array in MENU:
+		var b := Button.new()
+		b.text = item[0]
+		b.focus_mode = Control.FOCUS_NONE
+		b.pressed.connect(_menu_run.bind(item[1]))
+		grid.add_child(b)
+	var mrow := HBoxContainer.new()
+	col.add_child(mrow)
+	_msg_in = LineEdit.new()
+	_msg_in.placeholder_text = "message to the picked player"
+	_msg_in.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_msg_in.text_submitted.connect(func(_t: String) -> void: _menu_send())
+	mrow.add_child(_msg_in)
+	var send := Button.new()
+	send.text = "Send"
+	send.pressed.connect(_menu_send)
+	mrow.add_child(send)
+	return col
+
+
+func _fill_picker() -> void:
+	var keep := _picked()
+	_picker.clear()
+	for p: int in Game.players:
+		var n := str(Net.profiles.get(p, {}).get("name", ""))
+		_picker.add_item("%s%s (%d)" % [n if n != "" else "player", " [you]" if p == Game.local_peer() else "", p], p)
+		if p == keep:
+			_picker.select(_picker.item_count - 1)
+
+
+func _picked() -> int:
+	return _picker.get_selected_id() if _picker.item_count > 0 else Game.local_peer()
+
+
+func _menu_run(line: String) -> void:
+	line = line.replace("{p}", str(_picked()))
+	_print("> " + line)
+	_print(run(line))
+
+
+func _menu_send() -> void:
+	if _msg_in.text.strip_edges().is_empty():
+		return
+	_menu_run("msg {p} " + _msg_in.text.strip_edges())
+	_msg_in.clear()
+
+
+func _show_message(text: String) -> void:
+	_toast.text = text
+	_toast.visible = true
+	_toast_t = 8.0
+	print("[dev] message: %s" % text)
+
+
+func _process(delta: float) -> void:
+	if _toast_t > 0.0:
+		_toast_t -= delta
+		_toast.visible = _toast_t > 0.0
 
 
 func _exec_later(lines: String) -> void:
@@ -119,6 +226,7 @@ func _toggle() -> void:
 		_mouse_before = Input.mouse_mode
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		_in.clear()
+		_fill_picker()
 		_in.call_deferred(&"grab_focus")
 	else:
 		_in.release_focus()
@@ -370,6 +478,17 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? no living peer"
 			main.get_node("TrapRace").shake(p)
 			return "%d Shaken" % p
+		"msg":  # P5-36: one player's screen only; the peer argument works as everywhere (id, number, name)
+			var p := _peer_arg(a, 0)
+			if a.size() < 2 or p == 0:
+				return "? msg <peer|name> <text>"
+			var text := " ".join(a.slice(1))
+			Log.event(&"dev_message", {"peer": p, "text": text})
+			if p == Game.local_peer():
+				_show_message(text)
+			else:
+				Net.to_peers(&"apply_dev_message", [text], [p])
+			return "sent to %d" % p
 		"debug":
 			var dv := main.get_node_or_null("DebugView")
 			if dv == null:

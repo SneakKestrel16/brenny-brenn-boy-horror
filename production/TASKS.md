@@ -1018,7 +1018,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-33 | AI Programmer | Creature AI: more drawn to noise, targets players more often at night; bear trap deaths too quick and random; crows seen more often (CEO STOP 6) | todo | P5-08 |
 | P5-34 | Gameplay | Barn how-to-play signboard; intro scene with the situation and the goal (CEO STOP 6) | todo | P5-08 |
 | P5-35 | Gameplay | Player models break when Taint shows (CEO STOP 6) | todo | P5-08 |
-| P5-36 | Gameplay | Dev console: message one player; dev menu for the common commands, typed commands kept (CEO STOP 6) | todo | P5-08 |
+| P5-36 | Gameplay | Dev console: message one player; dev menu for the common commands, typed commands kept (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-37 | Director | Rename: Taint to Corrupted in every doc and all player-facing text; game named "Farmer's Delight" (CEO STOP 6) | todo | P5-30 to P5-36 |
 | P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | done (QA PASS) | P5-02 to P5-07, P5-09 to P5-29 |
 

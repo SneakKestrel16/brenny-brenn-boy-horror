@@ -1503,3 +1503,9 @@ Doc 01 "Imposter mode", "Rejoining"; doc 02 s22; `data/imposter.json`; D-155, D-
 The end reveal also plays `ui_imposter_reveal` (P5-07 cue) on every peer when the line shows (`dawn_report.gd`, `season_awards.gd`).
 
 **Dev setting.** Console `imposter <peer id|name|me|none|off>` (host only, answers "unknown command" and is not in `help` unless `DevGate.unlocked()`): forces the pick, even below 4 players. In a running match it picks at once and tells only that peer the secret (the public toggle is re-broadcast first, which clears the old imposter's `me`). Test: the host script uses `Imposter.dev_force` with `--dev-gate-test-hash=`.
+
+### Dev console message and dev menu (P5-36)
+
+`msg <peer|name> <text>` (host only, logged `dev_command` and `dev_message`) sends the text to one peer: `Net.to_peers(&"apply_dev_message", [text], [peer])`, an authority-to-client reliable RPC, so no other peer receives it. The target's `DevConsole` shows it as an outlined label for 8 s at the bottom of the screen (the host shows its own locally). The peer argument resolves like every console peer argument (id, nth player, name prefix). A console message is a dev tool, not a gameplay surface.
+
+The console panel has a left column, the dev menu: a player picker (filled from `Game.players` each time the console opens), buttons for the common commands (`MENU` in `dev_console.gd`; `{p}` is the picked peer), and a message box with Send. A button runs the same command line through `DevConsole.run`, so the host-only rule, logging and replies are identical to typing; a client's buttons answer "host only". The typed console is unchanged. Test: `tests/net/test_p5_36_msg.gd` (3 peers: the named one shows the message, the other does not).

@@ -920,6 +920,12 @@ func apply_dev_toy(toy: StringName, seconds: float, position: Vector3) -> void:
 	apply_received.emit(&"dev_toy", [toy, seconds, position])
 
 
+## P5-36: the host's dev console sent `text` to this peer only (`to_peers` with one target). Shown on this screen only.
+@rpc("authority", "call_remote", "reliable")
+func apply_dev_message(text: String) -> void:
+	apply_received.emit(&"dev_message", [text])
+
+
 @rpc("authority", "call_remote", "reliable")
 func apply_emote(peer: int, emote_id: StringName, position: Vector3) -> void:
 	apply_received.emit(&"emote", [peer, emote_id, position])
