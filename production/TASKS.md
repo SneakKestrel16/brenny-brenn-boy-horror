@@ -1021,17 +1021,21 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-36 | Gameplay | Dev console: message one player; dev menu for the common commands, typed commands kept (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-37 | Director | Rename: Taint to Corrupted in every doc and all player-facing text; game named "Farmer's Delight" (CEO STOP 6) | todo | P5-30 to P5-36 |
 | P5-38 | Technical Artist | Optimise the game: measure doc 07 s10 budget, fix hotspots (CEO STOP 6) | done (QA PASS) | P5-08 |
-| P5-39 | AI Programmer | Creature AI improvements; Q-345 fixes (CEO STOP 6) | in progress | P5-33 |
-| P5-40 | 3D | New farmer model from quality sample B (CEO STOP 6) | in progress | P5-08 |
-| P5-41 | Technical Artist | Better nuke dev-toy look (CEO STOP 6) | todo | P5-08 |
+| P5-39 | AI Programmer | Creature AI improvements; Q-345 fixes (CEO STOP 6) | in review | P5-33 |
+| P5-40 | 3D | New farmer model from quality sample B (CEO STOP 6) | in review | P5-08 |
+| P5-41 | Technical Artist | Better nuke dev-toy look (CEO STOP 6) | in progress | P5-08 |
 | P5-42 | Gameplay | Big heads toy texture issue (CEO STOP 6) | done (QA PASS) | P5-35 |
 | P5-43 | Gameplay | Dev command: whisper scare on one player (CEO STOP 6) | done (QA PASS) | P5-36 |
 | P5-44 | Gameplay | Screen messages go off screen (CEO STOP 6) | done (QA PASS) | P5-08 |
-| P5-45 | Gameplay | More emotes (CEO STOP 6) | todo | P5-08 |
+| P5-45 | Gameplay | More emotes (CEO STOP 6) | in review | P5-08 |
 | P5-46 | Gameplay | Mouse sensitivity setting (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-47 | Level Designer | Move the well between field A and field B (CEO STOP 6) | todo | P5-08 |
 | P5-48 | Gameplay | Lore in game from doc 11: road sign, intro line, masthead, notes, archive, win line (CEO STOP 6) | todo | P5-37 |
 | P5-49 | Technical Artist | Corn looks like grass: rework stalks to read as corn (CEO STOP 6) | todo | P5-38 |
+| P5-50 | Technical Artist | Improve the lighting: day, dusk, night, interiors (CEO STOP 6) | todo | P5-49 |
+| P5-51 | Level Designer | More corn inside the farm, so the creature can move through it, not only round the edges (CEO STOP 6) | todo | P5-49, P5-47, P5-39 |
+| P5-52 | Gameplay | Crowkeeper role: bait perches that flush crows (CEO STOP 6) | todo | P5-37 |
+| P5-53 | Gameplay | Horror role: everything is scarier for that player (CEO STOP 6) | todo | P5-37, CEO picks ideas |
 | P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | done (QA PASS) | P5-02 to P5-07, P5-09 to P5-29 |
 
 ### P5-02 Phase 5 design and data
@@ -1327,7 +1331,7 @@ Acceptance:
 - Q-345 items 1, 3 and 4 (day race at nightfall, hold_registry freed-target guard, trap_changed `by`).
 
 ### P5-40 New farmer model
-Owner: 3D Artist. Output: `char_farmer.glb`, ragdoll, cosmetics refit, doc 07 update, handoff `FARMER-HQ.md`.
+Owner: 3D Artist. Output: `char_farmer.glb`, ragdoll, cosmetics refit, doc 07 update, handoff `P5-40.md`.
 Acceptance:
 - The CEO picked quality sample B (shipped face, hq2 clothes, neck, fixed hair, 3,600 tris). It replaces
   `char_farmer` through the real build pipeline with the same bones, animations and tint slots; ragdoll,
@@ -1400,3 +1404,47 @@ Acceptance:
   plant than a person, and corn colours (doc 07 palette). Wild corn ring and field strips both.
 - Stays inside doc 07 s10 budget on the road and corn lane probe spots (tests/qa/perf_probe.gd, P5-38 numbers);
   cover and sight-blocking (doc 04) unchanged. Before/after windowed screenshots, day and night, viewed.
+
+### More STOP 6 feedback (CEO, 2026-10-10, fourth batch)
+
+### P5-50 Better lighting
+Owner: Technical Artist. Output: lighting, environment and post changes in game/render/, doc 07 update, handoff.
+Acceptance:
+- The CEO says "improve the lighting". Survey day, dusk, night and the building interiors side by side first, list
+  what reads flat or wrong, then fix: sun and sky colour across the day, dusk warmth, a readable but frightening
+  night (moonlight shape, fog depth), lamp and lantern pools, interior light. Before/after windowed screenshots of
+  the same spots for each phase, viewed.
+- Doc 07 rules hold: the light rules the creature reads (doc 03) are unchanged, no white flash, safe mode limits,
+  ghost-only flicker stays ghost-only. Stays inside the doc 07 s10 budget on the P5-38 probe spots.
+
+### P5-51 Corn through the farm
+Owner: Level Designer (AI Programmer checks the creature uses it). Output: farm layout change, doc 04 update, handoff.
+Acceptance:
+- The CEO says the creature "moves through corn but it's only really around the edges". Add corn strips and patches
+  inside the farm: between fields, along fences and lanes, near buildings, so the creature has covered routes into
+  the middle of the farm. Keep the buildings, roads, well (P5-47), cart route and work spots reachable and clear.
+- The creature's cover points and lurk routes use the new corn (P5-39 wander picks cover points), checked on a bot
+  season. Doc 04 sight lines and the day safety rules still hold.
+- Uses the P5-49 corn; stays inside the doc 07 s10 budget on the P5-38 probe spots plus one new probe spot inside
+  the farm. Top-down and walk-through screenshots, viewed.
+
+### P5-52 Crowkeeper role
+Owner: Gameplay Programmer (Game Designer for doc 01/02 row and data). Output: role data, perch prop and logic,
+docs 01/02 rows, handoff.
+Acceptance:
+- The CEO approved the Crowkeeper (2026-10-10: "add that crow class"), as the Director pitched it: the Crowkeeper can
+  place up to 2 bait perches at field or corn edges. When anything moves within about 8 m of a perch, its crows burst
+  up cawing; this includes teammates, animals and the creature, so it warns that something is near, never proves what.
+- The flush is a noise the creature can hear. The creature's fake crows can trigger it too. The Rancher keeps the pens
+  and the ghost keeps its one possessed crow per night; perches never show the creature's position on any UI.
+- Role row in `data/roles.json` and doc 01 Roles table, marked placeholder; numbers placeholder with cite. Role hat in
+  the lobby. Synced on 2 instances; a test for the flush trigger.
+
+### P5-53 Horror role
+Owner: Gameplay Programmer (Game Designer for rules, Audio Designer for sound). Output: role data and per-peer scare
+layer, docs 01/02/03 rows, handoff.
+Acceptance:
+- The CEO asked for "a horror class where everything is scarier". Which ideas go in is the CEO's pick (Director's
+  list given 2026-10-10); this spec is filled in from the pick.
+- Everything is local to that player's peer (like hallucinations), so no one else's game changes and no honest signal
+  turns into a lie for others. Roles never harm or reveal the creature (doc 01 Roles).
