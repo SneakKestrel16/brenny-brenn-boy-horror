@@ -17,8 +17,6 @@ func _init() -> void:
 		ids.append(StringName(r["id"]))
 		_check(bool(r["loud"]) == (r["id"] == "scream"), "%s loudness" % r["id"])
 	_check(ids.size() >= 10, "at least 10 emotes (%d)" % ids.size())
-	for k in EmotePoses.KINDS:
-		_check(k in ids, "pose %s is listed in data" % k)
 	var body := FarmerBody.new(0)
 	root.add_child(body)
 	var ap: AnimationPlayer = body.find_children("*", "AnimationPlayer", true, false)[0]

@@ -32,6 +32,8 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--emote-shots="):
 			_shot_dir = a.trim_prefix("--emote-shots=")
+		elif a.begins_with("--wheel-shot=") and _wheel:  # QA (P5-60): open the wheel, aim at the inner ring, save <path>
+			_wheel_shot(a.trim_prefix("--wheel-shot="))
 	if OS.get_cmdline_user_args().has("--autowhistle"):
 		_autowhistle()
 	elif OS.get_cmdline_user_args().has("--autoemotes"):
@@ -51,11 +53,27 @@ func emotes() -> Array[StringName]:
 ## QA (`-- --autoemotes`, P5-45): this peer asks for every emote in wheel order, 4 s apart, after a 12 s settle.
 func _autoemotes() -> void:
 	await get_tree().create_timer(12.0).timeout
+	var only := ""  # QA (P5-60): `--emote-only=flex,bow` limits the run
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--emote-only="):
+			only = a.trim_prefix("--emote-only=")
 	for k in emotes():
 		if not is_inside_tree():
 			return
+		if only != "" and not String(k) in only.split(","):
+			continue
 		Net.to_host(&"request_emote", [k])
 		await get_tree().create_timer(4.0).timeout
+
+
+func _wheel_shot(path: String) -> void:
+	await get_tree().create_timer(6.0).timeout
+	_wheel.open()
+	_wheel._aim = Vector2(40, 60)
+	_wheel._paint()
+	await get_tree().create_timer(0.5).timeout
+	get_viewport().get_texture().get_image().save_png(path)
+	_wheel.visible = false
 
 
 func _autowhistle() -> void:
@@ -154,6 +172,8 @@ func _shoot(pl: Node3D, kind: StringName) -> void:
 	var cam := Camera3D.new()
 	get_parent().add_child(cam)
 	var fwd := -pl.global_transform.basis.z
+	if OS.get_cmdline_user_args().has("--emote-side"):  # QA (P5-60): shoot from the body's left instead
+		fwd = -pl.global_transform.basis.x
 	cam.global_position = pl.global_position + fwd * 3.2 + Vector3.UP * 1.2
 	cam.look_at(pl.global_position + Vector3.UP * 1.0)
 	cam.make_current()

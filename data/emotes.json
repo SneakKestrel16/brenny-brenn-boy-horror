@@ -12,6 +12,14 @@
     { "id": "cower", "source": "placeholder", "cite": "P5-45: scared crouch; silent", "loud": false },
     { "id": "cheer", "source": "placeholder", "cite": "P5-45: arms up, jumps; silent (no voice clip)", "loud": false },
     { "id": "facepalm", "source": "placeholder", "cite": "P5-45; silent", "loud": false },
-    { "id": "clap", "source": "placeholder", "cite": "P5-45: silent (no clap sound until the Sound Designer adds one)", "loud": false }
+    { "id": "clap", "source": "placeholder", "cite": "P5-45: silent (no clap sound until the Sound Designer adds one)", "loud": false },
+    { "id": "salute", "source": "placeholder", "cite": "CEO 2026-10-10 (P5-60): hand to the brow; silent", "loud": false },
+    { "id": "jig", "source": "placeholder", "cite": "CEO 2026-10-10 (P5-60): hopping dance; silent", "loud": false },
+    { "id": "cross_arms", "source": "placeholder", "cite": "CEO 2026-10-10 (P5-60): arms crossed, foot tap; silent", "loud": false },
+    { "id": "look_around", "source": "placeholder", "cite": "CEO 2026-10-10 (P5-60): nervous crouch, head sweeps; silent", "loud": false },
+    { "id": "bow", "source": "placeholder", "cite": "CEO 2026-10-10 (P5-60): deep bow; silent", "loud": false },
+    { "id": "flex", "source": "placeholder", "cite": "CEO 2026-10-10 (P5-60): muscle pose; silent", "loud": false },
+    { "id": "yawn", "source": "placeholder", "cite": "CEO 2026-10-10 (P5-60): stretch and yawn; silent", "loud": false },
+    { "id": "shiver", "source": "placeholder", "cite": "CEO 2026-10-10 (P5-60): hugs self, shakes; silent", "loud": false }
   ]
 }

@@ -813,6 +813,11 @@ P4-12: `game/items/cart.gd`, an interactable that `farm.gd` builds under `World`
   picks by angle. QA: `-- --autoemotes` requests every emote 4 s apart after 12 s; `-- --emote-shots=<dir>`
   on the watching peer saves `<emote>_a.png` / `_b.png` from a camera in front of the sender.
   Test: `tests/gameplay/test_emotes.gd`.
+- **Eight more emotes (P5-60, CEO 2026-10-10).** `salute`, `jig`, `cross_arms`, `look_around`, `bow`, `flex`, `yawn`,
+  `shiver`: silent, `placeholder` rows in `data/emotes.json` (schema max raised to 24), procedural poses in
+  `emote_poses.gd` (helpers `_hold`, `_alt`). Deleting a data row removes the emote everywhere (wheel, host
+  validation); its pose stays unused. The wheel has two rings: the first 11 on the outer ellipse, the rest on an inner
+  one; aim travel under 130 px picks the inner ring. Ghosts still cannot emote (`ghost` refusal, unchanged).
 - **Whistle and emotes as built (P3-11, `game/player/whistle_emotes.gd`, node `WhistleEmotes`).** `whistle`
   (Q) sends `request_whistle`; hold `emote_wheel` (Z) opens the word wheel (`game/ui/emote_wheel.gd`; P3-11 had four
   words: up `wave`, right `point`, down `shrug`, left `scream`; P5-45 adds seven, see below; release fires, under 25 px of mouse travel
