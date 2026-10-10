@@ -24,6 +24,7 @@ run; no render code exists yet, so nothing in section 10 has been measured).
 12. Phase priority summary
 13. Gotchas
 14. Questions raised
+15. Model sources (P4-40, D-151)
 
 ## 1. Art direction
 
@@ -618,3 +619,49 @@ Appended to `production/QUESTIONS.md` (Q-025 onwards):
 - Q-028 to QA: add the three grep rules from section 4.4 and the corn profile (section 10.3) to doc 09.
 - Q-029 FOR CEO: bundled serif fonts for the Dawn Report need an open-licensed download; and the
   night ambient floor needs a look on the CEO's monitor.
+
+## 15. Model sources (P4-40, D-151)
+
+CEO direction: build models better in Blender, or start from a free CC0 library model and edit it to fit this
+doc. Only CC0 is used. Anything else needs CEO approval first and is not in the repo. Downloads stay outside the
+repo (`C:\Users\Ockey\fc_dl\models\`), are read only with Blender's own glTF importer, and no script inside a
+download is run. Build script: `tools/blender/build_p4_40.py` (run line in its docstring); sources in
+`assets/blender/<name>.blend`. Before/after renders: `logs/renders/p4_40/` (gitignored).
+
+### 15.1 Library models used (edited)
+
+| Model | Source | Asset | Licence | Changes |
+|---|---|---|---|---|
+| `animal_cow.glb` | https://poly.pizza/m/5XSc2Fka3F | "Cow" (Quaternius) | CC0 1.0 (Poly Pizza page) | Rig and stray sphere removed, turned to face -Z in Godot, scaled to 2.3 m long (1.3 m tall), feet on y=0, colours baked into vertex colour layer `Col` (white `#E8E4DA`, black `#2C2624`, nose `#D8A0A0`), one `mat_flat_lit`, flat shading, 796 tris (budget 800). |
+| `animal_pig.glb` | https://poly.pizza/m/TNvG3QUFlp | "Pig" (Quaternius) | CC0 1.0 (Poly Pizza page) | Same steps as the cow; recoloured pink (`#D9A3A0`, `#C48A8A`), 1.4 m long, 562 tris. |
+
+### 15.2 Built in Blender, no outside source
+
+`animal_chicken` (hen: breast, neck, comb, wattle, wings, fanned tail, toed legs; 716 tris), `char_farmer` (static
+body, separable Torso, Head, ArmL, ArmR, LegL, LegR, no hat, head centre z 1.62; 1,160 tris; rig, tint slots and
+animations are still open, doc 07 s11.7), `pumpkin_prize_*` (eight files: 12 ribs, dimpled top, curved stem; sizes
+unchanged), `pumpkin_patch` (mound, edge stones, vines, leaves, flowers; 1,840 tris), `crop_plot` (tilled ridges,
+overlapping boards, corner posts), `prop_cart` (rimmed iron tyres, 8 spokes, plank sides with gaps, slatted deck,
+yoke; layout, wheel centres and the `LanternSocket` and `PumpkinSlot` Empties unchanged), `prop_cart_lantern`,
+`tool_lantern`, `tool_lantern_bright` (bail handle, vent chimney), `bldg_town_stand` (plank counter and back wall,
+scalloped striped awning, hanging sign, jars, turnip crate, lamp; origin and 3.0 m width unchanged).
+
+### 15.3 Looked at and rejected (all CC0, Quaternius via Poly Pizza)
+
+| Poly Pizza id | Asset | Why not |
+|---|---|---|
+| `26zM1outCr` | cow (brown bull) | atlas texture; doc 07 s7 allows no textures |
+| `u35l6uP5vj` | pig | atlas texture |
+| `ineV9pU5VL`, `Z3RCoCYss4` | chicken | blob shape; voxel with atlas texture |
+| `l7bDe7ak6j` | cart | awning blocks the carried pumpkin; 514 unwelded islands |
+| `DGIM5HGISb`, `hts7l0NZxW`, `fmHUuX9AS3`, `4ZAhRv2tLG` | market stands and stalls | not matching the stand layout and awning; the built stand fits doc 07 s11.8 |
+| `bvLvqnU1jX` | pumpkin | exact width and height formulas needed; built instead |
+
+The Quaternius Farm Animal pack on Google Drive was out of quota and not downloaded. No CC-BY or other
+non-CC0 asset was used, so nothing here needs CEO approval.
+
+### 15.4 Still gray-box
+
+Unchanged since P4-16: creatures (passed P4-19, left alone), hats, other tools, `prop_shipping_crate`,
+`prop_scarecrow_player`, `prop_cart_pumpkin_slot*`. Not built yet: the rest of s11 (barn, shed, well, fence, traps,
+crops, corn, crow, hoe, shovel).

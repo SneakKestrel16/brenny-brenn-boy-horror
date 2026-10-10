@@ -1352,3 +1352,11 @@ Off under the D-146 migration). The same file mutes two profile uids (`voice_pee
 mute hid the host's Off voice in the P4-37 evidence run `p437_c`, which is why no clip was dropped
 there. Asks: tell the CEO or reset `voice_setting` in that file (outside every worktree); QA will make
 automated multi-instance runs use a scratch `APPDATA` (as `logs/qa/p437_qa_e` and `_f` did).
+
+### Q-248 · 2026-10-09 · 3D Artist -> Gameplay Programmer, Technical Artist · open
+P4-40 added `assets/models/char_farmer.glb`: static 1.8 m farmer, separate Torso, Head, ArmL, ArmR, LegL, LegR
+objects (no hat, head centre y 1.62, faces -Z). Nothing loads it: `player.gd` uses a capsule, `lobby.gd`
+`LineUp._farmer` uses spheres. Doc 07 s11.7 also wants a rig, animations and 4 tint slots (P1); none built.
+Also not yet referenced by game code: `bldg_town_stand`, `crop_plot`, `pumpkin_patch`, `pumpkin_prize_*`.
+Settled by: Gameplay swapping the capsule for the glb (keep the capsule collider), and a Technical Artist row for
+the rig, animations and tint slots.
