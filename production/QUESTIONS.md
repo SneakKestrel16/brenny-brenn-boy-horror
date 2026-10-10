@@ -1508,3 +1508,15 @@ are not wanted on low-end clients. Keep it, or drop it? Proposal: keep (costs no
 Settled by: Director or Gameplay.
 
 **Answer (Director, D-168):** keep `lie`. Doc 07 s8 and s11 say "pose-only `lie` animation". Gameplay must not autoplay the AnimationPlayer when it enables physical bones.
+
+### Q-311 · 2026-10-09 · 3D Artist -> Director / Gameplay · answered
+P5-15 bear trap is built to doc 07 s11.4 (open 0.58 x 0.62 m, closed 0.26 wide). Game primitive `TrapArt.bear()` is about 1.22 x 0.8 m (ring 0.8 plus springs), and `trap_sweep.gd` hangs it at scale 0.5 on pegboard slots. Closed width 0.26 vs doc 0.5. Which footprint does the game keep? Proposal: wiring task scales the model to the trigger radius, or doc 07 s11.4 is updated to the as-built size. Settled by: Gameplay choosing at wiring time.
+**Answer (Director, D-169):** keep the as-built bear and sync doc 07 s11.4.
+
+### Q-312 · 2026-10-09 · 3D Artist -> Gameplay / World · answered
+`prop_pegboard` is 1.6 m wide with 5 hook empties (`Hook1..Hook5`, 0.32 m pitch). Farm markers `Slot1..5` are 0.8 m apart (3.2 m span, build_farm.py, season.json pegboard_bear_slots=5). Gameplay either hangs bears on the `Hook` nodes of one board, or tiles boards at the slot spacing. Settled by: the wiring task owner.
+**Answer (Director, D-169):** one board; `Hook1..5` govern; the wiring task regenerates the farm `Slot1..5` markers.
+
+### Q-313 · 2026-10-09 · 3D Artist -> Gameplay / World · answered
+`trap_pit_open` is a hole shell 1.5 m deep; the farm ground mesh covers it, so the hole is invisible. Needs a hole cut in the ground (or the pit swapped in with the ground patch hidden). Settled by: the ground owner at wiring time.
+**Answer (Director, D-169):** closed by the `Mouth` disc in `trap_pit_open`.

@@ -1162,3 +1162,11 @@ text, made in the QA review section. Q-321: as-built sizes stand and doc 07 s11 
 its pose-only `lie` animation. `tool_hands` arms run along Godot -Z (elbows at x +-0.19, fingertips z -0.47, up +Y),
 so `TaintLook` must climb -Z or the hands get rotated -90 deg about X when wired.
 **Why:** QA PASS with fixes (handoffs/P5-17.md "QA review").
+
+### D-169 · 2026-10-09 · Director · P5-15 merged
+P5-15 (trap and tool models) passed QA with fixes, all made before merge: a dark `Mouth` disc so the open pit reads
+as a hole on the farm, handoff node coordinates in Godot axes, shorter pegboard tool outlines with the end bear
+rings inside the frame, and the hoe shot turned to show the blade. Rulings: Q-311 keep the as-built bear and sync
+doc 07; Q-312 one pegboard, `Hook1..5` govern and the wiring task regenerates the farm `Slot1..5` markers; Q-313
+closed by the `Mouth` disc. `model_shots.gd` merges P5-15's `--prim` with P5-17's `--before`.
+**Why:** QA PASS with fixes (handoffs/P5-15.md "QA review").

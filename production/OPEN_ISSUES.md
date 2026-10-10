@@ -410,3 +410,12 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   AnimationPlayer with physical bones on; the ghost's double-sided blend shows inner faces (set cull back if it
   reads badly). Owner: Gameplay Programmer (model wiring task).
 - **`before/tool_hands_*` shot camera sits below the ground plane** (cosmetic, shots only). Owner: 3D Artist.
+
+## Found at the P5-15 review (QA, 2026-10-09)
+
+- **Doc 07 s11 trap and tool sizes.** Bear open 0.58 x 0.62 x 0.21 m, pit 1.56 x 1.5 m deep, tripwire span 3.06 m,
+  hoe 1.39 m, shovel 1.33 m differ from the placeholder rows. Owner: Technical Artist (doc 07).
+- **Wiring the trap models.** `trap_glint` is static: show it by angle or distance, never a blink. Hang the bear item
+  at scale 1.0; offset the pegboard so hook y meets the `Pegboard` marker; regenerate `Slot1..5` from `Hook1..5`.
+  The rust pan #8A5A3A must not read as creature ember at night. Owner: Gameplay (model wiring task).
+- **Pegboard outlines are circles** while a hung bear is closed (cosmetic). Owner: 3D Artist.

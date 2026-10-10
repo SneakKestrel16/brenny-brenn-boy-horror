@@ -3,6 +3,8 @@ extends SceneTree
 ## from the front (-Z side), auto-framed, saved as <out>/<name>_<day|night>.png.
 ## Light values follow game/render/world_look.gd NOON and NIGHT (doc 07 s3).
 ##   godot --path . --audio-driver Dummy --script tools/blender/model_shots.gd -- --out=logs/renders/p5_12/before [--only=a,b]
+##   [--before]  P5-17: primitive stand-ins the game drew before the P5-17 models, under each glb's name
+##   [--prim]    P5-15: game-code trap and tool primitives (TrapArt, trap_sweep slab, cans.gd box), fixed name list
 
 var _out := "logs/renders/p5_12/after"
 var _only: PackedStringArray = []
@@ -77,8 +79,45 @@ func _standin(name: String) -> Node3D:
 	return n
 
 
+## P5-15 "before": --prim renders the game-code primitives (TrapArt, trap_sweep slot slab, cans.gd box) under the model's name.
+var _prim := OS.get_cmdline_user_args().has("--prim")
+
+
+func _prim_node(name: String) -> Node3D:
+	var root := Node3D.new()
+	match name:
+		"trap_bear_open": root.add_child(TrapArt.bear())
+		"trap_bear_closed": root.add_child(TrapArt.bear(true))
+		"trap_pit_open", "trap_pit_cover": root.add_child(TrapArt.pit())
+		"tool_fuel_can": root.add_child(_prim_box(Vector3(0.2, 0.3, 0.14), Vector3(0, 0.15, 0)))
+		"prop_pegboard":  # trap_sweep.gd: slab 0.6 x 0.6 per slot, 0.8 m apart, a hung bear scaled 0.5 on each (the board itself is not drawn)
+			for i in 5:
+				var s := _prim_box(Vector3(0.6, 0.6, 0.02), Vector3((i - 2) * 0.8, 0.3, 0.0))
+				var art := TrapArt.bear()
+				art.rotation.x = -PI / 2.0
+				art.scale = Vector3.ONE * 0.5
+				s.add_child(art)
+				root.add_child(s)
+	return root
+
+
+func _prim_box(size: Vector3, pos: Vector3) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var b := BoxMesh.new()
+	b.size = size
+	mi.mesh = b
+	mi.position = pos
+	mi.material_override = StandardMaterial3D.new()
+	return mi
+
+
 func _names() -> Array:
 	var names := []
+	if _prim:
+		for n in ["trap_bear_open", "trap_bear_closed", "trap_pit_open", "tool_fuel_can", "prop_pegboard"]:
+			if _only.is_empty() or n in _only:
+				names.append(n)
+		return names
 	for f in DirAccess.get_files_at("res://assets/models"):
 		if f.ends_with(".glb"):
 			var n := f.trim_suffix(".glb")
@@ -127,10 +166,14 @@ func _run() -> void:
 	await process_frame
 	for name in _names():
 		var inst: Node3D
-		if _before:
+		if _prim:
+			inst = _prim_node(name)
+		elif _before:
 			inst = _standin(name)
 		else:
 			inst = (load("res://assets/models/%s.glb" % name) as PackedScene).instantiate()
+		if name == "tool_hoe" and not _prim and not _before:
+			inst.rotation.y = PI / 2.0  # thin blade is edge-on from the front: turn it to show the blade
 		world.add_child(inst)
 		var acc := [null]
 		_aabb(inst, acc)
@@ -138,7 +181,9 @@ func _run() -> void:
 		var ctr := box.get_center()
 		var r := box.size.length() * 0.5
 		var dist := maxf(r / tan(deg_to_rad(cam.fov * 0.5)) * 1.05, 0.6)
-		var dir := Vector3(0.65, 0.4, -1.0).normalized()
+		var dir := Vector3(0.65, 1.1 if name.begins_with("trap_pit") else 0.4, -1.0).normalized()
+		if name == "tool_hoe":
+			dist *= 1.3
 		cam.look_at_from_position(ctr + dir * dist, ctr)
 		lamp.position = ctr + Vector3(0.5, 0.4, -1.0).normalized() * (r + 0.8)
 		for look in ["day", "night"]:
