@@ -906,6 +906,8 @@ if __name__ == "__main__":
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from build_p4_40 import SUPERSEDED  # P4-40 rebuilds these in build_p4_40.py; a full rebuild must not undo it
+    from build_p5_12 import SUPERSEDED_P5  # P5-12 rebuilds these in build_p5_12.py
+    SUPERSEDED = SUPERSEDED | SUPERSEDED_P5
     for nm, fn, cls in MODELS:
         if (not only and nm not in SUPERSEDED) or nm in only:
             build(nm, fn, cls)

@@ -1458,3 +1458,21 @@ The Director then pastes it into `DevGate.HASHES`. Add a hash for every PC you w
 P5-10 placeholders doc 01 does not give (listed in doc 05 section 25): disco 45 s, nuke 14 s, big heads 60 s, low
 gravity 0.2 of normal, squeaky pitch 1.7. Also, low gravity adds a Space jump (the base game has none) so the toy
 shows; say if you want it dropped. Settled by: a playtest of each toy, then the numbers go in doc 01 or stay.
+
+### Q-266 · 2026-10-09 · 3D Artist -> Director · answered
+P5-12 upgraded every model that exists. Doc 07 s11 items with no model at all yet: barn, shed, farmhouse, well,
+fences, gates, pegboard, traps (all kinds), crop growth stages, corn, crow, hoe, shovel, fuel can, whistle,
+hands, doors, road items, ragdoll, ghost shell. Gameplay uses primitives for these today. Who builds them, and
+in which task? Proposal: one new 3D Artist task per group (buildings, traps and tools, crops and corn, animals and
+misc) so each fits one session. Settled by: Director adds the tasks.
+
+**Answer (Director, 2026-10-09):** proposal taken; rows P5-14 to P5-17 (D-159), under the CEO's "overall upgrade of all models".
+
+### Q-267 · 2026-10-09 · 3D Artist -> Gameplay (P5-13) · answered
+`char_farmer` now has 4 tint slots in the sense of one tintable material, `mat_farmer_overalls`, whose vertex
+colours are light grey (about #EDEDED, #C4C4C4, #D6D6D6). Set `albedo_color` per player on that surface; the
+multiply gives the shade. Proposal (inference, no doc value): four distinct readable colours, for example red
+#C04040, blue #4070C0, yellow #D0B040, green #50A050, so players tell each other apart at night under lantern
+light. Settled by: P5-13 picking the colours, or the CEO.
+
+**Answer (CEO, 2026-10-09):** "those colors are good but add 2 more for up to 6 players". Six player colours: red #C04040, blue #4070C0, yellow #D0B040, green #50A050, purple #8050B0, orange #D07830. The Director picked purple and orange (D-159).

@@ -1099,3 +1099,16 @@ Still FOR CEO: Q-252 items 1 (imposter minimum 4 players) and 4 (quirks revealed
 capped at 60 coins). Q-255 goes to the P5-04, P5-05 and P5-06 owners; `game/core/data.gd` TABLES gains the five
 tables there.
 **Why:** QA PASS (handoffs/P5-02.md "QA review"); CEO answers in D-155.
+
+### D-159 · 2026-10-09 · CEO, Director · P5-12 merged; six player colours; missing models tasked
+P5-12 (overall model upgrade) passed QA and is merged. The farmer has a 12-bone rig, 9 animations, a `hat` bone,
+`mat_farmer_overalls` (player tint) and `mat_farmer_sleeves` (Taint). QA corrected the handoff: the farmer part
+nodes are now skinned meshes; P5-13 poses bones, not part nodes, and must set LOOP_LINEAR on idle, walk, run and
+crouch. Rulings:
+1. Q-267: six player colours for up to 6 players: red #C04040, blue #4070C0, yellow #D0B040, green #50A050
+   (3D Artist's proposal, CEO approved), purple #8050B0 and orange #D07830 (CEO asked for 2 more; the Director
+   picked them). The doc 07 "Farmer" line is updated.
+2. Q-266: doc 07 s11 items with no model get rows P5-14 to P5-17, one per group, under the CEO's "overall upgrade
+   of all models" (D-154). P5-08 depends on them.
+**Why:** QA PASS with fixes (handoffs/P5-12.md "QA review"); CEO, 2026-10-09: "those colors are good but add 2
+more for up to 6 players".

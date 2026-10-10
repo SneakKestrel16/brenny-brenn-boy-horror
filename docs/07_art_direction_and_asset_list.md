@@ -293,7 +293,7 @@ vertex offsets or UV scroll, which are position or texture changes, not brightne
 
 ## 8. Characters, Taint, ragdoll and ghost look
 
-- **Farmer.** Same body for all 4 players, tinted overalls per player colour (4 slots). Visible
+- **Farmer.** Same body for every player, tinted overalls per player colour (6 colours, D-159). Visible
   sleeves and hands in first person (the Taint stain needs them). Third-person body for other
   players, standing at 1.8 m. Cosmetics (hats, overalls) are DD Phase 5 and out of scope.
   **Exception (D-144):** one fixed hat per role is in now, as a role marker rather than a cosmetic
@@ -444,7 +444,7 @@ follow section 2.
 | `prop_well.glb` | 2 diameter x 2.2 | P1 | doc 04 s3 |
 | `prop_pegboard.glb` | 1.6 x 0.1 x 1.2 | P1 | painted outlines for each tool (doc 01) |
 | `prop_sell_box.glb` | 1.2 x 0.8 x 1 | P1 | DD Phase 1 (40,20), doc 04 s9 |
-| `prop_shipping_crate.glb` | 2 x 1 x 1.2 | P2 | doc 04 s3 |
+| `prop_shipping_crate.glb` | 2 x 1 x 1.2 (as built, P5-12: 2.02 x 1.11 x 1.04, 552 tris) | P2 | doc 04 s3 |
 | `prop_fence_segment.glb` | 3 x 0.1 x 1.2 | P1 | pen fence 12 x 10 m |
 | `prop_fence_gate.glb` | 2 x 0.1 x 1.2 | P1 | pen gate |
 | `prop_farm_gate.glb` | 6 x 0.3 x 2.2 | P2 | doc 04 s3 |
@@ -472,7 +472,7 @@ follow section 2.
 | `tool_seed_packet.glb` (variants `_turnip`, `_pumpkin`, `_moonflower`) | 0.1 x 0.01 x 0.15 | P1 (turnip), P2, P3 |
 | `tool_scrap.glb` | 0.15 x 0.1 x 0.05 | P1 |
 | `tool_fuel_can.glb` | 0.3 x 0.15 x 0.35 | P1 |
-| `tool_lantern.glb` (plus `_bright` variant) | 0.25 x 0.25 x 0.34 (as built, P4-40; Director decision, QA fix) | P1, P4 |
+| `tool_lantern.glb` (plus `_bright` variant) | 0.25 x 0.25 x 0.34 (as built, P4-40; Director decision, QA fix); `_bright` is 0.30 x 0.30 x 0.38 as built. The glass is its own surface in `mat_emissive_warm`; to show an unlit lantern, override that surface by material name (P5-12) | P1, P4 |
 | `tool_walkie_talkie.glb` | 0.08 x 0.04 x 0.2 | P3 |
 | `tool_flare_gun.glb` | 0.25 x 0.05 x 0.18 | P3 |
 | `tool_shed_lock.glb` | 0.1 x 0.05 x 0.15 | P3 |
@@ -527,12 +527,12 @@ moonflower bed has 4 plots (2 by 2); the Prize Pumpkin patch is 4 m across centr
 
 | Name | Dimensions | Phase |
 |---|---|---|
-| `char_farmer.glb` (rig: idle, walk, run, crouch, interact, emotes wave, point, shrug, scream; 4 tint slots) | 0.5 x 0.3 x 1.8 | P1 |
+| `char_farmer.glb` (rig: idle, walk, run, crouch, interact, emotes wave, point, shrug, scream; 4 tint slots) | 0.5 x 0.3 x 1.8; as built (P5-12) 0.61 x 0.38 x 1.8 (arm width, boot length), 2,152 tris of 4,000; Skeleton3D of 12 bones (`hips`, `spine`, `head`, `hat`, `arm_l/r`, `forearm_l/r`, `thigh_l/r`, `shin_l/r`), 9 animations named as listed, tint slot = material `mat_farmer_overalls`, Taint slot = `mat_farmer_sleeves` | P1 |
 | `char_farmer_ragdoll.glb` (physical bones) | 1.8 | P2 |
 | `char_ghost.glb` (translucent shell of the farmer) | 0.5 x 0.3 x 1.8 | P3 |
 | `hat_<role_id>.glb`, one per role in `data/roles.json` (D-144): farmer straw hat, rancher cowboy hat, mechanic backwards cap with goggles, tracker hunting cap with ear flaps, carpenter hard hat, medic pillbox with red cross, night owl beanie with owl tufts and headlamp, radio operator cap with headphones and antenna, warden campaign hat, medium bent witch hat. Origin at the centre of the band's bottom edge, sits at 1.74 m on the head; up to 300 tris (small prop); vertex colour, nothing emissive | 0.24 to 0.72 wide, up to 0.5 tall (radio antenna) | P4 |
 | `creature_gaunt.glb` | 0.9 x 1.06 x 2.1 (hunched; depth as built in P4-19, head and hump forward) | P1 (placeholder) |
-| `creature_scarecrow.glb`, `creature_scarecrow_head.glb` | 1 x 0.6 x 2.2 | P2 |
+| `creature_scarecrow.glb`, `creature_scarecrow_head.glb` | 1 x 0.6 x 2.2; as built 1.14 x 0.83 x 2.23 with level arms along the crossbar (P5-12; hat brim and coat set the depth) | P2 |
 | `creature_boar.glb` (with `_chain` part) | 1.2 x 2.38 x 1.4 (length as built in P4-19) | P3 |
 | `creature_corn_husk.glb`, `creature_corn_husk_heart.glb` | 1 x 1.07 x 2.4 (depth as built in P4-19) | P3 |
 | `creature_smear.glb` (ghost-view silhouette, a hull of the active body) | as body | P3 |
@@ -548,7 +548,7 @@ from doc 02 (inference; settled by the Game Designer if the pen holds other spec
 
 | Name | Dimensions | Phase |
 |---|---|---|
-| `prop_cart.glb` (with lantern part `prop_cart_lantern.glb`, squeaks) | 1.62 x 3 x 1.8 (1.62 wide as built, P4-40; Director decision, QA fix) | P4 |
+| `prop_cart.glb` (with lantern part `prop_cart_lantern.glb`, squeaks) | 1.62 x 3 x 1.8 (1.62 wide as built, P4-40; Director decision, QA fix; P5-12: 1.60 x 2.99 x 1.74, 1,384 tris, wheels are the separate nodes `WheelL` and `WheelR`, pivot at the hub, spin about X) | P4 |
 | `prop_cart_pumpkin_slot.glb` (bite damage variant) | n/a | P4 |
 | `bldg_town_stand.glb` | see above | P4 |
 | `prop_road_lamp.glb` | 0.3 x 0.3 x 3.5 | P3 |
@@ -637,9 +637,15 @@ download is run. Build script: `tools/blender/build_p4_40.py` (run line in its d
 
 ### 15.2 Built in Blender, no outside source
 
-`animal_chicken` (hen: breast, neck, comb, wattle, wings, fanned tail, toed legs; 716 tris), `char_farmer` (static
-body, separable Torso, Head, ArmL, ArmR, LegL, LegR, no hat, head centre z 1.62; 1,160 tris; rig, tint slots and
-animations are still open, doc 07 s11.7), `pumpkin_prize_*` (eight files: 12 ribs, dimpled top, curved stem; sizes
+`animal_chicken` (hen: breast, neck, comb, wattle, wings, fanned tail, toed legs; 716 tris), `char_farmer`
+(P5-12: skinned; parts Torso, Head, ArmL, ArmR, LegL, LegR kept as skinned meshes whose joints are now the bones, no hat, head centre z 1.62;
+belt, bib pocket, buttons, straps, hair fringe, ears, cuffs, boot soles and laces; 2,152 tris; 12-bone rig, 9
+animations, tint and Taint material slots; `tools/blender/build_p5_12.py`), P5-12 also rebuilt in Blender
+`tool_watering_can` and `_quiet` (ribbed body, rose, cloth wrap), `tool_walkie_talkie`, `tool_walkie_battery`,
+`tool_flare_gun` (now 0.18 high, grip on the ground), `tool_shed_lock` (round shackle), `tool_scrap`,
+`tool_seed_packet_*` (crimped top, one drawn crop each), `prop_shipping_crate`, `prop_scarecrow_player`,
+`prop_cart_pumpkin_slot` and `_bitten` (staves, rope-free), `creature_scarecrow` and its smear (level arms),
+`prop_cart` (wheels split, round 16-sided rims), all with sizes and node names unchanged; `pumpkin_prize_*` (eight files: 12 ribs, dimpled top, curved stem; sizes
 unchanged), `pumpkin_patch` (mound, edge stones, vines, leaves, flowers; 1,840 tris), `crop_plot` (tilled ridges,
 overlapping boards, corner posts), `prop_cart` (rimmed iron tyres, 8 spokes, plank sides with gaps, slatted deck,
 yoke; layout, wheel centres and the `LanternSocket` and `PumpkinSlot` Empties unchanged), `prop_cart_lantern`,
@@ -662,6 +668,7 @@ non-CC0 asset was used, so nothing here needs CEO approval.
 
 ### 15.4 Still gray-box
 
-Unchanged since P4-16: creatures (passed P4-19, left alone), hats, other tools, `prop_shipping_crate`,
-`prop_scarecrow_player`, `prop_cart_pumpkin_slot*`. Not built yet: the rest of s11 (barn, shed, well, fence, traps,
-crops, corn, crow, hoe, shovel).
+Unchanged since P4-16 (P5-12 reviewed them and left them): the gaunt, boar and corn husk creatures (passed P4-19,
+seen only in glimpses, about 1,000 of 5,000 tris each), the hats (only the import script was fixed), `tool_lantern*`,
+`pumpkin_*`. Not built yet: the rest of s11 (barn, shed, farmhouse, well, fences, gates, pegboard, traps, crops,
+corn, crow, hoe, shovel, fuel can, whistle, hands, doors, road items, ragdoll, ghost shell); listed in Q-266.

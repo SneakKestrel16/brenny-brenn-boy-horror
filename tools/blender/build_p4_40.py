@@ -71,6 +71,8 @@ def lib_part(name, glb, palette, size):
     for coll in (bm.loops.layers.color, bm.loops.layers.float_color):  # library colour layers: exporter would take them first
         for old in list(coll.values()):
             coll.remove(old)
+    for dl in list(bm.verts.layers.deform.values()):  # skin weights point at bones we dropped: 7429 "invalid deform group" log lines (P5-12)
+        bm.verts.layers.deform.remove(dl)
     lay = bm.loops.layers.color.new("Col")
     bm.faces.ensure_lookup_table()
     for f in bm.faces:
@@ -422,6 +424,7 @@ MODELS = [
 
 if __name__ == "__main__":
     only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    from build_p5_12 import SUPERSEDED_P5  # P5-12 rebuilds these in build_p5_12.py
     for nm, fn, cls in MODELS:
-        if not only or nm in only:
+        if (not only and nm not in SUPERSEDED_P5) or nm in only:
             B.build(nm, fn, cls)
