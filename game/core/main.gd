@@ -68,6 +68,9 @@ func _ready() -> void:
 	whistle.set_script(load("res://game/player/whistle_emotes.gd"))
 	whistle.name = "WhistleEmotes"
 	add_child(whistle)
+	var perches := CrowPerches.new()  # P5-52: the Crowkeeper's bait perches (game/player/crow_perches.gd), after Scares
+	perches.name = "CrowPerches"
+	add_child(perches)
 	var toys := DevToys.new()  # P5-10: dev toys (D-044 gate); idle until the console runs one
 	toys.name = "DevToys"
 	add_child(toys)

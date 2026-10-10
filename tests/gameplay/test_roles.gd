@@ -13,7 +13,7 @@ func _initialize() -> void:
 
 
 func _pure() -> void:
-	_check(Roles.ids().size() == 10, "ten roles in roles.json")
+	_check(Roles.ids().size() >= 11 and Roles.ids().has(&"crowkeeper"), "crowkeeper among the roles in roles.json")
 	_check(Roles.hold_mult(&"repair_generator", &"mechanic") == 0.6, "Mechanic repair x0.6")
 	_check(Roles.hold_mult(&"repair_generator", &"tracker") == 1.0, "Tracker repairs at normal speed")
 	_check(Roles.hold_mult(&"disarm_bear", &"tracker") == 0.6, "Tracker disarm x0.6")

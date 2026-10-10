@@ -371,6 +371,13 @@
       "radius_m": 70
     },
     {
+      "id": "noise_crow_flush",
+      "source": "placeholder",
+      "cite": "P5-52: a Crowkeeper bait perch bursts its crows; cawing is about a tool noise plus a bit (inference), tune in play",
+      "kind": "noise",
+      "radius_m": 25
+    },
+    {
       "id": "noise_whistle",
       "source": "placeholder",
       "cite": "doc 03 section 3.1",

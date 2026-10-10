@@ -129,6 +129,24 @@
       "sources": {
         "perks": "placeholder"
       }
+    },
+    {
+      "id": "crowkeeper",
+      "source": "placeholder",
+      "cite": "P5-52 (CEO STOP 6, 2026-10-10: 'add that crow class'); doc 01 Roles row pending CEO (Q-352). Places up to max_perches bait perches at field or corn edges; any movement within flush_radius_m of one bursts its crows and the cawing is noise_crow_flush (creature.json). A warning that something is near, never proof of what: teammates, loose animals, the creature and its fake crows all trigger it. Every number placeholder",
+      "name": "Crowkeeper",
+      "perks": {
+        "max_perches": 2,
+        "flush_radius_m": 8,
+        "edge_m": 8,
+        "min_gap_m": 12,
+        "pickup_m": 3,
+        "move_eps_m": 0.25,
+        "flush_cooldown_s": 20
+      },
+      "sources": {
+        "perks": "placeholder"
+      }
     }
   ]
 }

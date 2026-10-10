@@ -34,7 +34,8 @@
               "night_owl",
               "radio_operator",
               "warden",
-              "medium"
+              "medium",
+              "crowkeeper"
             ]
           },
           "source": {
@@ -65,7 +66,7 @@
           "perks"
         ]
       },
-      "maxItems": 10,
+      "maxItems": 11,
       "allOf": [
         {
           "contains": {

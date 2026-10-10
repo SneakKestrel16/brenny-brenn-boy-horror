@@ -635,8 +635,8 @@ plot can be replanted. The "unattended farm" scaling beyond this and the disturb
 
 ## 15. Roles
 
-Optional, best at 4 players; none required to win (`01 Roles`). All ten doc 01 roles are in
-`data/roles.json` (P4-03, D-077). Four have doc 02 numbers (the first four rows); the other six are
+Optional, best at 4 players; none required to win (`01 Roles`). All ten doc 01 roles and the CEO-pitched Crowkeeper (P5-52, Q-352) are in
+`data/roles.json` (P4-03, D-077). Four have doc 02 numbers (the first four rows); the other seven are
 `placeholder` perks written from doc 01's one-line descriptions and are to be tuned in play.
 
 | Role | Perk | Number (`roles.json` field) | Source |
@@ -651,6 +651,7 @@ Optional, best at 4 players; none required to win (`01 Roles`). All ten doc 01 r
 | `radio_operator` | walkies reach further and last longer, stronger lures | `walkie_range_mult` 1.5; `battery_transmit_mult` 1.5; `lure_weight_mult` 2 | placeholder |
 | `warden` | more flare shots, faster reload | `flare_shots_extra` 1; `flare_reload_mult` 0.5 (x `store.json` `flare_gun` `reload_s` 8 = 4 s) | placeholder |
 | `medium` | hears less ghost static | `ghost_static_mult` 0.5 | placeholder |
+| `crowkeeper` | places up to `max_perches` 2 bait perches at a field or corn edge (within `edge_m` 8, at least `min_gap_m` 12 apart, `pickup_m` 3 to take one up); anything that moves within `flush_radius_m` 8 of a perch (not its owner) bursts its crows, cooldown `flush_cooldown_s` 20, `move_eps_m` 0.25; the cawing is the `crow_flush` noise (`creature.json` `noise_crow_flush` 25 m); the creature and its fake-out crows trigger it too | placeholder (CEO pitch, no doc 01 row yet: Q-352) |
 
 Multipliers on hold seconds round up like every scaled value. Roles are not in the season simulator
 (none is required to win; the median policy has none).
