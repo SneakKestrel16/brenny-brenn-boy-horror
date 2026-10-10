@@ -365,7 +365,7 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   reading only. Needs a windowed playtest on the CEO's PC once Q-261's hash is in. Owner: QA (P5-08).
 - **Late joiners miss a running toy.** A peer joining mid-toy does not get it. Owner: Gameplay.
 - **Low-gravity jump bypasses the InputMap** (`KEY_SPACE` read directly); settle with Q-262. Owner: Gameplay.
-- **`test_harness.py` `MultiArgs` fails on main** (2 tests): `multi.py` now appends `--profile=p<n>` and
+- ~~**`test_harness.py` `MultiArgs` fails on main**~~ FIXED at P5-08 (QA, 2026-10-10). Was (2 tests): `multi.py` now appends `--profile=p<n>` and
   `--`, which the tests do not expect. Owner: QA.
 
 ## Found at the P5-06 review (QA, 2026-10-09)
@@ -505,7 +505,7 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 
 - **`HAT_LOOK` / `TINT_LOOK` placeholder colours** in `cosmetics.gd` (doc 07 s8 gives none; only fallbacks once the
   glbs load). Owner: Technical Artist.
-- **"ObjectDB instances leaked at exit" warnings** in test_farmer_body, test_colour_slots and one client run. Inference:
+- ~~**"ObjectDB instances leaked at exit" warnings**~~ SETTLED at P5-08: source is the Soundscape Ambience players (`soundscape.gd:156`), a warning, not an error. Was: in test_farmer_body, test_colour_slots and one client run. Inference:
   the test scripts never free their nodes; a run on main before P5-05 settles it. Owner: QA.
 
 ## Found at the P5-22 review (QA, 2026-10-09)

@@ -28,8 +28,9 @@ doc has been run; every command is the harness as it stands in `tools/qa/README.
   from the logs").
 - Sections 7 to 9 are for the review of every task (a task is done only when QA passes it).
 - Section 10 is a one-off measurement doc 07 requires before its budget counts as measured.
-- DD Phase 5 (spliced clips from live speech, next season, cosmetics) is not tested here. Live clips
-  came forward from Phase 5 in D-146 and are tested in section 8 D.
+- DD Phase 5 (spliced clips from live speech, next season, cosmetics) has no measured gate: it is done
+  when the CEO says so (Q-250). Section 3 "DD Phase 5" lists what to try at STOP 6. Live clips came
+  forward from Phase 5 in D-146 and are tested in section 8 D.
 
 ## 2. Session rules
 
@@ -110,6 +111,24 @@ Director).
 | Teams sometimes win and sometimes lose | At least 6 full seasons (`placeholder`; fewer can't show both outcomes) | `payment_made`, `session_end` | At least one win and one loss across the seasons |
 | Logs land within 15 points of the sim | `tools/sim/sim.py compare` on the host logs of the full seasons (section 4) | `dawn_summary`, `money_changed`, `payment_made`, `death` | Doc 02 s18.5 metric (Q-038): per dawn 2 to 8 the live median bank as % of the next payment within 15 points of the sim median for the same player count; clear rates reported, not gated (doc 01 "Playtest check") |
 | Saving, joining and leaving | A drop mid-season; a late join; a host left | `net_peer_left`, `net_host_left`, `save_written` | Debt recomputed per doc 01's example (4p, one drop before dawn 2: 1,135 total, first payment 223); resume from the last dawn save |
+
+### DD Phase 5
+
+No measured gate: Phase 5 is done when the CEO says so (Q-250). The rows are what to try at STOP 6; the
+log measure is what QA reads afterwards. Rows P5-G1 to P5-G15 were drafted by the Game Designer
+(`production/handoffs/P5-02.md`); the session plan is `tools/qa/playtest/checklist_p5.md`. Numbers are
+doc 02 s21 and `data/next_season.json`, `data/creature_traits.json`, `data/cosmetics.json`,
+`data/quirks.json`, `data/imposter.json`.
+
+| Item | Try | Log measure | Looks right when |
+|---|---|---|---|
+| Next season (G1, G2, G11) | Win season 1 (pay the final payment), then Season Awards > next season; everyone back in the lobby | `season_started` (`savings`, `spare`, `upgrades`), `plots_open` | Savings = floor(25% of spare), capped at 60; upgrades and plots carried, plots never above the new headcount's cap; every peer reloads into season 2 |
+| Creature trait (G3, G4) | Play season 2's first dawn | `trait_gained` (`season`, `trait`, `seed`) on the host | One trait per new season, logged once; the Dawn Report prints its line once and plays `ui_trait_gained`; never names the trait on screen beyond its `report_line` |
+| Cosmetics (G5, G6) | Try to buy a hat before the debt is paid, then after; save, quit, load; play into season 2 | `cosmetic_bought`, `cosmetic_refused`, `cosmetic_worn` | Refused before the debt is paid; seen on every peer; kept across load and season; no speed, light, noise or slot change |
+| Spliced lures (G7, diagnostic) | Talk a lot on days 1 to 3; listen for day-4 lures | `lure_played` (`exact`, `segments`) | Days 1 to 3 exact clips only; day 4 on may splice; joins sound like the speaker (the CEO's ear, doc 08 s14) |
+| Quirks (G8, G9, G13) | Lobby option on | `quirk_assigned` (host only) | One quirk per player per season, none shared; each player knows only their own; no flash or strobe |
+| Imposter mode (G10, G12, G14, G15) | Hidden dev setting (D-044) on the gated host | `imposter_picked`, `imposter_action` (host only) | Nobody else's log, screen or sound names the imposter before the reveal; the imposter never kills; kit stays inside `imposter.json`; with none picked, the Dawn Report says so |
+| Doors (P5-27) | Close the barn door with a teammate inside at night; a late joiner looks at it | `door` (host), `door_seen` with `--log-farm` | A closed door stops farmhands, not the Creature; every peer and the late joiner see the same door; all open again at day start |
 
 ## 4. Log measures and what proves them
 

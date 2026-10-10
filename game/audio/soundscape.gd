@@ -79,7 +79,7 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 	&"ui_stamp": {"n": 0, "bus": &"UI", "db": -10.0},
 	&"ui_award_reveal": {"n": 0, "bus": &"UI", "db": -8.0},
 	&"ui_shop_bell": {"n": 0, "bus": &"UI", "db": -4.0},
-	&"ui_season_start_sting": {"n": 0, "bus": &"UI", "db": -6.0},  # P5-07, no caller yet (doc 08 s10.8)
+	&"ui_season_start_sting": {"n": 0, "bus": &"UI", "db": -6.0},  # P5-07, called from main.gd (doc 08 s10.8)
 	&"ui_cosmetic_buy": {"n": 0, "bus": &"UI", "db": -6.0},
 	&"ui_trait_gained": {"n": 0, "bus": &"UI", "db": -10.0},
 	&"ui_imposter_reveal": {"n": 0, "bus": &"UI", "db": -8.0},

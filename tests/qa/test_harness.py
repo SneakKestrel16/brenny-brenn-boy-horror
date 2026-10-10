@@ -247,13 +247,13 @@ class MultiArgs(unittest.TestCase):
         cmd = multi.build_command("godot", 2, "-s res://x.gd -- --qa-port=1", "--verbose -- --qa-role=client", True, 300, True)
         self.assertEqual(
             cmd,
-            ["godot", "--path", str(godot_qa.REPO_ROOT), "--audio-driver", "Dummy", "--headless", "--quit-after", "300", "-s", "res://x.gd", "--verbose", "--", "--qa-port=1", "--qa-role=client", "--free-mouse"],
+            ["godot", "--path", str(godot_qa.REPO_ROOT), "--audio-driver", "Dummy", "--headless", "--quit-after", "300", "-s", "res://x.gd", "--verbose", "--", "--qa-port=1", "--qa-role=client", "--free-mouse", "--profile=p2"],
         )
 
     def test_windows_tile_in_a_grid(self) -> None:
         cmd = multi.build_command("godot", 4, "", "", False, None, True)
-        self.assertEqual(cmd[5:-2], ["--windowed", "--resolution", "640x360", "--position", "640,360"])
-        self.assertEqual(cmd[-2:], ["--", "--free-mouse"])
+        self.assertEqual(cmd[5:-3], ["--windowed", "--resolution", "640x360", "--position", "640,360"])
+        self.assertEqual(cmd[-3:], ["--", "--free-mouse", "--profile=p4"])  # b66ddcc: copies 2+ get their own profile
 
 
 if __name__ == "__main__":

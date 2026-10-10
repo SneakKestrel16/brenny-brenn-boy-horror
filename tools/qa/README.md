@@ -169,7 +169,7 @@ exit code 1. A log with none of these events is still a pass: each measure repor
 
 ## Playtest kit: `playtest.py`, `package_playtest.py`, `playtest/`
 
-Step by step: [playtest/checklist.md](playtest/checklist.md). Phase checklists: [DD Phase 2](playtest/checklist_p2.md), [DD Phase 3](playtest/checklist_p3.md). Hand testers
+Step by step: [playtest/checklist.md](playtest/checklist.md). Phase checklists: [DD Phase 2](playtest/checklist_p2.md), [DD Phase 3](playtest/checklist_p3.md), [DD Phase 4](playtest/checklist_p4.md), [DD Phase 5](playtest/checklist_p5.md). Hand testers
 [playtest/tester_brief.md](playtest/tester_brief.md) (controls and setup only; no coaching).
 
 ```bash
