@@ -386,7 +386,8 @@ client rolls back its prediction). Doc 05 section 7 (hold framework) uses only t
 | `request_whistle` | `apply_whistle(slot, position)` | "How players fight back > Whistle" |
 | `request_emote(emote_id)` | `apply_emote` | "Emotes and physical comedy" |
 | `request_flicker(light_id)` (ghost) | `apply_flicker(light_id)` | "Ghosts > Lantern flicker" |
-| `request_possess_crow(crow_id)` (ghost) | `apply_crow_possessed` | "Ghosts > The crow" |
+| `request_possess_crow(crow_id)` (ghost) | `apply_crow_possessed(peer, crow_id)` to all, `""` = let go | "Ghosts > The crow" |
+| `request_crow_steer(dir)` (ghost in a crow; unreliable ordered, channel 1, 20 Hz; host ignores any sender but that crow's ghost and clamps `dir` to length 1) | `apply_crow_pos(peer, position, yaw)` to all (unreliable ordered, channel 1, 20 Hz) | "Ghosts > The crow"; P5-66 flight, doc 05 section 14 |
 | `request_hold_cancel()` | `apply_hold_cancelled` | |
 
 `apply_lights` turns a light on or off; it never flickers one. Only `apply_flicker` does (doc 01
@@ -566,8 +567,8 @@ state lagged.
 - Attenuation `placeholder`s: inverse distance, unit size 10 m, max distance 120 m (raised from 6 / 80 at the Phase 1 playtest: quiet, short) plus a `voice_gain_db` setting (default +6 dB, no AGC), so a voice is
   still placeable at the 60 m spatial audio test distance (doc 01 "Testing > Spatial audio").
 - Ghost voices play from the ghost's spectating position as the Ghost system reports it (Q-006):
-  the ghost's own Player node, held at the perch while the ghost is in a crow (P3-09), so the voice
-  then comes from the crow.
+  the ghost's own Player node, which rides the flying crow while the ghost is in one (P3-09, P5-66),
+  so the voice then comes from the crow.
 - **Risk: TwoVoIP v6.5 playback thread safety.** v6.6's changelog makes "the decoded Opus playback
   ring safe between its single packet-producing thread and Godot's audio mixing thread"; v6.5 lacks
   that fix, which is a plausible cause of the crackling in upstream issues #45 and #80 (inference).

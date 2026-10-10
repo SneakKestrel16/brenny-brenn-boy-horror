@@ -1312,3 +1312,12 @@ cross owner paths (CONTRACTS s2); the Director approved them, as D-156 did for P
 **Why:** each edit is a thin hook for models the owner had no task to wire. QA PASS: the door harness proves a closed
 door blocks the player and not the Creature; 3-instance sync evidence is the implementer's run (QA's own run was not
 permitted).
+
+### D-187 · 2026-10-10 · Director · Crow flight RPCs approved (Q-357)
+P5-66 adds `request_crow_steer(dir)` and `apply_crow_pos(peer, position, yaw)` to `game/net/net.gd`, both
+`unreliable_ordered` on channel 1 at 20 Hz, only while a ghost flies a crow. They stay RPCs rather than a
+`send_bytes()` type, an exception to CONTRACTS s7's naming line; doc 06 s7 lists them. The edit to `net.gd`
+(Network & Voice) crosses owner paths (CONTRACTS s2); approved as D-156 did for P5-03.
+**Why:** one 20 s stream per ghost a night; a `send_bytes` type would touch the movement packet code for no gain.
+The host keeps authority: it accepts a steer only from the ghost holding that crow, drops non-finite vectors and
+clamps length to 1 (QA, P5-66).

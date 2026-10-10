@@ -353,7 +353,7 @@ Then the creature vanishes. Jumpscares never Corrupt.
   - **Nothing else in the game ever flickers a light,** whether the generator, ambience, weather or the lobby. It's the one unfakeable signal.
 - **Rustling corn:** points at things, but the creature can fake it.
 - **Static voices:** the living hear ghosts in proximity chat through heavy static.
-- **The crow:** a ghost can possess one crow per night for 20 seconds, to scout and point. The creature ignores crows but also sends fake ones, so an odd crow is a hint, not proof.
+- **The crow:** a ghost can possess one crow per night for 20 seconds and fly it around, to scout and point. The creature ignores crows but also sends fake ones, so an odd crow is a hint, not proof.
 
 ### The dead-voice twist
 

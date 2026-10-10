@@ -795,6 +795,13 @@ func request_crow_caw() -> void:
 	request_received.emit(&"crow_caw", _sender(), [])
 
 
+## Ghost to host, 20 Hz while in a crow: the world direction to fly (length <= 1; the host clamps it). Channel 1,
+## latest wins (doc 06 section 2), so a lost reliable packet on channel 0 never holds it back.
+@rpc("any_peer", "call_remote", "unreliable_ordered", 1)
+func request_crow_steer(dir: Vector3) -> void:
+	request_received.emit(&"crow_steer", _sender(), [dir])
+
+
 @rpc("any_peer", "call_remote", "reliable")
 func request_rustle() -> void:
 	request_received.emit(&"rustle", _sender(), [])
@@ -806,7 +813,13 @@ func apply_flicker(light_id: String) -> void:
 	apply_received.emit(&"ghost_light", [light_id])
 
 
-## Host to the ghost: it now sees from crow perch `crow_id` ("" = the crow let go).
+## Host to all, 20 Hz while a ghost flies a crow: where it is and which way it faces (channel 1, latest wins).
+@rpc("authority", "call_remote", "unreliable_ordered", 1)
+func apply_crow_pos(peer: int, position: Vector3, yaw: float) -> void:
+	apply_received.emit(&"crow_pos", [peer, position, yaw])
+
+
+## Host to all: ghost `peer` took the crow from perch `crow_id` ("" = the crow let go and flies home).
 @rpc("authority", "call_remote", "reliable")
 func apply_crow_possessed(peer: int, crow_id: String) -> void:
 	apply_received.emit(&"crow_possessed", [peer, crow_id])

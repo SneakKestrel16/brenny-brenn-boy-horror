@@ -6,7 +6,11 @@ extends Node
 ## silhouette within 20 m, traps never shown).
 ## Keys while a ghost (no new actions): use_tool = the nearest lit light (or caw while in a crow),
 ## alt_use = rustle the corn you are in, lantern = take the nearest crow.
-## Not built: the creature attacking a possessed crow (`dead_crow`), crow objects (the perch is the crow).
+## P5-66: a possessed crow FLIES. The ghost sends its steer (a world direction from move + look: forward, turn, climb and
+## dive follow the camera pitch) at 20 Hz; the host moves the crow (speed, altitude clamp, wall/roof blocking by a ray on
+## layer 1) and broadcasts its position at 20 Hz; every peer draws one `animal_crow` flying (clip `fly`), the perch crow
+## hidden. When the 20 s end the crow flies back to its perch on every peer, then lands (the perch crow shows again).
+## Not built: the creature attacking a possessed crow (`dead_crow`).
 
 const LightFlicker := preload("res://game/ghost/light_flicker.gd")
 
@@ -15,6 +19,14 @@ const REACH_M := 20.0  ## placeholder: how close a ghost must be to the light or
 const NEAR_LIVING_M := 15.0  ## placeholder: doc 01 "any light near a living teammate", no distance given
 const CROW_S := 20.0  ## doc 01 "Ghosts": one crow a night for 20 s
 const CROW_SIGHT_M := 30.0  ## placeholder (inference): beyond the 20 m ghost sight, or the crow adds nothing
+const CROW_SPEED_MPS := 7.0  ## placeholder (inference): doc 01 gives no speed; about a sprint, so a scout can cross the farm in 20 s
+const CROW_MIN_Y := 1.0  ## placeholder: stays off the ground
+const CROW_MAX_Y := 8.0  ## placeholder: under the 10 m boundary walls (build_farm.py Bounds), so they still stop it
+const CROW_RADIUS_M := 0.4  ## ray look-ahead: the crow stops this short of a wall or roof
+const CROW_SEND_S := 0.05  ## 20 Hz steer up, 20 Hz position down
+const CROW_STEER_STALE_MS := 400  ## no steer packet this long = the crow hovers (lost packets never run it away)
+const CROW_RETURN_MPS := 8.0  ## flying back to the perch when the possession ends
+const WORLD_MASK := 1  ## layer 1 world: buildings and the boundary walls
 const SEE_CREATURE_M := 20.0  ## doc 01 "Ghosts > Vision", doc 04 section 8.4
 const SMEAR := 0.6  ## creature silhouette transparency for a ghost (placeholder look until doc 07 gives one)
 const CORN_MASK := 16  ## layer 5 corn
@@ -23,12 +35,19 @@ var _next: Dictionary = {}  ## host: peer -> {kind: msec when allowed again}
 var _crow_day: Dictionary = {}  ## host: peer -> Clock.day of its crow
 var _crows: Dictionary = {}  ## host: peer -> {id, until}
 var _my_crow := ""  ## local: perch id while this ghost is in a crow
+var _steer: Dictionary = {}  ## host: peer -> {dir, at (msec)}
+var _flyers: Dictionary = {}  ## every peer: ghost peer -> {node, to, yaw, home, back, perch}
+var _qa_shot_dir := ""  ## QA `--crow-shot=<dir>`: each peer saves one picture of a flying crow from 4 m behind
+var _t := 0.0  ## send timer (host: positions down, local ghost: steer up)
 var _vision := false  ## local: ghost vision applied
 
 
 func _ready() -> void:
 	add_to_group(&"ghost_powers")
 	process_physics_priority = 100  # after the Player, so the crow view holds the camera at the perch
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--crow-shot="):
+			_qa_shot_dir = a.substr("--crow-shot=".length())
 	Net.apply_received.connect(_on_apply)
 	if Game.is_host():
 		Net.request_received.connect(_on_request)
@@ -42,6 +61,9 @@ func _on_request(what: StringName, peer: int, args: Array) -> void:
 			act(peer, &"crow", String(args[0]))
 		&"crow_caw":
 			act(peer, &"caw")
+		&"crow_steer":
+			if _crows.has(peer) and (args[0] as Vector3).is_finite():  # only the crow's own ghost; NaN would poison the crow
+				_steer[peer] = {"dir": (args[0] as Vector3).limit_length(1.0), "at": Time.get_ticks_msec()}
 		&"rustle":
 			act(peer, &"rustle")
 
@@ -98,17 +120,14 @@ func _try(peer: int, kind: StringName, id: String) -> String:
 				if c.id == perch.name:
 					return "taken"
 			_crow_day[peer] = Clock.day
-			_crows[peer] = {"id": String(perch.name), "until": now + int(CROW_S * 1000.0)}
+			_crows[peer] = {"id": String(perch.name), "until": now + int(CROW_S * 1000.0), "pos": perch.global_position, "yaw": 0.0}
 			fields.crow_id = String(perch.name)
 			_send_crow(peer, String(perch.name))
 		&"caw":
 			if not _crows.has(peer):
 				return "no_crow"
-			var perch := _perch(_crows[peer].id)
-			if perch == null:
-				return "no_crow"
 			fields.crow_id = _crows[peer].id
-			_sound(&"caw", perch.global_position)
+			_sound(&"caw", _crows[peer].pos)
 		_:
 			return "unknown"
 	if COOLDOWN_S.has(kind):
@@ -117,20 +136,53 @@ func _try(peer: int, kind: StringName, id: String) -> String:
 	return ""
 
 
-func _physics_process(_delta: float) -> void:
+## One step of crow flight: `dir` (length <= 1, world space) at CROW_SPEED_MPS, altitude clamped, and the crow stays put
+## when a wall, roof or boundary is in the way (ray on the world layer). Static so the check can drive it.
+static func fly(space: PhysicsDirectSpaceState3D, from: Vector3, dir: Vector3, delta: float) -> Vector3:
+	var to := from + dir.limit_length(1.0) * CROW_SPEED_MPS * delta
+	to.y = clampf(to.y, CROW_MIN_Y, CROW_MAX_Y)
+	var ahead := to + (to - from).normalized() * CROW_RADIUS_M
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, ahead, WORLD_MASK))
+	if not hit.is_empty():
+		return from
+	return to
+
+
+func _physics_process(delta: float) -> void:
+	_t += delta
+	var tick := _t >= CROW_SEND_S
+	if tick:
+		_t = 0.0
 	if Game.is_host():
 		for p in _crows.keys():  # the crow lets go after 20 s, or when its ghost walks again
 			if Time.get_ticks_msec() >= int(_crows[p].until) or not Game.is_ghost(p):
 				_crows.erase(p)
+				_steer.erase(p)
 				_send_crow(p, "")
+				continue
+			var c: Dictionary = _crows[p]
+			var st: Dictionary = _steer.get(p, {})
+			var dir: Vector3 = st.dir if not st.is_empty() and Time.get_ticks_msec() - int(st.at) < CROW_STEER_STALE_MS else Vector3.ZERO
+			c.pos = fly(get_viewport().world_3d.direct_space_state, c.pos, dir, delta)
+			if Vector2(dir.x, dir.z).length() > 0.05:
+				c.yaw = atan2(dir.x, dir.z)
+			if tick:
+				Net.to_peers(&"apply_crow_pos", [p, c.pos, c.yaw])
+				_on_apply(&"crow_pos", [p, c.pos, c.yaw])
 	if _my_crow != "":
 		var pl := _local_player()
-		var perch := _perch(_my_crow)
-		if pl and perch:
-			pl.global_position = perch.global_position
+		var f: Dictionary = _flyers.get(Game.local_peer(), {})
+		if pl and not f.is_empty():
+			var eye: Vector3 = pl._cam.global_position - pl.global_position
+			pl.global_position = f.node.global_position - eye  # the view rides the crow
+			if tick and not Game.console_open:
+				var d := Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
+				var want: Vector3 = pl._cam.global_transform.basis * Vector3(d.x, 0.0, d.y)
+				Net.to_host(&"request_crow_steer", [want])
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_move_flyers(delta)
 	var pl := _local_player()
 	var on: bool = pl != null and pl.ghost
 	var body := _creature_mesh()
@@ -204,9 +256,14 @@ func _on_apply(what: StringName, args: Array) -> void:
 		&"ghost_sound":
 			Soundscape.play_3d(&"sfx_step_corn" if args[0] == &"rustle" else &"sfx_crow_caw", args[1])
 		&"crow_possessed":
-			if args[0] != Game.local_peer():
-				return
-			_my_crow = String(args[1])
+			_set_flyer(int(args[0]), String(args[1]))
+			if args[0] == Game.local_peer():
+				_my_crow = String(args[1])
+		&"crow_pos":
+			if _flyers.has(int(args[0])):
+				_flyers[int(args[0])].to = args[1]
+				_flyers[int(args[0])].yaw = args[2]
+			return
 		_:
 			return
 	if not Game.is_host():  # QA: this peer applied it
@@ -219,10 +276,84 @@ func _sound(kind: StringName, pos: Vector3) -> void:
 
 
 func _send_crow(peer: int, crow_id: String) -> void:
-	if peer == Game.local_peer():
-		_on_apply(&"crow_possessed", [peer, crow_id])
-	elif peer > 1:  # bots (negative ids) have no screen
-		Net.to_peers(&"apply_crow_possessed", [peer, crow_id], [peer])
+	_on_apply(&"crow_possessed", [peer, crow_id])  # every peer draws the crow, not only its ghost
+	Net.to_peers(&"apply_crow_possessed", [peer, crow_id])
+
+
+## Every peer: the ghost `peer` took the crow at perch `id` (a flying crow appears, the perch crow hides) or let go
+## (`id` ""; the flying crow heads home and lands).
+func _set_flyer(peer: int, id: String) -> void:
+	if id == "":
+		if _flyers.has(peer):
+			_flyers[peer].back = true
+		return
+	var perch := _perch(id)
+	if perch == null:
+		return
+	if _flyers.has(peer):
+		_land(peer)
+	var node := (load("res://assets/models/animal_crow.glb") as PackedScene).instantiate() as Node3D
+	add_child(node)
+	node.global_position = perch.global_position
+	for ap in node.find_children("*", "AnimationPlayer"):
+		(ap as AnimationPlayer).get_animation(&"fly").loop_mode = Animation.LOOP_LINEAR
+		(ap as AnimationPlayer).play(&"fly")
+	_perch_crow(perch).visible = false
+	_flyers[peer] = {"node": node, "to": perch.global_position, "yaw": 0.0, "home": perch.global_position, "back": false, "perch": perch}
+
+
+func _perch_crow(perch: Node3D) -> Node3D:  # the scenery crow WorldProps put under the marker
+	for c in perch.get_children():
+		if c is Node3D:
+			return c
+	return Node3D.new()
+
+
+func _land(peer: int) -> void:
+	var f: Dictionary = _flyers[peer]
+	f.node.queue_free()
+	_flyers.erase(peer)
+	for o: Dictionary in _flyers.values():
+		if o.perch == f.perch:
+			return  # another ghost holds this perch now
+	_perch_crow(f.perch).visible = true
+
+
+func _qa_shot(n: Node3D, peer: int) -> void:
+	var cam := Camera3D.new()
+	n.add_child(cam)
+	cam.position = Vector3(0.0, 1.0, -4.0)
+	cam.look_at(n.global_position)
+	cam.make_current()
+	for l: CanvasLayer in get_tree().root.find_children("*", "CanvasLayer", true, false):
+		l.visible = false  # the intro card and HUD hide the crow
+	await get_tree().process_frame
+	await get_tree().process_frame
+	get_viewport().get_texture().get_image().save_png("%s/crow_peer%d_of%d.png" % [_qa_shot_dir, Game.local_peer(), peer])
+	cam.queue_free()
+
+
+func _move_flyers(delta: float) -> void:
+	for peer in _flyers.keys():
+		var f: Dictionary = _flyers[peer]
+		var n: Node3D = f.node
+		if not f.back and _qa_shot_dir != "" and n.global_position.distance_to(f.home) > 12.0 and not f.has("shot"):
+			f.shot = true
+			_qa_shot(n, peer)
+		if int(Time.get_ticks_msec() * 0.001) != f.get("logged", -1):
+			f.logged = int(Time.get_ticks_msec() * 0.001)
+			Log.event(&"crow_flyer_seen", {"peer": peer, "x": snappedf(n.global_position.x, 0.1), "y": snappedf(n.global_position.y, 0.1), "z": snappedf(n.global_position.z, 0.1), "back": f.back})
+		var goal: Vector3 = f.home if f.back else f.to
+		if f.back:
+			var d := goal - n.global_position
+			if d.length() <= CROW_RETURN_MPS * delta:
+				_land(peer)
+				continue
+			n.global_position += d.normalized() * CROW_RETURN_MPS * delta
+			f.yaw = atan2(d.x, d.z)
+		else:
+			n.global_position = n.global_position.lerp(goal, 1.0 - exp(-15.0 * delta))
+		n.rotation.y = lerp_angle(n.rotation.y, f.yaw, 1.0 - exp(-10.0 * delta))
 
 
 func _living_near(pos: Vector3) -> bool:

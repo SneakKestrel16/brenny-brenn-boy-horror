@@ -767,8 +767,8 @@ P4-12: `game/items/cart.gd`, an interactable that `farm.gd` builds under `World`
 - **As built (P3-09).** `game/ghost/ghost_powers.gd` (node `Death/GhostPowers`) holds every rule; the
   look is `game/ghost/light_flicker.gd`. Requests: `request_flicker(light_id)`,
   `request_possess_crow(crow_id)`, `request_crow_caw()`, `request_rustle()`; results:
-  `apply_flicker(light_id)`, `apply_crow_possessed(peer, crow_id)` (sent to that ghost only, `""` to
-  release), `apply_ghost_sound(kind, position)`. A `light_id` is the `lightrig_spots` marker path
+  `apply_flicker(light_id)`, `apply_crow_possessed(peer, crow_id)` (to every peer, `""` to
+  release), plus the P5-66 flight pair below, `apply_ghost_sound(kind, position)`. A `light_id` is the `lightrig_spots` marker path
   relative to Main (e.g. `World/Buildings/Barn/LightRigDoor`), the same on every peer; a `crow_id` is
   the `crow_perches` marker name. Host rules: ghosts only; per-ghost cooldowns flicker 8 s, rustle
   8 s, caw 3 s (`placeholder`, doc 01 says only "short"); the ghost must be within 20 m of the light
@@ -778,12 +778,29 @@ P4-12: `game/items/cart.gd`, an interactable that `farm.gd` builds under `World`
   number), 20 s (doc 01 "Ghosts"), one ghost per perch; a rustle only inside the corn (layer 5) and
   only a sound (`sfx_step_corn`), never a creature Noise; a caw plays `sfx_crow_caw` at the perch,
   no Noise. Keys (no new actions): `use_tool` uses the nearest lit light, or caws while in a crow;
-  `alt_use` rustles; `lantern` takes the nearest crow. In a crow the local player is held at the
-  perch. Ghost vision (local only): every `trap_spots` marker is hidden (all trap looks hang under
+  `alt_use` rustles; `lantern` takes the nearest crow. In a crow the local player's view rides the
+  flying crow (P5-66, next bullet). Ghost vision (local only): every `trap_spots` marker is hidden (all trap looks hang under
   them), and the creature mesh shows only within 20 m of the ghost's camera (30 m from a crow,
   inference so the crow adds sight), at transparency 0.6 as a placeholder "smeared silhouette".
-  Not built: the creature attacking a possessed crow, crow models (the perch is the crow), the
+  Not built: the creature attacking a possessed crow, the
   photosensitive flicker variant. Dev console: `ghost light|crow|rustle|caw [peer] [id]`.
+- **Crow flight (P5-66, CEO playtest 2026-10-10).** A possessed crow flies; doc 01 "Ghosts" says
+  "possess one crow per night for 20 seconds and fly it around" but gives no flight numbers, so they are
+  `placeholder`s in `ghost_powers.gd`. The ghost's client sends `request_crow_steer(dir)` (unreliable
+  ordered on channel 1, 20 Hz; the host ignores any sender but that crow's ghost; a world direction from move keys and the camera, so forward, turn, climb and dive
+  follow where the ghost looks). The host (the only mover) clamps `dir` to length 1, flies the crow at
+  7 m/s with altitude 1 to 8 m (under the 10 m boundary walls), and a ray on layer 1 (buildings, roofs,
+  boundary walls) stops it short of anything solid. No steer for 0.4 s and it hovers. The host sends
+  `apply_crow_pos(peer, position, yaw)` (unreliable ordered, channel 1, 20 Hz) to every peer; each peer draws one
+  `animal_crow` (clip `fly`), smoothed, and hides the perch crow. The ghost's camera rides the crow;
+  the caw sounds at the crow's position. When the 20 s end (or the ghost respawns) the host sends
+  `apply_crow_possessed(peer, "")`; every peer flies the crow back to its perch at 8 m/s on its own
+  (nothing is synced for the trip), lands it and shows the perch crow again. The 20 s and one-a-night
+  limits, the ghost-only check, the 20 m reach and "ghosts cannot harm" are unchanged: the crow
+  emits no Noise and touches nothing. A client joining mid-flight does not see that crow until the
+  next possession (inference: 20 s, not worth a state sync). QA: `-- --crow-shot=<dir>` (each peer saves
+  one picture of a flying crow); `check_ghost.gd` checks steer validation, climb, ceiling and wall;
+  `tests/qa/qa_p5_66_crow_client.gd` flies a real client's crow with key events.
 - **Respawn.** At dawn, ghosts get bodies again (doc 01 "Death"). `apply_respawn(peer, position)`.
   A roster player who reconnects mid-session spawns as a ghost and gets a body at the next dawn
   (doc 06 section 5). No one new joins after the match starts (D-048).

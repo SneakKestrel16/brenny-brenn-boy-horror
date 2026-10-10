@@ -147,7 +147,7 @@ func _process(delta: float) -> void:
 	var text := ""
 	if player.ghost:
 		text = "YOU ARE DEAD. You are a ghost: nobody hears or sees you.\n%s / %s watch a friend. You come back at dawn.
-%s  disturb the nearest light   %s  rustle the corn you are in   %s  ride a crow (once a night; %s caws)" % [
+%s  disturb the nearest light   %s  rustle the corn you are in   %s  ride a crow (once a night: steer it, %s caws)" % [
 				_key(&"spectate_prev"), _key(&"spectate_next"), _key(&"use_tool"), _key(&"alt_use"), _key(&"lantern"), _key(&"use_tool")]
 	else:
 		text = _trap_text()

@@ -38,6 +38,40 @@ func _run() -> void:
 	var corn: Vector3 = (farm.get_node("CornBlockers").get_child(0) as Node3D).global_position
 	_check("rustle allowed in corn %s" % corn, powers._in_corn(corn))
 	_check("rustle refused at the barn spawn", not powers._in_corn(Vector3(0, 0, 0)))
+	# P5-66: a possessed crow flies, clamped in altitude, and a wall stops it.
+	var perch := root.get_tree().get_first_node_in_group(&"crow_perches") as Node3D
+	root.get_node("Game").players[1] = {"ghost": true, "pos": perch.global_position}
+	_check("crow possessed", powers.act(1, &"crow") == "")
+	var wall := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	shape.shape = BoxShape3D.new()
+	wall.add_child(shape)
+	farm.add_child(wall)
+	wall.global_position = perch.global_position + Vector3(10, 4, 0)
+	wall.scale = Vector3(1, 20, 20)
+	await physics_frame
+	await physics_frame
+	var start: Vector3 = powers._crows[1].pos
+	powers._on_request(&"crow_steer", 99, [Vector3(1, 0, 0)])  # QA P5-66: only the crow's own ghost steers it
+	powers._on_request(&"crow_steer", 1, [Vector3(NAN, 0, 0)])
+	_check("steer from another peer or NaN ignored", powers._steer.is_empty())
+	powers._on_request(&"crow_steer", 1, [Vector3(50, 0, 0)])
+	_check("steer clamped to length 1", is_equal_approx(powers._steer[1].dir.length(), 1.0))
+	powers._on_request(&"crow_steer", 1, [Vector3(0, 1, 0)])
+	for i in 90:
+		powers._steer[1].at = Time.get_ticks_msec()
+		await physics_frame
+	_check("crow climbs to the ceiling %s" % powers._crows[1].pos, is_equal_approx(powers._crows[1].pos.y, powers.CROW_MAX_Y))
+	powers._on_request(&"crow_steer", 1, [Vector3(-1, 0, 0)])
+	for i in 30:
+		powers._steer[1].at = Time.get_ticks_msec()
+		await physics_frame
+	_check("crow flew away from the perch", powers._crows[1].pos.x < start.x - 2.0)
+	powers._on_request(&"crow_steer", 1, [Vector3(1, 0, 0)])
+	for i in 120:
+		powers._steer[1].at = Time.get_ticks_msec()
+		await physics_frame
+	_check("a wall stops the crow %s" % powers._crows[1].pos, powers._crows[1].pos.x < start.x + 10.0)
 	print("check_ghost: %s" % ("PASS" if _fails == 0 else "%d FAIL" % _fails))
 	quit(1 if _fails else 0)
 
