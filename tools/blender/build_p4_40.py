@@ -35,9 +35,17 @@ def lin2srgb(c):
 
 
 # ---------------------------------------------------------------- CC0 library animals (edited)
-def lib_part(name, glb, palette, length):
+def fit(bm, size):
+    """Scale a bmesh per axis to size (w, l, h) metres (doc 07 s11.7), feet on z 0, centred on x/y."""
+    lo = Vector((min(v.co[i] for v in bm.verts) for i in range(3)))
+    hi = Vector((max(v.co[i] for v in bm.verts) for i in range(3)))
+    s = [size[i] / (hi[i] - lo[i]) for i in range(3)]
+    bmesh.ops.transform(bm, matrix=Matrix.Diagonal((s[0], s[1], s[2], 1)) @ Matrix.Translation(-Vector(((lo.x + hi.x) / 2, (lo.y + hi.y) / 2, lo.z))), verts=bm.verts)
+
+
+def lib_part(name, glb, palette, size):
     """Import a library glb with Blender's importer, bake it into one flat-coloured part: armature and helper objects
-    dropped, rest pose applied, turned to face +Y, scaled so its length (nose to tail) is `length`, feet on z 0, centred on x/y.
+    dropped, rest pose applied, turned to face +Y, scaled per axis to `size` (w, l, h), feet on z 0, centred on x/y.
     `palette` maps the library material name to our hex colour (doc 07 s2 palette)."""
     bpy.ops.import_scene.gltf(filepath=os.path.join(DL_DIR, glb))
     dg = bpy.context.evaluated_depsgraph_get()
@@ -59,10 +67,7 @@ def lib_part(name, glb, palette, length):
     bm.from_mesh(me)
     bm.transform(ob.matrix_world)
     bmesh.ops.transform(bm, matrix=Euler((0, 0, math.pi)).to_matrix().to_4x4(), verts=bm.verts)  # library front is -Y
-    lo = Vector((min(v.co[i] for v in bm.verts) for i in range(3)))
-    hi = Vector((max(v.co[i] for v in bm.verts) for i in range(3)))
-    s = length / (hi.y - lo.y)
-    bmesh.ops.transform(bm, matrix=Matrix.Diagonal((s, s, s, 1)) @ Matrix.Translation(-Vector(((lo.x + hi.x) / 2, (lo.y + hi.y) / 2, lo.z))), verts=bm.verts)
+    fit(bm, size)
     for coll in (bm.loops.layers.color, bm.loops.layers.float_color):  # library colour layers: exporter would take them first
         for old in list(coll.values()):
             coll.remove(old)
@@ -87,12 +92,12 @@ def lib_part(name, glb, palette, length):
     return ob
 
 
-def cow():  # CC0 low-poly Holstein, edited: our palette, 2.3 m long, facing -Z in Godot
-    lib_part("Cow", "cow_a.glb", {"White": "#E8E4DA", "Black": "#2C2624", "Pink": "#D8A0A0"}, 2.3)
+def cow():  # CC0 low-poly Holstein, edited: our palette, 0.8 x 2 x 1.5 m (doc 07 s11.7), facing -Z in Godot
+    lib_part("Cow", "cow_a.glb", {"White": "#E8E4DA", "Black": "#2C2624", "Pink": "#D8A0A0"}, (0.8, 2.0, 1.5))
 
 
-def pig():  # CC0 low-poly farm pig, edited: our palette, 1.4 m long (doc 07 s11.7)
-    lib_part("Pig", "pig_a.glb", {"Material.003": "#D9A3A0", "Material": "#C48A8A"}, 1.4)
+def pig():  # CC0 low-poly farm pig, edited: our palette, 0.6 x 1.2 x 0.8 m (doc 07 s11.7)
+    lib_part("Pig", "pig_a.glb", {"Material.003": "#D9A3A0", "Material": "#C48A8A"}, (0.6, 1.2, 0.8))
 
 
 # ---------------------------------------------------------------- chicken (built, real hen proportions)
@@ -121,6 +126,7 @@ def chicken():
         a = (i - 2) * 0.28
         p.ball((0.012, 0.07, 0.06), (math.sin(a) * 0.05, -0.2 - 0.01 * abs(i - 2), 0.36 + 0.02 * (2 - abs(i - 2))), F2 if i % 2 else F3,
                rot=(0.2, 0, -a), seg=5, rings=3)
+    fit(p.bm, (0.3, 0.4, 0.4))  # doc 07 s11.7
     p.done()
 
 
@@ -274,8 +280,8 @@ def wheel(p, cx):
     cy, cz = -0.2, 0.55
     for i in range(12):  # felloe segments with an iron tyre
         a = i * math.tau / 12
-        p.box((0.1, 0.17, 0.09), (cx, cy + 0.49 * math.cos(a), cz + 0.49 * math.sin(a)), WOOD2 if i % 2 else "#6A4A32", rot=(a + math.pi / 2, 0, 0))
-        p.box((0.11, 0.18, 0.02), (cx, cy + 0.535 * math.cos(a), cz + 0.535 * math.sin(a)), IRON, rot=(a + math.pi / 2, 0, 0))
+        p.box((0.1, 0.27, 0.09), (cx, cy + 0.49 * math.cos(a), cz + 0.49 * math.sin(a)), WOOD2 if i % 2 else "#6A4A32", rot=(a + math.pi / 2, 0, 0))
+        p.box((0.11, 0.295, 0.02), (cx, cy + 0.535 * math.cos(a), cz + 0.535 * math.sin(a)), IRON, rot=(a + math.pi / 2, 0, 0))
     for i in range(8):  # spokes
         a = i * math.tau / 8 + 0.2
         p.between((cx, cy, cz), (cx, cy + 0.46 * math.cos(a), cz + 0.46 * math.sin(a)), 0.03, 0.022, WOOD, seg=4)

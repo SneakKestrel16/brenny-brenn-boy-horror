@@ -472,7 +472,7 @@ follow section 2.
 | `tool_seed_packet.glb` (variants `_turnip`, `_pumpkin`, `_moonflower`) | 0.1 x 0.01 x 0.15 | P1 (turnip), P2, P3 |
 | `tool_scrap.glb` | 0.15 x 0.1 x 0.05 | P1 |
 | `tool_fuel_can.glb` | 0.3 x 0.15 x 0.35 | P1 |
-| `tool_lantern.glb` (plus `_bright` variant) | 0.2 x 0.2 x 0.3 | P1, P4 |
+| `tool_lantern.glb` (plus `_bright` variant) | 0.25 x 0.25 x 0.34 (as built, P4-40; Director decision, QA fix) | P1, P4 |
 | `tool_walkie_talkie.glb` | 0.08 x 0.04 x 0.2 | P3 |
 | `tool_flare_gun.glb` | 0.25 x 0.05 x 0.18 | P3 |
 | `tool_shed_lock.glb` | 0.1 x 0.05 x 0.15 | P3 |
@@ -548,7 +548,7 @@ from doc 02 (inference; settled by the Game Designer if the pen holds other spec
 
 | Name | Dimensions | Phase |
 |---|---|---|
-| `prop_cart.glb` (with lantern part `prop_cart_lantern.glb`, squeaks) | 1.5 x 3 x 1.8 | P4 |
+| `prop_cart.glb` (with lantern part `prop_cart_lantern.glb`, squeaks) | 1.62 x 3 x 1.8 (1.62 wide as built, P4-40; Director decision, QA fix) | P4 |
 | `prop_cart_pumpkin_slot.glb` (bite damage variant) | n/a | P4 |
 | `bldg_town_stand.glb` | see above | P4 |
 | `prop_road_lamp.glb` | 0.3 x 0.3 x 3.5 | P3 |

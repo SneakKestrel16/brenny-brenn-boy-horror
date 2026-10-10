@@ -1360,3 +1360,12 @@ objects (no hat, head centre y 1.62, faces -Z). Nothing loads it: `player.gd` us
 Also not yet referenced by game code: `bldg_town_stand`, `crop_plot`, `pumpkin_patch`, `pumpkin_prize_*`.
 Settled by: Gameplay swapping the capsule for the glb (keep the capsule collider), and a Technical Artist row for
 the rig, animations and tint slots.
+
+### Q-244 · 2026-10-09 · QA -> Director (for 3D Artist) · open
+P4-40 QA FAIL, details in `production/handoffs/P4-40.md` "QA review". F1: the `prop_cart` wheel rim and tyre are
+separate boxes with gaps of 8 to 10 cm, so in game the wheel reads as a sprocket (`build_p4_40.py` `wheel()`: box
+lengths 0.17 and 0.18 against chords of 0.254 and 0.277). F2: the cow, pig and chicken sizes drift from the doc 07
+s11.7 rows (cow 0.59 x 2.30 x 1.30 against 0.8 x 2 x 1.5), and the doc was not updated. Either rescale the models or
+record "as built" sizes, with your approval. Also N1 for Gameplay: `cart.gd` hangs the lantern at a fixed `LANTERN`,
+not at `LanternSocket`, and the LightRig box hides the lantern model.
+Settled by: a P4-40 follow-up commit fixing F1 and F2, then a QA re-review.
