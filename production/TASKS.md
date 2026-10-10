@@ -994,7 +994,9 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-09 | Gameplay, AI Programmer | Quirks group option: ten quirks, one random per player per season (doc 01 "Quirks", D-052) | todo | P5-02 |
 | P5-10 | Gameplay, Network & Voice | Dev toys behind the machine-hash gate (doc 01 "Dev toys", D-044, D-045) | todo | P5-01 |
 | P5-11 | Gameplay | Imposter mode and its hidden dev setting (doc 01 "Imposter mode", D-043, D-044) | todo | P5-02, P5-10 gate |
-| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-11 |
+| P5-12 | 3D Artist, Technical Artist | Overall upgrade of every model; farmer rig, animations and tint slots (D-154) | todo | P5-01 |
+| P5-13 | Gameplay | Wire the upgraded models in: creature glb for the capsule (Q-150), farmer rig, unused models | todo | P5-12, P5-03 |
+| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-13 |
 
 ### P5-02 Phase 5 design and data
 Owner: Game Designer. Output: doc 02, doc 03, `data/`, `tools/sim/`; handoff note.
@@ -1098,4 +1100,27 @@ Acceptance:
 - Rejoining keeps imposter status (doc 01 "Rejoining").
 - The hidden dev setting (D-044) forces an imposter and picks who, behind the P5-10 gate.
 - 2-instance and 4-instance ENet tests; headless, no new errors.
+
+### P5-12 Overall model upgrade
+Owner: 3D Artist (models), Technical Artist (rig, animations, tint slots, materials). Output: `assets/models/`,
+`assets/blender/`, `tools/blender/`, `game/render/`; handoff note. Source: CEO 2026-10-09 (D-154), D-151, doc 07.
+Acceptance:
+- Every model in `assets/models/` reviewed against doc 07 s11 and s12 and upgraded: better silhouettes and
+  detail within each poly budget, real scale, palette and materials per doc 07; D-151 sources (Blender plus
+  CC0 libraries, edited to fit). File names and node names unchanged so game code keeps loading them.
+- The P4-16 and P4-40 handoff nits closed or listed with a reason.
+- Farmer: rig, the doc 07 s11.7 animations and 4 tint slots.
+- Before and after screenshots in day and night light for each model, for the CEO.
+- Import headless with no new errors; smoke passes.
+
+### P5-13 Wire in the upgraded models
+Owner: Gameplay Programmer (AI Programmer reviews creature changes). Output: `game/`; handoff note.
+Acceptance:
+- `creature.gd` shows the P4-19 body glb in place of the capsule; the capsule collider stays (Q-150).
+- Players use the rigged farmer with its animations and tint slots, synced to every peer; `LineUp._farmer`
+  uses it too.
+- Built models not yet referenced (`bldg_town_stand`, `crop_plot`, `pumpkin_patch`, `pumpkin_prize_*`) are
+  placed or used where doc 04 and doc 07 put them.
+- `cart.gd` hangs the lantern at `LanternSocket` (Q-247 N1).
+- 2-instance ENet test; full suite and smoke headless, no new errors.
 

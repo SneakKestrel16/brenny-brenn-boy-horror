@@ -1039,3 +1039,11 @@ D-044 machine-hash gate that P5-11's dev setting reuses.
 **Why:** CEO, 2026-10-09, asked whether the mental illness options and dev trolls were in this phase, then said
 yes to adding them (Imposter mode included).
 
+### D-154 · 2026-10-09 · CEO · Overall model upgrade in Phase 5
+The CEO asked for an overall upgrade of all models in DD Phase 5. P5-12 upgrades every model in
+`assets/models/` under D-151 (Blender plus CC0 libraries) and adds the farmer rig, animations and tint slots
+(doc 07 s11.7). P5-13 wires them in: the creature glb replaces the capsule (Q-150), the rigged farmer, and the
+built models no code uses yet. P5-13 waits for P5-03, which also edits `game/creature/`. File and node names
+stay, so code keeps loading the upgraded files.
+**Why:** CEO, 2026-10-09: "do an overall upgrade of all models".
+
