@@ -1056,3 +1056,18 @@ count, payments. Roles are re-pickable and a new body is picked. Q-252 item 2: t
 final payment is missed; the first-payment Foreclosure Notice is not an imposter win. Doc 01 "Next season" and
 "Imposter mode" get this wording when P5-02 merges.
 **Why:** CEO, 2026-10-09: "yes to both".
+
+### D-156 · 2026-10-09 · Director · P5-03 splice decisions; cross-owner edits ratified
+P5-03 (spliced lures) passed QA and is merged. The Director adopts its three proposals:
+1. A splice travels as a spec String in `apply_lure.source` (`clip:<owner>:<id>@<first>+<count>,...`),
+   not doc 06's original dictionary; an exact clip keeps the bare `clip:<owner>:<id>`. Continues P2-04's
+   String source, and an old client given a splice skips it as `missing` instead of crashing.
+2. Opus packet size is the silence proxy for the word break (`VoiceSplice.word_break`); thresholds are
+   placeholders, inference. A real-speech listening test settles them (OPEN_ISSUES).
+3. From day 4, every clip lure is spliced when its owner has 2 or more clips. Doc 01 says "spliced clips
+   from day 4" with no share; reading it as all of them is inference. The CEO can set a share.
+P5-03's edits outside Network & Voice paths are ratified, as D-036 did: doc 03 s12.1 and s12.4 (Game
+Designer), `game/creature/creature.gd` (AI Programmer, co-owner on the row), `game/ui/dawn_report_logic.gd`
+and its test (Gameplay). All are small and needed for the splice to log and replay.
+**Why:** QA PASS (handoffs/P5-03.md "QA review"); the proposals were in the P5-03 handoff.
+

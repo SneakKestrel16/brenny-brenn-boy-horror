@@ -348,3 +348,14 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 
 1. **The gaunt signature is a stand-in.** The CEO picked option C (a flicked clipboard as joint clicks) "for now" and noted "its not the best". Audio Designer: find a better real joint, knuckle or beetle-click recording later. Settled when the CEO picks a replacement by ear.
 2. **All D-149 sound picks are stand-ins.** The CEO, 2026-10-09: "make a note to redo all these sounds at a later date as im not compltely satisfied with them but they will work for now". Every pick from the D-149 listen (creature, animal, item, radio, UI) ships for now. Audio Designer: redo them all in a later sound pass, starting from better real recordings. Settled when the CEO re-listens and approves each sound.
+
+## Found at the P5-03 review (QA, 2026-10-09)
+
+- **Splice word break unproven on real speech.** Both e2e runs cut mid-clip; the packet-size silence path
+  (`VoiceSplice.word_break`) is covered only by `tests/net/test_splice.gd`. Logging per-clip packet sizes
+  in a real-voice day-4 lure settles it (P5-07 listens to splice joins). Owner: Network & Voice.
+- **No test for exact days 1 to 3.** Nothing asserts a day-1 to day-3 lure logs `exact:true` with an
+  unchanged seed stream. Owner: QA (P5-08).
+- **Splice log nits.** `lure_stopped` and `lure_skipped` put the whole spec in `clip_id`; doc 03 s12.4
+  "Wire" and "Logs" bullets need rewrapping. Owner: Network & Voice.
+
