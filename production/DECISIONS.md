@@ -1047,3 +1047,12 @@ built models no code uses yet. P5-13 waits for P5-03, which also edits `game/cre
 stay, so code keeps loading the upgraded files.
 **Why:** CEO, 2026-10-09: "do an overall upgrade of all models".
 
+
+### D-155 · 2026-10-09 · CEO · Next season campaign and imposter win (Q-251, Q-252 item 2)
+The CEO approved the P5-02 proposals. Q-251: a campaign is 3 seasons; a won season 3 pays the farm off; a lost
+season (final payment missed) ends the campaign and carries nothing; a missed first payment is not a loss.
+Resets each season: crops, Prize Pumpkin, Taint, deaths, medical bill, traps, pegboard stock, fuel, flags, day
+count, payments. Roles are re-pickable and a new body is picked. Q-252 item 2: the imposter wins only when the
+final payment is missed; the first-payment Foreclosure Notice is not an imposter win. Doc 01 "Next season" and
+"Imposter mode" get this wording when P5-02 merges.
+**Why:** CEO, 2026-10-09: "yes to both".
