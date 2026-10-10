@@ -476,3 +476,10 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   packet sizes of a CEO real-voice clip. Owner: Network & Voice.
 - **`test_splice` short-clip message** reads "cut X before the tail at Y" even when X is past Y (wording only).
   Owner: Network & Voice.
+
+## Found at the P5-07 review (QA, 2026-10-09)
+
+- **CEO listen for the four P5-07 cues** (doc 08 s14 item 12): options B and C live in `assets/audio/alt/`, unloaded.
+  Owner: CEO, then Audio.
+- **No callers wired** for the four P5-07 cues. Handed to running rows: `ui_cosmetic_buy` P5-05,
+  `ui_season_start_sting` and `ui_trait_gained` P5-24, `ui_imposter_reveal` P5-25. Owner: Gameplay; P5-08 checks.

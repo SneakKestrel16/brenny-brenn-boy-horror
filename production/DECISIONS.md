@@ -1233,3 +1233,11 @@ because the cut landed in the 300 ms VAD hangover tail, so segment B was silence
 the first and last loud frame, the noise floor is the 10th-percentile packet, a spread guard cuts uniform clips at the
 middle, and the fallback is the middle of the loud span. A mutation back to `n >> 1` fails 9 checks.
 **Why:** QA PASS (handoffs/P5-19.md "QA re-review 2", probe of 13,902 VAD-shaped clips, 0 bad).
+
+### D-177 · 2026-10-09 · Director · P5-07 merged
+P5-07 (Phase 5 sounds: season-start sting, cosmetic purchase, trait gained, imposter reveal, splice join check)
+merged. The first review failed on D-149 sourcing (synth sounds); the author rebuilt all four from the FilmCow
+library with 3 options each. The re-check failed only on a DC step at the file edges; fixed, and the Director
+confirmed every file starts and ends on 0. No melody; all quieter than `ui_confirm`. The splice join check found
+Q-291, settled by P5-19 (D-176). The CEO listen (doc 08 s14 item 12) picks among options A to C.
+**Why:** QA (handoffs/P5-07.md "QA review", "QA re-check") plus the Director's edge check.

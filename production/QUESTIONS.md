@@ -1616,3 +1616,13 @@ The dev setting forces an imposter even below 4 players and with the toggle off,
 **Answer (Director, D-174):** accept. QA adds a `check_logs.py` rule treating a `forced: true` session like a `dev_toy` session (OPEN_ISSUES).
 ### Q-305 · 2026-10-09 · Gameplay (P5-11) -> Director · answered
 Reveal wording. CEO ruling 2026-10-09: the end reveal says who the imposter was AND whether they won or lost: "THE IMPOSTER WAS <name>. The imposter won." / "The imposter lost." / "There was no imposter." ("The farm held" dropped: wrong on a Harvest Moon loss card.) Built as ruled (`Imposter.line`). Shows under "THE SEASON IS OVER" in the final Dawn Report and on the Season Awards card, only when the toggle was on or a dev pick forced one.
+### Q-291 · 2026-10-09 · Audio Designer -> Network & Voice · answered
+`VoiceSplice.BREAK_QUIET_SHARE` 0.5 finds no silent frame in real TwoVoIP output (P5-07, doc 08 s10.8). Encoded
+synthetic clips: a silent frame is 24 to 25 bytes, speech 40 to 70, clip median 40.5 and 43, so silence is 0.58 to 0.62
+of the median and never at or under 0.5. Every lure falls back to the clip middle; the silence-gap path never runs
+on real encoder output. Proposal (inference): quiet = size at most 1.15 times the clip's smallest packet, else half the
+median (keeps the old rule as a floor). Cut-join measurements show no glitch either way. Settled by: a real-voice clip
+(microphone noise floor may not sit at the 25-byte size), or you changing the rule. `tools/audio/splice_join_capture.gd`
+prints the packet sizes (`info.json`).
+**Answer (Director, D-176):** P5-19 adopted the proposal with changes: 10th-percentile floor, search only between the first and last loud frame, spread guard. Constants stay placeholders until a CEO real-voice clip.
+

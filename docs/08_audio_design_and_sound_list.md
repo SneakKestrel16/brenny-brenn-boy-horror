@@ -666,6 +666,56 @@ the catalog rows carry the trims. `unit`/`max` for the new 3D rows are inference
   play `cre_jumpscare_hit_` + body (`creature_body` without `body_`), see `Soundscape.CATALOG`.
 - Not done: no caller wired for any new id (owners above).
 
+### 10.8 Phase 5 as built (P5-07)
+
+Four new UI cues for doc 02 s21 and s22 events, **rebuilt from real FilmCow recordings** (D-149) with
+`tools/audio/real_p5.py`: three options (A, B, C) each, A installed as the CATALOG file, B and C in `assets/audio/alt/`
+as `<id>_B.wav` and `<id>_C.wav` (not loaded by game code; to switch, copy the alt over `<id>.wav`). Unheard by the
+author: which option is best is the CEO's call by ear (section 14, item 12). Mono, 48 kHz, 16-bit, peak at most -1 dBFS,
+no music, no melody, no voice. A first pass of synthetic SuperCollider stand-ins was replaced and its `.scd` sources deleted.
+Added to `Soundscape.CATALOG`; **no caller is wired** (P5-04 season start, P5-05 store, P5-11 imposter own them).
+
+Level: each file is set so its loudness **at playback** (integrated LUFS plus the CATALOG trim) is -24.0 (sting),
+-25.0 (cosmetic), -26.0 (trait) and -24.0 (reveal) LUFS. `ui_confirm` plays at -21.7 LUFS (file -7.7 LUFS, trim -14 dB),
+so the sting and every other cue is quieter than the confirm (QA P5-07 asked for no louder). Meter readings, not ears.
+
+| File | Length | Caller (not wired) | A (installed) | B, C | Trim |
+|---|---|---|---|---|---|
+| `ui_season_start_sting` | 3.0 s | P5-04, when the new season's first day starts | `ding 3` at 0.5x speed under a low-passed `clothing movement 7` | B: `ding 1` at 0.6x, low-passed 2.5 kHz. C: `glass ding 8` at 0.4x over a low-passed `boxes knocked over 1` | -6 dB |
+| `ui_cosmetic_buy` | 1.0 s | P5-05, a hat or overalls bought (doc 02 s21.5) | `clothes ruffle 1` then `glass ding 5` at 1.2x | B: `clothing movement 3` and `glass ding 1`. C: `clothes ruffle 2` and `ding 3` at 1.5x | -6 dB |
+| `ui_trait_gained` | 1.6 s | P5-04, with the Dawn Report's `report_line` (doc 03 s22.1) | `glass ding 1` at 0.7x, a low dull ring; never says which trait | B: `glass ding 3` at 0.6x, low-passed 3 kHz. C: `ding 2` at 0.8x, low-passed 2.5 kHz | -10 dB |
+| `ui_imposter_reveal` | 1.8 s | P5-11, the season-end Dawn Report names the imposter (doc 02 s22.1) | `door knock 1` then `ding 1` at 0.4x, low-passed 2 kHz | B: `door knock 3` and a low-passed `boxes knocked over 1`. C: `door knock 2` then `glass ding 8` at 0.35x | -8 dB |
+
+Sources and licence: section 13.3 (FilmCow, D-149).
+
+- **Rules kept.** No melody and no music (section 2.1; the Phase 1 day music is never reused). The sting is a bell, not a
+  stinger: it is a UI cue on the `UI` bus and does not touch the creature state tells (section 5). Crows are not used.
+- **Season-end win or loss has no new cue**: the existing `ui_award_reveal` and `ui_stamp` stay (no doc 02 line asks for one).
+- **Splice join check (doc 03 s12.1, doc 06 "A lure").** `tools/audio/splice_join_capture.gd` encodes two 3 s windows of
+  a synthetic voice (`spikes/voice/make_test_wav.py`, kept outside the repo, seeds 1 and 2) with the same TwoVoIP
+  Opus encoder as `voice.gd` (24 kbps, RNNoise on), cuts them with `VoiceSplice.word_break` (or forced frames), plays
+  the splice through one `AudioStreamOpus` with the decoder not reset (as `creature.gd` does) and records the
+  decoded PCM from a capture bus. `tools/audio/splice_join_check.py` measures the join. Results, 48 kHz:
+
+  | Cut (clip A frame, clip B frame) | Join | step at join (max in +-10 ms) vs max elsewhere | >4 kHz energy at the join vs elsewhere | verdict |
+  |---|---|---|---|---|
+  | 75, 75 (what `word_break` returned) | silence to speech (clip A frame 75 lies in its silent gap, frames 25 to 84) | 0.0143 vs 0.0738 | 4.1e-4 vs median 1.8e-5, max 4.3 | no glitch measured |
+  | 12, 110 (forced, voiced to voiced) | mid-word to mid-word | 0.0135 vs 0.0681 | 9.6e-3 vs median 3.4e-4, max 4.2 | no glitch measured |
+  | 54, 48 (forced, gap middles) | silence to silence | 0 | 6.9e-7 vs median 5.8e-4 | no glitch measured |
+
+  **Not heard** (I cannot hear): "no glitch" means **no gross glitch**. The detector flags only a join louder than the
+  loudest speech in the clip, so a quiet click below about 0.07 (full scale 1.0) passes it.
+  Voiced-to-voiced joins have a level step (-28.6 to -36.7 dBFS in the 12/110 row), which is the two clips'
+  different levels, not a decoder artefact; a listener may still hear a splice as two voices. Decoder not reset
+  across the join is therefore **no gross problem measured** on this encoder. The ear check on real speech is the CEO's.
+- **Finding for `VoiceSplice.word_break` (Q-291).** In this encoder's output a silent frame is 25 bytes (24 to 25) and
+  speech is 40 to 70 bytes; the clip median is 40.5 (A) and 43 (B), so a silent frame is 0.62 and 0.58 of the median,
+  and `BREAK_QUIET_SHARE` 0.5 finds **no** silent frame in either clip. Both lures fell back to the clip middle
+  (frame 75), which is why the two e2e runs of P5-03 always cut mid-clip. Clip A has a silent gap of about 60 frames
+  from frame 24 and clip B one of 22 frames from frame 38 that the rule should have used. Proposed fix (inference): quiet
+  is a size at most 1.15 times the clip's smallest packet, else half the median. Settled by a real-voice clip; a
+  microphone's noise floor may not sit at the digital-silence size.
+
 ## 11. Sound list
 
 **Key.** `P` = DD Phase when needed (1 to 4, doc 01 "Build Plan"). `Bus`: Mu Music, S SFX, A
@@ -783,6 +833,7 @@ is generic farm stock and changes without touching the list shape.
 | `ui_click`, `ui_confirm`, `ui_deny` | U | M | 0.1 to 0.35 | no | 1 | short wood tick, up-chirp, down-chirp (sine) |
 | `ui_paper_slide`, `ui_paper_rustle` | U | M | 0.5 | no | 3 | `ui_paper_slide` **real** (section 13): one sheet scritching across wood (Dawn Report); `ui_paper_rustle` not built |
 | `ui_stamp` | U | M | 0.4 | no | 3 | stamp thump + paper |
+| `ui_season_start_sting`, `ui_cosmetic_buy`, `ui_trait_gained`, `ui_imposter_reveal` | U | M | 3.0, 1.0, 1.6, 1.8 | no | 5 | **real** (section 10.8, 13.3, P5-07): slowed ding and cloth, cloth and glass ding, low glass ding, door knock and low ding; options B and C in `alt/`; no caller wired |
 | `ui_rec_start`, `ui_rec_stop` | U | M | 0.25 | no | 2 | soft two-tone tally ticks (the recording light's audio, doc 01 "Recording light"; the live-clips tally is silent since D-146, so unused) |
 
 There is no Phase 1 score: doc 01 mentions only the chase sting (inference, see Q-032).
@@ -997,6 +1048,17 @@ All Freesound sources are CC0 1.0 (previews in `assets/audio/src/dl/`); FilmCow 
 | `ui_award_reveal` | 470710 I.fekry "traditional stamp.wav" + 709925 Squidems "Service bell louder" | stamp from 0.4 s; bell from 1.3 s at 0.3 s, gain 0.45 |
 | `ui_shop_bell` | 709925 Squidems "Service bell louder" | struck at 0 and 0.28 s |
 
+Phase 5 UI cues (P5-07), all FilmCow Recorded SFX (D-149: royalty-free, commercial use allowed, no credit needed, not for national government, law enforcement or hate-group projects, processed
+sounds may ship, the library itself is not redistributed; the library stays on the CEO's PC and is read in place). Built by
+`tools/audio/real_p5.py`; option A installed, B and C in `alt/` as `<id>_B.wav`, `<id>_C.wav`:
+
+| Sound | FilmCow files used (A / B / C) |
+|---|---|
+| `ui_season_start_sting` | A: `ding 3`, `clothing movement 7`. B: `ding 1`. C: `glass ding 8`, `boxes knocked over 1` |
+| `ui_cosmetic_buy` | A: `clothes ruffle 1`, `glass ding 5`. B: `clothing movement 3`, `glass ding 1`. C: `clothes ruffle 2`, `ding 3` |
+| `ui_trait_gained` | A: `glass ding 1`. B: `glass ding 3`. C: `ding 2` |
+| `ui_imposter_reveal` | A: `door knock 1`, `ding 1`. B: `door knock 3`, `boxes knocked over 1`. C: `door knock 2`, `glass ding 8` |
+
 **Alternates, not loaded by game code** (CEO: may switch later), in `assets/audio/alt/` under the same file names:
 `alt/sfx_animal_panic_02.wav` (pig panic option C: 352698 Jofae, angry squeal-grunt, 2.3-3.35 s) and
 `alt/sfx_animal_panic_03.wav` (cow panic option C: 194899 lolamadeus "Distressed Mother Cow and Calves.wav",
@@ -1037,6 +1099,13 @@ because these carry the game:
     the body (gaunt thin shriek, scarecrow hoarse and ragged, boar low bellow with chain, husk dry rattle and
     hollow wail)? Is the boar thud clearly the heaviest, the scarecrow and husk the lightest? Are the running
     steps (the approved ones, retimed per body) still right? The old `cre_jumpscare_hit` stays as the fallback.
+12. Phase 5 (P5-07), section 10.8, real FilmCow recordings, three options each (play the wavs in `assets/audio/`
+    for A and `assets/audio/alt/` for B and C; no caller yet), in this order: `ui_season_start_sting` (A, B, C: does a
+    slow low ding say "a new season, it is worse"? it is set quieter than `ui_confirm`), `ui_trait_gained` (unsettling
+    without naming a trait?), `ui_imposter_reveal` (does the knock plus a low ding read as wrong?), `ui_cosmetic_buy`
+    (a pleasant, small purchase sound, nothing scary). Pick one option per cue. Then the splice join: a day-4 lure with
+    a real voice (the two clips of one player, `lure_played` `segments` in the log) and listen for a click, a pitch hiccup or a level jump at the
+    cut; the measured result on a synthetic voice was no gross glitch (section 10.8; quiet clicks below about 0.07 are not detectable), a real voice settles it.
 
 ## 15. Gotchas
 

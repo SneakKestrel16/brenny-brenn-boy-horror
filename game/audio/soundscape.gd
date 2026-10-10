@@ -79,6 +79,10 @@ const CATALOG := {  # id -> variants, bus, unit_size, max_distance, volume_db (d
 	&"ui_stamp": {"n": 0, "bus": &"UI", "db": -10.0},
 	&"ui_award_reveal": {"n": 0, "bus": &"UI", "db": -8.0},
 	&"ui_shop_bell": {"n": 0, "bus": &"UI", "db": -4.0},
+	&"ui_season_start_sting": {"n": 0, "bus": &"UI", "db": -6.0},  # P5-07, no caller yet (doc 08 s10.8)
+	&"ui_cosmetic_buy": {"n": 0, "bus": &"UI", "db": -6.0},
+	&"ui_trait_gained": {"n": 0, "bus": &"UI", "db": -10.0},
+	&"ui_imposter_reveal": {"n": 0, "bus": &"UI", "db": -8.0},
 }
 ## Taint heartbeat (doc 08 sections 2.4, 8): "faint", local to the Tainted player only. Placeholder level.
 const TAINT_DB := -20.0  # CEO listens: -42 barely audible, then double (+6 dB) at listens 2 and 3
