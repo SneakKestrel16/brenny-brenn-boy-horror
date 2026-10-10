@@ -45,6 +45,7 @@ without a revert.
 | P5-58 | 3f748d8 | Dev pick of the creature body: --creature-body=<id>, host-only lobby dropdown (DevGate), console creaturebody | `git revert 3f748d8` |
 | P5-61 | f88ef4d | Every world sign is a plank board on posts; TOWN board moved onto the gate beam | `git revert f88ef4d` |
 | P5-57 | a6f4912 | Bots route round walls, do chores by default, open doors, follow the cart; Director fake-outs skip bots. Each switch is a flag in the bots record of data/ai_director.json | `git revert a6f4912` |
+| P5-64 | e8138ab | Barn sign board cut to a short summary, one fact per line, bigger font | `git revert e8138ab` |
 
 ## 3. Tests run and what we did
 
@@ -64,3 +65,4 @@ without a revert.
 - **P5-58 creature pick: Opus QA PASS.** QA fixed the body test script (it always exited 1) and made the console switch reach clients at once. On main: all four bodies PASS host + client, import 0 ERROR, parse_check 224/0, grep_rules clean. Open: --creature-body works without DevGate, like --body; body art is static (no rig).
 - **P5-61 signs: Opus QA PASS after a fix.** QA moved the TOWN board onto the gate beam so it no longer covers the BRENN FARM sign. On main: import 0 ERROR, parse_check 224/0, check_farm, test_lore, smoke PASS. Open: the FIELD A board faces east-west, so strip 2 corn hides it from the west.
 - **P5-57 bots and Director: Opus QA PASS.** 12-seed mean short at final payment 877 to 834, deaths 16 to 14; seed 3 is worse with it on (721 to 894); every 4-player bot season is still lost. No crashes in 12 serial seasons. P5-62 full test sweep is next.
+- **P5-64 barn sign: Opus QA PASS after a fix.** QA put back "The creature copies voices" (the core threat, doc 01). Import 0 ERROR, parse_check 225/0, grep_rules clean, smoke PASS. Open: blank lines between sections do not show on the board.
