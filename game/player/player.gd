@@ -58,7 +58,6 @@ var body_scale := 1.0  ## P5-10 dev toys (doc 01 "Dev toys"): shrink, 0.25; body
 var head_scale := 1.0  ## P5-10: big heads, 3.0
 var gravity_scale := 1.0  ## P5-10: low gravity
 var jump_ok := false  ## P5-10: low gravity also turns on a jump (Space); the game has no jump otherwise (inference, see doc 05 s25)
-var _head: MeshInstance3D  ## P5-10: made on first use
 var _toy_tw: Tween
 var _pushing := false  ## P4-32: locked to a festival cart handle slot (cart.push_slot)
 var _cart_yaw := 0.0  ## P4-32: the cart heading last frame, so the pusher turns with the route
@@ -178,10 +177,6 @@ func _apply_height(crouch: bool) -> void:
 	_shape.position.y = h / 2.0
 	_mesh.scale = Vector3.ONE * body_scale  # crouching is the farmer's crouch animation, not a squash
 	_mesh.position = Vector3.ZERO
-	if _head:
-		var s := head_scale * body_scale
-		_head.scale = Vector3.ONE * s
-		_head.position.y = h + 0.12 * s
 
 
 ## P5-10 dev toys (every peer, visual and collision size only; the host's speed check is untouched).
@@ -190,17 +185,10 @@ func set_body_scale(s: float) -> void:
 	_apply_height(crouching)
 
 
-## P5-10: a head sphere on the body, `s` times its size (1 hides it).
+## P5-10, P5-42: the farmer's own head (and hat) `s` times its size, through the head bone.
 func set_head_scale(s: float) -> void:
 	head_scale = s
-	if _head == null and s != 1.0:
-		_head = MeshInstance3D.new()
-		var sp := SphereMesh.new()
-		sp.radius = 0.18
-		sp.height = 0.36
-		_head.mesh = sp
-		add_child(_head)
-	_apply_height(crouching)
+	_mesh.set_head_scale(s)
 
 
 ## P5-10 disco: one frame of the dance at time `t` (bob 1.5 per second, a slow spin). Visual only; `dance_end` undoes it.
@@ -287,8 +275,6 @@ func _physics_process(delta: float) -> void:
 			ve.volume_db = _peer_gain_db()
 	_held.visible = not ghost
 	_animate(delta)
-	if _head:
-		_head.visible = head_scale != 1.0 and _mesh.visible
 	rotation.y = yaw
 	_cam.rotation.x = pitch
 	_eye = lerpf(_eye, (EYE_CROUCH if crouching else EYE_STAND) * body_scale, 1.0 - exp(-12.0 * delta))

@@ -15,6 +15,7 @@ var _overalls := Color(0, 0, 0, 0)  ## P5-05 cosmetic overalls colour; alpha 0 =
 var _stained := false  ## P5-23 Taint: sleeves stained
 var _overlay: Array[MeshInstance3D] = []
 var _att: BoneAttachment3D  ## P5-05 cosmetic hat on the `hat` bone
+var _head_mod: HeadScaler  ## P5-42: made on first use
 
 
 func _init(slot: int = 0) -> void:
@@ -93,6 +94,17 @@ func wear_hat(hat: Node3D) -> void:
 	skel.add_child(_att)
 	_att.bone_name = "hat"
 	_att.add_child(hat)
+
+
+## P5-42 (dev toy big heads): the head bone, and so the head texture and any hat, `s` times its size.
+func set_head_scale(s: float) -> void:
+	if _head_mod == null:
+		var sk := find_children("*", "Skeleton3D", true, false)
+		if sk.is_empty():
+			return  # no rig: nothing to scale
+		_head_mod = HeadScaler.new()
+		sk[0].add_child(_head_mod)
+	_head_mod.factor = s
 
 
 ## A looping animation (no-op when it already plays). `speed` scales it (crouch-walking plays `crouch` faster).

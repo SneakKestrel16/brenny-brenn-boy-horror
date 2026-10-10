@@ -1460,7 +1460,7 @@ Doc 01 "Hidden dev setting" and "Dev toys" (D-044, D-045, D-046). Code: `game/co
 | `disco` | 45 s (inference) | Mirror ball drops in over the host's player, generated music loop on the `Music` bus, four slow colour beams, every player dances (`Player.dance`), the creature gets a steady colour overlay (fully visible) and its parts bob and spin. |
 | `nuke` | 14 s (inference) | Warm slow glow, a mushroom cloud over the corn (middle of `World/CornBlockers`), a rumble; 1.2 s in, players ragdoll outward (`Player.ragdoll`, visual tumble and a camera roll, 4 s) and so do the creature's parts. No damage, no death, nothing destroyed. |
 | `low_gravity` | 60 s (doc 01) | The local player's gravity scale is 0.2 (placeholder). There is no jump in the base game, so while this runs Space jumps (`JUMP_V` 5 m/s); inference, the toy would otherwise only slow falls. |
-| `big_heads` | 60 s (inference) | Every player's `head_scale` 3 (a sphere head), and a `ToyHead` sphere on the creature. |
+| `big_heads` | 60 s (inference) | Every player's `head_scale` 3 (the head bone, see "Big heads (P5-42)"), and a `ToyHead` sphere on the creature. |
 | `confetti` | until dawn | A ripe-to-empty `plot_changed` (a harvest) pops confetti and a kazoo on every peer. |
 | `chicken` | until dawn | The host's tools squeak: each `hold_done` on the host broadcasts `squeak`, every peer plays a rubber-chicken squeak. |
 
@@ -1511,3 +1511,11 @@ The end reveal also plays `ui_imposter_reveal` (P5-07 cue) on every peer when th
 `msg <peer|name> <text>` (host only, logged `dev_command` and `dev_message`) sends the text to one peer: `Net.to_peers(&"apply_dev_message", [text], [peer])`, an authority-to-client reliable RPC, so no other peer receives it. The target's `DevConsole` shows it as an outlined label for 8 s at the bottom of the screen (the host shows its own locally). The peer argument resolves like every console peer argument (id, nth player, name prefix). A console message is a dev tool, not a gameplay surface.
 
 The console panel has a left column, the dev menu: a player picker (filled from `Game.players` each time the console opens), buttons for the common commands (`MENU` in `dev_console.gd`; `{p}` is the picked peer), and a message box with Send. A button runs the same command line through `DevConsole.run`, so the host-only rule, logging and replies are identical to typing; a client's buttons answer "host only". The typed console is unchanged. Test: `tests/net/test_p5_36_msg.gd` (3 peers: the named one shows the message, the other does not).
+
+### Dev console whisper (P5-43)
+
+`whisper [peer|name]` (host only like every console command; default: yourself) plays the creature's whisper scare (doc 03 section 13 "The whisper") on that one player. It runs `scare whisper <peer>`, so it goes through `Scares.fire(..., forced)` and `Scares._send` with the scare's `private` flag: the build-up and the whisper go only to the target (`Net.to_peers(&"apply_scare", args, [peer])`; the host emits locally only when it is the target), and the host logs `scare` (`private` true, `target`). The target's client logs `scare_applied`; no other peer does. The whisper needs a teammate's clip at least `COULD_NOT_BE_M` away (`Scares._voice`); when there is none the director drops the whisper (`fits` returns `no_teammate_clip`), and the console, which forces it, sends the whisper with no clip: the target gets the hush and the log line, silence where the voice would be, and the reply says so. The dev menu's `whisper` button runs `whisper {p}` for the picked player. Test: 3 headless peers, host `whisper 2; whisper 1; whisper 3`, a client `whisper 1` answers "host only"; each client logged one `scare_applied`.
+
+### Big heads (P5-42)
+
+The `big_heads` toy scales the farmer's own `head` bone (`FarmerBody.set_head_scale`, via `HeadScaler`, a `SkeletonModifier3D` that sets the bone's pose scale after the animation each frame), so the skinned head texture and the `hat` bone below it (cosmetic hats) grow together. It replaced a separate white sphere that floated over the real head and hid the hat. The creature's `ToyHead` sphere is unchanged.

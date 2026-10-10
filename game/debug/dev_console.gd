@@ -20,7 +20,7 @@ const MENU := [
 	["kill", "kill {p}"], ["respawn", "respawn {p}"], ["Taint", "taint {p}"], ["wash", "taint {p} off"],
 	["Shaken", "shaken {p}"], ["flag", "flag {p}"], ["whistle", "whistle {p}"], ["wave", "emote wave {p}"],
 	["lurk", "creature lurk {p}"], ["stalk", "creature stalk {p}"], ["chase", "creature chase {p}"],
-	["retreat", "creature retreat {p}"], ["jumpscare", "scare jumpscare {p}"], ["whisper", "scare whisper {p}"],
+	["retreat", "creature retreat {p}"], ["jumpscare", "scare jumpscare {p}"], ["whisper", "whisper {p}"],
 	["hallucination", "scare hallucination {p}"],
 ]
 const HELP := """Commands (host only unless marked):
@@ -53,6 +53,7 @@ const HELP := """Commands (host only unless marked):
   taint_source [kind]       leavings, dead_crow or strange_seeds 2 m north of you (default leavings)
   shaken [peer]             Shaken for taint.json's 60 s (default: you)
   msg <peer> <text>         show a text message on that player's screen only (P5-36)
+  whisper [peer|name]       P5-43: the whisper scare on that one player only (default: you)
   debug                     toggle the debug view (F3)
   clear                     clear this console (any peer)"""
 
@@ -491,6 +492,12 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 			else:
 				Net.to_peers(&"apply_dev_message", [text], [p])
 			return "sent to %d" % p
+		"whisper":  # P5-43: the director's whisper scare (doc 03 s13) on one player, through `scare` (private send)
+			var p := _peer_arg(a, 0)
+			if p == 0:
+				return "? whisper [peer|name]"
+			var reply := _host("scare", PackedStringArray(["whisper", str(p)]))
+			return reply + " (no teammate clip 25 m+ away to replay: hush and log only, silent where the director would drop it)" if "no_teammate_clip" in reply else reply
 		"debug":
 			var dv := main.get_node_or_null("DebugView")
 			if dv == null:
