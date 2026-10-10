@@ -9,7 +9,16 @@ extends RefCounted
 
 const BREAK_EDGE_FRAMES := 5  ## doc 03 s12.1 word break: 100 ms kept clear at each end of a clip (placeholder)
 const BREAK_MIN_FRAMES := 2  ## a silence gap is 40 ms or more (placeholder)
-const BREAK_QUIET_SHARE := 0.5  ## a frame is silent at half the clip's median packet size or less (placeholder)
+const BREAK_QUIET_SHARE := 0.5  ## a frame is silent at half the clip's median packet size or less (floor rule)
+## P5-19 (Q-291): a frame is also silent at up to 1.15 x the clip's noise floor. Measured on TwoVoIP output
+## (P5-07 review): silence 24-26 bytes, speech 40-70, median ~40-43, so the median rule alone never fired.
+const BREAK_FLOOR_SLACK := 1.15
+## The noise floor is the 10th-percentile packet, not the smallest, so one tiny (DTX) packet can't lower it.
+## Inference: a VAD clip carries 5 pre-roll + 16 hangover quiet frames, over 10% of a 150-frame clip.
+const BREAK_FLOOR_PERCENTILE := 0.1
+## The floor must be at most half the largest packet, else the clip has no silence to find (all speech, all
+## silence, every packet the same size): no frame is a break and the cut falls mid-clip.
+const BREAK_SPREAD := 0.5
 
 
 ## Segments to the spec string.
@@ -45,27 +54,39 @@ static func spec_ids(spec: String) -> Array:
 
 
 ## Doc 03 s12.1: the frame to cut a clip at, the word break: the middle of its longest interior silence gap,
-## else the middle of the clip. `sizes` are its Opus packet sizes. Inference: VBR Opus spends few bytes on
+## else the middle of its loud span (the middle of the clip if it has no silence at all). `sizes` are its Opus packet sizes. Inference: VBR Opus spends few bytes on
 ## silence, so packet size stands in for loudness (there is no PCM decoder here, doc 06 "A lure"); a
-## playtest listen settles it. The thresholds are placeholders. Always 1 to size - 1.
+## playtest listen settles it. A frame is silent near the clip's noise floor or under half its median,
+## whichever is larger (P5-19). Only gaps between the first and last loud frame count: the leading and trailing
+## quiet runs are the VAD pre-roll and hangover (doc 06 "A lure"), not word gaps. The thresholds are
+## placeholders. Always 1 to size - 1.
 static func word_break(sizes: PackedInt32Array) -> int:
 	var n := sizes.size()
 	if n < 2:
 		return 1
 	var sorted := sizes.duplicate()
 	sorted.sort()
-	var quiet: float = sorted[n >> 1] * BREAK_QUIET_SHARE
+	var floor_size: int = sorted[int(n * BREAK_FLOOR_PERCENTILE)]
+	if floor_size >= sorted[n - 1] * BREAK_SPREAD:  # >= so all-empty packets stop here too
+		return n >> 1
+	var quiet: float = maxf(floor_size * BREAK_FLOOR_SLACK, sorted[n >> 1] * BREAK_QUIET_SHARE)
+	var first_loud := 0
+	while sizes[first_loud] <= quiet:  # the spread guard leaves the largest packet loud
+		first_loud += 1
+	var last_loud := n - 1
+	while sizes[last_loud] <= quiet:
+		last_loud -= 1
 	var best_len := 0
 	var best_start := 0
 	var run := 0
-	for i in range(BREAK_EDGE_FRAMES, n - BREAK_EDGE_FRAMES):
+	for i in range(maxi(BREAK_EDGE_FRAMES, first_loud), mini(n - BREAK_EDGE_FRAMES, last_loud)):
 		run = run + 1 if sizes[i] <= quiet else 0
 		if run > best_len:
 			best_len = run
 			best_start = i - run + 1
 	if best_len >= BREAK_MIN_FRAMES:
 		return best_start + (best_len >> 1)
-	return n >> 1
+	return (first_loud + last_loud + 1) >> 1  # no gap: the middle of the speech, never inside the hangover
 
 
 ## The same rule as VoiceClips' clip ids.

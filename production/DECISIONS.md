@@ -1226,3 +1226,10 @@ on the second review. The first failed on strips reaching 0.8 m past their ends 
 Plot26; end points moved. The network is two groups, east and west, meeting across the open ground in front of the
 barn door: accepted, so the door lane stays clear. Doc 04 s14.2 wording corrected by the Director at merge.
 **Why:** QA PASS (handoffs/P5-21.md "QA re-review"); farm regenerates byte-identical on main.
+
+### D-176 · 2026-10-09 · Director · P5-19 merged
+P5-19 (`VoiceSplice.word_break` finds real silent frames, Q-291) passed QA on the third review. The first two failed
+because the cut landed in the 300 ms VAD hangover tail, so segment B was silence. The search now runs only between
+the first and last loud frame, the noise floor is the 10th-percentile packet, a spread guard cuts uniform clips at the
+middle, and the fallback is the middle of the loud span. A mutation back to `n >> 1` fails 9 checks.
+**Why:** QA PASS (handoffs/P5-19.md "QA re-review 2", probe of 13,902 VAD-shaped clips, 0 bad).

@@ -933,6 +933,20 @@ Doc 01 "Voice > Lures": "clips are sent to every peer at session start, so a lur
   through the chain; TwoVoIP has no standalone PCM decoder, so this is the only way to play a clip,
   and it is the same decode path as live voice. A splice resets nothing: the decoder runs across
   segment joins, which may add a faint glitch at each join (inference; heard in DD Phase 2).
+- **Word break (P5-19):** `VoiceSplice.word_break` cuts in the middle of a clip's longest silent
+  run of 2+ frames between its first and last loud frame, else in the middle of that loud span.
+  The leading and trailing quiet runs never count and never hold the cut: a live clip starts with
+  the VAD pre-roll (`PREROLL_FRAMES` 5) and ends with the hangover (`VAD_HANG_FRAMES` 15 plus the
+  `FLAG_TALK_END` frame), section 8. A short clip (25 frames, `CLIP_MIN_FRAMES`) cut at its plain
+  middle would land in the hangover. With no PCM
+  decoder, packet size stands in for loudness. A frame is silent at up to 1.15 x the clip's noise
+  floor (`BREAK_FLOOR_SLACK`), or at half its median (`BREAK_QUIET_SHARE`), whichever is larger.
+  The noise floor is the 10th-percentile packet (`BREAK_FLOOR_PERCENTILE`), so one tiny packet
+  can't lower it. A clip whose floor is at least half its largest packet (`BREAK_SPREAD`: all
+  speech, all silence, one size) has no break and is cut mid-clip. Measured on
+  TwoVoIP output at the P5-07 review: silence 24-26 bytes, speech 40-70, median about 40-43, so
+  the median rule alone never fired. Inference: a real microphone's noise floor may encode above
+  25 bytes and narrow the gap to speech; a real-voice clip's packet sizes settle it.
 - **Tests (P5-03):** `tests/net/test_splice.gd` checks the segment list and the word break;
   `tests/net/test_p5_03_e2e.gd` is the two-instance run (its header has the `multi.py` command):
   the host's synthetic `--voice-wav` voice cuts live clips, a day-4 lure in that voice is spliced,

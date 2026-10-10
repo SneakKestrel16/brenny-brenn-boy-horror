@@ -469,3 +469,10 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 - **ToHouse1 runs over props** (older than P5-21): the Farmhouse sign post (0.53 m) and the Windpump mast (0.25 m)
   stand on the strip. Owner: Level.
 - **Prize Pumpkin path ends on bare grass** until the patch is planted. Owner: Level (cosmetic).
+
+## Found at the P5-19 review (QA, 2026-10-09)
+
+- **Word-break constants are placeholders**: `BREAK_FLOOR_SLACK`, `BREAK_FLOOR_PERCENTILE`, `BREAK_SPREAD` wait on the
+  packet sizes of a CEO real-voice clip. Owner: Network & Voice.
+- **`test_splice` short-clip message** reads "cut X before the tail at Y" even when X is past Y (wording only).
+  Owner: Network & Voice.
