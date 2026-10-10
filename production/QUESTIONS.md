@@ -1332,3 +1332,23 @@ still list a "no live clips" lobby toggle; P4-37 did not build it. Inference: st
 player's own Off cover it. Settled by: the CEO keeping or dropping the toggle.
 Also open: the 0.5 s minimum clip length (`CLIP_MIN_FRAMES` 25, `game/voice/voice.gd`) is a
 placeholder; a playtest settles it.
+
+### Q-245 · 2026-10-09 · QA -> Director · open
+P4-37 review. D-011's last clause ("a capturing machine never plays Off players' voices during
+capture") is replaced in code by dropping any live clip cut while an Off player's voice plays on this
+machine (`game/voice/voice.gd` `_off_voice_playing`, log `live_clip_dropped` `off_voice`). No
+DECISIONS entry records the change. Measured: 2 instances, clean settings, host Off on a looping
+`--voice-wav`: the client cut 0 clips and dropped 65 (`logs/qa/p437_qa_e`). So one Off player on
+open mic can starve every other player's clips. The guard also counts an Off emitter that is talking
+but out of earshot (inference: conservative, not measured). Settled by: a Director decision
+amending D-011, and a playtest reading of how often clips survive with an Off player present.
+
+### Q-246 · 2026-10-09 · QA -> Director · open
+P4-37 review. Test runs share the real `user://settings.cfg`
+(`%APPDATA%/Godot/app_userdata/Brenny Brenn Boy Horror/settings.cfg`). The P4-37 run `p437_d`
+(`--voice-off-after`) calls `Game.set_voice_setting("off")`, which saves; the file now holds
+`voice_setting="off"` (modified 18:59), so the CEO's next session starts Off (Off correctly stays
+Off under the D-146 migration). The same file mutes two profile uids (`voice_peer_volume` 0.0); that
+mute hid the host's Off voice in the P4-37 evidence run `p437_c`, which is why no clip was dropped
+there. Asks: tell the CEO or reset `voice_setting` in that file (outside every worktree); QA will make
+automated multi-instance runs use a scratch `APPDATA` (as `logs/qa/p437_qa_e` and `_f` did).

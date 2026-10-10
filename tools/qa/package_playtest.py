@@ -63,8 +63,8 @@ START_HERE = """Brenny Brenn Boy Horror: playtest build {build_id} (gray box, no
 Controls: W A S D move, mouse look, Shift sprint, C crouch, hold X stand still, hold E interact,
 left/right mouse use tool, G drop, F lantern, Q whistle, V push to talk, F3 debug (host), Esc pause.
 
-Your voice setting (Off or Lobby lines) is on your machine and you can change it any time.
-Anything the game keeps of your voice stays on your disk; Off deletes it.
+Your voice setting (Off or Live clips) is on your machine and you can change it any time.
+Live clips keeps 3 s clips of your in-match speech in memory for this session only; Off deletes them.
 
 More: TESTER BRIEF.md. Third-party licenses: licenses/ (TwoVoIP, libopus, RNNoise, SpeexDSP, godot-cpp).
 """

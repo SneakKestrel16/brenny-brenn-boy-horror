@@ -34,7 +34,7 @@ line plus the flags). The short season has no lobby pick (OPEN_ISSUES "Found at 
 
 - [ ] Build: the zip from `uv run tools/qa/package_playtest.py` (build id printed, goes in the notes).
       Others run `Join.bat` plus the host's Tailscale address (D-024).
-- [ ] Real mics; do not pass `--voice-setting=off`. Everyone records lobby lines in the barn.
+- [ ] Real mics; do not pass `--voice-setting=off`. Live clips is the default (D-146); nobody records in the barn.
 - [ ] Headphones on every tester (model noted, Windows spatial sound off).
 - [ ] Consent asked for any recording. Notes say "tester A/B/C/D", never names.
 - [ ] Observer: `uv run tools/qa/playtest.py new --session <n> --networks different --fresh B --smoke`;
