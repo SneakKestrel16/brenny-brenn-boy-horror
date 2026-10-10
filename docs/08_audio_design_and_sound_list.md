@@ -950,6 +950,34 @@ No husk source pulses at 14 to 22 Hz on its own (envelope peaks 3 to 8 Hz; the r
 every husk option is levelled and shaken at 17 to 19 Hz in code (section 6 rule; measured env peak 17.0 to 19.0 Hz
 against 3.4 Hz for the corn stand-in).
 
+### 13.3 Real-recording options for animals, items, radio and UI (D-149): candidates, not yet picked
+
+CEO direction D-149: base every animal and item sound on its real-life counterpart. Three options per sound were
+cut from real recordings by `tools/audio/real_animals_items.py` into `logs/listen/real_items/` (git-ignored); none
+is installed, and the generated `.scd` versions stay current until the CEO picks. The full per-option table (cuts,
+filters, descriptions) and the listening order are in `production/handoffs/real_items.md`. Sources:
+
+- **FilmCow Recorded SFX** (library approved in D-149): footstep dirt, footstep grass and leaves, footstep leaves,
+  body fall, body fall with lots of bass, crashing through debris, land in dirt, land in leaves, clothes ruffle,
+  clothing movement, flag, glass clink, air duster, beep, tube tv turn off, light switch off, mouse click, switch
+  press, knob clicky turn, ding, glass ding, clicky button, door knock, punch soft thud, table hit.
+- **Freesound, CC0 1.0** (each page checked, remix chains included; `https://freesound.org/s/<id>/`):
+  animals 456803 Breviceps, 316920 and 316921 Rudmer_Rotteveel, 494613 roboroo, 232495 tom_woysky,
+  158746 and 163727 felix.blume, 652361 nomerodin1, 442906 qubodup (remix of 352698), 352698 Jofae,
+  344972 mrmunk, 260640 TheAcidRomance, 59245 Zozzy, 401636 Mystikuum, 513565 spurioustransients,
+  827111 TheKingOfGeeks360, 194899 lolamadeus; items 163455 LeMudCrab, 404434 Duesenbert, 151713 bowlingballout,
+  348766 and 348767 frankelmedico, 316682 Alex_hears_things, 635488 kyles, 577320 TRP, 389687 Shamewap,
+  644245 fractionalist, 278203 ThePriest909 (from CC0 83374, 83454), 752070 qubodup (from CC0 38747, 426774,
+  752065), 461697 and 504626 leonelmail, 853591 Wigglesworth, 242867 Reitanna, 204531 peridactyloptrix,
+  255835 neild101, 35397 marvman, 568995 strongbot, 452633 kyles, 682127 HenKonen, 613567 zazz.sound.design,
+  543685 Nox_Sound, 523273 MrFossy, 521589 Fission9; radio 154654 crcavol, 760245 and 760335 LukaCafuka,
+  110739 clesquir, 454259 kyles, 701314, 701326 and 701327 SEF7, 612722 3questionmarks, 524205 JovianSounds,
+  47646 ReadeOnly; UI 847350 ilyaShevelev, 223343 jalastram, 336481 Faulkin, 470710 I.fekry, 448474 eddies2000,
+  683031 mpuffenbarger, 709925 Squidems, 57743 3bagbrew, 192761 ryuuzan.
+
+No voices (the radio options are static, squelch and tones only); lantern options A and B hold a person's breath,
+no vocalisation. When the CEO picks, each installed sound gets a row in the section 13 table.
+
 ## 14. Listening list for the CEO
 
 Everything is generated; I cannot hear any of it, so each new sound is for you to listen to. The doc
