@@ -125,3 +125,4 @@ Install all picks in one batch after the listen. Use the steps under "Installing
 | scarecrow jumpscare (`cre_jumpscare_hit_scarecrow`) | C | |
 | boar jumpscare (`cre_jumpscare_hit_boar`) | B | |
 | husk jumpscare (`cre_jumpscare_hit_corn_husk`) | C | |
+| gnaw (`cre_gnaw`) | B | |
