@@ -32,15 +32,15 @@ func _ready() -> void:
 	_root.add_child(center)
 	var box := VBoxContainer.new()
 	box.custom_minimum_size.x = minf(820.0, get_viewport().get_visible_rect().size.x - 2.0 * UiText.MARGIN)  # P5-44
-	box.add_theme_constant_override(&"separation", 10)
+	box.add_theme_constant_override(&"separation", 6)
 	center.add_child(box)
-	_label(box, TITLE, 56, Color(0.95, 0.8, 0.4))
-	_label(box, "THE SITUATION", 26, Color(0.8, 0.5, 0.4))
-	_label(box, SITUATION, 24, Color(0.92, 0.9, 0.85))
-	_label(box, "THE GOAL", 26, Color(0.8, 0.5, 0.4))
-	_label(box, GOAL, 24, Color(0.92, 0.9, 0.85))
-	_label(box, HINT, 20, Color(0.7, 0.7, 0.65))
-	_label(box, SKIP, 20, Color(0.95, 0.8, 0.4))
+	_label(box, TITLE, 44, Color(0.95, 0.8, 0.4))
+	_label(box, "THE SITUATION", 22, Color(0.8, 0.5, 0.4))
+	_label(box, Lore.text(&"intro") + "\n\n" + SITUATION, 20, Color(0.92, 0.9, 0.85))  # P5-48: doc 11 s6.2, one line of history first
+	_label(box, "THE GOAL", 22, Color(0.8, 0.5, 0.4))
+	_label(box, GOAL, 20, Color(0.92, 0.9, 0.85))
+	_label(box, HINT, 17, Color(0.7, 0.7, 0.65))
+	_label(box, SKIP, 17, Color(0.95, 0.8, 0.4))
 	Game.console_open = true  # game keys off while the card is up (as the pause menu)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	Log.event(&"intro_shown", {})

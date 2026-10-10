@@ -364,7 +364,7 @@ copy come from doc 03 s17. Art spec:
 
 - **Paper.** A cream sheet `#E8DCC0` with a subtle fibre texture, slightly rotated 0.5 degrees, a
   fold line across the middle, a dark vignette from the card to the screen edge. `mat_paper`.
-- **Masthead.** "THE HARROW COUNTY GAZETTE" in a bold slab serif at the top (name is a
+- **Masthead.** "THE HALVERS CREEK COURIER" in a bold slab serif at the top (name is a
   `placeholder` for the Game Designer's town name), a thin rule under it, the date as "Day N" and
   the weather.
 - **Sections in order** (doc 01 "Dawn Report"): cash-in, bill, payment, farm damage; then Best

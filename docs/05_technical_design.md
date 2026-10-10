@@ -892,6 +892,27 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   message with a `season` flag. The awards list is doc 03 section 16's.
 - No audio of a player's real voice is kept by either screen (doc 01 "Voice settings > Storage").
 
+### Lore in game (P5-48, doc 11)
+
+All lore text lives in `data/lore.json` (table `lore`, schema `lore.schema.json`, every record `source: "placeholder"`),
+registered in `Data.TABLES`. Records: `masthead`, `intro`, `road_sign`, `notes` (10 verb notes), `archive` (21 clippings),
+`win` (3 lines). Text only: no captions, no voice, no rule (doc 11 s1). Every peer reads the same file; nothing is synced.
+
+- `game/ui/lore.gd` (`Lore`, statics): `text(id)`, `clipping(season, day, tenants)`, `archive_index()`, `win_lines()`,
+  `tenant_names()`. The clipping for a dawn is `posmod((season-1)*7 + (day-1), 21)`, so season 1 day 1 is clipping 1,
+  season 2 day 1 is clipping 8, and it repeats after 21. `{tenants}` (the last clipping) becomes the team's names.
+- `game/world/lore_props.gd` (`LoreProps`, added in `main.gd` and `farm_view.gd`): no floating words (CEO 2026-10-10). Every
+  note is a thin paper box (`MeshInstance3D`, sized from the wrapped text) with a non-billboard `Label3D` lying on its
+  face. A note record is `anchor` (node path under the farm scene), `offset` (x/z metres from the anchor, y height above
+  ground), `facing` (yaw degrees, 0 faces +z, 180 faces -z, 90 faces +x, -90 faces -x) and `mount`: `wall` (card pinned flat
+  on a wall) or `post` (card on a wooden stake from the ground), plus an optional `width` (card wrap width in metres, default 1.5). A moved prop moves its note (the well, P5-47); a missing
+  anchor logs a warning and skips. The road sign is two boards (the BRENN FARM title over the bank notice) on two posts at
+  the lane centre (`road_sign.at` in `lore.json`, with `notice_y`, `title_y`, `post_top`, `post_half`), above the corn, facing the gate. Notes have a 7 m visibility range. It does nothing when the farm has no
+  `World/Buildings/Barn` (Phase 1 farm).
+- UI: `intro_card.gd` puts `Lore.text(&"intro")` above the situation; `dawn_report.gd` uses the masthead and appends a
+  "FROM THE ARCHIVE" block as the last pending section; `season_awards.gd` draws `Lore.win_lines()` on the campaign win.
+- Test: `tests/gameplay/test_lore.tscn` (a scene, because `Lore` reads the `Data` autoload).
+
 ## 16. Menus and settings
 
 - **Menus** (`game/ui/`): main menu (Host, Join, Settings, Quit), menu lobby (a menu screen over a

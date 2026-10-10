@@ -3,7 +3,7 @@
 Who the Brenny Brenn Boy is, why the farm works the way it does, and where players find the story.
 
 **Status:** `placeholder` for CEO review. Every name, date and line here is a starting draft. Source: the CEO,
-2026-10-10 ("work it in however you want"). Delivery in game is task P5-48.
+2026-10-10 ("work it in however you want"). Delivery in game is task P5-48: text in `data/lore.json`, see doc 05 "Lore in game".
 
 ## Contents
 

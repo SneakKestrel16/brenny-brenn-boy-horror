@@ -1,0 +1,85 @@
+{
+  "table": "lore",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "masthead",
+      "source": "placeholder",
+      "cite": "doc 11 s5, s7 item 1 (town name open): the Dawn Report's paper",
+      "text": "THE HALVERS CREEK COURIER"
+    },
+    {
+      "id": "intro",
+      "source": "placeholder",
+      "cite": "doc 11 s6.2: one line at the start of THE SITUATION on the intro card",
+      "text": "The last family to own this farm was the Brenns. That was 1958."
+    },
+    {
+      "id": "road_sign",
+      "source": "placeholder",
+      "cite": "doc 11 s6.1: the sign at the farm gate; the title is the faded old paint, the notice is stencilled over it",
+      "title": "BRENN FARM",
+      "at": [110.0, -5.0],
+      "notice_y": 3.6,
+      "title_y": 5.15,
+      "post_top": 5.8,
+      "post_half": 2.0,
+      "notice": "LEASED BY FARMERS & MERCHANTS BANK OF HALVERS CREEK.\nNO TRESPASSING AFTER DARK."
+    },
+    {
+      "id": "notes",
+      "source": "placeholder",
+      "cite": "doc 11 s6.3: one note per verb, pinned where the verb is first met. anchor = node path under the farm scene (so a moved prop moves its note); offset = x, z metres from the anchor, y = height above the ground; facing = degrees, 0 faces +z, 180 faces -z, 90 faces +x; mount = wall (a card on a real wall) or post (a card on its own stake); child = the one note in a child's hand",
+      "notes": [
+        {"id": "pegboard", "anchor": "Buildings/ToolShed/Pegboard", "offset": [-1.65, 2.2, 0.32], "facing": 180, "mount": "wall", "width": 1.5, "text": "Every hook gets a trap. Empty outline means it's out there. If it's not on the board, it's in the corn. — Jeremy"},
+        {"id": "shed_door", "anchor": "Buildings/ToolShed/Door", "offset": [2.32, 1.2, -0.19], "facing": 180, "mount": "wall", "width": 1.1, "text": "Kneel still and take your time with them. They don't care who steps in. — Jeremy"},
+        {"id": "well", "anchor": "Props/Well", "offset": [2.2, 1.5, -0.5], "facing": 180, "mount": "post", "text": "Wash up before supper. Whatever's on your hands, the corn can follow it. Pump's loud. — Jill"},
+        {"id": "generator", "anchor": "Props/Generator", "offset": [-2.4, 1.5, 0.0], "facing": 0, "mount": "post", "text": "Keep it running. It don't come in where the lights are. — Jeremy"},
+        {"id": "fuel_drum", "anchor": "Props/FuelDrum", "offset": [0.3, 1.4, -1.5], "facing": 180, "mount": "post", "text": "Drum's full. The walk's the hard part."},
+        {"id": "town_stand", "anchor": "Props/TownStand", "offset": [-1.0, 1.5, -2.4], "facing": -90, "mount": "post", "text": "Turnips sell steady. Count your coins twice. Pa says the bank does. — Julia"},
+        {"id": "barn_door", "anchor": "Buildings/Barn/Door", "offset": [4.2, 1.8, 0.19], "facing": 0, "mount": "wall", "text": "Bell rings three, everybody in."},
+        {"id": "moonflowers", "anchor": "Props/MoonflowerBed", "offset": [0.0, 1.5, 3.0], "facing": 0, "mount": "post", "text": "Pick the white ones at night. Don't leave any standing till morning. — Jill"},
+        {"id": "pumpkin", "anchor": "Props/PrizePumpkin", "offset": [0.0, 1.5, -2.8], "facing": 180, "mount": "post", "text": "Water her every day. Somebody sit out with her on a night or two. Something's been at her. — Jeremy"},
+        {"id": "whistle", "anchor": "Buildings/ToolShed/Pegboard", "offset": [1.65, 2.2, 0.32], "facing": 180, "mount": "wall", "width": 1.5, "child": true, "text": "two short wissels and Brenny comes runing. he cant do that one. — Brynlee"}
+      ]
+    },
+    {
+      "id": "archive",
+      "source": "placeholder",
+      "cite": "doc 11 s6.4: one clipping per dawn, in order across the campaign (season 1 = clippings 1-7, season 2 = 8-14, season 3 = 15-21), repeating after 21. {tenants} = the current players' names",
+      "clippings": [
+        {"head": "COURIER, SEPT. 2", "text": "Brenn farm takes blue ribbon for turnips at the county stand for a second year running."},
+        {"head": "COURIER, SEPT. 9", "text": "Letters to the editor: a reader asks the Brenn boy to stop calling her name from the corn as she drives past."},
+        {"head": "COURIER, SEPT. 16", "text": "Jeremy Brenn reports hogs at his crops and says he has \"made arrangements.\""},
+        {"head": "COURIER, SEPT. 23", "text": "Farmers & Merchants Bank reminds county borrowers that payments fall due at the Harvest Moon."},
+        {"head": "COURIER, SEPT. 30", "text": "Kids at the town stand sent home for singing a rhyme about a neighbour's boy:\nBrenny Brenn, Brenny Brenn,\ntalks like everybody's friend.\nCall your ma and she'll say \"where?\"\nBrenny Brenn's already there."},
+        {"head": "COURIER, OCT. 7", "text": "Brenn prize pumpkin \"the size of a wash tub,\" say neighbours."},
+        {"head": "COURIER, OCT. 14 (festival edition)", "text": "Harvest Moon festival. Brenn pumpkin judged Medium. The family left early."},
+        {"head": "COURIER, OCT. 15", "text": "BRENN BOY MISSING. Brennen Brenn, 9, last heard in the family's corn on festival night."},
+        {"head": "COURIER, OCT. 16", "text": "Searchers report voices in the Brenn corn. Each says it was their own name, called by someone they knew. One heard a little girl, though Brynlee Brenn was home in bed."},
+        {"head": "COURIER, OCT. 17", "text": "Sheriff: \"The corn out there is thicker than anybody remembers planting.\""},
+        {"head": "COURIER, OCT. 18", "text": "Jeremy Brenn tells the Courier he heard the boy that night. \"I thought he was doing voices.\""},
+        {"head": "COURIER, OCT. 21", "text": "Search called off for the harvest. The church will ring its bell three times at dusk \"until he comes in.\""},
+        {"head": "COURIER, OCT. 22", "text": "Farmers & Merchants Bank takes possession of the Brenn farm."},
+        {"head": "COURIER, NOV. 3", "text": "The Brenns leave Halvers Creek. Jill Brenn asks that someone keep the well pump working. Julia Brenn, 14, asks that the church keep ringing the bell."},
+        {"head": "COURIER, 1961", "text": "Brenn farm leased for the season. The tenants leave before the festival."},
+        {"head": "COURIER, 1967", "text": "Bank tries to clear the Brenn corn with a hired crew. Work stops on the first day."},
+        {"head": "COURIER, 1974", "text": "A tenant reports a farmhand at the corn edge, wearing his own hat, while he was at the stand."},
+        {"head": "COURIER, 1983", "text": "Letters: \"Why does the church still ring at dusk?\" The pastor's answer is two words: \"Just in case.\" The next week a letter from Julia Brenn, now of the city, thanks the church for not stopping."},
+        {"head": "COURIER, 1990s", "text": "The bank's lease terms for the Brenn farm, unchanged since 1958: seven days, payment due at the Harvest Moon."},
+        {"head": "COURIER, UNDATED", "text": "A child's drawing found in the shed, signed \"Brynlee\": a boy in the corn and a family in a lit barn. Nobody in the drawing is looking at the corn except the smallest girl."},
+        {"head": "COURIER, TODAY", "text": "New tenants at the Brenn farm: {tenants}. The bell will ring at dusk."}
+      ]
+    },
+    {
+      "id": "win",
+      "source": "placeholder",
+      "cite": "doc 11 s6.5: the card after season 3 is paid off (D-155); doc 11 s7 item 4 (the last line) open",
+      "lines": [
+        "THE FARM IS YOURS.",
+        "The deed lists the last owner: Jeremy Brenn, 1958.",
+        "At dusk the bell rings three times. Out in the corn, somebody whistles: two short."
+      ]
+    }
+  ]
+}

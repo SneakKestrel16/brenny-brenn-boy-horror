@@ -36,6 +36,7 @@ func _ready() -> void:
 			_target = int(a.trim_prefix("--view-frames="))
 	_cam = Camera3D.new()
 	add_child(_cam)
+	add_child(LoreProps.new())  # P5-48: the gate sign and notes (needs the Data autoload, as in the game)
 	_cam.global_position = v
 	_cam.rotation_degrees = Vector3(pitch, yaw, 0.0)
 	_cam.make_current()

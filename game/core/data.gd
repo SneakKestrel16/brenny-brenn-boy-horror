@@ -8,7 +8,7 @@ const TABLES: Array[StringName] = [&"season", &"labor", &"crops", &"pumpkin", &"
 		&"player_scaling", &"difficulty", &"store", &"ramp_up", &"traps", &"taint", &"roles",
 		&"creature", &"sabotage", &"ai_director", &"voice_lines", &"dawn_report_templates", &"rejoin_lines",
 		&"next_season", &"creature_traits", &"cosmetics", &"quirks", &"imposter",
-		&"emotes"]  # Phase 5 (P5-04 registers all five; P5-45 the emote list)
+		&"emotes", &"lore"]  # Phase 5 (P5-04 registers all five; P5-45 the emote list)
 ## Phase 1 content: loaded only with --phase1 (P1-01 handoff; Director approval pending).
 const PHASE1_TABLE := &"phase1"
 ## Must exist for Phase 1 (P1-01 wrote these). The rest load when present.

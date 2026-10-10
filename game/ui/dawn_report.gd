@@ -145,7 +145,7 @@ func _show(report: Dictionary) -> void:
 	for c in _box.get_children():
 		c.queue_free()
 	_pending.clear()
-	_label("THE HARROW COUNTY GAZETTE", 30, INK, HORIZONTAL_ALIGNMENT_CENTER)
+	_label(Lore.text(&"masthead", "THE HALVERS CREEK COURIER"), 30, INK, HORIZONTAL_ALIGNMENT_CENTER)
 	_label("Season %d  Day %d" % [int(report.get("season", 1)), int(report.day)], 16, INK, HORIZONTAL_ALIGNMENT_CENTER)
 	if not String(report.get("trait_line", "")).is_empty():
 		_label(report.trait_line, 15, RED_INK, HORIZONTAL_ALIGNMENT_CENTER)
@@ -178,6 +178,15 @@ func _show(report: Dictionary) -> void:
 				_label(r.off_text, 15, Color(INK, 0.7), HORIZONTAL_ALIGNMENT_LEFT, v)  # doc 01: text for Off players
 		_pending.append([v, s.replays])
 		replays += s.replays.size()
+	var clip := Lore.clipping(int(report.get("season", 1)), int(report.day), Lore.tenant_names())  # P5-48: doc 11 s6.4
+	if not clip.is_empty():
+		var a := VBoxContainer.new()
+		a.modulate.a = 0.0
+		_box.add_child(a)
+		_label("FROM THE ARCHIVE", 14, Color(INK, 0.7), HORIZONTAL_ALIGNMENT_LEFT, a)
+		_label(clip.head, 13, Color(INK, 0.7), HORIZONTAL_ALIGNMENT_LEFT, a)
+		_label(clip.text, 14, Color(INK, 0.85), HORIZONTAL_ALIGNMENT_LEFT, a)
+		_pending.append([a, []])
 	if report.get("final", false):  # the last dawn: the season is over (the Season Awards screen is not built)
 		_label("THE SEASON IS OVER", 20, RED_INK, HORIZONTAL_ALIGNMENT_CENTER)
 		if String(report.get("imposter_line", "")) != "":

@@ -26,6 +26,7 @@ func _ready() -> void:
 	doors.name = "Doors"
 	add_child(doors)
 	add_child(BarnSign.new())  # P5-34: the how-to-play signboard in the barn (game/world/barn_sign.gd)
+	add_child(LoreProps.new())  # P5-48: the gate sign and the 1958 notes (game/world/lore_props.gd)
 	add_child(WorldProps.new())  # P5-27: window glow, road lamps, perched crows (game/core/world_props.gd), after Generator
 	var taint := Node.new()  # P3-07: who is Tainted, and the Taint sources on the ground
 	taint.set_script(load("res://game/player/taint.gd"))

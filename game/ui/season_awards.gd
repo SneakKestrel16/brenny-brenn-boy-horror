@@ -151,7 +151,9 @@ func show_card(res: Dictionary) -> void:
 	if lost:
 		_label("Nothing carries over.", 14, INK, HORIZONTAL_ALIGNMENT_CENTER)  # placeholder copy
 	elif Game.season_no >= Campaign.seasons_max():
-		_label("The farm is yours. The campaign is over.", 14, INK, HORIZONTAL_ALIGNMENT_CENTER)  # placeholder copy
+		var win := Lore.win_lines()  # P5-48: doc 11 s6.5, the deed and the bell
+		for i in win.size():
+			_label(win[i], 20 if i == 0 else 14, INK, HORIZONTAL_ALIGNMENT_CENTER)
 	elif Game.is_host():  # P5-04 (doc 01 "Next season"): the host starts it
 		var n := Button.new()
 		n.text = "Start season %d" % (Game.season_no + 1)
