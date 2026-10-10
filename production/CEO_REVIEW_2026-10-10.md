@@ -49,6 +49,7 @@ without a revert.
 | P5-64 | e8138ab | Barn sign board cut to a short summary, one fact per line, bigger font | `git revert e8138ab` |
 | P5-63 | a3c14a0 | Pen fence corners and building walls no longer overlap; watering and fuel cans sit on the ground | `git revert a3c14a0` |
 | P5-66 | 669f05e | A ghost can fly the crow it possesses (move keys and look); it flies home when time runs out | `git revert 669f05e` |
+| P5-67 | 0a69d46 | Wordless 26 s intro cutscene (gate, yard, pumpkin, a shape in the corn, title) replaces the start text | `git revert 0a69d46` |
 
 ## 3. Tests run and what we did
 
@@ -72,3 +73,4 @@ without a revert.
 - **P5-62 full sweep: 110 of 111 pass.** Fail: the P5-58 screenshot script frames day corn instead of the creature (filed, test only). Three stale tests fixed. Still owed: a run from a cleared .godot cache, which needs your game closed.
 - **P5-63 walls and cans: Opus QA PASS after a fix.** The "walls clipping" was the pen fence corners (overlapping posts); building corners overlapped only in hidden collision. QA closed a gap the fix opened at the south pen corners. Cans now measured at ground level in a running game. All farm, door and smoke checks PASS.
 - **P5-66 crow flight: Opus QA PASS after fixes.** QA proved real key steering on a client (no test bypass), blocked a bad-data steer from a modified client, and checked ending at time-out, quit and dawn. Open: a player who joins mid-flight does not see that crow.
+- **P5-67 intro: Opus QA PASS after a fix.** A player rejoining mid-season got the whole intro; fixed. Note for you: every shot is in daylight, so the only scare is the brief shape in the corn and its sound. Say if you want it at dusk.
