@@ -186,3 +186,8 @@ was first built with a whole-file gate and came out silent for A and B; it is no
 | step_wood | A | |
 | emote_cloth | C | |
 | ragdoll_thud | A | |
+| radio_static_loop | C | |
+| crackle_loop | B | |
+| radio_squelch_on | C | |
+| radio_squelch_off | A | |
+| radio_low_battery | B | |
