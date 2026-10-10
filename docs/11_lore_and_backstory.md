@@ -128,7 +128,7 @@ All text, all optional, all diegetic. A team can win three seasons without readi
 | Where | What | Owner | Needs |
 |---|---|---|---|
 | Road sign at the farm gate (`prop_road_sign`) | "BRENN FARM", painted over with the bank's lease notice | 3D Artist / Gameplay | Texture or Label3D |
-| Intro card (`intro_card.gd`) | One line of history in THE SITUATION | Gameplay | Text change |
+| Intro cutscene (`intro_card.gd`) | Wordless since P5-67: the gate sign (6.1) is its first shot; the 6.2 line is unused | Gameplay | None |
 | Shed-door and onboarding notes | Jeremy's and Jill's notes, one per verb, doubling as doc 01 "One introduction per verb" | Game Designer / Gameplay | New note prop and text table |
 | Dawn Report masthead | The paper's name: *The Halvers Creek Courier* | Gameplay | Text change |
 | Dawn Report "From the archive" | One 1958 clipping per dawn, in order across the campaign | Gameplay | New template section |
@@ -148,9 +148,10 @@ All `placeholder`. Each note states only what doc 01 already says.
 >
 > *(painted over, stencilled)* LEASED BY FARMERS & MERCHANTS BANK OF HALVERS CREEK. NO TRESPASSING AFTER DARK.
 
-### 6.2 Intro card
+### 6.2 Intro card (unused)
 
-Add one line at the start of `SITUATION`:
+P5-67 (CEO playtest 2026-10-10) replaced the text card with a wordless cutscene (doc 05 "Intro cutscene"), so this line
+is not shown. It stays in `data/lore.json` (`intro`) for later use. It was written for the start of `SITUATION`:
 
 > The last family to own this farm was the Brenns. That was 1958.
 
@@ -220,7 +221,8 @@ The last line is left for players to read however they like. Nothing in the game
 For the CEO:
 
 1. **Town and bank names.** "Halvers Creek" and "Farmers & Merchants Bank" are placeholders. Keep, or rename?
-2. **The intro title.** `intro_card.gd` shows "FARMER'S DELIGHT". Should it become the farm's name, or the game title?
+2. **The intro title.** The intro cutscene (`intro_card.gd`, wordless since P5-67) ends on "FARMER'S DELIGHT", its only
+   text. Should it become the farm's name, or the game title?
 3. **How dark the archive goes.** Clipping 11 (Jeremy's line) is the turn. Keep it, soften it, or cut it?
 4. **Campaign-win line.** The final whistle is the only time the game hints the boy might come in. Keep it, or end on the deed alone?
 5. **Imposter mode.** Should the imposter get one line of lore (for example, "Somebody's been doing voices"), or stay lore-free?

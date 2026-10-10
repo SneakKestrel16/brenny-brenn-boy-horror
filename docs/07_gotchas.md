@@ -6,7 +6,7 @@
 - **The host's quit shows "The host left." on every client.** A probe screenshot or a draw-call read taken after the host quits measures the dialog, not the scene. Keep the host running past the clients' sampling window.
 - **Quitting the host first spikes its frame to about 135 ms** (client disconnect cleanup). End the clients first or ignore the last seconds.
 - **A teleport trips the host speed check** (`speed_violation`, spams the log and may clamp the player). `--probe-pos=` does not switch the check off: it raises the speed cap to 1000 m/s (like `--autosweep`), so clamped `speed_violation` events can still log (3 seen in the QA run).
-- **The intro card blocks the first frames:** pass `--no-intro` in measured runs.
+- **The intro cutscene (P5-67) blocks the first 26 s of a new season** (a fly-through, `game/ui/intro_card.gd`): pass `--no-intro` in measured and screenshot runs.
 - **An isolated `APPDATA` needs `Godot/` inside it** or the shader cache logs `Unable to create shader cache directory` errors (harmless).
 - **Godot may pick the AMD iGPU on this hybrid machine.** Every run in PERF-01 reported `NVIDIA GeForce RTX 5070`; still check `adapter=` in each probe line.
 - **Door and wall tests: never teleport the player.** The host rubber-bands a teleported client (`speed_violation`), which looked like a client walking through a closed door in P5-55. Walk with `nav_path`. Also read the local player node once: a client's `Game.local_peer()` returns 1 after the host quits, so a later lookup finds the host's proxy (mask 0, no collision).

@@ -931,9 +931,25 @@ registered in `Data.TABLES`. Records: `masthead`, `intro`, `road_sign`, `notes` 
   anchor logs a warning and skips. The road sign is two boards (the BRENN FARM title over the bank notice) on two posts at
   the lane centre (`road_sign.at` in `lore.json`, with `notice_y`, `title_y`, `post_top`, `post_half`), above the corn, facing the gate. Notes have a 7 m visibility range. It does nothing when the farm has no
   `World/Buildings/Barn` (Phase 1 farm).
-- UI: `intro_card.gd` puts `Lore.text(&"intro")` above the situation; `dawn_report.gd` uses the masthead and appends a
+- UI: `dawn_report.gd` uses the masthead and appends a
   "FROM THE ARCHIVE" block as the last pending section; `season_awards.gd` draws `Lore.win_lines()` on the campaign win.
 - Test: `tests/gameplay/test_lore.tscn` (a scene, because `Lore` reads the `Data` autoload).
+
+### Intro cutscene (P5-67, replaces the P5-34 text card)
+
+`game/ui/intro_card.gd` (`IntroCard`, spawned in `main.gd`): a 26 s fly-through before day 1 of a new season, local to each
+peer, nothing synced. A throwaway `Camera3D` (added under `Main`, since a `CanvasLayer` cannot hold one) follows the `KEYS`
+table (time, position, look-at; farm.tscn coordinates): the road sign and bank notice at the gate (P5-48), the yard and plots,
+the Prize Pumpkin patch, then the west corn ring where a dark shape (a `CapsuleMesh`) is seen for 0.9 s with the existing
+`cre_corn_part` and `cre_presence_swell` sounds. Crow caws use `sfx_crow_caw`; no new assets, no Phase 1 day music. The only
+text is the title "FARMER'S DELIGHT" at the end (no captions). Cuts dip to black. The overlay is layer 80: over the HUD (hidden
+while it plays), under the REC light (layer 90), so the recording light (doc 06 s11) is never covered. Input:
+`Game.console_open = true` while it plays (Player, hold controller and keys ignore it) and the mouse is visible; on the end or
+on any key or click the keys, the mouse and the player camera come back and the black fades out over 0.6 s. Like the old card
+it does not pause the clock: the host day runs the same for every peer, so each peer loses the same seconds. `wanted()` is
+not headless, no `--no-intro`, no pending save, day 1 daylight of season 1, and `Clock.t_phase < 10` (a rejoiner gets the
+host clock before Main loads, so it never sees the film mid-season; QA P5-67). Test: `tests/ui/test_intro.gd`
+(windowed; `--skip` for the skip path). `Lore.text(&"intro")` is no longer shown.
 
 ## 16. Menus and settings
 

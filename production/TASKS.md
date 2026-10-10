@@ -1049,7 +1049,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-64 | Gameplay Programmer | Barn sign board: short summary instead of the long text (CEO playtest 2026-10-10) | done (QA PASS) | - |
 | P5-65 | AI Programmer | Creature just stood still during the day: find why and fix (CEO playtest 2026-10-10) | todo | - |
 | P5-66 | Gameplay Programmer | Ghost-possessed crow can fly around (CEO playtest 2026-10-10) | done (QA PASS) | - |
-| P5-67 | Gameplay Programmer | Intro cutscene in game instead of the start text card (CEO playtest 2026-10-10) | todo | - |
+| P5-67 | Gameplay Programmer | Intro cutscene in game instead of the start text card (CEO playtest 2026-10-10) | done (QA PASS) | - |
 | P5-68 | AI Programmer | Jumpscare shows the real creature body model, not a capsule (CEO playtest 2026-10-10) | todo | - |
 | P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | done (QA PASS) | P5-02 to P5-07, P5-09 to P5-29 |
 
