@@ -215,6 +215,9 @@ placeholder player speeds (Q-016).
   a day `chase` happens only inside a day death or a trap race (doc 01 "By day").
 - **At night** all states apply. A `stalk` ends in `chase` more often when the target is alone
   (section 11).
+- **Drawn to noise (P5-33, CEO STOP 6).** In `lurk` during a night build-up, a noise it hears that
+  does not start a stalk (the AI Director's budget is spent) still sends it walking to the heard
+  position, with no target. In `fade` and `relax` it keeps to its region.
 - **Crows** never change a state tell (doc 01 "Ambience"): crows are a scare, not a state.
 
 ## 5. Losing a chase
@@ -301,34 +304,37 @@ spare** (doc 01 "Day Deaths (2)").
 | `pry_s`, Tainted | 4 x 1.5 = 6 s | doc 02 section 13 (placeholder) |
 | `pry_s`, with a teammate | 4 x 0.6 = 2.4 s (3.6 s Tainted) | doc 02 section 2.1 (`labor.json` `pry.helped_mult`) |
 | `approach_speed_mps` | 3.5 | placeholder (section 4.1) |
-| `start_distance_m`, normal | 25 | placeholder, derived below |
-| `start_distance_m`, deep trap | 18 | placeholder, derived below |
+| `start_distance_m`, normal | 32 | placeholder, derived below (25 before P5-33) |
+| `start_distance_m`, deep trap | 25 | placeholder, derived below (18 before P5-33) |
 
-**Derivation.** Target spare is 3 s ("a few seconds", doc 01). `start_distance_m` = 3.5 x (4 + 3) =
-24.5, rounded up to 25 m, giving `spare_s` = 25 / 3.5 - 4 = **3.14 s** for a solo untainted player
-who pries at once. A deep trap puts the creature closer, 18 m, giving 18 / 3.5 - 4 = **1.14 s**,
-still survivable for the untainted but not for the Tainted (18 / 3.5 - 6 = -0.86 s).
+**Derivation.** The first target spare was 3 s ("a few seconds", doc 01): 3.5 x (4 + 3) = 24.5,
+rounded up to 25 m. In the CEO's STOP 6 playtest (P5-33, `logs/playtest_20261009/`) every race
+killed at 7.7 s, before a teammate could arrive or the victim could read the warning ("kills so
+quickly and randomly"). The target is now 5 s of spare for a solo untainted player who pries at
+once, so a teammate a few metres away can still run over and help: 3.5 x (4 + 5) = 31.5, rounded
+up to **32 m**, giving `spare_s` = 32 / 3.5 - 4 = **5.14 s**. A deep trap keeps its 7 m lead over
+the normal one: **25 m**, giving 25 / 3.5 - 4 = **3.14 s**. Both are placeholders
+(`ai_director.json` `trap_race`).
 
-Worked table (normal start 25 m, deep 18 m; speed 3.5):
+Worked table (normal start 32 m, deep 25 m; speed 3.5):
 
 | Case | Pry | Normal spare | Deep spare | Outcome | Doc 01 loss reason |
 |---|---|---|---|---|---|
-| Solo, untainted, pries at once | 4 s | +3.14 | +1.14 | survive | the target |
-| Solo, untainted, hesitates 2 s | 4 s + 2 s | +1.14 | -0.86 | lives normal, dies deep | "hesitation" |
-| Solo, Tainted, pries at once | 6 s | +1.14 | -0.86 | lives normal, dies deep | "Taint" (slower pry), "deep trap" |
-| With a teammate, untainted | 2.4 s | +4.74 | +2.74 | survive | "a teammate shortens the pry" |
-| With a teammate, Tainted | 3.6 s | +3.54 | +1.54 | survive | |
+| Solo, untainted, pries at once | 4 s | +5.14 | +3.14 | survive | the target |
+| Solo, untainted, hesitates 2 s | 4 s + 2 s | +3.14 | +1.14 | survive | "hesitation" |
+| Solo, untainted, hesitates 4 s | 4 s + 4 s | +1.14 | -0.86 | lives normal, dies deep | "hesitation", "deep trap" |
+| Solo, Tainted, pries at once | 6 s | +3.14 | +1.14 | survive | "Taint" (slower pry) |
+| Solo, Tainted, hesitates 2 s | 6 s + 2 s | +1.14 | -0.86 | lives normal, dies deep | "Taint", "hesitation", "deep trap" |
+| With a teammate, untainted | 2.4 s | +6.74 | +4.74 | survive | "a teammate shortens the pry" |
+| With a teammate, Tainted | 3.6 s | +5.54 | +3.54 | survive | |
 
 - **Hesitation** is the time from spring to starting the pry hold (the host measures it).
-  A hesitation of 2 s and a solo Tainted player cost the same as each other; both together die at
-  the normal distance too (-0.86 s).
-- **AI Director bend.** The AI Director may vary `start_distance_m` between 22 and 28 m at normal
-  and between 15 and 21 m at deep (placeholder, `trap_race_bend_m` +/- 3), picked at dawn. At 22 m
-  a solo untainted player has 2.29 s spare; at 28 m, 4.0 s. It never adds conditions and never
+- **AI Director bend.** The AI Director may vary `start_distance_m` between 29 and 35 m at normal
+  and between 22 and 28 m at deep (placeholder, `trap_race_bend_m` +/- 3), picked at dawn. At 29 m
+  a solo untainted player has 4.29 s spare; at 35 m, 6.0 s. It never adds conditions and never
   moves a solo untainted immediate prier at a normal trap below 2 s of spare (the floor;
   placeholder `trap_race_min_spare_s`). The floor does not apply to deep traps: they are meant to
-  be tighter (18 m gives 1.14 s; the 15 m bend gives 0.29 s, still alive for an untainted
-  immediate prier).
+  be tighter (25 m gives 3.14 s; the 22 m bend gives 2.29 s).
 - **Nightmare** widens the bend range to +/- 5 m but keeps the floor at 1 s; no voice tells; the
   whistle stays honest; the "wrong-place" tell remains (doc 01 "Difficulty and group settings").
 - **Who is "alone".** The race has no alone condition: a teammate within `help_range_m` (3 m,
@@ -345,6 +351,24 @@ Worked table (normal start 25 m, deep 18 m; speed 3.5):
 - **Log.** `trap_race_result` with `solo`, `tainted`, `pried_at_once` (hold started within 0.5 s of
   the spring, placeholder), `survived`, `seconds_spare` (the margin, negative on death) (CONTRACTS
   section 10).
+
+**As built (P5-33, CEO STOP 6).** The playtest log showed why the trap felt random. Three of the
+four races were sprung at night, although doc 01 "Night Traps" starts the race only "by day". A
+teammate's finished pry was ignored, so the victim died anyway. The clock killed while the creature
+was 66 to 72 m away or in `lurk`. The victim had to aim at the trap to pry it. Now:
+
+- **Only a day spring starts a race** (`traps.json` `bear_trap.starts_race_by_day`). A night pin
+  has no clock: the victim pries free (4 s), or the creature's own catch kills (cause `night_trap`).
+  `trap_pinned` logs `race` and `deadline_s`.
+- **Any living player's finished pry frees the victim**; a teammate's pry counts as helped
+  (`solo: false`).
+- **The body walks in.** On a day spring the creature's body is placed `start_distance_m` from the
+  victim and walks at `start_distance_m / deadline`, speeding up to its chase speed when the way
+  round buildings is longer, so it arrives on the deadline. The kill happens with the creature at
+  the victim, never from out of sight.
+- **A pinned player pries with the interact key** without aiming at the trap.
+- **HUD.** The victim sees "CAUGHT IN A TRAP. It is coming: N s" with the seconds left (day) or
+  "It can hear you" (night). Every teammate sees "A FRIEND IS CAUGHT IN A TRAP, N m away".
 
 ## 8. Taint and Shaken, creature side
 
@@ -385,7 +409,7 @@ any state, so a lone player who keeps the creature busy still meets planned trap
 | Count per night | doc 02 section 11, bear / pit / bells, set on the 22 trap spots (doc 04 sec 7.1) | doc 01 "Ramp-up" |
 | Spot choice | from the spot list near the **region** where the creature's senses say players work (fields, yard, paths), never at a player's tracked position; deep spots (`trap_05`, `_10`, `_20`, `_22`, doc 04 sec 7.1) are reserved for bear traps | doc 01 "Hunting and presentation"; doc 04 |
 | Kinds of spot | `edge`, `row`, `deep` | doc 04 sec 7.1 |
-| Bear trap | pins until pried; by day starts the race (section 7); then walk x0.6 for 60 s | doc 01 "Night Traps" |
+| Bear trap | pins until pried (any living player's pry frees); by day starts the race (section 7); at night there is no clock and only the creature's catch kills (P5-33); then walk x0.6 for 60 s | doc 01 "Night Traps" |
 | Pit | stumble, drop the carried item; fill with a shovel | doc 01 "Night Traps" |
 | Tripwire bells | from day 4; loud (60 m); tell the creature where the player is; cut with 1 s | doc 01 "Night Traps"; doc 02 section 12 |
 | Clues | fresh dirt, bent stalks, glinting metal; seen only by a player looking closely (within 4 m and facing, placeholder); trackers 1.5x that (doc 02 section 15, placeholder) | doc 01 "Night Traps" |
@@ -541,6 +565,12 @@ Left 4 Dead style (doc 01 "AI Director"): build-up, peak, fade, relax.
 
 - **Peak** lasts at most 20 s (placeholder) then `fade`; **fade** lasts until the meter is 30, then
   `relax` for a minimum 40 s (placeholder, doc 01 "release" after peaks).
+- **Caps (P5-33, CEO STOP 6).** `fade` lasts at most `fade_max_s` 20 s and `relax` at most
+  `relax_max_s` 40 s, then the night returns to build-up (placeholders). In the STOP 6 playtest a
+  group talking outdoors kept feeding the meter, so it never fell to 30 or 0: fade and relax held
+  63 to 79% of the night, and the creature, which may not stalk or chase there, went after the
+  group only 1 to 2 times a night. With the caps: 49 to 55% and 4 to 5 times
+  (`tests/creature/test_p5_33_night.gd`, seeds 1 to 3).
 - The meter is one number per session, plus a per-player **scare debt** (section 11.3).
 
 ### 11.2 Profiles
@@ -867,6 +897,19 @@ record by `opens_day` and `from_third` and applies `tainted_mult`.
   refuses a kind that is not built and a dead target.
 - **Not yet (doc 03 section 13).** The jumpscare on the screens of others in view, the creature
   vanishing, and its state change after a jumpscare (drop the stalk, then Retreat, as doc 08 expects).
+- **Crows (P5-33, CEO STOP 6: "show crows more often", no louder).** Besides the still crow on each
+  of the nine `crow_perches` (P5-27), the host sends two kinds of silent flock by day and dusk, timed
+  by `ai_director.json` `crows` on their own seeded stream (`seed + 6`), so the scare rolls are
+  unchanged. A **flyover** (every 40 to 90 s) is a line of 3 to 6 crows crossing 140 m over the fields
+  at 18 to 25 m up and 9 m/s. A **landing** (every 60 to 120 s) brings 3 to 6 crows down on a
+  `plot_spots` field marker; they sit for 20 to 40 s, or fly off when a living player comes within
+  8 m. All numbers are placeholders. They are not scares: no budget, no build-up, no sound, never a
+  state tell (section 4.2), and they log `crows` (`kind` flyover or land, `count`, `position`). They
+  go out as public `apply_scare` sends (`crow_flyover`, `crow_land`), and every peer draws the same
+  flock from the message. A fake-out burst now empties its perch: the still crow there is hidden
+  for `perch_empty_s` (60 s), so the burst is the crow that was sitting there (the P5-27 finding).
+  A day measure (`tests/creature/test_p5_33_crows.gd`, seed 1) gives 8 flyovers and 5 landings in
+  600 s of day and dusk, against none before.
 
 ### 13.2 As built (P3-09): ghost powers
 

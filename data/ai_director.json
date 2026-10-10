@@ -25,11 +25,13 @@
     {
       "id": "phases",
       "source": "placeholder",
-      "cite": "doc 03 section 11.1: build-up below peak_at, peak for at most peak_max_s, fade until fade_to, relax at least relax_min_s",
+      "cite": "doc 03 section 11.1: build-up below peak_at, peak for at most peak_max_s, fade until fade_to or fade_max_s, relax at least relax_min_s and until the meter is empty or relax_max_s; the two caps are CEO STOP 6 (P5-33: a loud group held the meter up and locked the night in fade)",
       "peak_at": 70,
       "peak_max_s": 20,
       "fade_to": 30,
-      "relax_min_s": 40
+      "fade_max_s": 20,
+      "relax_min_s": 40,
+      "relax_max_s": 40
     },
     {
       "id": "profile_day",
@@ -124,13 +126,27 @@
     {
       "id": "trap_race",
       "source": "placeholder",
-      "cite": "doc 03 section 7.2 (derivation there); rolled daily by the AI Director (P3-04), read by trap_race.gd",
-      "start_distance_m": 25,
-      "deep_start_distance_m": 18,
+      "cite": "doc 03 section 7.2 (derivation there); rolled daily by the AI Director (P3-04), read by trap_race.gd. P5-33 (CEO STOP 6, 'kills so quickly'): 25/18 m raised to 32/25 m, solo spare 5.1 s / deep 3.1 s at 3.5 m/s and a 4 s pry",
+      "start_distance_m": 32,
+      "deep_start_distance_m": 25,
       "bend_m": 3,
       "min_spare_s": 2,
       "nightmare_bend_m": 5,
       "nightmare_min_spare_s": 1
+    },
+    {
+      "id": "crows",
+      "source": "placeholder",
+      "cite": "P5-33 (CEO STOP 6: crows more often, perched, flying over, landing in fields, no louder sound); doc 03 section 13. Silent ambience, day and dusk only; seconds are host time",
+      "flyover_every_s": [40, 90],
+      "land_every_s": [60, 120],
+      "land_stay_s": [20, 40],
+      "flock": [3, 6],
+      "flyover_alt_m": [18, 25],
+      "flyover_half_m": 70,
+      "fly_mps": 9,
+      "flush_m": 8,
+      "perch_empty_s": 60
     },
     {
       "id": "nudge",

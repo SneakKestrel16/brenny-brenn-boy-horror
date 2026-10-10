@@ -142,8 +142,8 @@ func _process(delta: float) -> void:
 		text = "YOU ARE DEAD. You are a ghost: nobody hears or sees you.\n%s / %s watch a friend. You come back at dawn.
 %s  disturb the nearest light   %s  rustle the corn you are in   %s  ride a crow (once a night; %s caws)" % [
 				_key(&"spectate_prev"), _key(&"spectate_next"), _key(&"use_tool"), _key(&"alt_use"), _key(&"lantern"), _key(&"use_tool")]
-	elif player.pinned:
-		text = "CAUGHT IN A TRAP. Hold %s on the trap to pry free. A friend can help." % _key(&"interact")
+	else:
+		text = _trap_text()
 	_banner.text = text
 	var hs: Array = hold.hold_state()
 	var prompt := ""
@@ -164,6 +164,26 @@ func _process(delta: float) -> void:
 	_prompt.text = prompt
 	_prompt.visible = not Game.console_open  # P4-22: not through the store menu
 	_show_hotbar(_slots(farm) if farm and not player.ghost else [])
+
+
+## P5-33 (CEO STOP 6, the trap "kills so quickly and randomly"): the pinned player sees the day race's clock;
+## everyone else sees a friend is caught and how far away.
+func _trap_text() -> String:
+	var race := get_tree().get_first_node_in_group(&"trap_race")
+	if race == null:
+		return ""
+	for id in race.victims:
+		if race.victims[id] == player.peer:
+			var end := float(race.ends.get(id, -1.0))
+			if end < 0.0:
+				return "CAUGHT IN A TRAP. Hold %s to pry free. It can hear you." % _key(&"interact")
+			return "CAUGHT IN A TRAP. It is coming: %d s. Hold %s to pry free. A friend can help." % [
+					ceili(maxf(end - Time.get_ticks_msec() / 1000.0, 0.0)), _key(&"interact")]
+	for id in race.victims:
+		if race.traps.has(id):
+			var m := player.global_position.distance_to(race.traps[id].position)
+			return "A FRIEND IS CAUGHT IN A TRAP, %d m away. Hold %s on the trap to pry them free." % [roundi(m), _key(&"interact")]
+	return ""
 
 
 ## P4-22 (CEO session): [name, one-line use hint] for each thing the local player holds or the team owns.

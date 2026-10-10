@@ -128,6 +128,8 @@ var _stolen_night := 0
 var _capped_logged := false
 var _kept: Dictionary = {}  ## peer -> building: held a bear trap in a lit building at nightfall (moved at dawn, D-053 (3))
 var _theft_t := 0.0
+var _race_mps := 0.0  ## P5-33: a day trap race's approach speed while it walks in; 0 otherwise
+var _race_end := 0.0  ## P5-33: the race deadline in `_now` seconds
 var _nights := 0
 var _rects: Array[Rect2] = []  ## building floors (x, z), for "outdoor"
 var _rect_names: Array[String] = []  ## the building of each rect (the door's parent)
@@ -495,8 +497,13 @@ func _hunt(delta: float) -> void:
 				var p := int(heard.peer)
 				if _try_lure(p):
 					return
-				if not _dir.allow(&"stalk", p):  # out of build-up events, fading or relaxing: it keeps to its region
-					_wander()
+				if not _dir.allow(&"stalk", p):
+					# P5-33 (CEO STOP 6, "more drawn to noise"): out of build-up stalks it still walks to what it
+					# heard, without a target; fading or relaxing it keeps to its region (section 11.2)
+					if _dir.get(&"phase") == &"build_up":
+						_goal = heard.position
+					else:
+						_wander()
 					return
 				_dir.spend(&"stalk", p)
 				_set_state(&"stalk", &"heard_" + String(heard.kind), p)
@@ -586,6 +593,23 @@ func force_state(s: StringName, reason: StringName, p_target: int) -> void:
 		_set_state(s, reason, p_target)
 
 
+## P5-33 (CEO STOP 6: the race "kills so quickly and randomly"): a day trap race. The body walks in on
+## `peer` from `start_m` away at the speed that lands on the race deadline, `seconds`, so its signature
+## approach is the clock players hear (doc 03 section 7.2 "Signature approach"). Presentation: it reads the
+## victim's true position, as the race is the AI Director's (doc 01 "Hunting and presentation").
+func race_approach(peer: int, start_m: float, seconds: float) -> void:
+	if not _ok or not _alive(peer):
+		return
+	var at: Vector3 = Game.players[peer].pos
+	var away := Vector3(global_position.x - at.x, 0.0, global_position.z - at.z)
+	if away.length() < 0.1:
+		away = Vector3.BACK
+	global_position = at + away.normalized() * start_m  # from where it was, out of sight beyond sight_day_m
+	_set_state(&"chase", &"trap_race", peer)
+	_race_mps = start_m / maxf(seconds, 0.1)
+	_race_end = _now + seconds
+
+
 ## P4-06 (store.json `flare_gun`): a flare hit sends it into Retreat for `seconds` (doc 01 Store: 30 s). False if it
 ## is not hunting yet (day, or before its night starts).
 func flare_hit(seconds: float) -> bool:
@@ -608,6 +632,7 @@ func _set_state(s: StringName, reason: StringName, p_target: int) -> void:
 	state = s
 	target = p_target
 	_t_state = 0.0
+	_race_mps = 0.0
 	if s == &"chase" and from != &"chase":
 		_chase_t = 0.0
 		_lose_t = 0.0
@@ -1265,7 +1290,12 @@ func _move(_delta: float) -> void:
 	match state:
 		&"stalk": speed = _num[&"stalk_speed_mps"]
 		&"chase", &"retreat": speed = _num[&"chase_speed_mps"]
-	if _night_t < 0.0:
+	if _race_mps > 0.0 and _alive(target):
+		_goal = Game.players[target].pos
+		# the way round buildings is longer than start_m: speed up to chase speed to still arrive on the deadline
+		var left := Vector2(_goal.x - global_position.x, _goal.z - global_position.z).length()
+		speed = clampf(left / maxf(_race_end - _now, 0.25), _race_mps, _num[&"chase_speed_mps"])
+	elif _night_t < 0.0:
 		_goal = _dir.day_cover(_marker(&"creature_cover", DAY_COVER))
 	var goal := _goal if _goal == Vector3.INF else _shut_out(_goal)
 	var d := Vector3.INF if goal == Vector3.INF else goal - global_position

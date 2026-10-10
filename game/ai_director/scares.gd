@@ -5,6 +5,7 @@ extends Node
 ## record (ai_director.json) by weight among the open ones that fit where the player is. It sends the
 ## build-up, checks the rules again after it, then spends the budget, sends the scare (private: the target
 ## only; public: all), applies the cost and logs `scare`. Every peer plays what it is sent.
+## P5-33: silent crow flocks by day and dusk (`_crows`, not scares), and a fake-out empties its perch for a while.
 ## Presentation may read true positions (section 11). Not built: `the trap` (doc 03 section 13 says "not a
 ## race", but a pry only happens in a trap race, so nothing triggers it), `scarecrow_moved` (weight 0, placed
 ## by sabotage in P3-06), the teammate's hat on the wrong count (no hats yet: a plain farmer shape), the
@@ -34,6 +35,8 @@ var _wrong_today := 0
 var _own: Dictionary = {}  ## peer -> own-voice scares this season
 var _lunged: Dictionary = {}  ## peer -> the disarm hold already rolled
 var _rng := RandomNumberGenerator.new()
+var _crow_rng := RandomNumberGenerator.new()  ## its own stream, so the scare rolls stay as seeded before P5-33
+var _crow_next: Dictionary = {}  ## host: crow_flyover / crow_land -> seconds until the next flock
 
 
 func _ready() -> void:
@@ -46,6 +49,7 @@ func _ready() -> void:
 			_d[StringName(String(r.id).trim_prefix("scare_"))] = r
 	_rules = Data.record(&"ai_director", &"scare_rules")
 	_rng.seed = Game.seed_value + 5
+	_crow_rng.seed = Game.seed_value + 6
 	Clock.day_changed.connect(func(_day: int) -> void: _wrong_today = 0)
 	_setup.call_deferred()
 
@@ -65,6 +69,7 @@ func _physics_process(delta: float) -> void:
 	if _t < TICK_S:
 		return
 	_t = 0.0
+	_crows(TICK_S)
 	if _rng.randf() < FAKE_OUT_CHANCE_PER_S * TICK_S:
 		_fake_out()  # inference: doc 01 does not say when fake-outs fire; at random, so they tell nothing
 	var peers: Array = Game.players.keys().filter(func(p: int) -> bool: return p > 0 and _alive(p))  # a bot has nobody to scare
@@ -244,6 +249,38 @@ func _fake_out(forced := false) -> bool:
 	return true
 
 
+## P5-33 (CEO STOP 6: "show crows more often"): by day and dusk a flock flies over the farm, or lands on a
+## field and stays until someone walks up. Silent ambience, not a scare: no budget, no sound, tells nothing.
+## The host times them (ai_director.json `crows`) and every peer draws the same flock (`apply_scare`, public).
+func _crows(dt: float) -> void:
+	if not Clock.phase in [&"day", &"dusk"]:
+		return
+	var c: Dictionary = Data.record(&"ai_director", &"crows")
+	for kind: StringName in [&"crow_flyover", &"crow_land"]:
+		var every: Array = c.flyover_every_s if kind == &"crow_flyover" else c.land_every_s
+		_crow_next[kind] = float(_crow_next.get(kind, _crow_rng.randf_range(every[0], every[1]))) - dt
+		if _crow_next[kind] > 0.0:
+			continue
+		_crow_next[kind] = _crow_rng.randf_range(every[0], every[1])
+		var n := _crow_rng.randi_range(int(c.flock[0]), int(c.flock[1]))
+		var yaw := _crow_rng.randf_range(0.0, TAU)
+		var plots := get_tree().get_nodes_in_group(&"plot_spots")
+		if plots.is_empty():
+			return  # Phase 1 farm: no fields
+		var pos := Vector3.ZERO
+		var extra := ""
+		if kind == &"crow_flyover":
+			for m: Node3D in plots:
+				pos += m.global_position / plots.size()  # over the fields
+			pos.y += _crow_rng.randf_range(c.flyover_alt_m[0], c.flyover_alt_m[1])
+			extra = "%d:%.3f" % [n, yaw]
+		else:
+			pos = (plots[_crow_rng.randi() % plots.size()] as Node3D).global_position
+			extra = "%d:%.3f:%.1f" % [n, yaw, _crow_rng.randf_range(c.land_stay_s[0], c.land_stay_s[1])]
+		_send(kind, -1, false, pos, extra)
+		Log.event(&"crows", {"kind": String(kind).trim_prefix("crow_"), "count": n, "position": _v(pos)})
+
+
 ## `apply_scare` to `p` alone when `private` (nothing for a bot: no machine), else to every peer.
 func _send(id: StringName, p: int, private: bool, pos: Vector3, extra: String) -> void:
 	var args := [id, p if private else -1, pos, extra]
@@ -356,6 +393,11 @@ func _present(kind: StringName, slot: int, pos: Vector3, extra: String) -> void:
 			Soundscape.play_3d(&"sfx_step_corn", pos)  # the rustle; no layer change (doc 08 section 4.4 rule 4)
 			Soundscape.play_3d(&"sfx_crow_burst", pos)
 			_crow_burst(pos)
+			_perch_away(pos)
+		&"crow_flyover":
+			_flyover(pos, extra)
+		&"crow_land":
+			_land(pos, extra)
 	if not Game.is_host() and Game.local_peer() == slot:
 		Log.event(&"scare_applied", {"kind": String(kind)})
 
@@ -363,19 +405,101 @@ func _present(kind: StringName, slot: int, pos: Vector3, extra: String) -> void:
 ## P5-22: three `animal_crow` models burst from the perch and flap away (`fly` 2 flaps per second, under the D-046 limit of 3).
 ## Visual only, placement from the position (same on every peer); heading and spread are fixed by the index.
 func _crow_burst(pos: Vector3) -> void:
-	var scene := load("res://assets/models/animal_crow.glb") as PackedScene
 	for i in 3:
-		var crow := scene.instantiate() as Node3D
-		var ap := crow.find_children("*", "AnimationPlayer")[0] as AnimationPlayer
-		ap.get_animation(&"fly").loop_mode = Animation.LOOP_LINEAR
-		ap.play(&"fly")
-		add_child(crow)
-		crow.global_position = pos
 		var away := Vector3.FORWARD.rotated(Vector3.UP, i * 2.1 + 0.7)
-		crow.rotation.y = atan2(-away.x, -away.z)
-		var tw := crow.create_tween().set_parallel()
-		tw.tween_property(crow, "global_position", pos + away * 14.0 + Vector3(0, 7.0 + i, 0), 3.0)
-		tw.chain().tween_callback(crow.queue_free)
+		_fly_off(_crow(pos, away, &"fly"), away, i)
+
+
+## An `animal_crow` at `pos` heading along `dir`, playing `clip` looped.
+func _crow(pos: Vector3, dir: Vector3, clip: StringName) -> Node3D:
+	var crow := (load("res://assets/models/animal_crow.glb") as PackedScene).instantiate() as Node3D
+	add_child(crow)
+	crow.global_position = pos
+	crow.rotation.y = atan2(-dir.x, -dir.z)
+	_crow_clip(crow, clip)
+	return crow
+
+
+func _crow_clip(crow: Node3D, clip: StringName) -> void:
+	var ap := crow.find_children("*", "AnimationPlayer")[0] as AnimationPlayer
+	ap.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
+	ap.play(clip)
+
+
+## The burst's climb away: 14 m out and 7 m up in 3 s, then gone.
+func _fly_off(crow: Node3D, away: Vector3, i: int) -> void:
+	_crow_clip(crow, &"fly")
+	crow.rotation.y = atan2(-away.x, -away.z)
+	var tw := crow.create_tween()
+	tw.tween_property(crow, "global_position", crow.global_position + away * 14.0 + Vector3(0, 7.0 + i, 0), 3.0)
+	tw.tween_callback(crow.queue_free)
+
+
+## P5-33 (the P5-27 finding): the fake-out bursts from a perch whose still crow then stays put. Now that crow
+## is the one that flew: its perch is empty for `perch_empty_s`.
+func _perch_away(pos: Vector3) -> void:
+	for n: Node3D in get_tree().get_nodes_in_group(&"crow_perches"):
+		if n.global_position.distance_to(pos) > 0.5:
+			continue
+		for c in n.get_children():
+			if c is Node3D:
+				c.visible = false
+		await get_tree().create_timer(float(Data.value(&"ai_director", &"crows", &"perch_empty_s"))).timeout
+		if is_instance_valid(n):
+			for c in n.get_children():
+				if c is Node3D:
+					c.visible = true
+		return
+
+
+## P5-33: `extra` "count:yaw". A loose line of crows crosses the farm at `centre`'s height, silent.
+func _flyover(centre: Vector3, extra: String) -> void:
+	var a := extra.split(":")
+	var c: Dictionary = Data.record(&"ai_director", &"crows")
+	var dir := Vector3.FORWARD.rotated(Vector3.UP, float(a[1]))
+	var side := dir.cross(Vector3.UP)
+	var half := float(c.flyover_half_m)
+	for i in int(a[0]):
+		var off := side * (i - int(a[0]) / 2.0) * 2.5 - dir * (i % 2) * 2.0 + Vector3(0, (i % 3) * 0.8, 0)  # fixed by index: the same on every peer
+		var crow := _crow(centre - dir * half + off, dir, &"fly")
+		var tw := crow.create_tween()
+		tw.tween_property(crow, "global_position", centre + dir * half + off, 2.0 * half / float(c.fly_mps))
+		tw.tween_callback(crow.queue_free)
+
+
+## P5-33: `extra` "count:yaw:stay_s". Crows glide down onto the field at `spot`, sit, and fly off after
+## stay_s or when a living player comes within `flush_m` (every peer sees the bodies, so all agree closely).
+func _land(spot: Vector3, extra: String) -> void:
+	var a := extra.split(":")
+	var c: Dictionary = Data.record(&"ai_director", &"crows")
+	var dir := Vector3.FORWARD.rotated(Vector3.UP, float(a[1]))
+	var crows: Array[Node3D] = []
+	var glides: Array[Tween] = []
+	for i in int(a[0]):
+		var at := spot + Vector3.FORWARD.rotated(Vector3.UP, float(a[1]) + i * 2.4) * (1.0 + i * 0.6)
+		var crow := _crow(at - dir * 16.0 + Vector3(0, 10.0, 0), dir, &"fly")
+		var tw := crow.create_tween()
+		tw.tween_property(crow, "global_position", at, 16.0 / float(c.fly_mps) + 0.5)
+		tw.tween_callback(_crow_clip.bind(crow, &"idle"))
+		crows.append(crow)
+		glides.append(tw)
+	var t := 0.0
+	var players := get_parent().get_node_or_null(^"Players")
+	while t < float(a[2]):
+		await get_tree().create_timer(0.25).timeout
+		if not is_inside_tree():
+			return
+		t += 0.25
+		var near := false
+		for p in players.get_children() if players else []:
+			if p is Node3D and not bool(p.get("ghost")) and (p as Node3D).global_position.distance_to(spot) < float(c.flush_m):
+				near = true
+		if near:
+			break
+	for i in crows.size():
+		if is_instance_valid(crows[i]):
+			glides[i].kill()  # flushed while still gliding in
+			_fly_off(crows[i], Vector3.FORWARD.rotated(Vector3.UP, float(a[1]) + i * 2.1 + 0.7), i)
 
 
 func _local_player() -> Node:

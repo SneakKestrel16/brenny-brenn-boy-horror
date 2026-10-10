@@ -6,6 +6,8 @@ extends RefCounted
 ## Doc 03 section 11.1 phase machine. `t` is seconds in `phase`; `ph` is `ai_director.json` `phases`;
 ## `relax_s` is this relax's minimum (`relax_min_s`, or `jumpscare_relax_s` after a jumpscare).
 ## Inference (P3-04): the meter decays in `fade` as in `relax`, else a quiet fade never reaches `fade_to`.
+## P5-33 (CEO STOP 6): `fade_max_s` and `relax_max_s` cap both, so a group loud enough to hold the meter up
+## cannot keep the night in fade and relax, where the creature may not stalk or chase.
 static func next_phase(phase: StringName, t: float, meter: float, ph: Dictionary, relax_s: float) -> StringName:
 	match phase:
 		&"build_up":
@@ -15,10 +17,10 @@ static func next_phase(phase: StringName, t: float, meter: float, ph: Dictionary
 			if t >= float(ph.peak_max_s):
 				return &"fade"
 		&"fade":
-			if meter <= float(ph.fade_to):
+			if meter <= float(ph.fade_to) or t >= float(ph.fade_max_s):
 				return &"relax"
 		&"relax":
-			if t >= relax_s and meter <= 0.0:
+			if t >= relax_s and (meter <= 0.0 or t >= float(ph.relax_max_s)):
 				return &"build_up"
 	return phase
 

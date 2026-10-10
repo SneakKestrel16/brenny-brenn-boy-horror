@@ -16,7 +16,8 @@ const SLOW_MULT := 0.6  ## doc 02 section 6: walk x0.6
 
 var traps: Dictionary = {}  ## every peer: trap id -> {kind, state, position}; sprung ones only
 var victims: Dictionary = {}  ## every peer: trap id -> pinned peer
-var races: Dictionary = {}  ## host only: trap id -> {victim, deadline, t, hold_t, helped, start_m}
+var races: Dictionary = {}  ## host only: trap id -> {victim, deadline, t, hold_t, helped, start_m}; deadline INF: a night pin
+var ends: Dictionary = {}  ## every peer: trap id -> race deadline in Time.get_ticks_msec() / 1000 seconds; none for a night pin (HUD)
 var _shaken: Dictionary = {}  ## host: peer -> seconds of Shaken left (P3-07, sprint)
 var _slowed: Dictionary = {}  ## host: peer -> seconds of the bear trap slow left (speed)
 var _creature: Node
@@ -44,6 +45,10 @@ func _ready() -> void:
 	_death = get_parent().get_node("Death")
 	_registry = get_parent().get_node("Farm").registry
 	_creature.trap_sprung.connect(_on_sprung)
+	_creature.caught.connect(func(p: int) -> void:  # P5-33: a night pin has no clock; the creature's catch kills
+		for id in races.keys():
+			if races[id].victim == p and is_inf(float(races[id].deadline)):
+				_lose(id, races[id]))
 	Net.request_received.connect(func(what: StringName, peer: int, _a: Array) -> void:
 		if what != &"farm_state":
 			return  # a late joiner sees the open traps and who is pinned
@@ -51,7 +56,7 @@ func _ready() -> void:
 			Net.to_peers(&"apply_trap_changed", [id, traps[id].kind, traps[id].state, traps[id].position], [peer])
 		for id in races:
 			var r: Dictionary = races[id]
-			Net.to_peers(&"apply_trap_race", [r.victim, id, r.deadline - r.t, r.start_m], [peer]))
+			Net.to_peers(&"apply_trap_race", [r.victim, id, r.deadline - r.t if is_finite(r.deadline) else -1.0, r.start_m], [peer]))
 
 
 func _bcast(what: StringName, args: Array) -> void:
@@ -94,9 +99,16 @@ func _pin_victim(id: String, peer: int, deep: bool) -> void:
 		Net.to_peers(&"apply_teleport", [st.pos], [peer])  # snap back to where the host has them
 	var dist: float = get_tree().get_first_node_in_group(&"ai_director").trap_race_m(deep)  # the day's roll (P3-04)
 	var dl := dist / float(Data.value(&"creature", &"trap_race_speed_mps", &"speed_mps"))
+	# P5-33: doc 01 "Night Traps" and traps.json `starts_race_by_day`: only a day spring starts the race. At night
+	# the trap pins with no clock (deadline INF); the creature finds the victim by its senses, and a catch kills.
+	var race := not _night() and bool(Data.value(&"traps", &"bear_trap", &"starts_race_by_day"))
+	if not race:
+		dl = INF
 	races[id] = {"victim": peer, "deadline": dl, "t": 0.0, "hold_t": -1.0, "helped": false, "start_m": dist}
-	_bcast(&"trap_race", [peer, id, dl, dist])
-	_creature.force_state(&"chase", &"trap_race", peer)  # ambience: the signature approach
+	_bcast(&"trap_race", [peer, id, dl if race else -1.0, dist])
+	Log.event(&"trap_pinned", {"player": peer, "trap_id": id, "race": race, "deadline_s": snappedf(dl, 0.01) if race else null})
+	if race:
+		_creature.race_approach(peer, dist, dl)  # the signature approach walks in on the deadline
 
 
 func _physics_process(delta: float) -> void:
@@ -166,18 +178,33 @@ func clear_trap(id: String, state: StringName, peer: int) -> void:
 		sweep.remove_flags_near(t.position, 2.0)
 
 
-## Host: the victim's pry finished (a helper's hold only shortens it, doc 03 section 7).
+## Host: a pry finished: the victim's own, or (P5-33) a living teammate's. Doc 01 "a teammate can help" and the
+## Medic "frees a teammate from a bear trap"; before P5-33 a teammate's finished pry was ignored and the victim died.
 func on_pry_done(id: String, peer: int) -> void:
 	var r: Dictionary = races.get(id, {})
-	if r.is_empty() or peer != r.victim:
+	if r.is_empty() or Game.is_ghost(peer):
 		return
+	if peer != r.victim:
+		r.helped = true
+	var v: int = r.victim
 	races.erase(id)
-	Game.players[peer].pinned = false
+	_end_holds(id)
+	Game.players[v].pinned = false
 	_result(id, r, true, r.deadline - r.t, r.t - maxf(r.hold_t, 0.0))
-	slow(peer)
-	shake(peer)
-	_loosen(id, peer, "pried")
-	_creature.force_state(&"retreat" if _night() else &"lurk", &"trap_race_survived", peer)
+	slow(v)
+	shake(v)
+	_loosen(id, v, "pried")
+	if is_finite(r.deadline):  # a night pin: the creature hunts on by its senses
+		_creature.force_state(&"lurk", &"trap_race_survived", v)
+
+
+## Host, P5-33: the other pries on a freed or lost trap end before its hold target goes (a hold on a freed
+## target errors in the registry).
+func _end_holds(id: String) -> void:
+	for p in _registry.holds.keys():
+		var h: Dictionary = _registry.holds[p]
+		if h.verb == &"pry" and is_instance_valid(h.target) and h.target.id == id:
+			_registry.cancel(p, &"trap_freed")
 
 
 ## Host, P4-29 (CEO): the sprung trap stays at its spot as the Creature's TrapPickup once its victim is
@@ -224,6 +251,7 @@ func _lose(id: String, r: Dictionary) -> void:
 	var h: Dictionary = _registry.holds.get(r.victim, {})
 	var left := pry_s * (1.0 - float(h.progress)) if not h.is_empty() and h.verb == &"pry" else pry_s
 	_result(id, r, false, r.deadline - (r.t + left), pry_s)
+	_end_holds(id)
 	var night := _night()
 	_death.die(r.victim, &"night_trap" if night else &"trap_race")
 	_creature.force_state(&"retreat" if night else &"lurk", &"kill", r.victim)
@@ -233,7 +261,7 @@ func _result(id: String, r: Dictionary, survived: bool, spare: float, pry_s: flo
 	Log.event(&"trap_race_result", {"player": r.victim, "trap_id": id, "solo": not r.helped,
 		"tainted": bool(Game.players.get(r.victim, {}).get("tainted", false)),
 		"pried_at_once": r.hold_t >= 0.0 and r.hold_t <= AT_ONCE_S, "survived": survived,
-		"seconds_spare": snappedf(spare, 0.01), "start_distance_m": r.start_m, "pry_s": snappedf(pry_s, 0.01),
+		"seconds_spare": snappedf(spare, 0.01) if is_finite(spare) else null, "start_distance_m": r.start_m, "pry_s": snappedf(pry_s, 0.01),
 		"credit_ms": 0})
 
 
@@ -256,8 +284,11 @@ func _on_apply(what: StringName, args: Array) -> void:
 			if args[2] != &"sprung" and victims.has(id):
 				_pin(victims[id], false)
 				victims.erase(id)
+				ends.erase(id)
 		&"trap_race":
 			victims[args[1]] = args[0]
+			if float(args[2]) > 0.0:
+				ends[args[1]] = Time.get_ticks_msec() / 1000.0 + float(args[2])
 			_pin(args[0], true)
 		&"shaken":
 			var pl := _player(Game.local_peer())
@@ -273,6 +304,7 @@ func _on_apply(what: StringName, args: Array) -> void:
 			for id in victims.keys():
 				if victims[id] == args[0]:
 					victims.erase(id)
+					ends.erase(id)
 					races.erase(id)
 					_loosen(id, args[0], "death")
 			_pin(args[0], false)

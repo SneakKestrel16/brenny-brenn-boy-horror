@@ -20,7 +20,7 @@ func _init() -> void:
 		var v := int(data.record(&"ramp_up", StringName("day_%d" % day)).disturbances_4p)
 		dist.append([data.scaled(v, &"disturbances", 2), data.scaled(v, &"disturbances", 3), data.scaled(v, &"disturbances", 4)])
 	data.free()
-	# phases: peak at 70, peak at most 20 s, fade to 30, relax at least 40 s
+	# phases: peak at 70, peak at most 20 s, fade to 30 or 20 s, relax at least 40 s and at most 40 s
 	var ph: Dictionary = r.phases
 	_check(Logic.next_phase(&"build_up", 0.0, 69.9, ph, 40.0) == &"build_up", "build-up below peak_at")
 	_check(Logic.next_phase(&"build_up", 0.0, 70.0, ph, 40.0) == &"peak", "peak at peak_at")
@@ -29,9 +29,13 @@ func _init() -> void:
 	_check(Logic.next_phase(&"fade", 5.0, 30.1, ph, 40.0) == &"fade", "fade above fade_to")
 	_check(Logic.next_phase(&"fade", 5.0, 30.0, ph, 40.0) == &"relax", "relax at fade_to")
 	_check(Logic.next_phase(&"relax", 39.9, 0.0, ph, 40.0) == &"relax", "relax holds its minimum")
-	_check(Logic.next_phase(&"relax", 40.0, 1.0, ph, 40.0) == &"relax", "relax waits for an empty meter")
+	_check(Logic.next_phase(&"relax", 35.0, 1.0, ph, 30.0) == &"relax", "relax waits for an empty meter under relax_max_s")
+	_check(Logic.next_phase(&"relax", 35.0, 0.0, ph, 30.0) == &"build_up", "build-up after relax with an empty meter")
 	_check(Logic.next_phase(&"relax", 40.0, 0.0, ph, 40.0) == &"build_up", "build-up after relax")
 	_check(Logic.next_phase(&"relax", 40.0, 0.0, ph, 60.0) == &"relax", "a jumpscare's longer relax holds")
+	_check(Logic.next_phase(&"fade", 19.9, 90.0, ph, 40.0) == &"fade", "fade holds under fade_max_s")
+	_check(Logic.next_phase(&"fade", 20.0, 90.0, ph, 40.0) == &"relax", "relax after fade_max_s with the meter up (P5-33)")
+	_check(Logic.next_phase(&"relax", 40.0, 90.0, ph, 40.0) == &"build_up", "build-up after relax_max_s with the meter up (P5-33)")
 	# day arc: thirds of a 300 s day
 	_check(Logic.day_third(0.0, 300.0, r.day_arc) == 1, "first third at dawn")
 	_check(Logic.day_third(99.0, 300.0, r.day_arc) == 1, "first third to 1/3")

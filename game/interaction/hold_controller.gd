@@ -98,6 +98,12 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed(&"drop") and not Game.console_open and not _need_release and target_farm.targets.has("prize_pumpkin") and target_farm.targets["prize_pumpkin"].carrier == player.peer:
 			start(&"set_down_prize", target_farm.targets["prize_pumpkin"])  # P4-05: G puts the Prize Pumpkin down
 			return
+		if player.pinned and not _need_release and Input.is_action_pressed(&"interact") and not Game.console_open:
+			var race := get_tree().get_first_node_in_group(&"trap_race")
+			for id in race.victims:  # P5-33 (CEO STOP 6): pinned, E pries my own trap without aiming at it
+				if race.victims[id] == player.peer and target_farm.targets.has(id):
+					start(&"pry", target_farm.targets[id])
+					return
 		if tgt != null and not _need_release and Input.is_action_pressed(&"interact") and not Game.console_open:
 			var verbs: Array[StringName] = tgt.verbs_for(mine)
 			if not verbs.is_empty():
