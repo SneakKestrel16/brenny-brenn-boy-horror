@@ -181,3 +181,8 @@ was first built with a whole-file gate and came out silent for A and B; it is no
 | pit_fall | A | |
 | lantern_blow_out | A | Breath of a person blowing out a candle, no voice. |
 | whistle | C | |
+| step_dirt | B | |
+| step_corn | A | |
+| step_wood | A | |
+| emote_cloth | C | |
+| ragdoll_thud | A | |
