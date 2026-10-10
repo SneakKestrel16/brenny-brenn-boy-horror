@@ -28,7 +28,14 @@ without a revert.
 | Task | Commit | What changed | Revert |
 |---|---|---|---|
 | P5-54 | 662d919 | test_roles: stale test fixed (debounce), no game change | `git revert 662d919` |
+| P5-52 | 0c17cb6 | Crowkeeper role: bait perches that flush crows when anything moves near (D-7) | `git revert 0c17cb6` |
+| P5-53 | 9aa255b | Horror role: darker world and private scares for that player only (D-8, D-9, D-10) | `git revert 9aa255b` (test_roles count also covers P5-52; fix by hand if reverting only one) |
 
 ## 3. Tests run and what we did
 
-(Filled in as tasks land.)
+- **P5-53 QA (Opus): FAIL, fixed by Director.** grep_rules flagged the word "flicker" in two comment lines of `horror_scares.gd` (reworded); roles.json cited doc 03 s13.2 instead of s23.1 (fixed). After merge: import 0 ERROR, parse_check 211/0, grep_rules 0 violations, test_roles PASS, test_horror PASS.
+- **P5-53 QA notes, not fixed:** silhouettes log `scare_applied` on the client with no host `scare` line (doc 05 s29 says `scare` is unused); lamp bulb glow is not dimmed, only light energy.
+- **P5-50 interior fill re-QA (Opus): PASS.** Not merged yet. Notes: the barn lantern also gets a fill (4 fills, not 3); faint wash through barn walls (+6 to +10 brightness on 0-255); no automated test for the fill.
+- **Resource cap.** You set 20% CPU / 20% RAM and max 3 agents. About 54 orphan Godot test processes from earlier runs (started around 05:00) use most of the CPU (about 80%) and 6.3 GB RAM. I am not allowed to kill them. To free the machine, run this in PowerShell (it also stops any test Godot an agent is running at that moment):
+  `Get-CimInstance Win32_Process -Filter "Name like 'Godot%'" | Where-Object { $_.CommandLine -match 'audio-driver Dummy' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`
+- **Work paused for the cap:** P5-48 lore rework, P5-51 corn, P5-56 creature AI, P5-57 bots, P5-58 creature pick, P5-59 textures, P5-60 emotes, P5-61 signs. They resume one at a time.
