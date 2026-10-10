@@ -173,3 +173,7 @@ was first built with a whole-file gate and came out silent for A and B; it is no
 | animal_pig | C | |
 | animal_pig_panic | A | CEO: "save option c because i might switch to that later". At install, also keep C (for example `assets/audio/alt/`). |
 | animal_cow | A | |
+| animal_cow_panic | A | CEO: "keep option c of the cow one as an option to be used later". At install, also keep C (for example `assets/audio/alt/`). |
+| flare_shot | C | |
+| flare_hiss_loop | C | |
+| cart_squeak_loop | B, remade | CEO: "reduce the max sound in the audio because the peak loud sound was too much". Rebuilt with `squash` 2 dB and `TRIM` -6 dB: RMS -16.8, peak -9.1 (was -10.8 / -1.9). CEO: "yes go with b". |

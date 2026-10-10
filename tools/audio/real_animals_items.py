@@ -108,6 +108,10 @@ def loop(a, n):  # a seamless loop of n samples: crossfade the tail over the hea
     return a[:n]
 
 
+def squash(a, db):  # soft-limit peaks to about db above the RMS; memoryless, so a loop seam stays seamless
+    t = np.sqrt((a**2).mean())*10**(db/20); return t*np.tanh(a/t)
+
+
 def rms_db(a): return 20*np.log10(np.sqrt((a**2).mean())+1e-12)
 
 
@@ -117,6 +121,7 @@ def current(sid):
 
 # sound -> {option: [(sound_id, audio), ...]}; filled by the recipes below.
 B = {}
+TRIM = {("cart_squeak_loop", "B"): -6}  # dB below the current file's RMS, from CEO listen notes
 
 
 def opt(name, o, *pairs): B.setdefault(name, {})[o] = list(pairs)
@@ -144,7 +149,7 @@ def build(only):
         for o in "ABC":
             parts = opts[o]
             for k, (sid, a) in enumerate(parts):
-                lp = sid.endswith("_loop"); a = finish(sid, a, lp)
+                lp = sid.endswith("_loop"); a = finish(sid, a, lp)*10**(TRIM.get((name, o), 0)/20)
                 write(OUT / f"{sid}_{o}.wav", a)
                 listen += [np.tile(a, 2) if lp else a, short]  # a loop plays twice to expose the seam
                 print(f"{name} {o} {sid}: {len(a)/R:.2f}s rms{rms_db(a):.1f} pk{20*np.log10(abs(a).max()):.1f} first{a[0]*32767:.0f} last{a[-1]*32767:.0f}")
@@ -204,7 +209,7 @@ def recipes():
     opt("flare_hiss_loop", "C", (sid, lp_(sid, load(316682), 4.0, hp=150)))
     sid = "sfx_cart_squeak_loop"
     opt("cart_squeak_loop", "A", (sid, lp_(sid, load(635488), 2.5, hp=60)))
-    opt("cart_squeak_loop", "B", (sid, lp_(sid, load(577320), 1.95, hp=60)))
+    opt("cart_squeak_loop", "B", (sid, squash(lp_(sid, load(577320), 1.95, hp=60), 2)))  # CEO 2026-10-09: "reduce the max sound ... the peak loud sound was too much"
     opt("cart_squeak_loop", "C", (sid, lp_(sid, load(389687), 0.9, hp=60)))
     opt("beartrap_snap", "A", ("sfx_beartrap_snap", cut(644245, 0.78, 1.75, hp=40, fi=0.001, fo=0.25)))
     opt("beartrap_snap", "B", ("sfx_beartrap_snap", one(278203, 0.5, hp=40)))
