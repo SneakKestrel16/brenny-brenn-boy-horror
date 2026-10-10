@@ -194,3 +194,4 @@ was first built with a whole-file gate and came out silent for A and B; it is no
 | radio_dead | A | |
 | ui_click | A | |
 | ui_confirm | A | |
+| ui_deny | C | |
