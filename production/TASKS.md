@@ -1005,10 +1005,13 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-20 | Gameplay | Players type their own name in the lobby before start (CEO 2026-10-09: "not everyone shows up as farmer") | done (QA PASS, D-173) | |
 | P5-21 | Level Designer | Paths connect every structure to another; remove the stray path behind the barn to the animal pen (CEO 2026-10-09) | done (QA PASS, D-175) | P5-18 |
 | P5-22 | Gameplay | Wire the P5-14 to P5-17 models: buildings, traps, pegboard, tools, crops, corn, crows, hands, road items, ragdoll, ghost shell | done (re-QA skipped by CEO, D-181) | P5-13 |
-| P5-23 | Gameplay | Wire the primitives left by P5-13 (Q-283): death corpse, Taint look, hats, Taint sleeves, `interact` animation, cart lantern glass | todo | P5-13 |
+| P5-23 | Gameplay | Wire the primitives left by P5-13 (Q-283): Taint look, Taint sleeves, `interact` animation, cart lantern glass, store scarecrows, scarecrow facing | todo | P5-13 |
 | P5-24 | Gameplay | Next season through the lobby: roles re-picked, quirk reroll, `Imposter.pick`, season-start save (P5-04 follow-up) | done (QA PASS, D-178) | P5-04, P5-11 |
 | P5-25 | Gameplay | Imposter `pegboard_mark` and interaction holds for the kit (Q-303) | done (QA PASS, D-179) | P5-11 |
-| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-25 |
+| P5-26 | 3D | Missing models: trap_tripwire, field scarecrow, perched crow, clue decals, window glow, lit road lamp, hoe, whistle | todo | P5-14 |
+| P5-27 | Gameplay | Wire the P5-26 models; host door state (Q-307) | todo | P5-26 |
+| P5-28 | Gameplay | Lobby and save fixes: `trait_report_pending` saved, Season N label, bottom buttons overlap | todo | P5-24 |
+| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-28 |
 
 ### P5-02 Phase 5 design and data
 Owner: Game Designer. Output: doc 02, doc 03, `data/`, `tools/sim/`; handoff note.
@@ -1158,8 +1161,10 @@ Acceptance:
 ### P5-23 Wire the P5-13 leftover primitives
 Owner: Gameplay Programmer. Output: game code, handoff note.
 Acceptance:
-- Q-283 items use the farmer rig or models: death corpse (`game/ghost/death.gd`), Taint look (`tool_hands`), hats on
-  the `hat` bone, `mat_farmer_sleeves` for Taint, the `interact` animation on interact, cart lantern glass.
+- Q-283 items left after P5-05 (hats) and P5-22 (death corpse) use the farmer rig or models: Taint look
+  (`tool_hands`), `mat_farmer_sleeves` for Taint, the `interact` animation on interact, cart lantern glass.
+- The store's scarecrow preview (`store.gd` `_show_scarecrows`) uses `prop_scarecrow_player.glb`, not a cylinder.
+- Placed and moved scarecrows face the yaw the host sends (`scarecrow_moved` `yaw`, P5-22 OPEN_ISSUES).
 - The big-head dev toy stays a sphere. Two-instance run and smoke pass.
 
 ### P5-24 Next season through the lobby
@@ -1177,3 +1182,27 @@ Acceptance:
 - Kit actions (`whistle_throw`, `gate_prop`, `false_flag`, `pegboard_mark`) use interaction holds with a hold bar like
   other actions. Keys: placeholders until the CEO picks (Q-303).
 - `test_imposter_sync` 4 instances still passes; no client log holds the imposter's uid.
+
+### P5-26 Missing models
+Owner: 3D Artist. Output: .glb models, doc 07 asset list status, handoff note.
+Acceptance:
+- Low-poly, real-scale models per doc 07 for: `trap_tripwire` (set and sprung), the field scarecrow, a perched crow,
+  clue decals (fresh dirt, bent stalks, cut stalk), window glow (emissive pane), a lit road lamp, the hoe and the
+  whistle (P5-22 OPEN_ISSUES).
+- Placement notes for each model, like Q-307. No game code changed.
+
+### P5-27 Wire the P5-26 models and door state
+Owner: Gameplay Programmer. Output: game code, doc 05, handoff note.
+Acceptance:
+- Each P5-26 model replaces its gray-box or missing visual in game; held hoe and whistle show in the hand.
+- Doors open and close with host-owned state, synced to late joiners (Q-307).
+- Two-instance run and smoke pass.
+
+### P5-28 Lobby and save fixes
+Owner: Gameplay Programmer. Output: game code, handoff note.
+Acceptance:
+- `trait_report_pending` is saved, so a season loaded from its season-start save prints the trait line and plays
+  `ui_trait_gained` (P5-24 OPEN_ISSUES).
+- The lobby shows "Season N".
+- The lobby bottom buttons (START THE SEASON, Settings, Leave to menu) do not overlap at 1280x720 and 1920x1080.
+- Two-instance run through a season end and a save load passes.
