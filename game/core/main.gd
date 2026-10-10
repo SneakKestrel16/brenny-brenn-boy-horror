@@ -25,6 +25,7 @@ func _ready() -> void:
 	var doors := Doors.new()  # P5-27: door state (game/interaction/doors.gd), after Farm (its targets) and before the Creature (which it exempts)
 	doors.name = "Doors"
 	add_child(doors)
+	add_child(BarnSign.new())  # P5-34: the how-to-play signboard in the barn (game/world/barn_sign.gd)
 	add_child(WorldProps.new())  # P5-27: window glow, road lamps, perched crows (game/core/world_props.gd), after Generator
 	var taint := Node.new()  # P3-07: who is Tainted, and the Taint sources on the ground
 	taint.set_script(load("res://game/player/taint.gd"))
@@ -77,6 +78,7 @@ func _ready() -> void:
 	add_child(DebugView.new())  # P1-12: hidden unless --debug-view or F3 (host)
 	if DevConsole.enabled():  # D-031: ` opens it in debug runs or with --dev
 		add_child(DevConsole.new())
+	add_child(IntroCard.new())  # P5-34: the situation and the goal, once per new season (game/ui/intro_card.gd)
 	add_child(WaitingCard.new())  # P4-10: a season never plays on with one human
 	Save.apply_pending(self)  # P4-10: a loaded season's state goes into the live nodes (host)
 	if Game.season_sting:  # P5-24: every peer, once, when a next season leaves the lobby
