@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/emotes.schema.json",
+  "title": "Emote list, in emote-wheel order (doc 01 Emotes and physical comedy, P5-45)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["table", "schema_version", "records"],
+  "properties": {
+    "table": { "const": "emotes" },
+    "schema_version": { "const": 1 },
+    "records": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "source", "loud"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z_]+$" },
+          "source": { "enum": ["doc01", "sim", "placeholder"] },
+          "cite": { "type": "string" },
+          "loud": { "type": "boolean", "description": "true = also a Noise of kind voice at 255 (the scream)" }
+        }
+      }
+    }
+  }
+}

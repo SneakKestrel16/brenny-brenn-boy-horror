@@ -790,9 +790,22 @@ P4-12: `game/items/cart.gd`, an interactable that `farm.gd` builds under `World`
   AI Programmer confirms, Q-019). `request_emote(emote_id)`; the host rate-limits (1 per 1 s,
   `placeholder`) and broadcasts `apply_emote`; clients play the animation on the sender's body.
   Pointing is a visible arm direction only (no marker).
+- **More emotes (P5-45).** The list lives in `data/emotes.json` (schema `data/emotes.schema.json`, table
+  `emotes`, in wheel order, each with `loud` and `cite`): the four above plus `thumbs_up`, `beckon`, `shh`,
+  `cower`, `cheer`, `facepalm`, `clap`. Doc 01 lists only the first four; the extra seven rest on the CEO's
+  STOP 6 and are marked `placeholder` in the data (no doc 01 edit made). Only `scream` is `loud` (Noise `voice`
+  255); the others are silent and cost nothing in the Noise model. The seven are procedural poses in
+  `game/player/emote_poses.gd`, built from the body's `Skeleton3D` by bone name (rest rotation times a delta
+  Euler per key) and added to the AnimationPlayer's library by `FarmerBody._init`, so they play on any farmer
+  mesh with the 12 bones and need no clip in the glb. `Player.play_emote` plays any one-shot the body has.
+  Networking is unchanged: `request_emote` to the host, `emote()` validates against `emotes()` (from data),
+  `apply_emote` to all. The wheel (`emote_wheel.gd`) lays the words on an ellipse, clockwise from the top, and
+  picks by angle. QA: `-- --autoemotes` requests every emote 4 s apart after 12 s; `-- --emote-shots=<dir>`
+  on the watching peer saves `<emote>_a.png` / `_b.png` from a camera in front of the sender.
+  Test: `tests/gameplay/test_emotes.gd`.
 - **Whistle and emotes as built (P3-11, `game/player/whistle_emotes.gd`, node `WhistleEmotes`).** `whistle`
-  (Q) sends `request_whistle`; hold `emote_wheel` (Z) opens a four-word wheel (`game/ui/emote_wheel.gd`:
-  mouse up `wave`, right `point`, down `shrug`, left `scream`; release fires, under 25 px of mouse travel
+  (Q) sends `request_whistle`; hold `emote_wheel` (Z) opens the word wheel (`game/ui/emote_wheel.gd`; P3-11 had four
+  words: up `wave`, right `point`, down `shrug`, left `scream`; P5-45 adds seven, see below; release fires, under 25 px of mouse travel
   picks nothing) and sends `request_emote(emote_id)`. Both keys are ignored while the dev console is open
   and for a ghost (a ghost's Q is `spectate_prev`). The host checks, in order: the sender has a body
   (`no_player`), is alive (`ghost`), and the whistle cooldown of **5 s** (`cooldown`; `placeholder`,
@@ -1205,7 +1218,7 @@ the QA changes.
 | `lure_fooled` | host, when a recorded-line lure has `lure_result.worked` | `lure_id`, `target`, `line_id` | Doc 01 Phase 2 voice lure check (Q-037) |
 | `perf_sample` | each peer, debug runs only (`--debug-view` or `--bots`) | `avg_ms`, `max_ms`, `draw_calls`, `adapter` (`RenderingServer.get_video_adapter_name()`) | Doc 07 section 10.3 four-instance corn profile (Q-037) |
 | `whistle` | host, on an accepted whistle | `player`, `position` (`[x, z]`), `cooldown_s` | Doc 01 "Whistle"; P3-11 cooldown check |
-| `emote` | host, on an accepted emote | `player`, `emote` (`wave`, `point`, `shrug`, `scream`), `position` (`[x, z]`) | Doc 01 "Emotes"; P3-11 rate-limit check. Refusals of both are `hold_refused` with `verb` `whistle` or `emote` and `reason` `cooldown`, `rate_limit`, `unknown_emote`, `ghost` or `no_player` |
+| `emote` | host, on an accepted emote | `player`, `emote` (any id in `data/emotes.json`), `position` (`[x, z]`) | Doc 01 "Emotes"; P3-11 rate-limit check. Refusals of both are `hold_refused` with `verb` `whistle` or `emote` and `reason` `cooldown`, `rate_limit`, `unknown_emote`, `ghost` or `no_player` |
 | `dev_toy` | host, when a dev toy starts (P5-10) | `toy` (`shrink`, `disco`, `nuke`, `low_gravity`, `big_heads`, `confetti`, `chicken`), `seconds` (0 = until dawn), `player` | Doc 01 "Dev toys": a session that used a toy is not a play session. `check_logs.py` drops the session from every measure and lists it (`dev_toy_sessions`). Section 25 |
 | `imposter_picked` | host only, at match start (and each next season) | `season`, `roster_id` (profile uid), `forced` | Doc 02 s22.1. Only the host's own log has it; no client ever logs or receives it. Section 26 |
 | `group_settings_imposter` | host, when the lobby toggle changes | `enabled` | Doc 01 "Imposter mode" (default off, D-158). Public setting. Section 26 |

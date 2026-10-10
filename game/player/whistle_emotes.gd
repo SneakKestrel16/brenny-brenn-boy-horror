@@ -7,7 +7,7 @@ extends Node
 
 const EmoteWheel := preload("res://game/ui/emote_wheel.gd")
 
-const EMOTES: Array[StringName] = [&"wave", &"point", &"shrug", &"scream"]  ## doc 01 "Emotes and physical comedy"
+const FALLBACK: Array[StringName] = [&"wave", &"point", &"shrug", &"scream"]  ## doc 01 "Emotes and physical comedy"; used when `data/emotes.json` is absent
 const WHISTLE_COOLDOWN_S := 5.0  ## doc 01 "Whistle": "short cooldown"; the number is a placeholder (doc 05 s14)
 const EMOTE_GAP_S := 1.0  ## doc 05 s14: host rate limit, 1 per 1 s (placeholder)
 const SCREAM_BYTE := 255  ## doc 03 s3.1 emote `scream` row: `voice` at byte 255, 60 m (inference there)
@@ -15,6 +15,7 @@ const SCREAM_BYTE := 255  ## doc 03 s3.1 emote `scream` row: `voice` at byte 255
 var _last_whistle := {}  ## host: peer -> msec of the last accepted whistle
 var _last_emote := {}  ## host: peer -> msec of the last accepted emote
 var _wheel: Control
+var _shot_dir := ""  ## QA `--emote-shots=<dir>`
 
 
 func _ready() -> void:
@@ -24,15 +25,39 @@ func _ready() -> void:
 	if DisplayServer.get_name() != "headless":
 		var layer := CanvasLayer.new()
 		_wheel = EmoteWheel.new()
+		_wheel.kinds = emotes()
 		_wheel.picked.connect(func(e: StringName) -> void: Net.to_host(&"request_emote", [e]))
 		layer.add_child(_wheel)
 		add_child(layer)
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--emote-shots="):
+			_shot_dir = a.trim_prefix("--emote-shots=")
 	if OS.get_cmdline_user_args().has("--autowhistle"):
 		_autowhistle()
+	elif OS.get_cmdline_user_args().has("--autoemotes"):
+		_autoemotes()
 
 
 ## QA (`-- --autowhistle`, multi-instance tests): this peer sends the same requests the keys send, so a
 ## client exercises the real request path. Twice fast each time, so the host's cooldown and rate limit answer too.
+## The emote ids in wheel order, from `data/emotes.json` (P5-45).
+func emotes() -> Array[StringName]:
+	var out: Array[StringName] = []
+	for r in Data.records(&"emotes"):
+		out.append(StringName(r["id"]))
+	return out if not out.is_empty() else FALLBACK
+
+
+## QA (`-- --autoemotes`, P5-45): this peer asks for every emote in wheel order, 4 s apart, after a 12 s settle.
+func _autoemotes() -> void:
+	await get_tree().create_timer(12.0).timeout
+	for k in emotes():
+		if not is_inside_tree():
+			return
+		Net.to_host(&"request_emote", [k])
+		await get_tree().create_timer(4.0).timeout
+
+
 func _autowhistle() -> void:
 	for i in 6:
 		await get_tree().create_timer(3.0).timeout
@@ -40,8 +65,8 @@ func _autowhistle() -> void:
 			return
 		Net.to_host(&"request_whistle")
 		Net.to_host(&"request_whistle")
-		Net.to_host(&"request_emote", [EMOTES[i % EMOTES.size()]])
-		Net.to_host(&"request_emote", [EMOTES[i % EMOTES.size()]])
+		Net.to_host(&"request_emote", [emotes()[i % emotes().size()]])
+		Net.to_host(&"request_emote", [emotes()[i % emotes().size()]])
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -78,12 +103,12 @@ func whistle(peer: int) -> StringName:
 
 ## Host: `peer` asks for emote `kind`. Same return as `whistle`.
 func emote(peer: int, kind: StringName) -> StringName:
-	var reason := &"unknown_emote" if not kind in EMOTES else _refusal(peer, _last_emote, EMOTE_GAP_S, &"rate_limit")
+	var reason := &"unknown_emote" if not kind in emotes() else _refusal(peer, _last_emote, EMOTE_GAP_S, &"rate_limit")
 	if reason != &"":
 		return _refuse(peer, &"emote", reason)
 	_last_emote[peer] = Time.get_ticks_msec()
 	var pos: Vector3 = Game.players[peer].pos
-	if kind == &"scream":
+	if bool(Data.record(&"emotes", kind).get("loud", kind == &"scream")):
 		NoiseBus.emit_voice(pos, SCREAM_BYTE, peer)
 	Log.event(&"emote", {"player": peer, "emote": String(kind), "position": [snappedf(pos.x, 0.1), snappedf(pos.z, 0.1)]})
 	Net.to_peers(&"apply_emote", [peer, kind, pos])
@@ -119,3 +144,20 @@ func _on_apply(what: StringName, args: Array) -> void:
 		var pl: Node = get_parent().get_node("Players").player(args[0])
 		if pl:
 			pl.play_emote(args[1])
+			if pl.is_visible_in_tree() and _shot_dir != "" and args[0] != Game.local_peer():
+				_shoot(pl, args[1])
+
+
+## QA (`-- --emote-shots=<dir>`, P5-45): on a peer that sees another player emote, a camera 3 m in front of that body
+## saves `<dir>/<emote>_a.png` and `_b.png` (0.5 s and 1.1 s in), then hands the view back. Needs a window.
+func _shoot(pl: Node3D, kind: StringName) -> void:
+	var cam := Camera3D.new()
+	get_parent().add_child(cam)
+	var fwd := -pl.global_transform.basis.z
+	cam.global_position = pl.global_position + fwd * 3.2 + Vector3.UP * 1.2
+	cam.look_at(pl.global_position + Vector3.UP * 1.0)
+	cam.make_current()
+	for tag in ["a", "b"]:
+		await get_tree().create_timer(0.5 if tag == "a" else 0.6).timeout
+		get_viewport().get_texture().get_image().save_png("%s/%s_%s.png" % [_shot_dir, kind, tag])
+	cam.queue_free()

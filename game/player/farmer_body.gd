@@ -4,7 +4,8 @@ extends Node3D
 ## tints the `mat_farmer_overalls` surface with the player's colour. The glb's materials are shared between
 ## instances, so each tinted surface gets its own copy (a surface override).
 
-const MODEL := preload("res://assets/models/char_farmer.glb")
+const EmotePoses := preload("res://game/player/emote_poses.gd")
+const MODEL :=preload("res://assets/models/char_farmer.glb")
 ## D-159 (Q-267): up to 6 players. Index = slot.
 const COLOURS: Array[Color] = [Color("C04040"), Color("4070C0"), Color("D0B040"), Color("50A050"), Color("8050B0"), Color("D07830")]
 const LOOPED: Array[StringName] = [&"idle", &"walk", &"run", &"crouch"]
@@ -24,6 +25,11 @@ func _init(slot: int = 0) -> void:
 	_ap = root.find_children("*", "AnimationPlayer", true, false)[0]
 	for n in LOOPED:
 		_ap.get_animation(n).loop_mode = Animation.LOOP_LINEAR
+	var lib := _ap.get_animation_library(&"")
+	var poses := EmotePoses.build(root.find_children("*", "Skeleton3D", true, false)[0])  # P5-45: code poses, any 12-bone mesh
+	for k in poses:
+		if not lib.has_animation(k):
+			lib.add_animation(k, poses[k])
 	tint(slot)
 
 

@@ -325,7 +325,7 @@ func shake(seconds: float, mult: float) -> void:
 ## P3-11 (doc 05 s14), P5-13: an emote on this body, every peer: the farmer's wave, point, shrug or scream
 ## animation. The owner sees nothing on itself (first person, its mesh is hidden).
 func play_emote(kind: StringName) -> void:
-	if kind in [&"wave", &"point", &"shrug", &"scream", &"interact"] and _mesh.has_anim(kind):
+	if not kind in [&"idle", &"walk", &"run", &"crouch"] and _mesh.has_anim(kind):  # P5-45: any one-shot, incl. the code poses
 		_emote_s = _mesh.shot(kind)
 
 

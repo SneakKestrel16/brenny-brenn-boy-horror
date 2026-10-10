@@ -1027,7 +1027,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-42 | Gameplay | Big heads toy texture issue (CEO STOP 6) | done (QA PASS) | P5-35 |
 | P5-43 | Gameplay | Dev command: whisper scare on one player (CEO STOP 6) | done (QA PASS) | P5-36 |
 | P5-44 | Gameplay | Screen messages go off screen (CEO STOP 6) | done (QA PASS) | P5-08 |
-| P5-45 | Gameplay | More emotes (CEO STOP 6) | in review | P5-08 |
+| P5-45 | Gameplay | More emotes (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-46 | Gameplay | Mouse sensitivity setting (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-47 | Level Designer | Move the well between field A and field B (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-48 | Gameplay | Lore in game from doc 11: road sign, intro line, masthead, notes, archive, win line (CEO STOP 6) | todo | P5-37 |

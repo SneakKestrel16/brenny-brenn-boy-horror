@@ -1,0 +1,17 @@
+{
+  "table": "emotes",
+  "schema_version": 1,
+  "records": [
+    { "id": "wave", "source": "doc01", "cite": "doc 01 Emotes and physical comedy", "loud": false },
+    { "id": "point", "source": "doc01", "cite": "doc 01 Emotes and physical comedy", "loud": false },
+    { "id": "shrug", "source": "doc01", "cite": "doc 01 Emotes and physical comedy", "loud": false },
+    { "id": "scream", "source": "doc01", "cite": "doc 01 Emotes and physical comedy: the scream gives you away; Noise voice 255, doc 03 s3.1 (inference there)", "loud": true },
+    { "id": "thumbs_up", "source": "placeholder", "cite": "P5-45, CEO STOP 6: more emotes; silent, body language only", "loud": false },
+    { "id": "beckon", "source": "placeholder", "cite": "P5-45: 'come here'; silent", "loud": false },
+    { "id": "shh", "source": "placeholder", "cite": "P5-45: 'be quiet'; silent", "loud": false },
+    { "id": "cower", "source": "placeholder", "cite": "P5-45: scared crouch; silent", "loud": false },
+    { "id": "cheer", "source": "placeholder", "cite": "P5-45: arms up, jumps; silent (no voice clip)", "loud": false },
+    { "id": "facepalm", "source": "placeholder", "cite": "P5-45; silent", "loud": false },
+    { "id": "clap", "source": "placeholder", "cite": "P5-45: silent (no clap sound until the Sound Designer adds one)", "loud": false }
+  ]
+}

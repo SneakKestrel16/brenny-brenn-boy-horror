@@ -45,7 +45,7 @@ const HELP := """Commands (host only unless marked):
   trap [bear|pit]           creature sets a trap at the free trap spot nearest you (default bear)
   flag [peer]               a player plants a flag at their feet, host rules apply (default: you)
   whistle [peer]            whistle as a player, through the host checks (default: you)
-  emote <kind> [peer]       wave, point, shrug or scream as a player (default: you)
+  emote <kind> [peer]       any emote id (data/emotes.json) as a player (default: you)
   kill [peer]               kill a player (default: you)
   respawn [peer]            bring a ghost back (default: you)
   ghost light|crow|rustle|caw [peer] [id]  a ghost power as that ghost, host rules apply (id: light or perch)
@@ -438,7 +438,7 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 		"emote":
 			var p := _peer_arg(a, 1)
 			if a.is_empty() or p == 0:
-				return "? emote wave|point|shrug|scream [peer]"
+				return "? emote <id from data/emotes.json> [peer]"
 			var why: StringName = main.get_node("WhistleEmotes").emote(p, StringName(a[0]))
 			return "%d: %s" % [p, a[0]] if why == &"" else "refused: %s" % why
 		"kill":
