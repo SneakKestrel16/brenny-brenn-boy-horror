@@ -146,7 +146,7 @@ Doc 01 "Crops": "16 field plots at the start, up to 24 with upgrades, split into
   the outer two (1 and 4) at 6, so 5 players open 4 sites (20 at the start) and 6 players open 8 (24).
   A site below its `min_players` stays closed and cannot be bought. Both rows keep the field centres in this section
   and section 8 (centres use the 12-plot grid), sit 6 m or more from corn (strip 2 is 6 m from A's row; strip 3 is
-  14 m from B's), 28 m from the barn door at nearest and 40 m or more from the town stand.
+  14 m and Patch4 6 m from B's, see section 15), 28 m from the barn door at nearest and 40 m or more from the town stand.
 - **Plots are 3 × 3 m** (`placeholder`), 4 columns by 3 rows per field, so 8 + 8 = 16 at the start
   and 12 + 12 = 24 at most with 4 or fewer players (doc 01 "Crops"); 32 with the headcount rows at 6. Upgrades fill the south row of each field; the bank's
   seizure of 2 plots ("Foreclosure Notice") takes from that row first (inference; doc 02 settles
@@ -326,12 +326,12 @@ lines from the corn" in DD Phase 1 (doc 01 "Build Plan").
 | cover_14 | (-9, -47) | Barn's north side, generator |
 | cover_15 | (30, 57) | Open ground south of field A |
 | cover_16 | (-42, 57) | Prize Pumpkin, strip 1 |
-| cover_17 | (73, -30) | Field B, north (Patch1, section 15) |
-| cover_18 | (97, -23) | Field B, gate approach (Patch2) |
-| cover_19 | (81, 22) | Shipping crate, south (Patch3) |
-| cover_20 | (59, -4) | Field B, west (Patch4) |
-| cover_21 | (101.5, 23) | Field B, south-east (Patch5) |
-| cover_22 | (69, 44) | Moonflower bed, crate (Patch6) |
+| cover_17 | (73, -21.5) | Field B, north (Patch1, section 15) |
+| cover_18 | (95.5, -17.5) | Field B, gate approach (Patch2) |
+| cover_19 | (81, 15.5) | Shipping crate, south (Patch3) |
+| cover_20 | (58.5, -4) | Field B, west (Patch4) |
+| cover_21 | (100.5, 23) | Field B, south-east (Patch5) |
+| cover_22 | (69, 39.5) | Moonflower bed, crate (Patch6) |
 
 ### 7.3 Crows, scarecrows, pen and escape spots
 
@@ -450,7 +450,9 @@ beyond that, only through animals and crows. Nearest corn to each work spot:
 | Barn door, field A centre | 12.0 | Yes |
 | Shed door | 13.4 | Yes |
 | Animal pen gate | 17.0 | Yes |
-| Farmhouse door, shipping crate | 20.0 | At the limit (field B's west edge is 14 m from strip 3, its nearest plot centre 15.5 m) |
+| Farmhouse door | 20.0 | At the limit |
+| Field B centre | 12.0 | Yes (P5-31 patches, section 15; was 20.0) |
+| Shipping crate | 10.8 | Yes (P5-31, Patch3; was 20.0) |
 | Farm gate | 4.0 | Yes (the lane's corn) |
 | Generator | 23.0 | No: the pen's animals and crow_06, 25 m away, react for it |
 | Well | 32.2 | No: crow_09 sits on the well |
@@ -705,20 +707,20 @@ it and Stalk and lures start from it (the creature walks through corn, no nav me
 
 | Patch | Rectangle | Cover | Kind | Role |
 |---|---|---|---|---|
-| Patch1 | x 68..78, z -40..-20 | cover_17 (73, -30) | island, field B | North of the cart route (6 m off R5 to R7); links the ring to field B's north side |
-| Patch2 | x 94..100, z -30..-16 | cover_18 (97, -23) | island, field B | East of field B beside the gate approach, about 6 m off the R7 to R8 leg |
-| Patch3 | x 78..84, z 14..30 | cover_19 (81, 22) | island, field B | South of the crate and its path, 9 m off the store path |
-| Patch4 | x 57..61, z -8..0 | cover_20 (59, -4) | island, field B | Between strip 3 and field B, 5 m from the nearest plot edge, 4.4 m off the A-to-B walk |
-| Patch5 | x 99..104, z 16..30 | cover_21 (101.5, 23) | island, field B | South-east of field B, clear of the east tree line (x 97) |
-| Patch6 | x 66..72, z 38..55 | cover_22 (69, 44) | strip 5 | Reaches north from the south ring toward the moonflower bed and the crate |
+| Patch1 | x 68..78, z -40..-20 | cover_17 (73, -21.5) | island, field B | North of the cart route (6 m off R5 to R7); links the ring to field B's north side |
+| Patch2 | x 94..100, z -30..-16 | cover_18 (95.5, -17.5) | island, field B | East of field B beside the gate approach, about 6 m off the R7 to R8 leg |
+| Patch3 | x 78..84, z 14..30 | cover_19 (81, 15.5) | island, field B | South of the crate and its path, 9 m off the store path |
+| Patch4 | x 57..60, z -8..0 | cover_20 (58.5, -4) | island, field B | Between strip 3 and field B, 6 m from the headcount row (x 66), 4.4 m off the A-to-B walk |
+| Patch5 | x 99..102, z 16..30 | cover_21 (100.5, 23) | island, field B | South-east of field B, clear of the east tree line (x 97) |
+| Patch6 | x 66..72, z 38..55 | cover_22 (69, 39.5) | strip 5 | Reaches north from the south ring toward the moonflower bed and the crate |
 
 - Rules kept (checked by `check_farm.gd`, all PASS): every marker, tree canopy, path, fence and
   doc 04 s8.7 walk stays clear of the patches; every corn distance in section 8.4 for the pumpkin, drum, barn door,
   shed door, pen gate, generator, well and farm gate is unchanged; the cart route's closest pass to
-  corn is still 3.7 m. Gaps between patches and old corn are 4 m or more, so players always have a way round.
-- Changed: corn within field B's centre is now 11 m (was 20 m), and within the crate 10.8 m (was 20 m).
+  corn is still 3.7 m. Gaps between patches and old corn are 3 m or more (Patch5 to the east ring), so players always have a way round.
+- Changed: corn within field B's centre is now 12 m (was 20 m), and within the crate 10.8 m (was 20 m).
   Field B is no longer at the ghost 20 m limit; the ghost sees corn edges there (section 8.4).
-  Sections 5.1 and 8.3 ("6 m or more from corn") hold for every plot except Patch4's: its nearest plot edge is 5 m (`placeholder`).
+  Section 5.1 ("6 m or more from corn") holds for every plot and headcount row (Patch4 ends 6 m from x 66).
 - I tried a seventh strip (x -52..-46, z -45..-25, north of the farmhouse) and dropped it: it sits on
   the West tree line (West2, 3, 5).
 - Phase 2 scene totals: 22 cover points (`check_farm.gd` counts it).
