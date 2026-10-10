@@ -76,6 +76,10 @@ func _ready() -> void:
 	add_child(_cam)
 	_target_pos = global_position
 	_make_held()
+	var dress := Node.new()  # P5-05: worn hat and overalls (game/player/cosmetic_dress.gd)
+	dress.set_script(preload("res://game/player/cosmetic_dress.gd"))
+	dress.name = "CosmeticDress"
+	add_child(dress)
 	Net.apply_received.connect(_on_carry)
 	if is_local:
 		_cam.current = true

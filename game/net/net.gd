@@ -611,6 +611,17 @@ func apply_store(state: Dictionary) -> void:
 	apply_received.emit(&"store", [state])
 
 
+## P5-05 cosmetics: `buy` or `wear` (id, slot). The host validates and answers `apply_cosmetics` to everyone.
+@rpc("any_peer", "call_remote", "reliable")
+func request_cosmetic(op: StringName, id: StringName, slot: StringName) -> void:
+	request_received.emit(&"cosmetic", _sender(), [op, id, slot])
+
+
+@rpc("authority", "call_remote", "reliable")
+func apply_cosmetics(table: Dictionary) -> void:
+	apply_received.emit(&"cosmetics", [table])
+
+
 @rpc("authority", "call_remote", "reliable")
 func apply_refused(verb: StringName, reason: StringName) -> void:
 	apply_received.emit(&"refused", [verb, reason])

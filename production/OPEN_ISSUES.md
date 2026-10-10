@@ -500,3 +500,10 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   Game Designer.
 - **Host times only begin to act**: a modded imposter client can begin, walk off and act within 30 s. Accepted by
   D-179 (the client owns its input). Owner: none.
+
+## Found at the P5-05 review (QA, 2026-10-09)
+
+- **`HAT_LOOK` / `TINT_LOOK` placeholder colours** in `cosmetics.gd` (doc 07 s8 gives none; only fallbacks once the
+  glbs load). Owner: Technical Artist.
+- **"ObjectDB instances leaked at exit" warnings** in test_farmer_body, test_colour_slots and one client run. Inference:
+  the test scripts never free their nodes; a run on main before P5-05 settles it. Owner: QA.

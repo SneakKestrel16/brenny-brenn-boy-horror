@@ -210,6 +210,7 @@ func load_season(ref: String, port: int = Net.DEFAULT_PORT) -> Error:
 		if get(k) != null:
 			set(k, s.game[k])
 	Save.pending = s
+	Cosmetics.load_state(s.get("extras", {}).get("cosmetics", {}))  # P5-05: the lobby shows what each farmhand owns
 	var err := start_host(port, true)
 	if err != OK:
 		Save.pending = {}
@@ -412,6 +413,7 @@ func leave_session(reason: StringName = &"left") -> void:
 	Log.close()
 	multiplayer.multiplayer_peer = null
 	players.clear()
+	Cosmetics.reset()
 	in_session = false
 	in_lobby = false
 	lobby_ready.clear()

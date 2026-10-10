@@ -1256,3 +1256,12 @@ and now in doc 06 s7 "Imposter mode": `request_imposter_hold`, `apply_pegboard_m
 interactable; any completed pegboard hold clears every mark. Known limit accepted: the host times only begin to act.
 **Why:** QA PASS (handoffs/P5-25.md "QA re-review"); `test_imposter`, `test_imposter_sync` 2 instances,
 `test_p5_24_lobby` and smoke pass on main.
+
+### D-180 · 2026-10-09 · Director · P5-05 merged
+P5-05 (cosmetics: store items once the debt is paid, equip, synced, saved) passed QA after three rounds: four small
+fixes, then a FarmerBody port (hats on the `hat` bone), then the pattern overlays for plaid, striped and patched
+overalls, which nothing called. CEO ruling: cosmetics are permanent for now, and Season's End purchases are not saved.
+The `net.gd` messages and the doc 05 section are accepted under CONTRACTS s7 (Gameplay wrote them; Network & Voice
+reviews at P5-08). `HAT_LOOK` and `TINT_LOOK` are placeholder fallback colours (doc 07 s8 gives none).
+**Why:** QA PASS (handoffs/P5-05.md "QA re-review 2"); `test_cosmetics` 2 instances, `test_imposter_sync`,
+`test_p5_24_lobby`, `test_farmer_body` and smoke pass on main.

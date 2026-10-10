@@ -1278,6 +1278,30 @@ the cart, Dawn Report, Season Awards, saves (Phase 2: the first full season), em
 polish, carrying teammates, flags and pegboard. Their message names are reserved in doc 06 section
 7 so they add no transport work.
 
+### 20.1 Cosmetics (P5-05, doc 02 section 21.5, doc 07 section 8)
+
+- **Autoload `Cosmetics`** (`game/items/cosmetics.gd`). Rows are `data/cosmetics.json` records of kind `hat` or
+  `overalls`. Ownership is kept by player uid (`Save.uid_of`), so it survives a rejoin, a new peer id and the
+  next season (the autoload outlives a `Main`). No gameplay code reads it.
+- **Flow:** client `Net.request_cosmetic(op, id, slot)` (`buy`, `wear`, `sync`; `wear` with an empty id takes the slot
+  off) -> host validates (`why_not_buy`: `no_item`, `not_sold`, `ghost`, `owned`, `too_far`, `no_coins`) ->
+  `farm.add_coins(-price, &"cosmetic", peer)` -> `Net.apply_cosmetics(table)` to all. The table is
+  `{owned: {peer: [ids]}, worn: {peer: {slot: id}}}`; refusals go back as `apply_refused(&"cosmetic", why)`.
+  Host logs `cosmetic_bought`, `cosmetic_worn`, `cosmetic_refused`.
+- **Sold when** the mirrored `Debt` node says `not lost and paid > 0 and owed == 0`, and the buyer is within crate
+  range (`store._too_far`) until `Clock.season_over`, when the Season's End card sells (the crate is out of reach then).
+- **Save:** group `saveable`, extras key `cosmetics` (`{owned: {uid: [ids]}, worn: {uid: {slot: id}}}`); `Game.load_season`
+  calls `load_state`. Unknown ids are dropped.
+- **Looks:** `Cosmetics.make_hat(id)` loads `res://assets/models/char_hat_<id>.glb` (origin at the band bottom) else a
+  primitive from `HAT_LOOK`; `tint(id)` reads the glb extra `tint` else `TINT_LOOK` (placeholders, the extras format is
+  inference until P5-06 lands); `attach_overlay(skel, id)` re-parents `char_overalls_<name>.glb` meshes into a farmer
+  Skeleton3D (the plaid, striped and patched patterns exist only as these skinned meshes; their `tint` is alpha 0).
+- **UI:** `CosmeticsPanel` (`game/ui/cosmetics_panel.gd`) in the pause menu (lobby and match, wear only), the store menu
+  and the Season's End card (buy and wear). `CosmeticDress` is `game/player/cosmetic_dress.gd`: a child of every
+  non-local Player that calls `FarmerBody.wear_hat` (a `BoneAttachment3D` on the `hat` bone) and `FarmerBody.set_overalls(colour, id)`
+  (frees the old overlay meshes, attaches the new; alpha 0 keeps the player colour, D-159); the lobby line-up swaps the role hat for the worn hat.
+- **Test:** `tests/net/test_cosmetics.gd` (2 instances, ports 53750-53759).
+
 ## 21. Testing
 
 - **2+ instances over ENet**, every feature: `uv run tools/qa/multi.py -n 2` (PP-03). The host's own

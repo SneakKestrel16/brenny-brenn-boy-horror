@@ -145,6 +145,8 @@ func show_card(res: Dictionary) -> void:
 			var l := _label(q, 16, INK, HORIZONTAL_ALIGNMENT_LEFT)
 			l.modulate.a = 0.0
 			_pending.append(l)
+	if not lost:
+		_box.add_child(CosmeticsPanel.new(true))  # P5-05: the debt is paid; sold until this card closes (doc 02 s21.5)
 	_box.add_child(HSeparator.new())
 	if lost:
 		_label("Nothing carries over.", 14, INK, HORIZONTAL_ALIGNMENT_CENTER)  # placeholder copy

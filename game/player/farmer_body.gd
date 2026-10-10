@@ -10,6 +10,10 @@ const COLOURS: Array[Color] = [Color("C04040"), Color("4070C0"), Color("D0B040")
 const LOOPED: Array[StringName] = [&"idle", &"walk", &"run", &"crouch"]
 
 var _ap: AnimationPlayer
+var _slot := 0
+var _overalls := Color(0, 0, 0, 0)  ## P5-05 cosmetic overalls colour; alpha 0 = none
+var _overlay: Array[MeshInstance3D] = []
+var _att: BoneAttachment3D  ## P5-05 cosmetic hat on the `hat` bone
 
 
 func _init(slot: int = 0) -> void:
@@ -30,14 +34,50 @@ static func colour(slot: int) -> Color:
 
 
 func tint(slot: int) -> void:
+	_slot = slot
 	for mi in find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
 		for i in m.mesh.get_surface_count():
 			var mat := m.mesh.surface_get_material(i) as StandardMaterial3D
 			if mat and mat.resource_name == "mat_farmer_overalls":
 				var own := mat.duplicate() as StandardMaterial3D
-				own.albedo_color = colour(slot)
+				own.albedo_color = _overalls if _overalls.a > 0.0 else colour(slot)
 				m.set_surface_override_material(i, own)
+
+
+## P5-05 (doc 02 s21.5): cosmetic overalls colour; alpha 0 keeps the player colour (D-159).
+## `id` (the cosmetic id) also brings its skinned pattern overlay meshes (`Cosmetics.attach_overlay`); empty removes them.
+func set_overalls(c: Color, id: StringName = &"") -> void:
+	_overalls = c
+	tint(_slot)
+	for m in _overlay:
+		m.get_parent().remove_child(m)
+		m.queue_free()
+	_overlay.clear()
+	var cos := (Engine.get_main_loop() as SceneTree).root.get_node_or_null("Cosmetics")  # by path: -s test scripts compile this without autoloads
+	if id != &"" and cos:
+		_overlay = cos.attach_overlay(find_children("*", "Skeleton3D", true, false)[0], id)
+
+
+## The overlay meshes of the worn overalls, on the Skeleton3D.
+func overlay() -> Array[MeshInstance3D]:
+	return _overlay
+
+
+## P5-05: a cosmetic hat on the `hat` bone (origin at the hat's band bottom); null takes it off.
+func wear_hat(hat: Node3D) -> void:
+	if _att:
+		_att.get_parent().remove_child(_att)  # frees the name now
+		_att.queue_free()
+		_att = null
+	if hat == null:
+		return
+	var skel := find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	_att = BoneAttachment3D.new()
+	_att.name = "HatAttach"
+	skel.add_child(_att)
+	_att.bone_name = "hat"
+	_att.add_child(hat)
 
 
 ## A looping animation (no-op when it already plays). `speed` scales it (crouch-walking plays `crouch` faster).

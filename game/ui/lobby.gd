@@ -128,13 +128,25 @@ class LineUp extends Node3D:
 		var ready := peer < 0 or Game.lobby_ready.has(peer)  # bots count as ready (Game.all_ready)
 		st.text = "HOST" if peer == 1 else ("READY" if ready else "NOT READY")
 		st.modulate = EMBER if peer == 1 else (READY_COL if ready else NOT_READY_COL)
-		if f.get_meta(&"hat", &"-") != role:
-			f.set_meta(&"hat", role)
+		var look := Cosmetics.look(peer)  # P5-05: a worn cosmetic hat replaces the role hat (doc 02 s21.5, Q-255)
+		var worn := StringName(look.get(&"hat", &""))
+		var key := worn if worn != &"" else role
+		if f.get_meta(&"hat", &"-") != key:
+			f.set_meta(&"hat", key)
 			var old := f.get_node_or_null("Hat")
 			if old:
 				old.free()
-			if HATS.has(role):
+			if worn != &"":
+				var ch := Cosmetics.make_hat(worn)
+				ch.name = "Hat"
+				ch.position.y = 1.74
+				f.add_child(ch)
+			elif HATS.has(role):
 				f.add_child(_hat(role))
+		var ov := StringName(look.get(&"overalls", &""))
+		if f.get_meta(&"overalls", &"-") != ov:
+			f.set_meta(&"overalls", ov)
+			(f.get_node("Body") as FarmerBody).set_overalls(Cosmetics.tint(ov) if ov != &"" else Color(0, 0, 0, 0), ov)  # alpha 0: player colour
 
 	## The role's hat: the 3D Artist's `hat_<role>.glb` (P4-36, D-144; origin at the band centre) when it
 	## exists, else the placeholder primitives from HATS.
@@ -190,6 +202,7 @@ func _ready() -> void:
 	Game.voice_setting_changed.connect(func(_p: int) -> void: _refresh())
 	Game.roles_changed.connect(_refresh)
 	Net.names_changed.connect(_refresh)
+	Cosmetics.changed.connect(_refresh)  # P5-05
 	if not Game.is_host():
 		Net.to_host(&"request_lobby_ready", [false])  # the host answers with everyone's ready marks
 	_refresh()

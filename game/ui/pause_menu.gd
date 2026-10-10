@@ -61,6 +61,7 @@ func _rebuild() -> void:
 	_label("Paused" if not Game.in_lobby else "The lobby")
 	_button("Resume", set_open.bind(false))
 	_roster_volumes()
+	_box.add_child(CosmeticsPanel.new())  # P5-05: wear what you own (lobby and match)
 	_own_clips()
 	_join_code()
 	_button("Settings", _open_settings)

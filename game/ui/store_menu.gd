@@ -76,6 +76,7 @@ func _rebuild() -> void:
 	_label("Seeds (planting uses one; %s picks which)" % hud._key(&"cycle_seed"), 22)
 	for r in Data.records(&"crops"):
 		_row(StringName(r.id), &"seed", "%s seed   %d coins" % [r.name, int(r.seed)], [1, 5])
+	_box.add_child(CosmeticsPanel.new(true))  # P5-05: hats and overalls, once the debt is paid
 	_why = _label("", 18)
 	_why.modulate = Color(1, 0.6, 0.5)
 	_label("%s or %s: close" % [hud._key(&"interact"), hud._key(&"pause")], 16)
