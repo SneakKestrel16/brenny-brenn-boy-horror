@@ -1453,3 +1453,8 @@ Acceptance:
   fake whispers, fake teammate voices; (5) sixth sense perk: a chill when the real creature is near, which
   hallucinations also trigger, so it is never proof. Out: louder creature, creature favours them, fear pays.
   Further scares from the Director's second list are added here once the CEO picks.
+- CEO pick, second list (2026-10-10): also in: (a) steps behind: footsteps follow them and stop the moment they turn;
+  (b) edge shadows: shapes at the screen edge that vanish when looked at; (c) their name whispered from the corn in
+  clips of their own recorded voice; (d) fake grab: a jolt and a stinger as if caught, then nothing. Out: wrong
+  teammate, things move, tunnel vision. None of these can hurt or kill; doc 01 hallucination rules (distant, never
+  cut to black or knock down) apply except where this pick says otherwise, which the Game Designer records in doc 03.
