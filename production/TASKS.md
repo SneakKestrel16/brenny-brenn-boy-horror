@@ -614,6 +614,7 @@ no economy number and can start now.
 | P4-32 | Gameplay | CEO: the Harvest Moon push bar shows the distance left to the gate, not a stuck 0%; pushers lock to the cart while holding interact | done (QA PASS; follow-ups sent) | — |
 | P4-33 | Gameplay | CEO: flag limit per player; remove your own placed flag; flags as small icons on the minimap | done (QA PASS; CEO flag rules D-142) | P4-24 |
 | P4-36 | 3D Artist | CEO: a different hat per role (D-144); ten `hat_<role_id>.glb` for the lobby line-up, later the in-game farmer | done (QA PASS with follow-ups) | — |
+| P4-37 | Network & Voice | CEO: drop the barn recording; auto-record live clips from in-game speech as the default voice setting (D-146) | ready | — |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
@@ -892,6 +893,20 @@ and an Opus QA review passes.
 - Doc 01 "Flags" rules stay: from day 5 the creature can move one flag a night, and the minimap shows
   where the flag is now. Host-authoritative, synced, logged. Same done-when line as P4-22 to P4-28.
 - D-141: remove the teammate dots from the minimap; only the local arrow, layout and flags show.
+
+### P4-37 Live clips replace the barn recording (D-146, CEO 2026-10-09)
+- Remove the recording screen and its menu-lobby staging (`lantern_out` and the rest) and the "Lobby lines"
+  setting. Voice settings become Off and Live clips; Live clips is the default, including for existing
+  settings files that hold Lobby lines.
+- On a Live-clips player's own machine, cut clips of at most 3 s from transmitted speech (VAD talk spurts) in a
+  match, keep them for the session only, share them by the existing manifest (doc 06 s11), delete them at
+  session end and when the player switches to Off.
+- The creature lures and the Dawn Report replay these clips through the existing `apply_lure` path. Streamer-safe
+  never replays them. The replay checks the owner's current setting at play time.
+- The pause menu lists this session's clips: play and delete each.
+- Steady recording light (own screen tally and on the character) while clips are kept; never flickering.
+- Docs 01, 06 (s16 into the main text, D-013 reading replaced), 08 and 09 updated. Same done-when line as P4-22
+  to P4-28; test with 2 instances that a lure replays a clip cut from the other player's speech.
 
 ### P4-35 Menu lobby line-up scene (D-140, CEO 2026-10-09)
 - Replace the flat lobby menu with a 3D scene behind the UI: a dark barn or night farm, lantern-lit, with

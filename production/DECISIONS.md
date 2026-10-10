@@ -957,3 +957,17 @@ The game supports 16:9 screens only (1280x720 and up). 4:3 and 16:10 are out of 
 lobby's 3-farmer fit at 1024x768 is not a bug. The night owl hat (P4-36) keeps its tufts as built.
 **Why:** CEO, 2026-10-09: "keep owl hat, and 16by9 is enough", answering the P4-35 and P4-36 QA findings.
 **How to apply:** layout and screenshot checks run at 16:9 resolutions only.
+### D-146 · 2026-10-09 · CEO · Auto-record in-game speech (live clips) instead of the barn recording
+The staged barn recording (doc 01 "Recording lines that sound scared") is dropped. The creature and the Dawn
+Report use short clips cut automatically from each player's transmitted proximity speech, so the doc 01
+"Live clips" mode comes forward from DD Phase 5 and becomes the default voice setting.
+**Why:** CEO, 2026-10-09, during a playtest: "can we skip the record in the barn and just have it set to auto
+record players in game and use that".
+**How to apply:** Keep the per-player voice setting on each player's own machine (doc 01 "Voice settings"),
+with Live clips as the default and Off still available in the menu, lobby and pause menu. Off keeps nothing
+and deletes kept clips. Doc 01 "Live clips" rules apply: transmitted speech only, at most 3 s a clip, kept for
+the session and then deleted, reviewable and deletable from the pause menu, streamer-safe never replays them.
+While clips are being kept, the recording light shows steadily (doc 01 "Recording light"); this replaces the
+D-013 reading that proximity capture is not "capture". The "Lobby lines" setting and the recording screen
+go. Doc 06 s16 settles where clips are cut (sender's machine, as barn chatter was) and how the manifest
+shares them (doc 06 s11 clip format, unchanged). Task P4-37.
