@@ -2,9 +2,8 @@ class_name TaintLook
 extends RefCounted
 ## P3-08, doc 01 "The Taint" cue, doc 05 section 10, doc 07 section 8: how Taint looks. taint.gd calls in:
 ## `show_on` when a player's Taint changes (every peer), `mark` for a Taint source on the ground (every peer).
-## - Hands and sleeves: two forearms under the camera (like the held props, so the owner sees them at the
-##   bottom of the screen and everyone else sees them in front of the body), oil stained to the elbow. They
-##   show only while Tainted: the tool_hands model (P5-22), with no clean pair.
+## - Hands and sleeves: the owner sees two forearms under the camera (tool_hands, P5-22), oil stained to the
+##   elbow, only while Tainted. Everyone else sees the world body's stained sleeves (P5-23), nothing more (P5-35).
 ## - Screen: the Tainted player alone gets edge smudges and a faint dark fog (taint_screen.gdshader).
 ## - Ground: leavings are an oil puddle, strange seeds a dark scatter, a dead crow prop_dead_crow (P5-22). "Black stains underfoot" (P3-08 acceptance) is read as these sources (inference: no doc
 ##   names Tainted footprints; the Game Designer settles it).
@@ -25,13 +24,13 @@ static func show_on(pl: Node3D, on: bool) -> void:
 	var body = pl.get("_mesh")  # P5-23: the world body's sleeves (mat_farmer_sleeves) take the stain too
 	if body and body.has_method(&"stain"):
 		body.stain(on)
+	if not pl.get("is_local"):
+		return  # P5-35: others see the stained body sleeves; a second pair at the camera floated off the body
 	var arms := cam.get_node_or_null(^"TaintArms") as Node3D
 	if arms == null:
-		arms = _arms(bool(pl.get("is_local")))
+		arms = _arms()
 		cam.add_child(arms)
 	arms.visible = on
-	if not pl.get("is_local"):
-		return
 	var layer := pl.get_node_or_null(^"TaintSmudge") as CanvasLayer
 	if layer == null:
 		layer = _smudge()
@@ -48,9 +47,8 @@ static func show_on(pl: Node3D, on: bool) -> void:
 			float(mat.get_shader_parameter(&"strength")), 1.0 if on else 0.0, FADE_S)
 
 
-## Placeholder poses read from screenshots. Local: elbows low at the screen corners, fingers forward and in.
-## Others: thicker and further out, so the hands clear the 0.35 m body capsule and read at a distance.
-static func _arms(local: bool) -> Node3D:
+## Placeholder pose read from screenshots (local player only): elbows low at the screen corners, fingers forward and in.
+static func _arms() -> Node3D:
 	# P5-22: the tool_hands model (HandL/HandR, elbow pivots at +-0.19, arms along -Z) in the stained-sleeve shader.
 	var arms := (load("res://assets/models/tool_hands.glb") as PackedScene).instantiate() as Node3D
 	arms.name = "TaintArms"
@@ -61,13 +59,8 @@ static func _arms(local: bool) -> Node3D:
 	for mi in arms.find_children("*", "MeshInstance3D"):
 		(mi as MeshInstance3D).material_override = mat
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	if local:  # elbows low at the screen corners, fingers forward and up
-		arms.position = Vector3(0, -0.5, -0.175)
-		arms.rotation.x = deg_to_rad(28.0)
-	else:  # others see them in front of the body, scaled out to clear the 0.35 m capsule
-		arms.position = Vector3(0, -0.55, -0.25)
-		arms.rotation.x = deg_to_rad(10.0)
-		arms.scale = Vector3(1.4, 1.4, 1.0)
+	arms.position = Vector3(0, -0.5, -0.175)  # elbows low at the screen corners, fingers forward and up
+	arms.rotation.x = deg_to_rad(28.0)
 	return arms
 
 
