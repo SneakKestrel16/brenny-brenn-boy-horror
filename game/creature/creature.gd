@@ -9,7 +9,7 @@ extends CharacterBody3D
 ## at the four scripted times (section 18); on the full farm (`--full-farm`, P2-05) it tops up the night's
 ## counts from `ramp_up.json` on spots near where it heard players work; its bear traps are the farm's own,
 ## taken at nightfall from hands, then the pegboard (D-053, section 9, "9.1 As built"). Traps show to every peer as a close-range clue, and it plays lures
-## (section 12, P2-04: recorded clips, sound lures, stranger lines) from crow corn edges and cover points
+## (section 12, P2-04, P4-37: live clips, sound lures, stranger lines) from crow corn edges and cover points
 ## as world sounds, in the scripted lurk too. Taint (P3-07, sections 3.3 and 8; off on the Phase 1 farm by
 ## `phase1.json` `taint_enabled`): at night it tracks Tainted players and leaves stains. After the scripted night the AI
 ## Director (P3-04, game/ai_director/) gates its lures, stalks, chases and kills and sets its wander region.
@@ -65,10 +65,7 @@ const SNAP_M := 10.0  ## P4-25 placeholder: clients jump, not glide, to a host p
 const DAY_COVER := "cover_15"  ## doc 04 sec 9: the far south cover point; where it waits by day (placeholder)
 const BODY := &"body_gaunt"  ## shown until the host's season pick arrives (P4-13)
 const TELLS: Array[StringName] = [&"none", &"echo", &"pitch_up", &"pitch_down", &"no_crackle"]  ## doc 03 section 12.2
-# P2-04 recorded lures (doc 03 section 12.1). Whose-voice weights are `ai_director.json` `lures` (P3-03).
-## Doc 03 section 16 "Day or night use"; which lines fit both is a placeholder reading. A name call fits both.
-const DAY_LINES := ["come_look_at_this", "i_found_something", "its_fine_come_on", "wait_for_me"]
-const NIGHT_LINES := ["over_here", "help_me", "where_are_you", "wait_for_me", "its_fine_come_on"]
+# P2-04 voice lures (live clips since P4-37, D-146) (doc 03 section 12.1). Whose-voice weights are `ai_director.json` `lures` (P3-03).
 ## Doc 03 section 16 sound lures with a sound in the Soundscape catalog: [catalog id, plays, gap s] (placeholder).
 ## hoe_fake, watering_can_fake and shovel_fake wait for their assets (Audio Designer).
 const SOUND_LURES := {"step_walk_fake": [&"sfx_step_dirt", 8, 0.55], "step_run_fake": [&"sfx_step_dirt", 10, 0.3],
@@ -705,7 +702,7 @@ func _try_day_lure() -> void:
 ## target only, by night as a world sound. Exact clips only: splicing (day 4 on) is not built, so `exact`
 ## is always true and `day` is logged.
 func _lure_at(p: int, day: bool) -> bool:
-	var v := _choose_voice(p, day)
+	var v := _choose_voice(p)
 	var src := _lure_source(p, day, int(v.owner))
 	if src == Vector3.INF and int(v.owner) != 0:  # no place for that voice: the unattributed voice from any
 		v = {"kind": "stranger", "owner": 0}
@@ -742,28 +739,21 @@ func _lure_at(p: int, day: bool) -> bool:
 
 
 ## Doc 03 section 12.1 "Whose voice": each player weighs dead 3, alive 1, own 0.1, plus the stranger. A
-## player voices a clip only with `lobby_lines` and a fitting clip this machine holds; anyone else (Off,
-## unchosen, a bot) gets a sound lure instead: footsteps and tools only (doc 01 "Habits").
-func _choose_voice(p: int, day: bool) -> Dictionary:
+## player voices a clip only if their live clips may be replayed (`Game.replays_voice`, D-146) and this
+## machine holds one; anyone else (Off, streamer-safe, a bot) gets a sound lure instead: footsteps and
+## tools only (doc 01 "Habits").
+func _choose_voice(p: int) -> Dictionary:
 	var opts: Array = [{"kind": "stranger", "owner": 0}]
 	var w := PackedFloat32Array([_num[&"weight_stranger"]])
 	for q: int in Game.players:
 		w.append(Logic.voice_weight(q, p, Game.is_ghost(q), _num))
-		var clips := _fitting_clips(q, p, day) if Game.voice_setting_of(q) == "lobby_lines" else []
+		var clips := Voice.clips.clip_ids(q) if Game.replays_voice(q) else []
 		if clips.is_empty():
 			opts.append({"kind": "sound", "owner": q, "sound_id": SOUND_LURES.keys()[_rng.randi() % SOUND_LURES.size()]})
 		else:
 			var id: String = clips[_rng.randi() % clips.size()]
-			opts.append({"kind": "clip", "owner": q, "clip_id": id, "line_id": "name:" + id.trim_prefix("name_") if id.begins_with("name_") else id})
+			opts.append({"kind": "clip", "owner": q, "clip_id": id, "line_id": VoiceClips.LIVE_LINE})
 	return opts[_rng.rand_weighted(w)]
-
-
-## `q`'s clips for a lure at `p`: the phase's fixed lines (section 16) and `p`'s name, never chatter. Own
-## voice: no name call (a player calling their own name is no lure).
-func _fitting_clips(q: int, p: int, day: bool) -> Array:
-	var lines: Array = DAY_LINES if day else NIGHT_LINES
-	var p_name := "name_" + str(Net.profiles.get(p, {}).get("uid", "-"))
-	return Voice.clips.clip_ids(q).filter(func(id: String) -> bool: return id in lines or (q != p and id == p_name))
 
 
 ## The source point (doc 03 section 12.1 "Position"): a trap spot by day, a crow corn edge or cover point by
@@ -820,10 +810,10 @@ func _hear_lure(args: Array) -> void:
 	var clip_id := parts[2]
 	if Settings.peer_volume(owner) <= 0.0:
 		return  # D-047: muted for this listener: the replay is skipped whole (its crackle would expose it)
-	var pk: Array = Voice.clips.packets(owner, clip_id) if Game.voice_setting_of(owner) == "lobby_lines" else []
+	var pk: Array = Voice.clips.packets(owner, clip_id) if Game.replays_voice(owner) else []
 	if pk.is_empty():
-		Log.event(&"lure_skipped", {"lure_id": args[0], "owner": owner, "clip_id": clip_id,
-			"why": "missing" if Game.voice_setting_of(owner) == "lobby_lines" else "owner_off"})
+		var why := "missing" if Game.replays_voice(owner) else "streamer_safe" if Game.streamer_safe else "owner_off"
+		Log.event(&"lure_skipped", {"lure_id": args[0], "owner": owner, "clip_id": clip_id, "why": why})
 		return
 	var chain: Script = load(VOICE_CHAIN) if ResourceLoader.exists(VOICE_CHAIN) else null
 	var tell: StringName = args[4]

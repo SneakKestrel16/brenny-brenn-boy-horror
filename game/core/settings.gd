@@ -14,9 +14,7 @@ const DEFAULTS := {
 	"vol_ui": 1.0,
 	"voice_gain_db": 6.0,  ## remote voices, plain gain (no AGC, doc 06); placeholder, playtest 1
 	"player_name": "Farmer",
-	## Doc 06 s11 "Setting IDs": `unchosen`, `off` or `lobby_lines`. Unchosen goes on the wire as `off`.
-	"voice_setting": "unchosen",
-	"lines_recorded": false,  ## P2-03 sets it once at least one line is kept
+	"voice_setting": "live_clips",  ## doc 06 s11 "Setting IDs" (D-146): `off` or `live_clips`
 	"keybinds": {},  ## action -> [{"t": "k", "c": physical keycode} | {"t": "m", "b": button}]; empty = project defaults
 	"mic_device": "Default",
 	"quality_preset": "high",  ## low | medium | high | custom
@@ -45,6 +43,11 @@ var _cfg := ConfigFile.new()
 
 func _ready() -> void:
 	_cfg.load(PATH)  # a missing file is fine: defaults
+	# D-146: the P2-03 settings `unchosen` and `lobby_lines` become the default, Live clips; Off stays Off.
+	if _cfg.has_section_key("settings", "voice_setting") and not str(_cfg.get_value("settings", "voice_setting")) in ["off", "live_clips"]:
+		_cfg.erase_section_key("settings", "voice_setting")
+	if _cfg.has_section_key("settings", "lines_recorded"):
+		_cfg.erase_section_key("settings", "lines_recorded")
 	var apply: Node = SettingsApply.new()
 	apply.name = "SettingsApply"
 	get_tree().root.add_child.call_deferred(apply)

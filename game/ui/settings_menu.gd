@@ -3,7 +3,7 @@ extends Control
 ## Doc 05 section 16: the settings screen, shared by the main menu and the pause menu. Five tabs:
 ## Keybinds, Audio, Graphics, Display, Comfort. Every change goes through `Settings.set_value` plus
 ## `Settings.save()` (local disk, never sent); `SettingsApply` pushes it to the engine.
-## Voice copy follows doc 06 section 11: it never implies the line list is the whole pool.
+## Voice copy follows doc 06 section 11 (D-146): Off or Live clips, and what Live clips keeps.
 
 signal closed
 
@@ -12,10 +12,11 @@ const FPS_CAPS := [0, 30, 60, 90, 120, 144, 240]
 const PRESETS := {"low": [0.67, 0], "medium": [0.85, 1], "high": [1.0, 2]}  ## render_scale, shadow_quality (placeholders)
 const VOLUMES := {"vol_master": "Master", "vol_music": "Music", "vol_sfx": "Effects", "vol_ambience": "Ambience",
 		"vol_voice": "Voices", "vol_ui": "Interface"}
-const VOICE_COPY := {
-	"unchosen": "Nothing recorded yet. Until you record or choose, the creature fakes only your footsteps and tools.",
-	"off": "Nothing recorded; the creature fakes only your footsteps and tools.",
-	"lobby_lines": "Lobby lines and barn chatter can be replayed by the creature and in the Dawn Report.",
+const VOICE_COPY := {  ## doc 06 s11 (D-146)
+	"off": "Nothing is kept; the creature fakes only your footsteps and tools.",
+	"live_clips": "Short clips (3 s at most) of what you say in a match are kept for this session only. The creature" \
+			+ " and the Dawn Report can replay them. The recording light shows while any are kept; review or delete" \
+			+ " them from the pause menu.",
 }
 const DISCORD_LINE := "The creature can't hear Discord, and you can't hear where your friends are."
 
@@ -24,8 +25,6 @@ var _bind_buttons: Dictionary = {}  ## action -> Button
 var _capturing: StringName = &""
 var _warn: Label
 var _voice_note: Label
-var _record_box: HBoxContainer
-var _skipped_record := false
 var _preset: OptionButton
 var _scale: HSlider
 var _shadow: OptionButton
@@ -221,19 +220,17 @@ func _audio_tab() -> void:
 	var d := Label.new()
 	d.text = DISCORD_LINE
 	p.add_child(d)
-	var cur := str(Settings.get_value(&"voice_setting"))
+	var ids := ["off", "live_clips"]
 	var o := OptionButton.new()
-	o.add_item("Not chosen yet")
 	o.add_item("Off")
-	o.add_item("Lobby lines")
-	o.selected = ["unchosen", "off", "lobby_lines"].find(cur)
-	o.set_item_disabled(0, true)
+	o.add_item("Live clips")
+	o.selected = ids.find(Game.wire_voice_setting())
 	o.item_selected.connect(func(i: int) -> void:
-		var s: String = ["unchosen", "off", "lobby_lines"][i]
-		if s == "off" and bool(Settings.get_value(&"lines_recorded")):  # doc 01 "Voice settings > Off" deletes the lines
-			o.selected = ["unchosen", "off", "lobby_lines"].find(str(Settings.get_value(&"voice_setting")))
+		var s: String = ids[i]
+		if s == "off" and Voice.clips.has_kept():  # doc 01 "Voice settings > Off" deletes the clips
+			o.selected = 1
 			var dlg := ConfirmationDialog.new()
-			dlg.dialog_text = "This deletes your recorded lines"
+			dlg.dialog_text = "This deletes your kept clips"
 			dlg.ok_button_text = "Delete and turn Off"
 			dlg.confirmed.connect(func() -> void:
 				o.selected = i
@@ -250,40 +247,11 @@ func _audio_tab() -> void:
 	_voice_note = Label.new()
 	_voice_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	p.add_child(_voice_note)
-	_record_box = HBoxContainer.new()
-	p.add_child(_record_box)
 	_refresh_voice()
 
 
 func _refresh_voice() -> void:
-	var cur := str(Settings.get_value(&"voice_setting"))
-	_voice_note.text = VOICE_COPY[cur]
-	for c in _record_box.get_children():
-		c.queue_free()
-	var recorded := bool(Settings.get_value(&"lines_recorded"))
-	if cur == "off":
-		return  # a player who chose Off is not offered recording (doc 06 s11)
-	if recorded:
-		_record_button("Re-record")
-	elif not _skipped_record:
-		_record_button("Record lines")
-		var skip := Button.new()
-		skip.text = "Skip"
-		skip.pressed.connect(func() -> void:
-			_skipped_record = true
-			_refresh_voice())
-		_record_box.add_child(skip)
-
-
-func _record_button(text: String) -> void:
-	var b := Button.new()
-	b.text = text
-	b.pressed.connect(func() -> void:
-		if Game.recording_requested.get_connections().is_empty():
-			_voice_note.text = "The recording screen is not built yet."  # P2-03 connects Game.recording_requested
-		else:
-			Game.recording_requested.emit())
-	_record_box.add_child(b)
+	_voice_note.text = VOICE_COPY[Game.wire_voice_setting()]
 
 
 # --- Graphics -----------------------------------------------------------------------------------

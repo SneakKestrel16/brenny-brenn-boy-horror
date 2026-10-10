@@ -2,7 +2,8 @@ class_name PauseMenu
 extends CanvasLayer
 ## P2-10 pause menu (doc 05 section 16), in the lobby and the match. It does not pause the game (it is
 ## a network session); it frees the mouse, tells Player and HoldController to ignore game keys
-## (`Game.console_open`) and offers Resume, Settings, Leave and Quit (the lobby screen has Start, P4-23).
+## (`Game.console_open`) and offers Resume, Settings, Leave and Quit (the lobby screen has Start, P4-23),
+## plus this player's live clips with Play and Delete (P4-37).
 ## It also shows the host-left card. Debug user arg: --pause-open.
 
 var _panel: Control
@@ -60,6 +61,7 @@ func _rebuild() -> void:
 	_label("Paused" if not Game.in_lobby else "The lobby")
 	_button("Resume", set_open.bind(false))
 	_roster_volumes()
+	_own_clips()
 	_join_code()
 	_button("Settings", _open_settings)
 	_button("Leave to menu", Game.leave_session)
@@ -73,6 +75,39 @@ func _join_code() -> void:
 		return
 	_label("Join code: %s" % code)
 	_button("Copy join code", func() -> void: DisplayServer.clipboard_set(code))
+
+
+## Doc 06 s11 (D-146): this session's live clips of this player, each with Play and Delete.
+func _own_clips() -> void:
+	var own: Array = Voice.clips.own_clips()
+	if own.is_empty():
+		return
+	_label("Your live clips (this session only)")
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size.y = mini(own.size(), 5) * 34
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var list := VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	for i in own.size():
+		var c: Dictionary = own[i]
+		var h := HBoxContainer.new()
+		var n := Label.new()
+		n.text = "Clip %d (%.1f s)" % [i + 1, c.frames * VoiceClips.FRAME_S]
+		n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(n)
+		var play := Button.new()
+		play.text = "Play"
+		play.pressed.connect(func() -> void: Voice.clips.play(Game.local_peer(), c.clip_id))
+		h.add_child(play)
+		var del := Button.new()
+		del.text = "Delete"
+		del.pressed.connect(func() -> void:
+			Voice.clips.delete_own(c.clip_id)
+			_rebuild.call_deferred())
+		h.add_child(del)
+		list.add_child(h)
+	_box.add_child(scroll)
 
 
 ## D-047: one volume slider per other player; 0 is mute. Applies to their live voice and to the creature's replays of their clips.

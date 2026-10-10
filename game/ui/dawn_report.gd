@@ -227,10 +227,10 @@ func _close() -> void:
 
 
 ## A clip replays in its owner's voice only if streamer-safe is off, the owner's current setting is
-## `lobby_lines` (doc 06 section 11 "Coverage") and this listener has not muted them (D-047).
+## `live_clips` (`Game.replays_voice`, doc 06 section 11 "Coverage") and this listener has not muted them (D-047).
 func _voiced(r: Dictionary) -> bool:
 	var src: String = r.source
-	return src.begins_with("clip:") and not _report.get("streamer_safe", false) and Game.voice_setting_of(int(r.owner)) == "lobby_lines"
+	return src.begins_with("clip:") and not _report.get("streamer_safe", false) and Game.replays_voice(int(r.owner))
 
 
 func _muted(r: Dictionary) -> bool:

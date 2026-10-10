@@ -1,25 +1,27 @@
 class_name VoiceClips
 extends Node
-## Doc 06 sections 11 and 12 (P2-03): lobby-line and barn-chatter clips, `Voice.clips`.
+## Doc 06 sections 11 and 12: live clips (D-146, P4-37) and their pre-share, `Voice.clips`.
 ##
-## The owner keeps their clips as `.vclip` files under `<Net.user_dir()>voice/lines/` and
-## `voice/chatter/`, and nowhere else. Every other machine, the host included, holds them in memory
-## only (doc 01 "Voice settings > Storage"): nothing here is written to disk, cached or saved.
+## Voice cuts each clip (at most 3 s of this player's transmitted speech) on the sender's machine and
+## hands it to `keep_live`. The owner keeps its clips in memory for the session only, never on disk;
+## every other machine, the host included, holds them in memory only too (doc 01 "Voice settings >
+## Storage"). Session end, switching to Off and the pause menu's Delete drop them.
 ##
-## Pre-share (doc 06 s12): the owner sends its manifest, then each clip in 16 KB chunks, on channel 3.
+## Pre-share (doc 06 s12): the owner sends its manifest, then each new clip in 16 KB chunks, on channel 3.
 ## The host checks ownership, the caps and the bytes, keeps a copy and forwards it to every other
 ## peer; a late joiner gets everything the host holds. A new manifest replaces the owner's set, so a
-## re-recorded or deleted clip is shared the same way. Each client reports a digest of what it holds
+## deleted clip is removed the same way. Each client reports a digest of what it holds
 ## (`request_clips_ready`); `ready_to_start()` holds the match start until every client holds every
 ## clip or 30 s pass (`Game.match_ready()` calls it).
 ##
 ## `.vclip` (little-endian): "VCLP", version u8, Opus rate u32, frame samples u16, bitrate u32,
 ## frame count u32, clip id (u8 length + UTF-8), line id (u8 length + UTF-8), then each Opus packet
-## as a u16 length and its bytes: the same packets the live encoder sends (doc 06 s8).
+## as a u16 length and its bytes: the same packets the live encoder sends (doc 06 s8). Only the wire
+## carries it now; the P2-03 lobby-line files under `user://voice/` are deleted at start.
 
 ## `owner_peer`'s clip `clip_id` is gone ("" means all of theirs): a lure or review playing it stops.
 signal clip_freed(owner_peer: int, clip_id: String)
-## This machine's own files changed (the recording screen's review list).
+## This machine's own clips changed (the pause menu's list).
 signal own_changed
 
 const MAGIC := "VCLP"
@@ -29,12 +31,7 @@ const MAX_CLIPS := 64  ## per player, doc 06 s12 (placeholder)
 const MAX_BYTES := 400 * 1024  ## per player, doc 06 s12 (placeholder)
 const SHARE_TIMEOUT_S := 30.0  ## doc 06 s12 step 5 (placeholder)
 const FRAME_S := 0.02
-
-## True while this machine's recording screen is open: its ready report is "" and the host waits.
-var recording := false:
-	set(v):
-		recording = v
-		_dirty = true
+const LIVE_LINE := "live"  ## the line id of every live clip: it is speech, not a scripted line
 
 ## owner peer -> clip_id -> {line_id, frames, bytes, hash, parts: Array, got: int, data: PackedByteArray or null}
 var _store := {}
@@ -42,6 +39,9 @@ var _digests := {}  ## host: client peer -> digest last reported
 var _dirty := true  ## the client's holdings changed since its last ready report
 var _wait_t := -1.0  ## host: seconds the match start has waited, or -1
 var _playing: Array = []  ## [owner peer, clip_id, AudioStreamPlayer]
+var _own := {}  ## this machine's live clips: clip_id -> .vclip bytes, oldest first
+var _sent := {}  ## own clip ids whose chunks this session already sent
+var _next := 0  ## the next live clip number
 
 
 func _ready() -> void:
@@ -50,115 +50,120 @@ func _ready() -> void:
 		_free(p)
 		_digests.erase(p))
 	Game.voice_setting_changed.connect(func(p: int) -> void:
-		if p != Game.local_peer() and Game.voice_setting_of(p) != "lobby_lines":
+		if p != Game.local_peer() and Game.voice_setting_of(p) != "live_clips":
 			_free(p))
-	Game.session_started.connect(share)
+	Game.session_started.connect(func() -> void:
+		_drop_own("session_start")
+		share())
 	Settings.changed.connect(func(key: StringName) -> void:
 		if key == &"voice_setting" and str(Settings.get_value(key)) == "off":
 			delete_all_own())
-	(func() -> void:  # deferred past Voice's --voice-setting override
-		if str(Settings.get_value(&"voice_setting")) == "off" and not own_clips().is_empty():
-			delete_all_own()).call_deferred()  # a leftover from a crash between Off and the delete
+	_purge_disk.call_deferred()  # deferred: Net.user_dir() names the profile once the args are read
 
 
 func _process(delta: float) -> void:
 	if not multiplayer.has_multiplayer_peer():
-		if not _store.is_empty() or not _digests.is_empty():  # left the session: peers' clips go
+		if not _store.is_empty() or not _digests.is_empty() or not _own.is_empty():  # left the session: every clip goes
 			for p in _store.keys():
 				_free(p)
 			_digests.clear()
+			_drop_own("session_end")
 		_wait_t = -1.0
 		return
 	if not Game.in_session:
 		return
 	if _dirty and not Game.is_host():
 		_dirty = false
-		# "" means the recording screen is open; no clips is md5("") = d41d8..., never "" (P2-17).
-		Net.to_host(&"request_clips_ready", ["" if recording else digest_for(Game.local_peer())])
+		Net.to_host(&"request_clips_ready", [digest_for(Game.local_peer())])
 	if _wait_t >= 0.0:
-		# A player still recording holds the start and the 30 s clock (inference: the timeout is for
-		# slow transfers, and a recorder can always skip; doc 06 s12).
-		if not _recording_peers():
-			_wait_t += delta
+		_wait_t += delta
 		if not Game.in_lobby:
 			_wait_t = -1.0
 		elif all_ready() or _wait_t >= SHARE_TIMEOUT_S:
 			Game.start_match()
 
 
-# --- Own files ----------------------------------------------------------------------------------
+# --- Own clips ----------------------------------------------------------------------------------
 
 static func root() -> String:
 	return Net.user_dir() + "voice/"
 
 
-static func path_of(clip_id: String) -> String:
-	if clip_id.begins_with("chatter_"):
-		return root() + "chatter/%s.vclip" % clip_id.trim_prefix("chatter_")
-	return root() + "lines/%s.vclip" % clip_id
-
-
-## A teammate's name line (doc 06 s11 "Line IDs").
-static func name_line(uid: String) -> Dictionary:
-	return {"clip_id": "name_" + uid, "line_id": "name:" + uid}
-
-
-func save_own(clip_id: String, line_id: String, packets: Array) -> Error:
-	DirAccess.make_dir_recursive_absolute(path_of(clip_id).get_base_dir())
-	var f := FileAccess.open(path_of(clip_id), FileAccess.WRITE)
-	if f == null:
-		return FileAccess.get_open_error()
-	f.store_buffer(encode(clip_id, line_id, packets))
-	f.close()
-	own_changed.emit()
-	return OK
-
-
-func delete_own(clip_id: String) -> void:
-	stop(Game.local_peer(), clip_id)
-	DirAccess.remove_absolute(path_of(clip_id))
-	if own_clips().is_empty():
-		Settings.set_value(&"lines_recorded", false)
-		Settings.save()
-	own_changed.emit()
-
-
-## Doc 06 s11 "Off deletes them": every file under voice/lines/ and voice/chatter/, then an empty manifest.
-func delete_all_own() -> void:
-	var had := false
-	for c in own_clips():
-		stop(Game.local_peer(), c.clip_id)
-		DirAccess.remove_absolute(path_of(c.clip_id))
-		had = true
-	if bool(Settings.get_value(&"lines_recorded")):
-		Settings.set_value(&"lines_recorded", false)
-		Settings.save()
-	if had:
-		Log.event(&"clips_deleted", {"reason": "voice_off"})
-		own_changed.emit()
-	share()
-
-
-## This machine's clips on disk: [{clip_id, line_id, frames, bytes, hash, data}], lines then chatter.
-func own_clips() -> Array:
-	var out := []
+## D-146: the P2-03 lobby lines and barn chatter are not used any more; their files go.
+func _purge_disk() -> void:
+	var n := 0
 	for sub: String in ["lines", "chatter"]:
 		var dir := root() + sub
 		if not DirAccess.dir_exists_absolute(dir):
 			continue  # get_files_at logs an ERROR for a missing folder
 		for f in DirAccess.get_files_at(dir):
-			if not f.ends_with(".vclip"):
-				continue
-			var data := FileAccess.get_file_as_bytes(dir.path_join(f))
-			var c := decode(data)
-			if not c.is_empty() and path_of(c.clip_id) == dir.path_join(f):
-				out.append({"clip_id": c.clip_id, "line_id": c.line_id, "frames": c.packets.size(),
-						"bytes": data.size(), "hash": _md5(data), "data": data})
+			if f.ends_with(".vclip") and DirAccess.remove_absolute(dir.path_join(f)) == OK:
+				n += 1
+		DirAccess.remove_absolute(dir)
+	if n > 0:
+		Log.event(&"clips_deleted", {"reason": "legacy_lines", "clips": n})
+
+
+## Doc 06 s11 (D-146): a live clip Voice cut from this player's transmitted speech. Kept for the
+## session; the oldest go first once a cap (doc 06 s12) would be broken. Shared at once.
+func keep_live(packets: Array) -> void:
+	var id := "live_%d" % _next
+	_next += 1
+	_own[id] = encode(id, LIVE_LINE, packets)
+	var total := 0
+	for d: PackedByteArray in _own.values():
+		total += d.size()
+	while _own.size() > MAX_CLIPS or total > MAX_BYTES:
+		var old: String = _own.keys()[0]
+		total -= (_own[old] as PackedByteArray).size()
+		stop(Game.local_peer(), old)
+		_own.erase(old)
+	Log.event(&"live_clip_cut", {"clip_id": id, "frames": packets.size(), "bytes": (_own[id] as PackedByteArray).size(), "kept": _own.size()})
+	own_changed.emit()
+	share()
+
+
+## The pause menu's Delete: the clip goes here and, through a new manifest, everywhere.
+func delete_own(clip_id: String) -> void:
+	stop(Game.local_peer(), clip_id)
+	if _own.erase(clip_id):
+		Log.event(&"clips_deleted", {"reason": "player", "clips": 1})
+		own_changed.emit()
+		share()
+
+
+## Doc 06 s11 "Off deletes them": every kept clip, then an empty manifest.
+func delete_all_own() -> void:
+	_drop_own("voice_off")
+	share()
+
+
+func _drop_own(reason: String) -> void:
+	_sent.clear()
+	if _own.is_empty():
+		return
+	stop(Game.local_peer())
+	Log.event(&"clips_deleted", {"reason": reason, "clips": _own.size()})
+	_own.clear()
+	own_changed.emit()
+
+
+func has_kept() -> bool:
+	return not _own.is_empty()
+
+
+## This machine's clips: [{clip_id, line_id, frames, bytes, hash, data}], oldest first.
+func own_clips() -> Array:
+	var out := []
+	for id: String in _own:
+		var data: PackedByteArray = _own[id]
+		out.append({"clip_id": id, "line_id": LIVE_LINE, "frames": (decode(data).get("packets", []) as Array).size(),
+				"bytes": data.size(), "hash": _md5(data), "data": data})
 	return out
 
 
 func has_own(clip_id: String) -> bool:
-	return FileAccess.file_exists(path_of(clip_id))
+	return _own.has(clip_id)
 
 
 static func encode(clip_id: String, line_id: String, packets: Array) -> PackedByteArray:
@@ -222,20 +227,26 @@ static func _md5(data: PackedByteArray) -> String:
 
 # --- Sharing (doc 06 s12) -----------------------------------------------------------------------
 
-## Owner: sends this machine's whole set (empty unless the setting is Lobby lines), then its chunks.
+## Owner: sends this machine's whole set (empty unless the setting is Live clips), then the chunks of
+## the clips not sent yet this session (the host already holds the rest).
 func share() -> void:
 	if not Game.in_session:
 		return
-	var clips := own_clips() if Game.wire_voice_setting() == "lobby_lines" else []
+	var clips := own_clips() if Game.wire_voice_setting() == "live_clips" else []
 	var manifest := []
 	for c in clips:
 		manifest.append({"clip_id": c.clip_id, "line_id": c.line_id, "frames": c.frames, "bytes": c.bytes, "hash": c.hash})
 	Net.to_host(&"request_clip_manifest", [manifest])
+	var sent := {}
 	for c in clips:
+		sent[c.clip_id] = true
+		if _sent.has(c.clip_id):
+			continue
 		var data: PackedByteArray = c.data
 		var n := ceili(data.size() / float(CHUNK_BYTES))
 		for i in n:
 			Net.to_host(&"request_clip_chunk", [c.clip_id, i, n, data.slice(i * CHUNK_BYTES, (i + 1) * CHUNK_BYTES)])
+	_sent = sent
 	_dirty = true
 
 
@@ -386,8 +397,6 @@ func all_ready() -> bool:
 
 func _not_ready() -> Array:
 	var out := []
-	if recording:
-		out.append(1)
 	for o in _store:
 		for c in _store[o].values():
 			if c.data == null and not o in out:
@@ -416,17 +425,12 @@ func waiting() -> bool:
 	return _wait_t >= 0.0
 
 
-## Host: whether anyone (the host included) has the recording screen open.
-func _recording_peers() -> bool:
-	return recording or _digests.values().has("")
-
-
 # --- Playback -----------------------------------------------------------------------------------
 
-## Clip ids `owner_peer` has shared, complete on this machine (own clips: from disk).
+## Clip ids `owner_peer` has shared, complete on this machine (own clips: this machine's memory).
 func clip_ids(owner_peer: int) -> Array:
 	if owner_peer == Game.local_peer():
-		return own_clips().map(func(c: Dictionary) -> String: return c.clip_id)
+		return _own.keys()
 	var out := []
 	for id in _store.get(owner_peer, {}):
 		if _store[owner_peer][id].data != null:
@@ -434,18 +438,14 @@ func clip_ids(owner_peer: int) -> Array:
 	return out
 
 
-## The clip's Opus packets, or [] if this machine doesn't hold it. Lures (P2-04) push these into a
-## fresh `AudioStreamOpus`; check the owner's current setting first (doc 06 s11 "Coverage").
+## The clip's Opus packets, or [] if this machine doesn't hold it. Lures push these into a fresh
+## `AudioStreamOpus`; check `Game.replays_voice(owner)` first (doc 06 s11 "Coverage").
 func packets(owner_peer: int, clip_id: String) -> Array:
-	var data: Variant = null
-	if owner_peer == Game.local_peer():
-		data = FileAccess.get_file_as_bytes(path_of(clip_id)) if has_own(clip_id) else null
-	else:
-		data = _store.get(owner_peer, {}).get(clip_id, {}).get("data")
+	var data: Variant = _own.get(clip_id) if owner_peer == Game.local_peer() else _store.get(owner_peer, {}).get(clip_id, {}).get("data")
 	return decode(data).get("packets", []) if data != null else []
 
 
-## Plays a clip flat (the review page). Returns the player, or null if the clip isn't here.
+## Plays a clip flat (the pause menu's review). Returns the player, or null if the clip isn't here.
 func play(owner_peer: int, clip_id: String, bus: StringName = &"VoiceBase") -> AudioStreamPlayer:
 	var pk := packets(owner_peer, clip_id)
 	if pk.is_empty():
@@ -454,7 +454,7 @@ func play(owner_peer: int, clip_id: String, bus: StringName = &"VoiceBase") -> A
 	return play_packets(pk, bus, owner_peer, clip_id)
 
 
-## Plays raw Opus packets (an unsaved take on the recording screen, or a clip from `play`).
+## Plays raw Opus packets (a clip from `play`, or the voice chain's replays).
 func play_packets(pk: Array, bus: StringName = &"VoiceBase", owner_peer: int = 0, clip_id: String = "") -> AudioStreamPlayer:
 	var s := AudioStreamOpus.new()
 	s.opus_sample_rate = Voice.OPUS_RATE

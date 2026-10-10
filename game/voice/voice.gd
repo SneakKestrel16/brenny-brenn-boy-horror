@@ -10,14 +10,15 @@ extends Node
 ## Nothing is stored: no audio and no volume reaches disk or the log (doc 01 "Senses").
 ##
 ## User args (after `--`): `--voice-wav <path>` (or `=path`), `--ptt` (start in push-to-talk),
-## `--voice-off` (no capture at all), `--voice-setting=<off|lobby_lines|unchosen>` (QA: this run's
+## `--voice-off` (no capture at all), `--voice-setting=<off|live_clips>` (QA: this run's
 ## setting, in memory; two local copies share one settings file), `--voice-off-after=<s>` (switches to
-## Off that many seconds into the session, as the menu does: deletes this profile's clips).
+## Off that many seconds into the session, as the menu does: deletes this machine's clips).
 ##
-## P2-03 (doc 06 s11): `clips` (VoiceClips) holds the recorded lines and the pre-share; the recording
-## screen opens on `Game.recording_requested`, and in the lobby for players who haven't chosen Off and
-## have no lines (a window only). While `capturing`, no Off player's voice plays here (D-011) and the recording light
-## shows on this player's character for everyone (`apply_recording_light`).
+## P4-37 (doc 06 s11, D-146): with Live clips, `_emit` cuts each talk spurt this player transmits in a
+## match into a clip of at most 3 s and hands it to `clips` (VoiceClips), which keeps and shares it. A
+## clip during which an Off player's voice played here is dropped (D-011). While this machine keeps
+## clips or can cut them, `capturing` is true: a steady tally shows on this screen and the recording
+## light on this player's character for everyone (`apply_recording_light`).
 ##
 ## P3-10 (doc 06 s9): each emitter plays on a `VoiceChain` bus with the crackle layer; a dead speaker heard by
 ## a living listener plays on `VoiceGhost` with the static layer (`hears_static`); ghosts hear each other clean.
@@ -55,9 +56,8 @@ const FLAG_TALK_START := 2
 const FLAG_TALK_END := 4
 const FLAG_GHOST := 8
 
-## Every encoded 20 ms frame, sent or not: the Opus packet, its level and the PCM it came from (the
-## recording screen keeps them while capturing).
-signal frame_captured(opus: PackedByteArray, db: float, pcm: PackedVector2Array)
+const CLIP_MAX_FRAMES := 150  ## doc 01 "Voice settings > Live clips": a clip is 3 s at most
+const CLIP_MIN_FRAMES := 25  ## 0.5 s: shorter spurts (a cough, a click) are not kept (placeholder)
 
 var push_to_talk := false  ## doc 01 "Mic mode": open mic with VAD by default
 var muted := false
@@ -66,7 +66,7 @@ var level_db := -100.0
 var input_name := "off"
 var clips: VoiceClips
 var walkie: Walkie
-## A take or barn chatter is being written on this machine (doc 06 s11 "The recording light").
+## This machine keeps live clips or can cut them now (doc 06 s11 "The recording light").
 var capturing := false
 
 # Sender stats since start (`voice_sent`).
@@ -89,7 +89,10 @@ var _stats_t := 0.0
 var _relayed := 0
 var _lit := {}  ## peer -> true while their recording light is on
 var _light_nodes := {}  ## peer -> the light on their character
-var _screen: Node
+var _cut: Array[PackedByteArray] = []  ## the live clip being cut from this talk spurt
+var _cut_tainted := false  ## an Off player's voice played here during it (D-011)
+var _cut_done := false  ## this spurt already gave its clip (3 s reached)
+var _tally: CanvasLayer
 
 
 func _ready() -> void:
@@ -110,15 +113,10 @@ func _ready() -> void:
 	walkie = Walkie.new()
 	add_child(walkie)
 	var vs := _arg(args, "--voice-setting")
-	if vs in ["off", "lobby_lines", "unchosen"]:
+	if vs in ["off", "live_clips"]:
 		Settings.set_value(&"voice_setting", vs)
-	Game.recording_requested.connect(open_recording)
 	Game.session_started.connect(func() -> void:
 		ensure_capture()
-		# P2-17: a headless copy never gets the offer. Nobody can press Skip there, so the open screen
-		# (ready report "") held the lobby start for ever.
-		if args.has("--record-auto") or (Game.in_lobby and should_offer_recording() and DisplayServer.get_name() != "headless"):
-			open_recording.call_deferred()
 		if _arg(args, "--voice-off-after").is_valid_float():  # QA: the menu's Off, N seconds in
 			get_tree().create_timer(float(_arg(args, "--voice-off-after"))).timeout.connect(
 					Game.set_voice_setting.bind("off")))
@@ -144,7 +142,7 @@ static func _bus(bus_name: String, send: String, mute: bool) -> int:
 	return idx
 
 
-## Doc 06 "Capture": starts the mic (or `--voice-wav`) once; the recording screen needs it outside a session too.
+## Doc 06 "Capture": starts the mic (or `--voice-wav`) once.
 func ensure_capture() -> void:
 	if _source == null and not OS.get_cmdline_user_args().has("--voice-off"):
 		_start_capture(_arg(OS.get_cmdline_user_args(), "--voice-wav"))
@@ -154,26 +152,34 @@ func has_capture() -> bool:
 	return _encoder != null
 
 
-## Doc 06 s11 "Before recording": unchosen and Lobby-lines players with no lines are offered it.
-func should_offer_recording() -> bool:
-	return str(Settings.get_value(&"voice_setting")) != "off" and clips.own_clips().is_empty()
+## Doc 06 s11 (D-146): this machine cuts live clips now: Live clips, in a match, alive (D-011: ghost
+## speech never feeds the creature).
+func keeps_clips() -> bool:
+	return Game.in_session and not Game.in_lobby and Game.wire_voice_setting() == "live_clips" \
+			and not Game.is_ghost(Game.local_peer())
 
 
-func open_recording() -> void:
-	if _screen and is_instance_valid(_screen):
-		return
-	_screen = RecordingScreen.new()
-	add_child(_screen)
-
-
-## Doc 06 s11 "Recording": a take or the chatter window is being captured on this machine.
-func set_capturing(on: bool) -> void:
-	if on == capturing:
-		return
-	capturing = on
-	_apply_buses()
-	if Game.in_session:
+## Doc 06 s11 "The recording light": on while this machine can cut clips or keeps any, steady (it
+## changes only when one of those does, never per talk spurt).
+func _update_light() -> void:
+	var on := Game.in_session and (keeps_clips() or clips.has_kept())
+	if on != capturing:
+		capturing = on
 		Net.to_host(&"request_recording_light", [on])
+	if capturing and _tally == null:
+		_tally = CanvasLayer.new()
+		_tally.layer = 90
+		var l := Label.new()
+		l.name = "Tally"
+		l.text = "REC  live clips"
+		l.add_theme_color_override(&"font_color", Color(1, 0.15, 0.1))
+		l.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 12)
+		l.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_tally.add_child(l)
+		add_child(_tally)
+	elif not capturing and _tally:
+		_tally.queue_free()
+		_tally = null
 
 
 ## wav_path empty: the microphone.
@@ -184,7 +190,6 @@ func _start_capture(wav_path: String) -> void:
 	# CONTRACTS section 9: VoiceBase sits under `Voice` from the layout file once the Audio Designer
 	# ships it; until then under Master. Levels come from game/audio/mix_levels.gd later (Q-033).
 	_bus("VoiceBase", "Voice" if AudioServer.get_bus_index("Voice") >= 0 else "Master", false)
-	_bus("VoiceMuted", "Master", true)  # D-011: Off players while this machine captures (still decoded)
 	_source = AudioStreamPlayer.new()
 	_source.bus = "Mic"
 	if wav_path.is_empty():
@@ -218,7 +223,12 @@ func _process(delta: float) -> void:
 	if _encoder:
 		_pump_capture()
 	if not Game.in_session:
+		if capturing or not _lit.is_empty():  # left the session: the lights go with it
+			capturing = false
+			_lit.clear()
+			_update_light()
 		return
+	_update_light()
 	_attach_emitters()
 	_apply_buses()
 	_show_lights()
@@ -261,7 +271,6 @@ func _pump_capture() -> void:
 		# The encoder runs on every frame, sending or not, so the pre-roll is real audio.
 		var opus := _encoder.encode_chunk()
 		frames_encoded += 1
-		frame_captured.emit(opus, level_db, chunk)
 		if not Game.in_session:
 			continue
 		var vol := volume_byte(level_db)
@@ -302,6 +311,41 @@ func _emit(opus: PackedByteArray, vol: int, flags: int) -> void:
 		_take(1, f)  # the host's own frames take the same path minus the network hop
 	else:
 		Net.send_bytes(1, f, CHANNEL)
+	_cut_frame(opus, flags)
+
+
+## Doc 06 s11 "Cutting" (D-146): the frames this player transmits, one talk spurt at a time, cut into
+## a clip at 3 s or at the spurt's end, whichever comes first; the rest of a longer spurt is not kept.
+func _cut_frame(opus: PackedByteArray, flags: int) -> void:
+	if flags & FLAG_TALK_START:
+		_cut.clear()
+		_cut_tainted = false
+		_cut_done = false
+	if _cut_done or not keeps_clips():
+		_cut.clear()
+		return
+	_cut.append(opus)
+	_cut_tainted = _cut_tainted or _off_voice_playing()
+	if _cut.size() < CLIP_MAX_FRAMES and not flags & FLAG_TALK_END:
+		return
+	_cut_done = true
+	if _cut_tainted:
+		Log.event(&"live_clip_dropped", {"reason": "off_voice", "frames": _cut.size()})
+	elif _cut.size() >= CLIP_MIN_FRAMES:
+		clips.keep_live(_cut.duplicate())
+	_cut.clear()
+
+
+## D-011: an Off player's voice (proximity or radio) plays here now, so this mic may pick it up.
+## Inference: a speaker-leak guard; headphones make it moot, and nothing measures leak itself.
+func _off_voice_playing() -> bool:
+	for p in Game.players:
+		if p == Game.local_peer() or Game.voice_setting_of(p) == "live_clips" or Settings.peer_volume(p) <= 0.0:
+			continue
+		var e := _emitter(p)
+		if (e and e.talking()) or walkie.radio_talking(p):
+			return true
+	return false
 
 
 # --- Host relay ---------------------------------------------------------------------------------
@@ -392,7 +436,7 @@ func _on_player_left(peer: int) -> void:
 	_lit.erase(peer)
 
 
-# --- The voice chain, capture mute and the recording light (doc 06 s9 and s11, D-011) -------------
+# --- The voice chain and the recording light (doc 06 s9 and s11) ---------------------------------
 
 ## Doc 06 s9 "Who hears ghosts": a dead speaker's voice reaches a living listener only through the ghost
 ## static; ghosts hear each other clean. The same test picks the chain for a fake in that voice (doc 01 "The
@@ -401,8 +445,7 @@ func hears_static(speaker: int) -> bool:
 	return Game.is_ghost(speaker) and not Game.is_ghost(Game.local_peer())
 
 
-## Each emitter's bus and layers: muted while capturing for every speaker who isn't Lobby lines (Off,
-## unchosen, unknown), else the ghost static chain or the base chain. The layers play only while the speaker talks.
+## Each emitter's bus and layers: the ghost static chain or the base chain. The layers play only while the speaker talks.
 func _apply_buses() -> void:
 	for peer in _emitters:
 		var e := _emitter(peer)
@@ -410,8 +453,6 @@ func _apply_buses() -> void:
 			continue
 		var ghost := hears_static(peer)
 		var want := VoiceChain.bus_for(&"none", ghost)
-		if capturing and Game.voice_setting_of(peer) != "lobby_lines":
-			want = &"VoiceMuted"
 		var st := e.get_node_or_null(^"GhostStatic")
 		if ghost and st == null:
 			VoiceChain.attach_static(e, want)
@@ -428,16 +469,7 @@ func _apply_buses() -> void:
 				layer.stream_paused = muted or not e.talking()
 
 
-## Names of the players this machine won't hear while it captures (the recording screen lists them).
-func muted_while_capturing() -> Array:
-	var out := []
-	for p in Game.players:
-		if p != Game.local_peer() and Game.voice_setting_of(p) != "lobby_lines":
-			out.append(str(Net.profiles.get(p, {}).get("name", "Player %d" % p)))
-	return out
-
-
-## Host: the owner says capture is live (or not); the owner's machine is the authority.
+## Host: the owner says its clips are kept or cut (or not); the owner's machine is the authority.
 func on_recording_light_request(peer: int, on: bool) -> void:
 	if not Game.is_host() or not Game.players.has(peer):
 		return
@@ -460,7 +492,7 @@ func _on_player_joined(peer: int) -> void:
 
 
 ## A steady red tally lamp over each recording player's head (doc 06 s11): an emissive bulb, not a
-## light, so it stays outside the light rules (doc 07 s4.4); on for the whole capture, then gone.
+## light, so it stays outside the light rules (doc 07 s4.4); on while that player keeps or cuts clips.
 func _show_lights() -> void:
 	for peer in _light_nodes.keys():
 		if not _lit.has(peer) or not is_instance_valid(_light_nodes[peer]):

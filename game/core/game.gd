@@ -8,8 +8,6 @@ signal session_started
 signal player_joined(peer: int)
 signal player_left(peer: int)
 signal voice_setting_changed(peer: int)
-## The player pressed "Record lines" / "Re-record" (doc 06 s11). The recording screen is P2-03's: connect here.
-signal recording_requested
 ## P4-09: the role table changed (a pick, a match start, a rejoin).
 signal roles_changed
 
@@ -27,7 +25,7 @@ var _leaving := false
 ## doc 01 "Difficulty and group settings": easy / normal / nightmare (difficulty.json); host picks in the lobby.
 ## P4-12: `short_season` is a difficulty.json record too; `--short-season` (or `--difficulty=short_season`) until a lobby picks it (Q-125)
 var difficulty: StringName = &"short_season" if OS.get_cmdline_user_args().has("--short-season") else &"normal"
-var streamer_safe := OS.get_cmdline_user_args().has("--streamer-safe")  ## group option: no voice replays in the dawn report (P4-11)
+var streamer_safe := OS.get_cmdline_user_args().has("--streamer-safe")  ## group option: live clips are never replayed (P4-11, D-146)
 var seed_value := 0
 var debug_view := false
 var bots := 0
@@ -51,7 +49,7 @@ func _notification(what: int) -> void:
 		quit()
 
 
-## `--free-mouse`: undo any capture (Player, pause menu, recording screen) so a test window never holds the mouse.
+## `--free-mouse`: undo any capture (Player, pause menu) so a test window never holds the mouse.
 func _process(_delta: float) -> void:
 	if free_mouse and Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -357,9 +355,9 @@ func _log_session_end(reason: StringName) -> void:
 
 # --- Voice setting (doc 06 s11 "Setting IDs"; the owner's machine is the authority) --------------
 
-## What goes on the wire: `unchosen` has nothing recorded, so it is sent as `off`.
+## What goes on the wire: `live_clips` or `off` (D-146).
 func wire_voice_setting() -> String:
-	return "lobby_lines" if str(Settings.get_value(&"voice_setting")) == "lobby_lines" else "off"
+	return "off" if str(Settings.get_value(&"voice_setting")) == "off" else "live_clips"
 
 
 func set_voice_setting(setting: String) -> void:
@@ -380,11 +378,17 @@ func voice_setting_of(peer: int) -> String:
 	return str(players.get(peer, {}).get("voice_setting", "off"))
 
 
-## Host, from `Net.request_voice_setting`: `live_clips` is Phase 5 and refused.
+## Doc 06 s11 "Coverage" (D-146): `peer`'s live clips may be replayed here now. Every replay (a lure,
+## the Dawn Report) asks at play time, so a switch to Off or streamer-safe mode stops the next one.
+func replays_voice(peer: int) -> bool:
+	return voice_setting_of(peer) == "live_clips" and not streamer_safe
+
+
+## Host, from `Net.request_voice_setting`.
 func on_voice_setting_request(peer: int, setting: String) -> void:
 	if not is_host() or not players.has(peer):
 		return
-	if not setting in ["off", "lobby_lines"]:
+	if not setting in ["off", "live_clips"]:
 		Log.event(&"hold_refused", {"verb": "voice_setting", "reason": "unsupported", "peer": peer})
 		return
 	apply_voice_setting(peer, setting)

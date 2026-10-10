@@ -206,9 +206,13 @@ func hear(speaker: int, flags: int, seq: int, opus: PackedByteArray) -> void:
 	var me := Game.local_peer()
 	if speaker == me or not powered(me):
 		return
-	if Voice.capturing and Game.voice_setting_of(speaker) != "lobby_lines":
-		return  # D-011: no Off player's voice while this machine captures, walkie included
 	_radio(speaker).receive(flags, seq, opus)
+
+
+## True while `speaker`'s radio voice plays on this machine's walkie (Voice's live-clip cut checks it).
+func radio_talking(speaker: int) -> bool:
+	var e: Variant = _radios.get(speaker)
+	return is_instance_valid(e) and e.talking()
 
 
 func _radio(speaker: int) -> VoiceEmitter:

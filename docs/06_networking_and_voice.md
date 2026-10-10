@@ -26,22 +26,21 @@ handling in D-012.
 8. [Voice pipeline](#8-voice-pipeline)
 9. [The shared voice chain](#9-the-shared-voice-chain)
 10. [Walkie-talkies](#10-walkie-talkies)
-11. [Lobby lines, barn chatter and voice settings](#11-lobby-lines-barn-chatter-and-voice-settings)
+11. [Live clips and voice settings](#11-live-clips-and-voice-settings)
 12. [Lures and clip pre-sharing](#12-lures-and-clip-pre-sharing)
 13. [Bandwidth](#13-bandwidth)
 14. [Testing hooks and logs](#14-testing-hooks-and-logs)
 15. [Opus GDExtension and other addons](#15-opus-gdextension-and-other-addons)
-16. [Later extension: live clips (DD Phase 5)](#16-later-extension-live-clips-dd-phase-5)
-17. [Gotchas](#17-gotchas)
-18. [Questions raised](#questions-raised)
+16. [Gotchas](#16-gotchas)
+17. [Questions raised](#questions-raised)
 
 ---
 
 ## 1. Scope
 
 Covers doc 01 "Engine and Tech > Networking" and "> Voice" (including "Weak localization"), "Voice
-Mimicry" where it touches transport, playback and storage, "Voice settings", "Recording lines that
-sound scared", "Season and Numbers > Joining and leaving" and "Saving > Host leaves".
+Mimicry" where it touches transport, playback and storage, "Voice settings", "Live clips" (D-146),
+"Season and Numbers > Joining and leaving" and "Saving > Host leaves".
 
 Not covered here, and owned elsewhere: what the creature does with a heard sound (doc 03), which
 lure the AI Director picks (doc 03), the Noise interface signature, the save contents and the full
@@ -68,7 +67,7 @@ real two-network test is STOP 1 (Q-009).
   `max_channels`**; clients call `create_client(address, port, 4)` to ask for the 4 channels below.
   Godot 4.7.2 passes `create_server`'s `max_channels + 3` to ENet as the server's *incoming
   bandwidth*, which made every client's bandwidth throttle drop 20 to 40% of its voice
-  (**measured (PP-02)**; see [Gotchas](#17-gotchas)). With `max_channels` left at 0 (unlimited),
+  (**measured (PP-02)**; see [Gotchas](#16-gotchas)). With `max_channels` left at 0 (unlimited),
   loss was 0.
 - **ENet throttle pinned:** on every connection, both ends call
   `ENetPacketPeer.throttle_configure(5000, 2, 0)` (ENet's default is `(5000, 2, 2)`). ENet's RTT
@@ -91,13 +90,13 @@ ENet channels are independent: a lost packet on one never delays another.
 | 0 | reliable | Gameplay: every `request_*` and `apply_*`, session and roster messages |
 | 1 | unreliable ordered | Movement and creature transforms (latest wins) |
 | 2 | unreliable | Voice frames (own sequence numbers and jitter buffer, section 8) |
-| 3 | reliable | Bulk: lobby-line clip transfer and the dawn save copy, chunked so they never stall channel 0 |
+| 3 | reliable | Bulk: live clip transfer and the dawn save copy, chunked so they never stall channel 0 |
 
 This is CONTRACTS section 7 (D-010). Movement and voice use `SceneMultiplayer.send_bytes()` with a
 one-byte type prefix rather than RPCs, to avoid RPC path overhead at 20 to 50 packets a second;
 everything on channel 0 is an RPC on the `Net` autoload so it follows the CONTRACTS naming. The
 spike sent on channels 1 and 2 this way with 4 channels (**measured (PP-02)**); channel 3 hasn't
-carried traffic yet (see "Channel numbering" in [Gotchas](#17-gotchas)).
+carried traffic yet (see "Channel numbering" in [Gotchas](#16-gotchas)).
 
 ## 3. Hosting, UPnP and the host screen
 
@@ -144,7 +143,7 @@ Always on the screen, in every state:
 - **LAN code** for players in the same house.
 - **Players connected**, each with its round-trip time. A friend appearing here is the real proof
   the port is reachable.
-- A one-line Windows Firewall reminder (see [Gotchas](#17-gotchas)).
+- A one-line Windows Firewall reminder (see [Gotchas](#16-gotchas)).
 
 ## 4. Join codes and fallbacks
 
@@ -216,20 +215,17 @@ section says slot; moving them to slots is a later change to the message list.
 
 1. Client connects. ENet peer timeout is set to 5 s minimum, 10 s maximum (`placeholder`).
 2. Client sends `request_join(protocol_version, build_id, player_uid, display_name, voice_setting)`.
-   `voice_setting` is `off` or `lobby_lines` (section 11 "Setting IDs").
+   `voice_setting` is `off` or `live_clips` (section 11 "Setting IDs").
 3. Host refuses (`apply_join_refused(reason)`, then disconnects) on a different protocol version or
    build (`"version_mismatch"`), or a full farm (`"full"`). **After the match starts,** the host also refuses any `player_uid` not on
    the match roster (`apply_join_refused("match_in_progress")`); a loaded save's lobby refuses any
    `player_uid` not in the save (`"not_in_season"`). D-048.
 4. Host sends `apply_join_accepted(slot, roster, session_state)` to the joiner and `apply_roster` to
    everyone.
-5. **Lobby-lines players record first** (doc 01 "Joining"): if the joiner hasn't chosen Off and has
-   no recorded lines, the staged recording is offered on their machine (section 11 "Before
-   recording"). They can skip it.
-6. The joiner shares their clips (section 12) and receives everyone else's, and reports what it
+5. The joiner shares their clips (section 12) and receives everyone else's, and reports what it
    holds with `request_clips_ready(digest)` (section 12; not `request_ready`, because
-   `Node.request_ready` exists, section 17).
-7. **In the lobby,** the player appears in the barn. **A roster player reconnecting mid-session**
+   `Node.request_ready` exists, section 16).
+6. **In the lobby,** the player appears in the barn. **A roster player reconnecting mid-session**
    (doc 01 "Joining", D-048) is matched by `player_uid`, keeps their slot and role, re-shares their
    clips, spawns as a ghost at once and gets a body at the next dawn. D-049: each client writes
    `user://last_session.cfg` (host address, port, session id) at match start and deletes it on a
@@ -245,10 +241,10 @@ section says slot; moving them to slots is a later change to the message list.
 - Host sees `peer_disconnected`, broadcasts `apply_peer_left(slot)`, and drops their voice relay.
 - Their character stays as an idle farmhand that doesn't count, and they count as absent from the
   next dawn (doc 01 "Joining and leaving").
-- Every peer frees the leaver's lobby lines from memory, and any lure using them stops. **This is a
+- Every peer frees the leaver's live clips from memory, and any lure using them stops. **This is a
   reading** (inference): doc 01 "Storage" says only "peers' memory", not for how long; freeing them
-  on leave is the strict reading, and a player who rejoins shares them again (section 12). Accepted
-  in D-013; DD Phase 2 playtests can revisit it.
+  on leave is the strict reading, accepted in D-013. Leaving ends the leaver's session, which deletes
+  their own copies too (section 11), so a player who rejoins starts with no clips.
 - **One player left** at a dawn: the host saves and pauses, showing "Waiting for a farmhand" until a
   second player joins (doc 01 "Joining and leaving"). There is no solo play.
 
@@ -342,11 +338,11 @@ CONTRACTS section 7 and needs the Director (D-010). D-013 confirms `request_lant
 | `request_join(protocol_version, build_id, player_uid, display_name, voice_setting)` | client → host | host | Section 5 |
 | `apply_join_accepted(slot, roster, session_state)` | host → joiner | — | |
 | `apply_join_refused(reason)` | host → joiner | — | `full` (the D-038 player cap), `match_in_progress` (uid not on the match roster), `not_in_season` (a loaded save's lobby, uid not in the save), `no_identity` (running match, no `request_join` within 10 s). `version_mismatch` (section 5 step 3: `protocol_version` or `build_id` differs from the host's; checked first, the host also logs `net_join_version`). The main menu shows one line per reason |
-| `apply_roster(roster)` | host → all | — | slot, uid, name, voice setting, role, alive/ghost/farmhand, has recorded lines |
+| `apply_roster(roster)` | host → all | — | slot, uid, name, voice setting, role, alive/ghost/farmhand |
 | `request_role(role_id)` | client → host | host: lobby only, one player per role | Doc 01 "Roles" (optional); the result is the role in `apply_roster` |
 | `request_lobby_ready(on)` | client → host | host: lobby only, roster peers only; sender from `_sender()` | D-092; P4-23 menu lobby |
 | `apply_lobby_ready(peers)` | host → all | authority only; clients mirror `Game.lobby_ready` | D-092 |
-| `request_clips_ready(digest)` | client → host, channel 3 | host | Section 12: what the client holds; empty while recording (an md5, so no clips is never empty) |
+| `request_clips_ready(digest)` | client → host, channel 3 | host | Section 12: what the client holds (an md5, so no clips is never empty) |
 | `apply_peer_left(slot)` | host → all | — | |
 | `apply_host_leaving()` | host → all | — | |
 | `apply_waiting_for_farmhand(on)` | host → all | — | Doc 01 "Joining and leaving" |
@@ -421,7 +417,7 @@ client rolls back its prediction). Doc 05 section 7 (hold framework) uses only t
 | `request_clips_ready(digest)` | 3 | client → host | host (section 12) |
 
 There is no clip-deleted message: a new manifest **replaces** the owner's whole set, so a deleted
-or re-recorded clip is a manifest without it or with a new hash (section 12). Off is an empty
+clip is a manifest without it (section 12). Off is an empty
 manifest plus `apply_voice_setting`.
 | `apply_lure(lure_id, source, position, target_slot, tell, ghost)` | 0 | host → target or all | — |
 | `apply_walkie(peer, has_walkie, battery)` | 0 | host → all | host (item state); peer id, not slot (D-076, Q-065), battery in whole seconds |
@@ -615,8 +611,8 @@ back > Tells": "each fake has at most one random giveaway: a faint echo, a wrong
 missing radio crackle; about a third have none; it always comes from a place the teammate can't be."
 
 One chain, in `game/voice/`, used by real voices and fakes alike. Every voice, real or fake, plays
-through the same Opus decode at the same settings: lobby lines are stored and shared as Opus packets
-encoded with the live settings (section 11), so fakes carry the same codec character as live
+through the same Opus decode at the same settings: live clips are the very Opus packets the live encoder
+sent (section 11), so fakes carry the same codec character as live
 speech.
 
 | Stage | Real teammate | Fake |
@@ -747,17 +743,21 @@ teammates. Limited batteries; static when the creature is near." Price and batte
 - **Radio range:** unlimited, so the Radio Operator's `walkie_range_mult` has nothing to multiply
   (Q-116).
 
-## 11. Lobby lines, barn chatter and voice settings
+## 11. Live clips and voice settings
+
+D-146 (CEO, 2026-10-09) dropped the staged barn recording (P2-03, P2-17): the creature and the Dawn
+Report now use **live clips**, short clips cut automatically from each player's transmitted
+proximity speech. Doc 01 "Live clips" came forward from DD Phase 5 and is the default setting.
+Built in P4-37. This section replaces the old section 16 ("Later extension: live clips").
 
 ### Voice settings
 
 Doc 01 "Voice settings", exactly:
 
-| Setting | Effect | Built |
-|---|---|---|
-| **Off** | Nothing recorded; the creature fakes only this player's footsteps and tools | DD Phase 2 |
-| **Lobby lines** (default once recorded) | Lobby lines and barn chatter can be replayed by the creature and in the Dawn Report | DD Phase 2 |
-| **Live clips** (opt-in, Phase 5) | Short clips of transmitted proximity speech can be kept and replayed | Not built (section 16) |
+| Setting | Effect |
+|---|---|
+| **Off** | Nothing recorded; the creature fakes only this player's footsteps and tools |
+| **Live clips** (default, D-146) | Short clips of transmitted proximity speech are kept and can be replayed by the creature and in the Dawn Report |
 
 - **No forced consent screen.** Each player picks on their own machine and can change it any time,
   in the menu, lobby or pause menu. The setting lives in the player's local settings, never the
@@ -766,151 +766,103 @@ Doc 01 "Voice settings", exactly:
   broadcasts `apply_voice_setting`. The owner's machine is the authority.
 - **Coverage:** the setting governs every replay: the creature's lures, the Dawn Report (Off players
   appear as text plus sound) and streamer-safe mode (doc 01 "Voice settings > Coverage"). A replay
-  checks the owner's **current** setting at play time, not the setting when the lure first played.
+  checks the owner's **current** setting at play time, not the setting when the lure first played
+  (`Game.replays_voice(peer)`: Live clips and not streamer-safe).
 - **Live speech isn't affected:** Off players still talk in proximity chat, and their volume still
-  reaches the creature. The setting is about recording and replay. The one exception is on a
-  machine that is capturing ("Recording" below, D-011).
+  reaches the creature. The setting is about recording and replay.
 - **Off players are never voiced by a stand-in** (doc 01 "Habits"): the host's lure picker never
   picks a clip of theirs or a generic voice in their name; it fakes their footsteps and tools.
 - The lobby recommends in-game voice with doc 01's line: "The creature can't hear Discord, and you
   can't hear where your friends are." (doc 01 "Staying on in-game voice").
-- UI copy never says or implies the line list is the whole pool (doc 01 "Habits").
+- UI copy never says or implies the clips are the whole pool (doc 01 "Habits").
 
-### Setting IDs and before recording
+### Setting IDs
 
 - **On the wire** (`request_join`, `request_voice_setting`, `apply_voice_setting`, `apply_roster`):
-  `off` or `lobby_lines`. `live_clips` is reserved for DD Phase 5; the host refuses it until then.
-- **Locally,** a new install starts **unchosen**: the player has neither picked Off nor recorded.
-  Doc 01 makes Lobby lines the default only "once recorded", so an unchosen player has nothing
-  recorded and is sent as **`off`**: the creature fakes only their footsteps and tools, exactly as
-  Off says. Recording is offered to unchosen players and to Lobby-lines players with no lines; a
-  player who **chose** Off is not offered it until they change the setting.
-- When an unchosen player accepts at least one recorded line, their setting becomes `lobby_lines`
-  and the client sends `request_voice_setting`. If they skip, they stay unchosen and the menu offers
-  re-record or skip later (doc 01 "Recording > Menu option").
-- **This is a reading of "default once recorded"** (inference), accepted in D-013; DD Phase 2
-  playtests can revisit it.
+  `off` or `live_clips`. The host treats anything else as `off`.
+- **Locally,** `Settings.voice_setting` is `off` or `live_clips`, default `live_clips` (D-146). A
+  settings file from before D-146 (`lobby_lines`, `unchosen`, or any other value) migrates to the
+  default on load, and its `lines_recorded` key is erased. D-146 replaces the D-013 reading that
+  made an unchosen player `off`.
 
-### Recording
+### Cutting
 
-Doc 01 "Recording lines that sound scared". Built in DD Phase 2 (doc 01 "Build Plan").
+Doc 01 "Live clips": "transmitted speech from Live-clips players only", "at most 3 seconds a
+clip". D-146: cut on the sender's machine, as barn chatter was.
 
-- **Who:** unchosen players and Lobby-lines players ("Before recording" above); not players who
-  chose Off. It can be skipped, and re-recorded or skipped later from the menu. As built (P2-17): a
-  headless copy is never offered it (only `--record-auto` opens it there), because nobody can skip
-  it and an open screen holds the match start (section 12).
-- **Staging:** the lobby is the dark barn at night; each line follows a staged moment, such as a
-  lantern blowing out before "help me", or a bang on the door before "over here". The lantern
-  **blows out, never flickers** (doc 01 "Ghosts": nothing but a ghost flickers a light).
-- **Lines:** "over here", "help me", "come look at this", "I found something", "where are you?",
-  "wait for me", "it's fine, come on", and each teammate's name: 7 lines plus one per teammate, so
-  10 at 4 players (doc 01 "Recording > Lines").
-- **Line IDs:** the seven fixed lines take their IDs from `voice_lines.json` (CONTRACTS section 6).
-  A teammate's name is `name:<player_uid>`, using the teammate's 128-bit uid as 32 hex digits, so
-  the line survives new peer ids and slots and follows the teammate across sessions; its file is
-  `name_<player_uid>.vclip`. A late joiner's name is a new line for everyone else (recorded at their
-  next lobby or skipped; inference). A teammate who renames keeps their old recorded name until
-  re-recorded (inference).
-- **Takes:** 2 to 3 per line. The game keeps the most energetic take, scored by loudness (mean dB of
-  voiced frames) plus pitch variation (standard deviation of the estimated pitch); the weights are
-  `placeholder`s. The other takes are deleted once the player accepts the line.
-- **Barn chatter:** 20 to 40 seconds of free talk, only from Lobby-lines players who join the staged
-  recording. **Captured on the sender's machine** from their own mic, before any network hop.
-- **No Off player's voice during capture** (D-011): while a machine is capturing a take or barn
-  chatter, it plays **no Off player's voice** (proximity, walkie or ghost; unchosen players count
-  as Off), so speaker bleed can't put an Off player into a clip. The recording screen says so: "While
-  you record, you won't hear: Sam (voice Off)." This enforces doc 01 "Voice settings": "Off |
-  Nothing recorded". Off players' frames are still decoded, just not played, so the decoder stays in
-  step. If a player switches to Off during a capture, the capturing machine mutes them as soon as
-  `apply_voice_setting` arrives and discards the take in progress, or the chatter captured so far,
-  so the recorder redoes or skips it (inference: the strictest way to make "nothing recorded" hold
-  for the moment before the message arrives; accepted in D-013, revisited in DD Phase 2 if needed).
-- **Format:** each clip is the same Opus packets the live encoder would send (section 8 settings),
-  in a small file: a header (clip id, line id, frame count, settings) followed by packets each
-  prefixed with a u16 length. Stored as `user://voice/lines/<line_id file name>.vclip` and
-  `user://voice/chatter/<n>.vclip`.
-- **Review:** every clip can be played back and deleted before the match (doc 01 "Voice settings >
-  Review"). Deleting shares a new manifest without the clip (section 12).
+- **What is cut:** the Opus packets this machine transmits (section 8), after the VAD or
+  push-to-talk gate, so only speech that left the machine as live voice can become a clip. No other
+  audio path (mic before the gate, received voice, the creature's replays) feeds a clip.
+- **When:** only while `Voice.keeps_clips()`: in a match (not the lobby), setting Live clips, and
+  alive. A ghost's speech never feeds the creature (D-011), so the dead cut nothing.
+- **How:** one talk spurt at a time (VAD open to close, section 8 "Mic modes"). The clip is the
+  spurt's first 3 s (150 frames, doc 01) or the whole spurt if shorter; the rest of a longer spurt
+  is not kept. Spurts under 0.5 s (25 frames, `placeholder`) are dropped as coughs and clicks.
+- **Line id:** every live clip has line id `live` (`VoiceClips.LIVE_LINE`); clip ids are
+  `live_<n>`, numbered per session. There is no transcript, so the Dawn Report shows "..." for the
+  words.
+- **No word filter** (doc 01 "Live clips").
+- **No Off player in a clip** (D-011, doc 01 "Off | Nothing recorded"): a spurt during which an Off
+  player's voice (proximity or radio) was playing on this machine is dropped
+  (`live_clip_dropped`, reason `off_voice`), because speaker bleed could carry it into the mic. A
+  player this machine has muted (volume 0) does not count. **This is a reading** (inference): it
+  replaces the P2-03 rule that muted Off players during a recording, since a live mute would cut
+  live conversation; headphones make it moot, and a playtest with speakers settles whether bleed is
+  real.
 
-### Recording as built (P2-03)
+### Session lifetime and storage
 
-`game/voice/recording_screen.gd` (`RecordingScreen`) and `game/voice/clips.gd` (`Voice.clips`).
+Doc 01 "Voice settings > Storage": "live clips stay in the owner's and peers' memory only, never on
+disk or in the host save. Off deletes them." Doc 01 "Live clips > Lifetime": "kept for that
+session, then deleted."
 
-- **Opens** on `Game.recording_requested` (the settings menu's Record button), and by itself when a
-  session starts in the lobby for a player `should_offer_recording()` picks (unchosen, or Lobby lines
-  with no lines). It is a CanvasLayer (layer 130) over a 40% black dim, so the barn stays visible.
-- **Order:** an intro page naming who won't be heard; the seven `voice_lines.json` lines of kind
-  `line`; one `name:<uid>` line per teammate in `Net.profiles`; 20 s of barn chatter (Stop ends it
-  early only past 20 s, 40 s at most); then review.
-- **Takes:** each take captures 3 s (`placeholder`) from the shared `AudioEffectCapture`, with the
-  per-frame dB the VAD uses. The take is trimmed to its voiced frames (dB at or above the VAD open
-  level) plus 5 frames (100 ms) either side. A take with no voiced frame is thrown away. Two takes
-  are captured; the player can ask for a third. **Score** = `loudness_weight_per_db` x mean dB of
-  voiced frames + `pitch_spread_weight_per_semitone` x pitch standard deviation in semitones, with
-  the weights from the line's `take_scoring` (P2-12 data). **Pitch** is plain normalised
-  autocorrelation on the voiced audio decimated to mix rate / 12, 50 ms windows, 70 to 400 Hz, a
-  window counting as voiced at r >= 0.5 (all `placeholder`; YIN if octave errors show up). The best
-  take is kept and played back; Accept saves it, Redo captures again, Skip line saves nothing. The
-  other takes are never written: they live only in the screen's memory and are dropped.
-- **Barn chatter** is saved as `chatter_0` (`user://voice/chatter/0.vclip`); there is one chatter
-  clip.
-- **The first accepted line** sets `lines_recorded` and the setting to `lobby_lines`
-  (`Game.set_voice_setting`), which sends `request_voice_setting`.
-- **No Off voice while capturing:** `Voice.set_capturing(true)` moves every emitter whose owner's
-  setting isn't `lobby_lines` to the muted `VoiceMuted` bus (decoded, not heard), and back after.
-  The intro and every take page say "While you record, you won't hear: Sam (voice Off)." A take in
-  progress is discarded if a teammate switches to Off during it.
-- **Staging:** a line's `staging_cue` from `voice_lines.json` runs 0.6 s (`placeholder`) before the
-  prompt. `lantern_out` calls `LightRig.stage_blown(true)` on the barn lantern: instant off with the
-  smoke puff, held out whatever `lights.gd` sets. The take after it ends with
-  `stage_blown(false)`, which rises through the rig's slew. The lantern is the `LightRig` in group
-  `barn_lantern`; until the level has one, the screen places its own staging `LightRig` at the
-  `barn_lantern` marker and frees it on close. `door_bang` plays the bang at the barn door. Light
-  energy changes only through the rig (doc 07 s4.4). `sfx_lantern_blow_out` and `cre_door_bang_01`
-  fall back to a short noise burst until the audio files exist.
-- **Tally:** a steady red "REC recording" label next to the page title while capture is live, and
-  `request_recording_light(true)`, so every peer shows a steady emissive red bulb over the
-  recorder's character (no light source, so no light energy changes). The host sends the current
-  lights to a newcomer.
-- **Close:** if anything was saved or deleted, the screen calls `Voice.clips.share()`.
+- **Owner:** clips live in `Voice.clips` memory only. Nothing is written to disk.
+- **Peers, including the host:** in memory only. Received clips are never written to disk, cached,
+  or put in a `Resource` that could be saved. The dawn save holds none of it.
+- **Caps:** 64 clips and 400 KB per player (section 12, `placeholder`). Past a cap the oldest own
+  clip goes first, so a long session keeps the most recent speech.
+- **Session end:** leaving, quitting or the host leaving drops every own clip and every received
+  clip (`clips_deleted`, reason `session_end`); a new session starts empty (`session_start`).
+- **Off:** switching to Off asks once ("This deletes your kept clips", only if any exist), then
+  drops every own clip (`clips_deleted`, reason `voice_off`), shares an empty manifest and
+  broadcasts `apply_voice_setting`. Every peer frees that player's clips, **any lure already
+  playing one of them stops at once** (`clip_freed`, `lure_stopped`), and the host's lure picker
+  stops choosing them.
+- **Leaving:** peers free the leaver's clips (a reading; section 5 "Leaving").
+- **Old files:** the P2-03 lobby lines and barn chatter under `user://voice/lines/` and
+  `user://voice/chatter/` are deleted at start (`clips_deleted`, reason `legacy_lines`).
+- **Logs** may name a `clip_id` and the owner's peer id in `lure_played`, never audio (section 14).
+
+### Review
+
+Doc 01 "Live clips > Review": "viewable and deletable from the pause menu".
+
+- The pause menu lists this session's own clips, "Clip N (1.2 s)", each with Play (local, through
+  `Voice.clips.play`) and Delete. Delete drops the clip, shares a new manifest without it, and every
+  peer frees it (`clips_deleted`, reason `player`).
 
 ### The recording light
 
-Doc 01 "Voice settings > Recording light": "a 'recording' lantern or tally light shows whenever
-capture is live." Doc 01 "Barn chatter": "Captured on the sender's machine, with the recording
-light on."
+Doc 01 "Voice settings > Recording light": "a 'recording' lantern or tally light shows steadily
+while clips are being kept" (D-146).
 
-- **Capture is live** whenever this machine is writing mic audio to a clip: every recorded take and
-  the whole barn chatter window. (In DD Phase 5 also while live clips are kept.) **This is a
-  reading** (inference): proximity chat also runs `AudioEffectCapture` all the time, but nothing it
-  captures is kept, so it isn't "capture" in the sense the light warns about; a light that was always
-  on would warn of nothing. Accepted in D-013; DD Phase 2 playtests can revisit it.
-- The light shows on the recording player's own screen as a steady tally, and on their character in
-  the barn for everyone (`apply_recording_light`, D-011), so friends know when they are being
-  captured.
-- It is on for the whole capture window, steady, never flickering.
+- **On** while this machine can cut clips (`keeps_clips()`) or holds any. D-146 replaces the D-013
+  reading that proximity capture is not "capture": with Live clips, transmitted speech is kept, so
+  the light is on for the whole match.
+- **Where:** a steady red "REC  live clips" tally at the top right of the player's own screen, and
+  `request_recording_light(true)` so every peer shows a steady emissive red bulb over the player's
+  character (`apply_recording_light`, D-011; no light source, so no light energy changes). The host
+  sends the current lights to a newcomer.
+- **Steady:** the light changes only when `keeps_clips()` or "holds any" changes, never per talk
+  spurt or per clip. It never flickers (doc 01 "Ghosts").
 
-### Storage and "Off deletes them"
+### Group options
 
-Doc 01 "Voice settings > Storage": "lobby lines stay on the owner's disk and in peers' memory only,
-never in the host save. Off deletes them."
-
-- **Owner:** files under `user://voice/`, and nowhere else.
-- **Peers, including the host:** in memory only. Received clips are never written to disk, cached,
-  or put in a `Resource` that could be saved. The dawn save holds none of it.
-- **Off:** switching to Off asks once ("This deletes your recorded lines", only if any exist), then
-  deletes every file under `user://voice/lines/` and `user://voice/chatter/`, and broadcasts
-  `apply_voice_setting`. On that message every peer frees that player's clips, **any lure already
-  playing one of them stops at once**, and the host cancels any queued lure using them.
-- **Leaving the session:** peers free the leaver's clips (a reading; section 5 "Leaving").
-- **Logs** may name a `line_id` and the owner's peer id in `lure_played`, never audio (section 14).
-- **As built (P2-03):** "the owner's disk" is `Net.user_dir() + "voice/"`. Off is
-  `Settings.changed` on `voice_setting` becoming `off`: every `.vclip` is deleted, `lines_recorded`
-  is cleared and an empty manifest is shared, so every peer drops that owner's clips, stops any of
-  them playing and emits `clip_freed(owner, id)` (P2-04's lure player listens to it). A copy that
-  starts with the setting already `off` and clips still on disk (a crash between the two) deletes
-  them at start. The "This deletes your recorded lines" confirm belongs to the settings menu
-  (Gameplay; QUESTIONS).
+Doc 01 "Live clips": a "no live clips" lobby toggle, and streamer-safe mode (never replays live
+clips). Streamer-safe (`Game.streamer_safe`, P4-11) is built: no live clip is replayed by the
+creature or the Dawn Report while it is on. The "no live clips" toggle is not built: with live clips
+the only recorded voice, it would do what streamer-safe does (inference; the Director or CEO
+settles whether it stays a separate option, QUESTIONS).
 
 ## 12. Lures and clip pre-sharing
 
@@ -919,24 +871,29 @@ Doc 01 "Voice > Lures": "clips are sent to every peer at session start, so a lur
 
 ### Pre-sharing
 
-1. After joining (and recording, if needed), each Lobby-lines player sends
-   `request_clip_manifest(manifest)`: clip ids, line ids, frame counts, byte sizes.
+1. Each Live-clips player sends `request_clip_manifest(manifest)`: clip ids, line ids, frame
+   counts, byte sizes. It sends one at session start (empty: clips start each session) and again each
+   time it cuts or deletes a clip (section 11), so the set grows during the match.
 2. It then sends each clip in 16 KB chunks (`placeholder`) on channel 3. The host checks the sender
    owns the clips and the caps (64 clips and 400 KB per player, `placeholder`; two to three times
    the expected size, section 13), keeps a copy in memory, and forwards to every other peer.
 3. A late joiner receives everyone's clips from the host; everyone receives theirs.
-4. A re-recorded or deleted clip is re-sent or removed the same way.
+4. A new clip is sent the same way; a deleted clip is removed by the next manifest.
 5. Each client reports when it holds every clip in the manifest; the host doesn't start the match
    until all have, or a 30 s timeout passes (`placeholder`; any lure whose clip a target lacks is
-   skipped for that target).
+   skipped for that target). Since clips start each session empty and are cut only in the match,
+   this wait is normally instant; it matters again for clips cut in one match of a session and still
+   held when the next match starts (inference: today a session runs one match).
 
 **As built (P2-03):**
 
 - Manifest entries are `{clip_id, line_id, frames, bytes, hash}`; `hash` is the MD5 of the whole
-  `.vclip`. The owner sends its manifest and then every chunk. Manifest and chunks share channel 3,
-  so ENet keeps them in order. Only `lobby_lines` owners share clips; anyone else shares an empty
-  manifest. The owner shares at session start and whenever the recording screen closes with a
-  change.
+  `.vclip` bytes (section 11 "Cutting" for the ids). The `.vclip` format is unchanged from P2-03: a
+  header (clip id, line id, frame count, Opus settings) and each packet prefixed with a u16 length,
+  now only in memory and on the wire. The owner sends its manifest and then the chunks of every clip
+  it has not sent yet this session (the host already holds the rest). Manifest and chunks share
+  channel 3, so ENet keeps them in order. Only `live_clips` owners share clips; anyone else shares an
+  empty manifest. (P4-37)
 - The host refuses a manifest with a malformed entry, more than 64 clips or more than 400 KB
   (`clip_refused` with the reason). A chunk is kept only if its clip is in the owner's manifest and
   its index and count fit the manifest's size. The assembled clip must match the size, the hash and
@@ -945,13 +902,10 @@ Doc 01 "Voice > Lures": "clips are sent to every peer at session start, so a lur
   as `player_joined` fires on the host.
 - **Ready:** each client sends `request_clips_ready(digest)` whenever its holdings change. The
   digest is the MD5 of the sorted `owner:clip_id:hash` of every complete clip it holds from other
-  owners. The host computes the digest each client should hold from its own store. A client with the
-  recording screen open reports an empty digest, which never matches.
+  owners. The host computes the digest each client should hold from its own store.
 - **The 30 s clock** starts when the host first tries to start the match (`Game.match_ready()`
-  calls `Voice.clips.ready_to_start()`) and **does not run while anyone is recording** (the host's
-  own screen, or a client reporting an empty digest). This is a reading (inference): the timeout is
-  for slow transfers, and a recorder can always skip; a playtest settles it. `clip_share_wait` logs
-  who it waits for; `clip_share_done` logs `waited_s`, `timed_out` and `missing`.
+  calls `Voice.clips.ready_to_start()`). `clip_share_wait` logs who it waits for; `clip_share_done`
+  logs `waited_s`, `timed_out` and `missing`.
 
 ### A lure
 
@@ -960,7 +914,7 @@ Doc 01 "Voice > Lures": "clips are sent to every peer at session start, so a lur
 | Field | Meaning |
 |---|---|
 | `lure_id` | Unique per session; shared by the `lure_played` and `lure_result` log events (D-012) and the Dawn Report |
-| `source` | Either `{owner_slot, line_id, segments}` for a voice clip, or `{sound_id}` for faked footsteps, watering cans, hoes, generic "stranger" voices (doc 01 "Material", "Habits") and DD Phase 1's generic voice lines from the corn (doc 01 "Build Plan > Phase 1") |
+| `source` | Either `{owner_slot, line_id, segments}` for a live clip, or `{sound_id}` for faked footsteps, watering cans, hoes, generic "stranger" voices (doc 01 "Material", "Habits") and DD Phase 1's generic voice lines from the corn (doc 01 "Build Plan > Phase 1") |
 | `segments` | List of `(clip_id, first_frame, frame_count)`. One whole-clip segment for exact clips (days 1 to 3); several for spliced clips from day 4 (doc 01 "Ramp-up" table). Choosing splice points is doc 03's |
 | `position` | Where the creature plays it from |
 | `target_slot` | The target for day lures (sent **only** to that peer), or -1 for night and chase lures (sent to all, a world sound) (doc 01 "Who hears a lure") |
@@ -1019,13 +973,11 @@ input per copy, simulated latency and packet loss. QA's `tools/qa/multi.py` laun
   `--voice-wav <path>`, `--host`, `--join <code or ip>`, `--net-sim-latency-ms <n>`,
   `--net-sim-jitter-ms <n>`, `--net-sim-loss <0..1>`. P2-18 adds `--protocol-version=<n>` (a joiner
   sends this instead of `Net.PROTOCOL_VERSION`, to test `version_mismatch`). P2-03 adds `--profile=<name>` (this copy's
-  own `user://profiles/<name>/` for its uid and clips), `--voice-setting=<off|lobby_lines|unchosen>`
-  (in memory only, because local copies share one settings file), `--voice-off-after=<s>` (switch to
-  Off as the menu does; deletes that profile's clips), `--record-auto` (open the recording screen
-  and answer every page: two takes per line, accept, 20 s chatter, done), `--record-shot=<png>`
-  (screenshot during the "help me" take) and `--clip-wav-out=<path>` (write the kept "help me",
-  played through the clip player into a muted bus, as WAV, outside the repo; it needs a real audio
-  driver and writes nothing under `--audio-driver Dummy`). The simulation delays and drops outgoing
+  own `user://profiles/<name>/` for its uid and settings), `--voice-setting=<off|live_clips>` (in
+  memory only, because local copies share one settings file) and `--voice-off-after=<s>` (switch to
+  Off as the menu does; deletes this copy's kept clips). P4-37 removed the recording screen's flags
+  (`--record-auto`, `--record-shot`, `--clip-wav-out`). A `--voice-wav` copy cuts live clips from
+  the WAV's talk spurts like a microphone's. The simulation delays and drops outgoing
   packets in `game/net/` on channels 1 and 2 (dropping reliable packets would only stall them, so
   channels 0 and 3 are only delayed).
 - **Every send goes through one `Net` wrapper.** Godot sends an RPC the moment `rpc()` or
@@ -1046,21 +998,19 @@ input per copy, simulated latency and packet loss. QA's `tools/qa/multi.py` laun
 | `net_host_left` | `how` (`quit`, `disconnected`) |
 | `net_rtt` | `to` (peer id), `rtt_ms`, `enet_loss`, every 10 s |
 | `net_bandwidth` | `up_kbps`, `down_kbps` (UDP/IP headers included), `up_datagrams_per_s`, every 10 s |
-| `voice_stats` | per speaker every 10 s and when the speaker leaves: `speaker` (peer id), `bus` (the chain this listener hears them through now, e.g. `VoiceBase`, `VoiceGhost`, `VoiceMuted`; P3-10), `static` (the ghost static layer is on), `received`, `lost` (concealed by PLC), `late`, `decoded`, `loss`, `talk_spurts`, `underflow_ms`, `overflow_ms` |
+| `voice_stats` | per speaker every 10 s and when the speaker leaves: `speaker` (peer id), `bus` (the chain this listener hears them through now, e.g. `VoiceBase`, `VoiceGhost`; P3-10), `static` (the ghost static layer is on), `received`, `lost` (concealed by PLC), `late`, `decoded`, `loss`, `talk_spurts`, `underflow_ms`, `overflow_ms` |
 | `voice_capture` | once when capture starts: `input` (`mic` or `wav`; the WAV's file name is never logged), `mix_rate`, `push_to_talk` |
 | `voice_sent` | this machine's mic every 10 s: `input` (`mic`, `wav`, `off`), `encoded`, `sent`, `bytes`, `talk_spurts`, `push_to_talk`, `relayed` (host only: frames through the relay, its own included). No volume values |
-| `lure_played` | `lure_id`, `owner` (peer id, or null for a `sound_id` lure), `line_id` (or null), `sound_id` (or null), `target` (peer id, or null for a world lure), `position` (`[x, y, z]`), `tell`, `ghost`. No audio, no volume |
+| `lure_played` | `lure_id`, `kind` (`clip`, `sound`, `stranger`), `owner` (peer id, or null for a stranger lure), `line_id` (`live` for a live clip, a stranger line id, or null), `clip_id` (or null), `sound_id` (or null), `target` (peer id, or null for a world lure), `position` (`[x, y, z]`), `tell`, `ghost`. No audio, no volume |
 | `clip_manifest` | `owner`, `clips`, `bytes`: on the owner when it shares, and on every machine that applies one |
 | `clip_received` | `owner`, `clip_id`, `line_id`, `bytes`, `frames`: a clip is complete in memory |
 | `clip_refused` | `owner`, `reason` (`bad_entry`, `too_many`, `too_big`, `bad_data`), and the counts or `clip_id` |
-| `clips_freed` | `owner`: that owner's clips dropped from memory (left the session, or not Lobby lines) |
-| `clips_deleted` | `reason` (`voice_off`): this machine deleted its own files |
+| `clips_freed` | `owner`: that owner's clips dropped from memory (left the session, or not Live clips) |
+| `live_clip_cut` | owner's machine: `clip_id`, `frames`, `bytes`, `kept` (own clips held after any cap eviction). No audio |
+| `live_clip_dropped` | owner's machine: `reason` (`off_voice`), `frames`: a talk spurt not kept (section 11 "Cutting") |
+| `clips_deleted` | `reason` (`voice_off`, `player`, `session_start`, `session_end`, `legacy_lines`), `clips`: this machine dropped its own clips (`legacy_lines`: deleted old P2-03 files) |
 | `clip_share_wait` / `clip_share_done` | `missing` (peer ids); `waited_s` and `timed_out` on done |
-| `recording_open` / `recording_closed` | `auto`; `clips` (own clips on disk at close) |
-| `take_scored` | `line_id`, `take`, `frames`, `mean_db`, `pitch_sd`, `score`. Statistics only, no audio |
-| `chatter_kept` | `frames` |
 | `recording_light` | host: `player`, `on` |
-| `clip_wav_out` | `clip_id`, `ok`, `samples` (QA flag only) |
 | `lure_result` | `lure_id` (the same as its `lure_played`), `target`, `moved_m`, `within_s`, `worked` (CONTRACTS section 10; `within_s` is Q-002, doc 05's) |
 
 Measured in PP-02 on loopback: connect 18 to 20 ms by code, 18 to 19 ms by raw IP; RTT 16 to 23 ms;
@@ -1193,21 +1143,7 @@ from the GitHub API, for that decision:
 - **Cost of the fallback route instead:** per-source occlusion and reverb in our own code (section
   8) needs no addon.
 
-## 16. Later extension: live clips (DD Phase 5)
-
-Out of scope until DD Phase 5 (doc 01 "Build Plan"). Recorded here only so nothing built now blocks
-it:
-
-- Source: transmitted speech from Live-clips players only; at most 3 s a clip; kept for that session
-  then deleted; reviewable and deletable from the pause menu; no word filter (doc 01 "Live clips").
-- Group options: a "no live clips" lobby toggle and streamer-safe mode, which never replays live
-  clips (doc 01 "Live clips", "Difficulty and group settings").
-- Section 11's clip format, manifest and `apply_lure` already carry any clip, so a live clip would be
-  another clip type. The `live_clips` setting ID is reserved (section 11). Where it is captured, how
-  it is shared and when the recording light shows for it get designed then.
-- Spliced clips from live speech are also DD Phase 5 (doc 01 "Build Plan").
-
-## 17. Gotchas
+## 16. Gotchas
 
 Each is marked **measured (PP-02)** if the voice spike hit it, otherwise it is inference or comes
 from the cited source.
@@ -1318,9 +1254,9 @@ from the cited source.
   CEO's mic gave all-zero samples with Windows mic access allowed (measured (PP-02); a switched-off
   headset is inference). The lobby mic check says so when the level stays at zero.
 - **Speakers instead of headphones.** No echo cancelling exists in any candidate (TwoVoIP issue
-  #106 is a request), so a player on speakers feeds friends back into their mic. During capture, a
-  Lobby-lines player's mic could record an **Off** player's voice from their speakers; D-011 closes
-  that by not playing Off players' voices on a capturing machine (section 11). Headphones are
+  #106 is a request), so a player on speakers feeds friends back into their mic. A Live-clips
+  player's mic could carry an **Off** player's voice from their speakers into a clip; section 11
+  "Cutting" drops any spurt during which an Off voice played on that machine (D-011, D-146). Headphones are
   required for the spatial audio test anyway (doc 01 "Testing").
 - **A bus sends only to a bus before it.** `VoiceGhost` must exist before its tell twins that send
   into it (inference from Godot's bus model; the P3-10 check reads the sends back and passes).
@@ -1331,11 +1267,13 @@ from the cited source.
 
 ### Privacy and design rules
 
-- **Received clips must never touch disk** (doc 01 "Storage"). Don't wrap them in a saved
-  `Resource`, don't cache them in `user://`, and keep them out of the dawn save.
+- **Clips must never touch disk** (doc 01 "Storage"), the owner's included since D-146. Don't wrap
+  them in a saved `Resource`, don't cache them in `user://`, and keep them out of the dawn save.
+- **A live clip is cut from what was sent, not from the mic.** Cutting from the capture buffer
+  before the VAD gate would keep speech the player never transmitted (doc 01 "Live clips > Source").
 - **Logs name peer ids, never slots** (D-012), and never carry audio or volume values.
-- **Nothing flickers but ghosts.** The recording light and the staged lantern blow-out stay steady
-  or go out, and `apply_lights` never flickers; a flicker anywhere else breaks the one unfakeable
+- **Nothing flickers but ghosts.** The recording light stays steady (it follows the setting and
+  the match, never the talk spurts), and `apply_lights` never flickers; a flicker anywhere else breaks the one unfakeable
   signal (doc 01 "Ghosts").
 
 ## Questions raised

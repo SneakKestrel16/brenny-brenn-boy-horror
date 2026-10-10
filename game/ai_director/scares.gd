@@ -245,11 +245,11 @@ func _send(id: StringName, p: int, private: bool, pos: Vector3, extra: String) -
 func _voice(p: int, own: bool) -> String:
 	var found: Array[String] = []
 	for q: int in Game.players:
-		if (q == p) != own or Game.voice_setting_of(q) != "lobby_lines":
+		if (q == p) != own or not Game.replays_voice(q):
 			continue
 		if not own and (not _alive(q) or Game.players[q].pos.distance_to(Game.players[p].pos) < _creature.COULD_NOT_BE_M):
 			continue
-		for c in _creature._fitting_clips(q, p, true):
+		for c in Voice.clips.clip_ids(q):
 			found.append("clip:%d:%s" % [q, c])
 	return found[_rng.randi() % found.size()] if not found.is_empty() else ""
 

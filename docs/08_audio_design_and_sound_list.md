@@ -375,8 +375,8 @@ sections 8 to 10); I own the levels, the generated layers and the placeholder vo
   buses are fed by fakes only, and the real voice path never touches them (doc 06 section 9).
 - The ghost static chain is the same for a real ghost and a fake of the dead, so the tiebreaker is
   the lantern flicker, not the audio (doc 01 "The dead-voice twist").
-- The chain must not make fakes cleaner, so lobby lines are stored and replayed as Opus-encoded
-  clips (doc 06 section 9), and the crackle layer applies to them equally.
+- The chain must not make fakes cleaner, so live clips are kept and replayed as the Opus packets the
+  speaker transmitted (doc 06 sections 9 and 11, D-146), and the crackle layer applies to them equally.
 
 ### 7.2 Voice bus levels and layer specs (all `placeholder`)
 
@@ -562,11 +562,9 @@ faded at both ends; `amb_barn_lobby_loop` 8.0 s stereo, first/last 20 ms within 
 - **Kill-warning heartbeat (trial, OPEN_ISSUES playtest 8).** While in `chase`, local only: `sfx_still_heartbeat_loop`
   on `SFX`, -34 to -22 dB and pitch 1.0 to 1.5 over 8 s. `CHASE_HEARTBEAT` in `soundscape.gd` switches it off.
   Inference: it warns a player who has not yet seen the creature; a playtest settles whether it helps or spoils.
-- **Barn bed.** `amb_barn_lobby_loop` fades in over 2 s (-34 dB) while `Game.in_lobby` or the recording screen
-  is open, over the wind. No day music, no score (CEO, Phase 1 playtest).
-- **Recording staging.** `recording_screen.gd` already loads `assets/audio/sfx_lantern_blow_out.wav` and
-  `cre_door_bang_01.wav`; it now finds them (it fell back to a noise burst). Both are also in the `Soundscape`
-  catalog for `play_3d`. The relight stays silent.
+- **Barn bed.** `amb_barn_lobby_loop` fades in over 2 s (-34 dB) while `Game.in_lobby`, over the wind. No day music, no score (CEO, Phase 1 playtest).
+- **Recording staging** is gone with the barn recording (D-146, P4-37). `sfx_lantern_blow_out` and
+  `cre_door_bang_01` stay in the `Soundscape` catalog for `play_3d`.
 - **Clip tells (`game/audio/voice_chain.gd`, `VoiceChain`).** `bus_for(tell)` creates (idempotently, under
   `Voice`) `VoiceBase`, `VoiceEcho` (`AudioEffectDelay` 180 ms, -18 dB, one tap, no feedback),
   `VoicePitchUp` / `VoicePitchDown` (`AudioEffectPitchShift` 1.06 / 0.94) and returns the bus for `none`,
@@ -726,7 +724,7 @@ is generic farm stock and changes without touching the list shape.
 | `sfx_wash_splash` | S | 3D | 1.2 | 3 | splash + run-off, plays at the end of the cure |
 | `sfx_door_open_01..02`, `sfx_door_close_01..02` | S | 3D | 0.8 | 1 | creak sweep (sine + BPF), latch click, thud |
 | `sfx_door_slam` | S | 3D | 2.0 | no | 3 | **real** (section 13): wall thump, then a heavy wooden door kicked shut with rattle (the shed scare) |
-| `sfx_lantern_ignite` / `sfx_lantern_blow_out` | S | 3D | 0.6 | 2 | match flare hiss / breath and glass tick (the barn staging, doc 01 "Recording lines") |
+| `sfx_lantern_ignite` / `sfx_lantern_blow_out` | S | 3D | 0.6 | 2 | match flare hiss / breath and glass tick (was the barn staging, dropped in D-146) |
 | `sfx_flag_plant` | S | 3D | 0.5 | 3 | soft thud + cloth flap |
 | `sfx_cloth_carry`, `sfx_emote_cloth` | S | 3D | 0.7 | 3 | cloth rustle |
 | `sfx_ragdoll_thud_01..03` | S | 3D | 0.5 | 3 | body fall: saturated sub drop + flesh slap + dirt grains + dull rattles |
@@ -785,7 +783,7 @@ is generic farm stock and changes without touching the list shape.
 | `ui_click`, `ui_confirm`, `ui_deny` | U | M | 0.1 to 0.35 | no | 1 | short wood tick, up-chirp, down-chirp (sine) |
 | `ui_paper_slide`, `ui_paper_rustle` | U | M | 0.5 | no | 3 | `ui_paper_slide` **real** (section 13): one sheet scritching across wood (Dawn Report); `ui_paper_rustle` not built |
 | `ui_stamp` | U | M | 0.4 | no | 3 | stamp thump + paper |
-| `ui_rec_start`, `ui_rec_stop` | U | M | 0.25 | no | 2 | soft two-tone tally ticks (the recording light's audio, doc 01 "Recording light") |
+| `ui_rec_start`, `ui_rec_stop` | U | M | 0.25 | no | 2 | soft two-tone tally ticks (the recording light's audio, doc 01 "Recording light"; the live-clips tally is silent since D-146, so unused) |
 
 There is no Phase 1 score: doc 01 mentions only the chase sting (inference, see Q-032).
 
@@ -992,7 +990,7 @@ because these carry the game:
 6. The whistle at 10, 30, 60 m and the church bell at the barn.
 7. The generator spin-down and low-fuel pitch drop (no sputter).
 8. The stranger lines: are they scary, or silly? Decide Q-031.
-9. Phase 2 (P2-08): the chase sting and the four chase signatures; the rising chase heartbeat (keep it or cut it?); a clip with echo, pitch up/down and no crackle against one with none; the barn bed in the lobby; the lantern blow-out and the door bang in the recording.
+9. Phase 2 (P2-08): the chase sting and the four chase signatures; the rising chase heartbeat (keep it or cut it?); a clip with echo, pitch up/down and no crackle against one with none; the barn bed in the lobby. (The lantern blow-out and door bang in the recording went with D-146.)
 10. Phase 3 (P3-08), section 10.6: the wet Taint heartbeat (`taint 2` in the dev console); each scare
     with `scare <kind> 2` for `jumpscare`, `disarm_lunge`, `shed`, `hallucination`, `wrong_count`, and
     `scare fake_out` with a player outdoors; the crow caws (`kill 2`, then `ghost caw 2`); the scream and the

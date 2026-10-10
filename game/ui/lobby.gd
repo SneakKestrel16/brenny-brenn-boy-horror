@@ -11,7 +11,7 @@ extends Control
 ## `--lobby-ready` goes through Ready and Start the season instead; `--role=<id>` picks a role.
 
 const DISCORD_LINE := "The creature can't hear Discord, and you can't hear where your friends are."
-const VOICE_NAMES := {"off": "Off", "lobby_lines": "Lobby lines"}
+const VOICE_NAMES := {"off": "Off", "live_clips": "Live clips"}
 const DIFFICULTIES: Array[StringName] = [&"easy", &"normal", &"nightmare"]
 
 ## P4-09 role cards (doc 01 "Picking a role"): one per role with its perk, a taken one greyed out, "No role" always open.
@@ -198,8 +198,7 @@ func _ready() -> void:
 
 
 ## The barn at night behind the menus (placeholder boxes, doc 07 s3 "Barn lobby"): plank floor and wall, a
-## moonlit window, hay, two side lanterns and the centre lantern the recording staging blows out (group
-## `barn_lantern`, Q-176), and a warm spotlight on the centre farmer. No light here changes on its own.
+## moonlit window, hay, three lanterns and a warm spotlight on the centre farmer. No light here changes on its own.
 func _stage() -> void:
 	var stage := Node3D.new()
 	stage.name = "Stage"
@@ -250,8 +249,6 @@ func _stage() -> void:
 		rig.ground_pool = false
 		rig.range_m = 6.0
 		rig.position = at
-		if at.x == 0.0:
-			rig.add_to_group(&"barn_lantern")  # RecordingScreen._find_lantern: "lantern_out" blows this one out
 		stage.add_child(rig)
 	var spot := $Spot as Node3D  # the local player's spotlight
 	spot.position = Vector3(0, 5.0, 1.6)

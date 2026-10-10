@@ -28,7 +28,8 @@ doc has been run; every command is the harness as it stands in `tools/qa/README.
   from the logs").
 - Sections 7 to 9 are for the review of every task (a task is done only when QA passes it).
 - Section 10 is a one-off measurement doc 07 requires before its budget counts as measured.
-- DD Phase 5 (live clips, spliced clips from live speech, next season, cosmetics) is not tested here.
+- DD Phase 5 (spliced clips from live speech, next season, cosmetics) is not tested here. Live clips
+  came forward from Phase 5 in D-146 and are tested in section 8 D.
 
 ## 2. Session rules
 
@@ -83,7 +84,7 @@ Director).
 
 | Item | Test | Log measure | Pass |
 |---|---|---|---|
-| A friend's recorded voice fools someone | Staged recording; the creature replays a recorded line to a teammate (not the speaker) | `lure_played` with `line_id` of a teammate and `tell` (`echo`, `pitch`, `crackle`, or none), joined to `lure_result.worked`; plus the debrief answer "did you believe it?" | At least one tester reports being fooled (they walked toward it or said so), and the log shows `worked` for a recorded-line lure. A lure's `worked` rate for recorded lines against generic ones is read, not gated |
+| A friend's recorded voice fools someone | Live clips (D-146): the creature replays a clip cut from one tester's in-game speech to a teammate (not the speaker) | `lure_played` with `kind` `clip` and `owner` a teammate and `tell` (`echo`, `pitch`, `crackle`, or none), joined to `lure_result.worked`; plus the debrief answer "did you believe it?" | At least one tester reports being fooled (they walked toward it or said so), and the log shows `worked` for a clip lure. A lure's `worked` rate for clips against generic ones is read, not gated |
 | Trap sweeps feel worth doing | Two fields, corn between, a pegboard theft | `trap_changed` (`disarmed`, `filled`, `cut`) against `trap_sprung` by day; `hold_completed` for `disarm` (seconds); debrief question 4 | Testers sweep without being told to after the first sprung trap, and say it paid off. A team that never sweeps and never springs a trap means the clues are too weak (*inference*) |
 | Death, dawn respawn, medical bills | Kill one tester | `death`, `medical_bill` (`players`, `deaths`, `bill`, `paid`, `to_final`), `dawn_summary` (`medical_bill`, `final_extra`); with nothing in the bank the game logs no `money_changed` for a bill (P2-09) | The bill matches doc 01's table for the headcount; the floor of 4 coins holds |
 | Up to 4 players | One session at 4 | `net_bandwidth`, `net_rtt`, `voice_stats` per speaker | No desync (section 7); bandwidth in line with doc 06 section 13's estimate |
@@ -124,7 +125,7 @@ three doc 01 measures plus tallies.
 | Time inside at night | `inside_at_night` | seconds by player | Done |
 | Deaths, traps, money | `death`, `trap_sprung`, `money_changed` | counts | Done |
 | Ghost powers used (DD Phase 3 "the dead stay engaged") | `ghost_action` (`kind`: `flicker`, `crow`, `rustle`, `caw`, `static_voice`; `peer`) | count by `kind` | Done (P3-09; `static_voice` P3-10: one per ghost talk spurt). Refusals are `ghost_action_refused` with a `reason` (doc 05 section 18), counted in the event list only |
-| Lure success by source (recorded line, generic line, sound) | `lure_played` joined to `lure_result` on `lure_id` | `kind` `clip` is recorded, anything else generic; read, not gated | Done (P2-22) |
+| Lure success by source (live clip, generic line, sound) | `lure_played` joined to `lure_result` on `lure_id` | `kind` `clip` is recorded, anything else generic; read, not gated | Done (P2-22) |
 | Dead and ghost lures (DD Phase 3) | `lure_played` `owner_dead`, `ghost` | count of each | Done (P3-13) |
 | AI Director tension | `tension` (`value`, `phase`, `profile`) | samples, value range, gap between samples (doc 09 s3 asks every 10 s), phases and profiles seen | Done (P3-13) |
 | Scare rules | `scare`, `scare_dropped`, `dev_command` | per player count, big, private, closest gap; violations of one big a day, 120 s, day third 1; a scare within 5 s after a dev `scare` command is forced and not judged (*inference*: 3 s build-up plus margin) | Done (P3-13) |
@@ -271,8 +272,8 @@ playtest problem into `production/OPEN_ISSUES.md`.
 
 - [ ] The task has a handoff (what was done, files changed, what the next role needs, open issues).
 - [ ] Only the role's owned paths changed (CONTRACTS section 2); anything else is a question, not an edit.
-- [ ] The task stayed inside its DD phase's scope; nothing from Phase 5 (live clips, spliced live clips,
-      next season, cosmetics).
+- [ ] The task stayed inside its DD phase's scope; nothing from Phase 5 (spliced live clips, next season,
+      cosmetics). Live clips are in scope since D-146.
 - [ ] No conflict with doc 01. A conflict is flagged to the Director, not resolved in the lower doc.
 - [ ] Numbers cite a doc 01 section or are marked `placeholder` or inference with what settles them.
 - [ ] Names follow CONTRACTS section 3: `snake_case` files and IDs, typed GDScript, "AI Director" written
@@ -300,46 +301,42 @@ playtest problem into `production/OPEN_ISSUES.md`.
 - [ ] Close calls are resolved in the victim's favour.
 - [ ] The feature works from a client.
 
-**D. Voice settings, to the letter (doc 01 "Voice settings"; doc 06 section 11)**
+**D. Voice settings and live clips, to the letter (doc 01 "Voice settings", "Live clips"; doc 06 section 11; D-146)**
 
-- [ ] **Off:** nothing recorded (no capture, no clip file created), and the creature fakes only this
-      player's footsteps and tools. `lure_played.owner` is never an Off player; no generic voice is used
-      in an Off player's name.
-- [ ] A new, unchosen player is treated as Off on the wire; Lobby lines becomes the default only once a
-      line is recorded (D-013).
-- [ ] **Lobby lines:** lobby lines and barn chatter can be replayed by the creature and in the Dawn
-      Report.
-- [ ] **Live clips** (Phase 5) is not built; the host refuses `live_clips`.
+- [ ] **Off:** nothing recorded (no `live_clip_cut` on that machine), and the creature fakes only this
+      player's footsteps and tools. `lure_played.owner` of a `clip` lure is never an Off player; no
+      generic voice is used in an Off player's name.
+- [ ] **Live clips** is the default, including for an old settings file that held Lobby lines; the
+      settings show only Off and Live clips.
+- [ ] Clips come only from transmitted speech (after the VAD or push-to-talk gate), at most 3 s each,
+      cut on the speaker's own machine in a match, never in the lobby or as a ghost.
+- [ ] A 2-instance run shows a `lure_played` with `kind` `clip` whose `owner` is the other instance
+      (P4-37 test), and no `lure_skipped` for it on the target.
 - [ ] No forced consent screen. A player can change the setting at any time (menu, lobby, pause).
 - [ ] The setting governs every replay: the creature, the Dawn Report (Off players appear as text plus
-      sound) and streamer-safe mode, checked at play time.
-- [ ] **Storage:** lobby lines on the owner's disk (`user://voice/`) and in peers' memory only. The
-      dawn save contains no voice key or path (grep the save file). Received clips are never written
-      to disk.
-- [ ] **Off deletes them:** the files under `user://voice/lines/` and `user://voice/chatter/` are gone,
-      peers free the clips, and a lure playing one of them stops at once.
-- [ ] The recording light is on whenever capture is live, steady, for the whole capture, on the
-      recorder's screen and on their character.
-- [ ] Each clip can be reviewed and deleted before the match.
-- [ ] UI copy never says or implies the line list is the whole pool. The lobby line is verbatim: "The
+      sound) and streamer-safe mode, checked at play time. Streamer-safe replays no live clip.
+- [ ] **Storage:** live clips in memory only, the owner's included. The dawn save contains no voice key
+      or path (grep the save file). No clip file is written under `user://voice/`.
+- [ ] **Session only:** leaving or ending the session drops every clip (`clips_deleted`
+      `session_end`); a new session starts with none.
+- [ ] **Off deletes them:** `clips_deleted` `voice_off` on the owner, an empty `clip_manifest` on the
+      host, peers free the clips, and a lure playing one of them stops at once.
+- [ ] The recording light is steady while clips are kept: on the player's own screen and on their
+      character, not toggling per talk spurt.
+- [ ] The pause menu lists this session's clips with Play and Delete; Delete removes the clip on every
+      peer.
+- [ ] A spurt during which an Off player's voice played on that machine is dropped (`live_clip_dropped`
+      `off_voice`, D-011).
+- [ ] UI copy never says or implies the clips are the whole pool. The lobby line is verbatim: "The
       creature can't hear Discord, and you can't hear where your friends are."
 - [ ] Tells: each fake has at most one giveaway (echo, wrong pitch, missing crackle); about a third have
       none; a tell always comes from a place the teammate can't be. Nightmare has no voice tells.
 - [ ] Day lures are targeted (only the target hears them, only with no teammate within about 15 m);
       night and chase lures are world sounds.
 
-**E. Recording lines that sound scared (doc 01)**
+**E. Recording lines that sound scared**
 
-- [ ] The lobby is the dark barn at night; each line follows a staged moment. A lantern **blows out,
-      never flickers**.
-- [ ] Each line is recorded 2 to 3 times; the game keeps the most energetic take (loudness and pitch
-      variation) and deletes the rest on accept.
-- [ ] The line list is the seven lines ("over here", "help me", "come look at this", "I found
-      something", "where are you?", "wait for me", "it's fine, come on") plus each teammate's name.
-- [ ] Barn chatter is 20 to 40 seconds, only from Lobby-lines players who join the staged recording,
-      skippable, captured on the sender's machine with the recording light on.
-- [ ] While a machine captures, it plays no Off player's voice (D-011).
-- [ ] The menu offers re-record or skip.
+Dropped in D-146 with the staged barn recording; section D covers live clips.
 
 **F. No real voice in the repo (CONTRACTS section 11)**
 
@@ -352,7 +349,7 @@ playtest problem into `production/OPEN_ISSUES.md`.
 **G. Flicker**
 
 - [ ] Nothing but the ghost system flickers a light. The three greps in section 9 pass. The generator
-      dims (smooth, warm, monotonic) and the lantern blows out; neither is a flicker. The recording
+      dims (smooth, warm, monotonic) and a lantern blows out; neither is a flicker. The recording
       light, moonflower glow and cart lantern are steady (doc 07 section 4.3).
 - [ ] Post-processing never pulses brightness.
 

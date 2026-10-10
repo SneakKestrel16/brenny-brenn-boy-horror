@@ -175,8 +175,7 @@ The creature copies voices, so proximity chat is both the team's best tool and i
 ### How it works
 
 **Material:**
-- lobby lines and barn chatter;
-- in Phase 5, live clips;
+- live clips: short clips cut from each player's in-game speech (D-146);
 - faked footsteps, watering cans and hoes, so quiet players still give it something.
 
 **Who hears a lure:**
@@ -208,7 +207,7 @@ The creature copies voices, so proximity chat is both the team's best tool and i
 
 ### Staying on in-game voice
 
-- **Why it's worth using:** in-game voice is 3D, so it's the only way to hear where friends are. Radios need it. Ghost voices exist only in it. Lobby lines and chatter give the creature voices regardless.
+- **Why it's worth using:** in-game voice is 3D, so it's the only way to hear where friends are. Radios need it. Ghost voices exist only in it. Live clips come only from it, so a Discord team gives the creature only footsteps, tools and the stranger.
 - **Lobby note:** the menu and lobby recommend in-game voice, with the line "The creature can't hear Discord, and you can't hear where your friends are."
 - **Accepted trade-off:** Discord groups see through fakes more easily and coordinate silently at no cost. Traps, scares and the night still work. The AI Director never cheats to compensate.
 
@@ -219,27 +218,18 @@ There's no forced consent screen. Each player picks a setting on their own machi
 | Setting | Effect |
 |---|---|
 | **Off** | Nothing recorded; the creature fakes only this player's footsteps and tools |
-| **Lobby lines** (default once recorded) | Lobby lines and barn chatter can be replayed by the creature and in the Dawn Report |
-| **Live clips** (opt-in, Phase 5) | Short clips of transmitted proximity speech can be kept and replayed |
+| **Live clips** (default, D-146) | Short clips of transmitted proximity speech are kept and can be replayed by the creature and in the Dawn Report |
 
 - **Coverage:** the setting governs every replay: the creature, the Dawn Report (Off players appear as text plus sound) and streamer-safe mode.
-- **Storage:** lobby lines stay on the owner's disk and in peers' memory only, never in the host save. Off deletes them.
-- **Recording light:** a "recording" lantern or tally light shows whenever capture is live.
-- **Review:** each clip can be reviewed and deleted before the match.
+- **Storage:** live clips stay in the owner's and peers' memory only, never on disk or in the host save. Off deletes them.
+- **Recording light:** a "recording" lantern or tally light shows steadily while clips are being kept (D-146).
+- **Review:** each clip can be reviewed and deleted from the pause menu.
 
-### Recording lines that sound scared
+### Live clips
 
-- **Staging:** the menu lobby is a dark, lantern-lit barn at night (D-140). Each line follows a staged moment, such as a lantern blowing out (never flickering) before "help me," or a bang on the door before "over here."
-- **Takes:** each line is recorded 2 to 3 times. The game keeps the most energetic take, judged by loudness and pitch variation.
-- **Lines:** "over here," "help me," "come look at this," "I found something," "where are you?", "wait for me," "it's fine, come on," and each teammate's name.
-- **Barn chatter:** 20 to 40 seconds of free talk.
-  - Only from Lobby-lines players who join the staged recording, which can be skipped.
-  - Captured on the sender's machine, with the recording light on.
-- **Menu option:** re-record or skip.
+The staged barn recording is dropped: the game cuts clips automatically from in-game speech (D-146).
 
-### Live clips (Phase 5)
-
-- **Source:** transmitted speech from Live-clips players only.
+- **Source:** transmitted speech from Live-clips players only, cut on the speaker's own machine during a match.
 - **Length:** at most 3 seconds a clip.
 - **Lifetime:** kept for that session, then deleted.
 - **Review:** viewable and deletable from the pause menu.
@@ -497,7 +487,7 @@ Trap counts and the disturbance budget scale to 80% at 3 players and 60% at 2, r
 
 ### Joining and leaving
 
-- **Joining:** new players join only in the lobby, before the host starts the match. Lobby-lines players record first.
+- **Joining:** new players join only in the lobby, before the host starts the match.
 - **No mid-session joins:** once the match starts, the host refuses anyone who is not on the match roster.
 - **Rejoining:** a roster player who drops (crash or disconnect) can reconnect to the same session. They come back as a ghost at once and get their own farmer back at the next dawn, keeping their role (and imposter status in Imposter mode).
   - **Rejoin prompt:** after a crash or disconnect, the next launch opens with "Rejoin your last match?" and connects in one click. A clean "Leave" or the end of the match clears it.
@@ -753,7 +743,7 @@ Only move on when the current phase is fun. Each "done when" is checked in at le
 - **Done when:** the day feels safe, the night tense, and at least 30% of lures make the target walk toward them.
 
 **Phase 2:**
-- staged barn recording with chatter and voice settings, replayed by the creature;
+- voice settings and recorded voices replayed by the creature (live clips since D-146; the staged barn recording was built here and dropped);
 - pegboard theft;
 - death, dawn respawn and medical bills;
 - two fields with corn between them;
@@ -778,12 +768,11 @@ Only move on when the current phase is fun. Each "done when" is checked in at le
 - **Done when:** teams sometimes win and sometimes lose, and the logs land within 15 points of the sim.
 
 **Phase 5 (later):**
-- live clips;
 - spliced clips from live speech;
 - next season;
 - cosmetics.
 
-Live clips come last because they're the hardest piece, and lobby lines plus chatter may be scary enough.
+Live clips moved forward from Phase 5 and replaced the barn recording (D-146).
 
 **Fake it first:** scripted traps and timers stand in for smart AI until the loop is proven.
 

@@ -1309,3 +1309,26 @@ Fix in `LineUp._farmer` (`lobby.gd:85`): `f.rotation.y = PI`, so farmers face th
 `logs/qa/p4_36/qa_noflip_zoomC.png` vs `qa_flip_zoomC.png` (same run with each Hat turned 180 degrees).
 Settled by: a Gameplay task turning the farmers, then a reshoot of the 6-player lobby.
 **Answer (Director, 2026-10-09):** fixed in the P4-36 merge: `LineUp._farmer` sets `f.rotation.y = PI`; reshot below.
+
+### Q-243 · 2026-10-09 · Network & Voice Programmer -> Director · open
+P4-37, D-146. Lines outside my paths still describe the barn recording or the `lobby_lines` setting.
+Code now uses `off` / `live_clips` (`game/voice/settings.gd`, old values migrate to `live_clips`).
+CONTRACTS s11 last line ("Phase 5 features (live clips, ...) are not built") contradicts D-146.
+CONTRACTS s10 needs the new log events: `live_clip_cut`, `live_clip_dropped`, and the new
+`clips_deleted` reasons (`player`, `session_start`, `session_end`, `legacy_lines`); removed:
+`recording_open`, `recording_closed`, `take_scored`, `chatter_kept`, `clip_wav_out` (doc 06 s14).
+Owners to reword: doc 03 lines 683, 725, 812 (`lobby_lines`, Lobby lines); doc 05 lines 794, 830,
+858, 937 (`lobby_lines`, `lines_recorded`; the host now accepts `off` and `live_clips`);
+`tools/qa/playtest/checklist_p4.md` line 37; `game/world/build_farm.py` `RecordingSpot` /
+`recording_spots` and `check_farm.gd` counts (no reader since `recording_screen.gd` is deleted);
+`data/voice_lines.json` `staging_cue` fields (unused now). Settled by: each owner editing, or the
+Director routing them.
+
+### Q-244 · 2026-10-09 · Network & Voice Programmer -> Director, FOR CEO · open
+P4-37, D-146. Doc 01 was edited in the P4-37 worktree to match D-146 (Material list, Voice settings,
+Storage, Recording light, Review, a "Live clips" section, Phase 2 and Phase 5 lists; "Recording lines
+that sound scared" removed). It needs CEO acknowledgement. Doc 01 group options (lines ~238, 663)
+still list a "no live clips" lobby toggle; P4-37 did not build it. Inference: streamer-safe and each
+player's own Off cover it. Settled by: the CEO keeping or dropping the toggle.
+Also open: the 0.5 s minimum clip length (`CLIP_MIN_FRAMES` 25, `game/voice/voice.gd`) is a
+placeholder; a playtest settles it.

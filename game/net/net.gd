@@ -412,7 +412,7 @@ func apply_lobby_ready(peers: Array) -> void:
 	Game.apply_lobby_ready(peers)
 
 
-## Doc 06 s11: the owner's voice setting (`off` / `lobby_lines`). Slots are not built, so this names the peer id.
+## Doc 06 s11: the owner's voice setting (`off` / `live_clips`, D-146). Slots are not built, so this names the peer id.
 @rpc("any_peer", "call_remote", "reliable")
 func request_voice_setting(setting: String) -> void:
 	Game.on_voice_setting_request(_sender(), setting)
@@ -433,7 +433,7 @@ func apply_walkie(peer: int, has_walkie: bool, battery: int) -> void:
 # Every clip message, `request_clips_ready` included, rides reliable channel 3 so they stay in order: a
 # manifest before its chunks, and a client's ready report after the clips it sent.
 
-## Owner to host to all: capture is live on the owner's machine (doc 06 s11 "The recording light").
+## Owner to host to all: the owner keeps or cuts live clips (doc 06 s11 "The recording light").
 @rpc("any_peer", "call_remote", "reliable")
 func request_recording_light(on: bool) -> void:
 	Voice.on_recording_light_request(_sender(), on)
@@ -465,7 +465,7 @@ func apply_clip_chunk(owner_peer: int, clip_id: String, index: int, count: int, 
 	Voice.clips.apply_chunk(owner_peer, clip_id, index, count, bytes)
 
 
-## Client to host: a digest of the complete clips it holds ("" while its recording screen is open).
+## Client to host: a digest of the complete clips it holds.
 @rpc("any_peer", "call_remote", "reliable", 3)
 func request_clips_ready(digest: String) -> void:
 	Voice.clips.on_ready_request(_sender(), digest)
@@ -505,7 +505,7 @@ func request_join(protocol_version: int, build_id: String, uid: String, display_
 	Roles.sync()  # P4-09: the joiner learns the picks
 
 
-## `p_profiles`: peer -> {uid, name} (P2-03). The names are for the recording screen's lines and lists.
+## `p_profiles`: peer -> {uid, name} (P2-03). The names are for the lobby roster and the Dawn Report.
 @rpc("authority", "call_remote", "reliable")
 func apply_roster(peers: Array, p_profiles: Dictionary) -> void:
 	profiles = p_profiles

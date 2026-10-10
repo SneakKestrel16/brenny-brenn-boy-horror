@@ -123,7 +123,7 @@ var recent: Array[StringName] = []  ## last 8 sound ids (doc 08 section 10.4)
 var _players: Dictionary = {}  ## layer -> AudioStreamPlayer
 var _night := 0.0  ## 0 day bed, 1 night bed; equal-power crossfade
 var _night_target := 0.0
-var _barn := 0.0  ## 1 while in the lobby or recording (the barn bed)
+var _barn := 0.0  ## 1 while in the lobby (the barn bed)
 var _report: DawnReport  ## the Dawn Report card, found when it is shown (set_report_open)
 var _report_on := false
 var _sig: AudioStreamPlayer3D  ## chase signature, a child of the creature node
@@ -393,14 +393,9 @@ func _taint_heartbeat() -> void:
 		_taint.volume_db = TAINT_DB - (TAINT_DUCK_DB if is_instance_valid(_heart) else 0.0)
 
 
-## The barn bed plays in the lobby and while the recording screen is open (anywhere).
+## The barn bed plays in the lobby.
 func _in_barn() -> bool:
-	if Game.in_lobby:
-		return true
-	for c in Voice.get_children():
-		if c is RecordingScreen:
-			return true
-	return false
+	return Game.in_lobby
 
 
 func _apply_gains() -> void:
