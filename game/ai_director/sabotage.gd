@@ -500,6 +500,12 @@ func _mark(id: int, kind: StringName, pos: Vector3) -> Node3D:
 		&"teeth_marks":  # two arcs of dark nicks at the pumpkin's foot (its rind has no decal yet)
 			for k in 8:
 				_box(root, Vector3(0.05, 0.03, 0.12), Vector3(-0.35 + 0.1 * k, 0.02, -0.75 if k < 4 else -0.65), mat)
+	if kind == &"trample":  # P5-27: corn_stalk_cut, the flattened stalks of a trampled plot (same marks on every peer: seeded)
+		for k in 3:
+			var cut: Node3D = (load("res://assets/models/corn_stalk_cut.glb") as PackedScene).instantiate()
+			cut.position = Vector3(r.randf_range(-0.9, 0.9), 0.0, r.randf_range(-0.9, 0.9))
+			cut.rotation.y = r.randf() * TAU
+			root.add_child(cut)
 	if (rec.get("fix_hold_s") != null or kind == &"broken_fence") and _farm:  # P4-08: the fence's repair_fence hold is labor.json's
 		var t := FixTarget.new()
 		t.verb = StringName(rec.fix)
@@ -524,22 +530,13 @@ static func _box(parent: Node3D, size: Vector3, at: Vector3, mat: Material) -> M
 	return mi
 
 
-## Placeholder scarecrow until the Technical Artist's: a post, a crossbar, a sack head with a dark face on the
-## side it faces (-Z).
+## P5-27: the field scarecrow model (front -Z, origin at the pole base), yawed to face the farmhouse door.
 func _scarecrow(pos: Vector3, yaw: float) -> Node3D:
-	var root := Node3D.new()
+	var root: Node3D = (load("res://assets/models/prop_scarecrow_field.glb") as PackedScene).instantiate()
 	root.name = "Scarecrow%d" % (_crows.size() + 1)
 	add_child(root)
 	root.global_position = pos
 	root.rotation.y = yaw
-	var straw := StandardMaterial3D.new()
-	straw.albedo_color = Color(0.45, 0.36, 0.2)
-	var dark := StandardMaterial3D.new()
-	dark.albedo_color = Color(0.05, 0.04, 0.03)
-	_box(root, Vector3(0.12, 2.0, 0.12), Vector3(0, 1.0, 0), straw)
-	_box(root, Vector3(1.4, 0.1, 0.1), Vector3(0, 1.5, 0), straw)
-	_box(root, Vector3(0.4, 0.45, 0.4), Vector3(0, 2.1, 0), straw)
-	_box(root, Vector3(0.25, 0.1, 0.02), Vector3(0, 2.15, -0.21), dark)
 	return root
 
 

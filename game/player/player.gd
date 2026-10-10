@@ -130,6 +130,7 @@ func _make_held() -> void:
 	_trap_prop.position = Vector3(-0.35, -0.1, 0.0)
 	_trap_prop.scale = Vector3.ONE * 0.7
 	_trap_prop.visible = false
+	HeldTools.attach(self, _held)  # P5-27: hoe and whistle
 	var farm := get_tree().get_first_node_in_group(&"farm")  # a late spawn still shows what the farm already knows
 	if farm and farm.carry.has(peer):
 		var c: Dictionary = farm.carry[peer]

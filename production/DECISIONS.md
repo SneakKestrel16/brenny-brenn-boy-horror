@@ -1302,3 +1302,13 @@ the ready list, so a late joiner's opening `false` gets everyone's marks. The `c
 Voice's path (CONTRACTS s2); the Director approved it.
 **Why:** QA proved key repeat cannot fire `pressed` on a focused Button, so the 302-request burst has an unknown
 cause; a rate limit caps any such stream at one toggle per 400 ms. QA re-review passed the late-joiner run.
+
+### D-186 · 2026-10-10 · Director · P5-27 door state and model wiring; cross-owner edits ratified
+P5-27 adds host-owned door state (`Doors`, `apply_door`, late joiners synced by the `farm_state` pull), held tools
+(`HeldTools`, `apply_tool`) and world props (window glow, road lamp, perched crows), and wires the P5-26 models into
+sabotage scarecrows, trample stalks and trap clue decals. Doors start open and reset to open each day. The edits to
+`game/net/net.gd` (Network & Voice) and `game/ai_director/sabotage.gd`, `game/creature/trap_art.gd` (AI Programmer)
+cross owner paths (CONTRACTS s2); the Director approved them, as D-156 did for P5-03.
+**Why:** each edit is a thin hook for models the owner had no task to wire. QA PASS: the door harness proves a closed
+door blocks the player and not the Creature; 3-instance sync evidence is the implementer's run (QA's own run was not
+permitted).

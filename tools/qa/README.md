@@ -249,5 +249,6 @@ committed.
 | `tests/qa/fake_peer.gd` | ENet fake peer for the launcher self-check |
 | `tests/qa/test_harness.py`, `tests/qa/fixtures/` | Self-test |
 | `tests/qa/perf_probe.tscn` + `.gd` | Windowed frame-time and render-counter probe (doc 09 section 10). Prints one `perf_probe` line; the exit prints a leaked-resource error, so `multi.py` reads FAIL |
+| `tests/qa/qa_p5_27_doors.tscn` + `.gd` | Door collision probe (P5-27): with each building door closed the player body is blocked and the Creature body passes; open doors block nobody |
 
 Code owners add their own tests under `tests/<area>/` (CONTRACTS section 2).

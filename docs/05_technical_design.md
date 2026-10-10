@@ -612,6 +612,34 @@ Traps are host-owned (doc 03 section 8). The player side is:
 - **Player scarecrow count** comes from `store.json`; moved scarecrows (doc 03 sabotage) use doc 04
   section 7.3 spots.
 
+### Door state and world dressing (P5-27, D-182, Q-307)
+
+- **Doors** (`game/interaction/doors.gd`, `Doors`, a node in `main.gd` after Farm). One door per `doors` group
+  marker: `door_barn`, `door_farmhouse`, `door_toolshed`. Each is an `Interactable` (range 3 m) with the verb
+  `open_door` or `close_door`, whichever applies; both are instant holds (0.3 s, `Interactable.INSTANT_S`),
+  so they go through the same `request_hold` path as every chore. The host validates (`already_open`,
+  `already_closed`, range as for any hold), flips the state in `Doors.host_set`, sends
+  `apply_door(door_id, open, by)` to everyone, emits a `door` noise at the door (`creature.json`
+  `noise_door`, by the player) and logs `door` `{door_id, open, by}`. A client never flips a door itself.
+- **State**: `Doors.open[id]` on every peer, host authoritative. Every door starts open. The host resets any
+  closed door to open on each new day (inference: the Phase 1 farm had no doors; a playtest settles it). It is
+  not in the dawn save yet (the save lists doors but the Save node stores no door state).
+- **Late joiners**: the `farm_state` pull makes the host send one `apply_door(id, open, 0)` per door to that
+  peer only. `by` 0 means "snap": the leaves jump to the state without the 0.25 s swing.
+- **Collision follows the door**: a closed door enables a `DoorBlock` StaticBody3D (layer 1, 3 x 4 x 0.3 m, in
+  the gap, named without `Wall` because `creature.gd` measures buildings by `Wall*` names). The Creature has a
+  collision exception for the blocks: it bangs, then comes in (doc 03 section 6). Bots have no door logic and can
+  be shut out; a closed door is the player's tool.
+- **Models**: `DoorArt/LeafL` and `LeafR` (`prop_door_*`, pivots at the jambs) turn -90 and +90 degrees when open.
+- **`apply_tool(peer, tool_id)`**: the host tells everyone which chore tool a peer holds (`&"hoe"` while a
+  `plant` or `clear_plot` hold is in the HoldRegistry, `&""` otherwise); `HeldTools` (`game/player/held_tools.gd`)
+  shows `tool_hoe` on that player's `_held` node. `tool_whistle` is shown for 1 s when `apply_whistle` names the
+  peer. Visual only.
+- **`WorldProps`** (`game/core/world_props.gd`, every peer, nothing synced): `prop_window_glow` on each `WindowGlow_n`
+  at dusk, night and harvest moon while the generator has power; a `LightRig` (own power, doc 07 light rules,
+  driven by `lights.gd`) on each `prop_road_lamp` at night; perched `animal_crow` (`idle`) at each `crow_perches`
+  marker. None of these animate a light.
+
 ## 12. Generator and lights
 
 - **Generator** (doc 01 "Nights > Generator"; doc 02 section 14): host-owned node `Generator` with

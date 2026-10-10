@@ -22,6 +22,10 @@ func _ready() -> void:
 	gen.set_script(load("res://game/core/generator.gd"))
 	gen.name = "Generator"
 	add_child(gen)
+	var doors := Doors.new()  # P5-27: door state (game/interaction/doors.gd), after Farm (its targets) and before the Creature (which it exempts)
+	doors.name = "Doors"
+	add_child(doors)
+	add_child(WorldProps.new())  # P5-27: window glow, road lamps, perched crows (game/core/world_props.gd), after Generator
 	var taint := Node.new()  # P3-07: who is Tainted, and the Taint sources on the ground
 	taint.set_script(load("res://game/player/taint.gd"))
 	taint.name = "Taint"

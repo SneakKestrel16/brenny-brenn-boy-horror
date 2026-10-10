@@ -842,6 +842,19 @@ func apply_pegboard_marks(marks: Array) -> void:
 	apply_received.emit(&"pegboard_marks", [marks])
 
 
+## Host to all (P5-27, doc 05 section 11): door `door_id` (`door_barn`, `door_farmhouse`, `door_toolshed`) is open or closed;
+## `by` is the peer who moved it (0: the day reset or a late-join sync). The request travels as `request_hold` (`open_door` / `close_door`).
+@rpc("authority", "call_remote", "reliable")
+func apply_door(door_id: String, open: bool, by: int) -> void:
+	apply_received.emit(&"door", [door_id, open, by])
+
+
+## Host to all (P5-27): the tool in `peer`'s hands while it works, `hoe` or empty (game/player/held_tools.gd).
+@rpc("authority", "call_remote", "reliable")
+func apply_tool(peer: int, tool_id: StringName) -> void:
+	apply_received.emit(&"tool", [peer, tool_id])
+
+
 ## Host to all: whether `peer` has the shovel and a disarmed bear trap in hand (doc 05 section 9).
 @rpc("authority", "call_remote", "reliable")
 func apply_hands(peer: int, shovel: bool, trap: bool) -> void:

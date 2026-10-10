@@ -551,3 +551,12 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 - **Pause-menu clip Play has no log event**, so the trigger of the "Lambda capture freed" errors is inferred only.
   Owner: Network & Voice.
 - **A double tap on READY 300 ms apart loses the second tap** (400 ms client limit). Accepted. Owner: Gameplay (UI).
+
+## Found at the P5-27 review (QA, 2026-10-10)
+
+- **Door state not saved:** doors are not in the dawn save; they reset to open each day anyway.
+- **Door verbs have no HUD labels:** `hud.gd` VERB_TEXT falls back to "Open door" / "Close door".
+- **Bots ignore doors:** a bot can be shut out by a closed door.
+- **Perched crows on burst markers:** `world_props.gd` puts still crows on the `crow_perches` markers that the ghost
+  crow and fake-out burst also use. A still crow may sit where a burst launches (inference); a playtest look settles it.
+- **No independent sync run:** QA's own 3-instance door run was not permitted; evidence is the implementer's `logs/p5_27/multi5`.

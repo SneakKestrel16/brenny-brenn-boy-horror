@@ -1009,7 +1009,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-24 | Gameplay | Next season through the lobby: roles re-picked, quirk reroll, `Imposter.pick`, season-start save (P5-04 follow-up) | done (QA PASS, D-178) | P5-04, P5-11 |
 | P5-25 | Gameplay | Imposter `pegboard_mark` and interaction holds for the kit (Q-303) | done (QA PASS, D-179) | P5-11 |
 | P5-26 | 3D | Missing models: trap_tripwire, field scarecrow, perched crow, clue decals, window glow, lit road lamp, hoe, whistle | done (QA PASS, D-182) | P5-14 |
-| P5-27 | Gameplay | Wire the P5-26 models; host door state (Q-307) | todo | P5-26 |
+| P5-27 | Gameplay | Wire the P5-26 models; host door state (Q-307) | done (QA PASS, D-186) | P5-26 |
 | P5-28 | Gameplay | Lobby and save fixes: `trait_report_pending` saved, Season N label, bottom buttons overlap | done (QA PASS, D-183) | P5-24 |
 | P5-29 | Gameplay | Playtest 2026-10-09 log fixes: client "Lambda capture freed" errors, lobby READY key-repeat toggling | done (QA PASS, D-185) | |
 | P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-29 |

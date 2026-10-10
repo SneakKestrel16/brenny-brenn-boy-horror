@@ -1,7 +1,8 @@
 class_name TrapArt
 ## Trap models (P5-22; doc 07 `trap_*.glb`, P5-15). D-055 (CEO 2026-10-08): set traps are plainly visible; the
 ## doc 03 section 9 "4 m clue only" rule stays paused. Origin on the ground for every model.
-## `trap_tripwire.glb` stays unwired: the tripwire is disabled in data/traps.json.
+## P5-27: `tripwire()` wires `trap_tripwire` (set) and `trap_tripwire_sprung` (same transform, swapped in when sprung); the tripwire
+## is still disabled in data/traps.json, so nothing places one yet. A set trap (`of`, not sprung) carries the clue decals.
 
 const PATH := "res://assets/models/%s.glb"
 static var _glow := {}  ## source material -> its faint-emission copy, shared by every trap (freed instances never own one)
@@ -38,5 +39,30 @@ static func pit(sprung := false) -> Node3D:
 	return _model("trap_pit_open" if sprung else "trap_pit_cover")
 
 
+## The tripwire between two posts (local Z, 2.9 m apart): set, or the snapped cord after it sprang.
+static func tripwire(sprung := false) -> Node3D:
+	return _model("trap_tripwire_sprung" if sprung else "trap_tripwire")
+
+
+## A clue decal on the ground beside a trap (`trap_fresh_dirt_decal`, `trap_bent_stalks`), plain model, no glow.
+static func _decal(name: String) -> Node3D:
+	return (load(PATH % name) as PackedScene).instantiate() as Node3D
+
+
+## The trap of `kind`. A set one (not sprung) shows the fresh dirt under it and the stalks bent toward it (doc 01 "Night Traps":
+## glinting metal, fresh dirt). The bent stalks lean over the pit and the bear; the tripwire has no dirt, only the posts.
 static func of(kind: StringName, sprung := false) -> Node3D:
-	return bear(sprung) if kind == &"bear" else pit(sprung)
+	var root: Node3D
+	match kind:
+		&"bear": root = bear(sprung)
+		&"tripwire": root = tripwire(sprung)
+		_: root = pit(sprung)
+	if not sprung and kind != &"tripwire":
+		var dirt := _decal("trap_fresh_dirt_decal")
+		dirt.name = "FreshDirt"
+		root.add_child(dirt)
+		var stalks := _decal("trap_bent_stalks")
+		stalks.name = "BentStalks"
+		stalks.position = Vector3(0.0, 0.0, 1.2)  # models' Dirt/Stalks sit at y 0 (P5-15); a set trap in the corn leaves them behind it
+		root.add_child(stalks)
+	return root

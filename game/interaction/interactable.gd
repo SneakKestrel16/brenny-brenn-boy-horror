@@ -8,7 +8,8 @@ extends Node
 const AnimalLogic := preload("res://game/farming/animal_logic.gd")
 const INSTANT_S := {&"take_shovel": 0.3, &"return_shovel": 0.3, &"take_trap": 1.0,
 		&"take_can": 0.5, &"drop_can": 0.3, &"lift_prize": 1.0, &"set_down_prize": 0.3, &"pay_early": 2.0,
-		&"load_cart": 1.0, &"push_cart": 9999.0, &"remove_flag": 0.5}  ## placeholders (remove_flag P4-33); take_trap about 1 s like hanging (doc 02 s2.1, P2-19); push_cart never completes (P4-12)
+		&"load_cart": 1.0, &"push_cart": 9999.0, &"remove_flag": 0.5,
+		&"open_door": 0.3, &"close_door": 0.3}  ## placeholders (remove_flag P4-33); take_trap about 1 s like hanging (doc 02 s2.1, P2-19); push_cart never completes (P4-12)
 
 var id := ""
 var range_m := 2.0  ## doc 05 section 7 step 2 (placeholder)
