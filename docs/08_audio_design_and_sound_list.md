@@ -920,6 +920,36 @@ and B and C for the presence avoid them. Rejected as human voice or unclear chai
 (mouth), 190595 dog snarl (voice, reversed), 170454 growl (voice), 470900 and 844096 breathing (voice), 350414
 (derived from a sound outside the checked chain).
 
+### 13.2 Creature sounds from real recordings: candidates, not yet picked (D-149)
+
+D-149 asks for the creature sounds rebuilt from real recordings of what each body is based on, three options per
+sound. `tools/audio/real_creature.py` builds them into `logs/listen/real_creature/` (git-ignored); nothing in
+`assets/audio/` changes until the CEO picks. Sources are the FilmCow Recorded SFX library (D-149) and Freesound
+HQ previews whose page says CC0 (D-066; every page and remix chain checked). The Freesound mp3s are not in the
+repo yet: they go to `assets/audio/src/dl/` with their `LICENSE.txt` lines only for the options the CEO picks.
+Full table with processing and flags: `production/handoffs/real_creature.md`.
+
+| Sound | A | B | C |
+|---|---|---|---|
+| gaunt sig | knuckle cracks: [500797](https://freesound.org/s/500797/) khenshom, [390962](https://freesound.org/s/390962/) lucantunes | FilmCow `marionette movement sounds` + tongue clicks [146339](https://freesound.org/s/146339/) MoltenMustafa | bone/branch snaps [621977](https://freesound.org/s/621977/) rydra_wong + click "beetle" [831713](https://freesound.org/s/831713/) BugginOut.wav |
+| scarecrow sig | FilmCow `flag 1, 3-7` | cape [701647](https://freesound.org/s/701647/) IENBA + flag [386796](https://freesound.org/s/386796/) RichieMcMullen | wing flap [244982](https://freesound.org/s/244982/) ani_music + FilmCow `umbrella opening 1-6`, `fiber bundle moved 1-2` |
+| boar sig | FilmCow `chain 3`, `land in dirt 1-4`, `body fall with lots of bass` + pig [158746](https://freesound.org/s/158746/) felix.blume | chain drag [191513](https://freesound.org/s/191513/) Hitrison + angry pig [352698](https://freesound.org/s/352698/) Jofae + FilmCow `footstep dirt` | FilmCow `metal dragged on floor`, `body fall with lots of bass` + chain [235959](https://freesound.org/s/235959/) mffm + wild boars [612995](https://freesound.org/s/612995/) felix.blume |
+| husk sig | timber rattlesnake [855914](https://freesound.org/s/855914/) TheKingOfGeeks360 | gourd shakers [434881](https://freesound.org/s/434881/) TA-AT + seed pods [610143](https://freesound.org/s/610143/) Michel1980 | FilmCow `glass full of beads 3, 9, 17` + seed pods [127385](https://freesound.org/s/127385/) vigorish |
+| jumpscare (per body) | fox [634005](https://freesound.org/s/634005/) Soundburst / FilmCow flag / [612995](https://freesound.org/s/612995/) / [855914](https://freesound.org/s/855914/) + corn [755839](https://freesound.org/s/755839/) Sami_Zadoud | cat hiss [485952](https://freesound.org/s/485952/) aunrea / [701647](https://freesound.org/s/701647/) / [352698](https://freesound.org/s/352698/) / [434881](https://freesound.org/s/434881/) + corn [454368](https://freesound.org/s/454368/) kyles | fox [832436](https://freesound.org/s/832436/) felix.blume / [244982](https://freesound.org/s/244982/) / boar [425241](https://freesound.org/s/425241/) Garuda1982 + [764944](https://freesound.org/s/764944/) Mastersoundboy2005 / FilmCow `harpoon rattle` + [613567](https://freesound.org/s/613567/) |
+| gnaw | dog gnawing bone [260880](https://freesound.org/s/260880/) YOH | large dog chewing bone [854169](https://freesound.org/s/854169/) FOSSarts | dog eating chicken wing [861818](https://freesound.org/s/861818/) qubodup |
+| lunge | corn [613567](https://freesound.org/s/613567/) + FilmCow body fall | FilmCow `crashing through debris 3`, `woosh 5`, body fall | corn [755839](https://freesound.org/s/755839/) + FilmCow `swoosh 4`, `land in dirt 3` |
+| flare hit | fox scream [634005](https://freesound.org/s/634005/) + FilmCow `land in dirt 3` | fox [832436](https://freesound.org/s/832436/) + FilmCow body fall | cat hiss [485952](https://freesound.org/s/485952/) + fox [634005](https://freesound.org/s/634005/) + FilmCow body fall |
+| door bang _01-_03 | FilmCow `door knock 1-3` + body fall | door kick [411694](https://freesound.org/s/411694/) deoking + [452609](https://freesound.org/s/452609/) kyles | [623701](https://freesound.org/s/623701/) mediatheksuche + FilmCow `closet door close`, `screen door close` |
+| corn part _01-_03 | green corn leaves [755839](https://freesound.org/s/755839/) Sami_Zadoud | corn field [613567](https://freesound.org/s/613567/) zazz.sound.design | FilmCow `bushes 3, 8, 15` + `branch moved 2, 5, 7` |
+| presence swell | dog [461839](https://freesound.org/s/461839/) (installed, CEO pick) | pig breathing [439216](https://freesound.org/s/439216/) matschulat | donkey breathing [170567](https://freesound.org/s/170567/) felix.blume |
+
+The jumpscares keep the approved 0.3 s lead and the running steps of `cre_jumpscare_hit` (635052) and add a
+FilmCow `body fall with lots of bass` thud at 0.92 s. Flags: 146339 is a human mouth (tongue clicks, no voice);
+831713 is foley (a flicked clipboard), not a beetle; 610143 was recorded through a Morphagene and may be processed.
+No husk source pulses at 14 to 22 Hz on its own (envelope peaks 3 to 8 Hz; the rattlesnake buzzes at 53 Hz), so
+every husk option is levelled and shaken at 17 to 19 Hz in code (section 6 rule; measured env peak 17.0 to 19.0 Hz
+against 3.4 Hz for the corn stand-in).
+
 ## 14. Listening list for the CEO
 
 Everything is generated; I cannot hear any of it, so each new sound is for you to listen to. The doc
