@@ -615,7 +615,8 @@ no economy number and can start now.
 | P4-33 | Gameplay | CEO: flag limit per player; remove your own placed flag; flags as small icons on the minimap | done (QA PASS; CEO flag rules D-142) | P4-24 |
 | P4-36 | 3D Artist | CEO: a different hat per role (D-144); ten `hat_<role_id>.glb` for the lobby line-up, later the in-game farmer | done (QA PASS with follow-ups) | — |
 | P4-37 | Network & Voice | CEO: drop the barn recording; auto-record live clips from in-game speech as the default voice setting (D-146) | ready | — |
-| P4-38 | Gameplay, Game Designer | CEO: buyable flare shells in the store (D-147); Dawn Report says the flare gun was reloaded | in review | — |
+| P4-38 | Gameplay, Game Designer | CEO: buyable flare shells in the store (D-147); Dawn Report says the flare gun was reloaded | done (QA PASS with follow-ups) | — |
+| P4-39 | Gameplay | P4-38 QA follow-up: after a save resumes, `step_free_scrap` (`save.gd:343`) logs `flare_reloaded`, so the next Dawn Report shows a stale reload line. Skip the log on resume or drop report events from before `save_loaded` | ready | P4-38 |
 | P4-18 | QA | Review each P4 task; 4-instance run; headless with no new errors. Human playtest and sim `compare` economy targets waived by the CEO (D-148), moved to a later economy pass | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09

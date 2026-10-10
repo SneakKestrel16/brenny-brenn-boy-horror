@@ -4,8 +4,8 @@ extends SceneTree
 ## the mirrored `flare_shots`, coins and its own menu reason.
 ## Run as the client of a 2-instance session:
 ##   uv run tools/qa/multi.py -n 2 --headless --duration 90 \
-##     --args "-- --host --port=47382 --free-mouse --dev-exec=\"wait 4; coins 300\"" \
-##     --args "-s res://tests/net/test_flare_shell_client.gd -- --join=127.0.0.1 --port=47382 --free-mouse"
+##     --args "-- --host --port=48382 --free-mouse --dev-exec=\"wait 4; coins 300\"" \
+##     --args "-s res://tests/net/test_flare_shell_client.gd -- --join=127.0.0.1 --port=48382 --free-mouse"
 
 var _fails := 0
 var _refused: Array = []
