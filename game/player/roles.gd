@@ -145,10 +145,15 @@ static func sync() -> void:
 		table[p] = String(Game.roles.get(_uid(p), ""))
 	apply(table)
 	Net.to_peers(&"apply_roles", [table])
+	Quirks.sync()  # P5-09: each player's own quirk rides the same RPC, to that peer only
 
 
 static func apply(table: Dictionary) -> void:
-	_locked = bool(table.get("locked", false))
+	Quirks.apply(table)
+	if not table.has("locked"):
+		Game.roles_changed.emit()
+		return  # a private quirk-only table (Quirks.sync)
+	_locked = bool(table.locked)
 	for p in table:
 		if p is int and Game.players.has(p):
 			Game.players[int(p)].role = StringName(String(table[p]))

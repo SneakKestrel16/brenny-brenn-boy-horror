@@ -11,6 +11,7 @@ extends Node
 ## jumpscare on the screens of others in view, and the creature's own body in it (a capsule flash only).
 
 const Logic := preload("res://game/ai_director/director_logic.gd")
+const Crops := preload("res://game/farming/crops.gd")
 const TIMED: Array[StringName] = [&"jumpscare", &"shed", &"whisper", &"own_voice", &"wrong_count", &"hallucination"]
 const BUILDUP_S := 3.0  ## placeholder: build-up before the scare lands (doc 03 section 13 "built up")
 const TICK_S := 1.0
@@ -87,11 +88,18 @@ func _pick(p: int) -> StringName:
 	var kinds: Array[StringName] = []
 	var w := PackedFloat32Array()
 	for k in TIMED:
-		var x := Logic.scare_weight_of(_d[k], Clock.day, _dir.third(), bool(Game.players[p].get("tainted", false)))
+		var x := Logic.scare_weight_of(_d[k], _day_for(k, p), _dir.third(), bool(Game.players[p].get("tainted", false)))
 		if x > 0.0 and fits(k, p) == "":
 			kinds.append(k)
 			w.append(x)
 	return kinds[_rng.rand_weighted(w)] if not kinds.is_empty() else &""
+
+
+## The day `p` sees `kind` open on: Schizophrenia opens hallucinations early, the same scare, weight and budget (P5-09).
+func _day_for(kind: StringName, p: int) -> int:
+	if kind == &"hallucination" and Clock.day >= int(Quirks.effect(p, &"hallucination_opens_day", 99)):
+		return maxi(Clock.day, int(_d[kind].opens_day))
+	return Clock.day
 
 
 ## Why `kind` cannot land on `p` where they are now; empty when it can (doc 03 section 13 rules).
@@ -183,6 +191,13 @@ func fire(kind: StringName, p: int, hold: Dictionary = {}, forced := false) -> v
 		var farm := get_parent().get_node_or_null(^"Farm")
 		if farm and farm.cans:
 			farm.cans.drop(p)  # dropped items: the can in hand (the shovel and a held trap stay, not built)
+			if Quirks.effect(p, &"jumpscare_drops", "") == "all_carried":  # P5-09 Dyspraxia: everything; crops are lost like a death's
+				var st: Dictionary = farm.pstate(p)
+				if int(st.bag) > 0:
+					Log.event(&"carried_lost", {"player": p, "bag": int(st.bag), "cause": "dyspraxia"})
+				Crops.bag_clear(st)
+				farm.set_hands(p, false, false)
+				farm.send_carry(p)
 	Log.event(&"scare", {"kind": String(kind), "target": p, "big": bool(rec.big), "private": private,
 		"day": Clock.day, "third": _dir.third(), "position": _v(pos), "extra": extra if extra else null,
 		"hold": hold.get("target") if hold else null})

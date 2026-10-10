@@ -107,6 +107,10 @@ func _host_end() -> void:
 		lost = lost or not _cart_out()
 	# else no CartRoute (Phase 1 farm, unit tests): no cart, so a paid debt with no Harvest Moon wipe wins
 	var res := Logic.build(_tally, {"names": names, "players": Game.players.keys(), "day": Clock.day}, tpl, lost)
+	if Game.quirks_on:  # P5-09 (D-161): every quirk is named at season end, from the host's table
+		for p: int in names:  # current names win; players who left keep the last name `Quirks.sync` saw
+			Quirks.last_name[str(Net.profiles[p].get("uid", ""))] = names[p]
+		res["quirks"] = Quirks.reveal(Game.quirks, Quirks.last_name)
 	Net.to_peers(&"apply_season_awards", [res])
 	show_card(res)
 
@@ -129,6 +133,13 @@ func show_card(res: Dictionary) -> void:
 		var l := _label(a.line, 18, INK, HORIZONTAL_ALIGNMENT_LEFT)
 		l.modulate.a = 0.0
 		_pending.append(l)
+	var qs: Array = res.get("quirks", [])
+	if not qs.is_empty():  # P5-09: the quirks, named at last (only when the option was on)
+		_box.add_child(HSeparator.new())
+		for q: String in qs:
+			var l := _label(q, 16, INK, HORIZONTAL_ALIGNMENT_LEFT)
+			l.modulate.a = 0.0
+			_pending.append(l)
 	var b := Button.new()
 	b.text = "Back to menu"
 	b.pressed.connect(Game.leave_session)

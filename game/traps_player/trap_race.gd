@@ -71,6 +71,23 @@ func _on_sprung(id: String, kind: StringName, peer: int, pos: Vector3, deep: boo
 	if kind != &"bear":
 		st.bag = 0  # pit: stumble and drop what you carry
 		return
+	var delay := float(Quirks.effect(peer, &"bear_snap_delay_s", 0.0))  # P5-09 Grandiose delusions: a moment to step off
+	if delay <= 0.0:
+		_pin_victim(id, peer, deep)
+		return
+	var step_off := float(Quirks.effect(peer, &"step_off_m", 0.0))
+	await get_tree().create_timer(delay).timeout
+	var now: Dictionary = Game.players.get(peer, {})
+	var at: Vector3 = now.get("pos", pos)
+	if now.is_empty() or Game.is_ghost(peer) or Vector2(at.x - pos.x, at.z - pos.z).length() > step_off:
+		Log.event(&"quirk_dodge", {"player": peer, "trap_id": id})
+		_loosen(id, peer, "dodged")  # the click already sounded at the step; only the leg is saved
+		return
+	_pin_victim(id, peer, deep)
+
+
+func _pin_victim(id: String, peer: int, deep: bool) -> void:
+	var st: Dictionary = Game.players[peer]
 	_registry.cancel(peer, &"pinned")
 	st.pinned = true
 	if peer > 1:
@@ -178,7 +195,7 @@ func _loosen(id: String, peer: int, cause: String) -> void:
 func shake(peer: int) -> void:
 	if not Game.players.has(peer) or Game.is_ghost(peer):
 		return
-	var s := float(Data.value(&"taint", &"shaken", &"duration_s"))
+	var s := float(Data.value(&"taint", &"shaken", &"duration_s")) * float(Quirks.effect(peer, &"shaken_duration_mult"))  # P5-09 Anxiety disorder
 	Game.players[peer].shaken = true
 	_shaken[peer] = s
 	Log.event(&"shaken", {"player": peer, "seconds": s})

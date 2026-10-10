@@ -1145,3 +1145,13 @@ bloom centre no longer clips to pure white at night (vertex colour `#7FE6D8`), a
 2.4 m. Models are not wired into the game yet; the Gameplay wiring task for the P5-14 to P5-17 models takes them.
 D-165 stays reserved for the P5-13 colour-slot ruling (Q-282).
 **Why:** QA PASS with fixes (handoffs/P5-16.md "QA review").
+
+### D-167 · 2026-10-09 · Director · P5-09 merged; quirk rulings
+P5-09 (Quirks group option, ten quirks) passed QA with two fixes, made before merge: Schizophrenia's hallucination day
+comes from `quirks.json`, and the season-end reveal includes players who left (D-161). Rulings:
+1. Client save copies (`Save.send_to_clients`) carry every player's quirk, so a player could read them from disk
+   before season end. Accepted: any farmhand must be able to host the save, and nothing shows in game.
+2. Grandiose delusions: a walking player always clears a bear trap in the 0.6 s grace (3.0 m/s x 0.6 s > 1 m
+   step-off), skipping the trap race. Matches doc 02 s22.2 literally; left to playtest (OPEN_ISSUES).
+3. Q-276: OCD's scarecrow arc faces -Z until scarecrows store a facing yaw.
+**Why:** QA PASS with fixes (handoffs/P5-09.md "QA review").

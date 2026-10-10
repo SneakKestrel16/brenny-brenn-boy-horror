@@ -46,7 +46,7 @@ func owns(peer: int, id: StringName) -> bool:
 
 
 func lantern_mult(peer: int) -> float:  ## the player lantern's light radius multiplier (nothing draws that lantern yet)
-	return float(rec(&"brighter_lantern").effect.light_radius_mult) if owns(peer, &"brighter_lantern") else 1.0
+	return (float(rec(&"brighter_lantern").effect.light_radius_mult) if owns(peer, &"brighter_lantern") else 1.0) * float(Quirks.effect(peer, &"light_radius_mult"))  # P5-09 Nyctophobia
 
 
 ## What `peer` pays for `id`: a Carpenter builds scarecrows at `build_cost_mult` (P4-09, doc 02 s15, rounded up).

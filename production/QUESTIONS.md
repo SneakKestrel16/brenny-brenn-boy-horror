@@ -1483,3 +1483,11 @@ multiply gives the shade. Proposal (inference, no doc value): four distinct read
 light. Settled by: P5-13 picking the colours, or the CEO.
 
 **Answer (CEO, 2026-10-09):** "those colors are good but add 2 more for up to 6 players". Six player colours: red #C04040, blue #4070C0, yellow #D0B040, green #50A050, purple #8050B0, orange #D07830. The Director picked purple and orange (D-159).
+
+### Q-276 · 2026-10-09 · Gameplay (P5-09) -> Level Designer / 3D Artist · answered
+OCD's scarecrow gaze (data/quirks.json `ocd`, a 120 degree front arc) needs the direction a scarecrow faces, but
+`Store.scarecrows` keeps positions only and no scarecrow model exists. Built as an inference: the arc faces world -Z
+(`QuirkWatch.CROW_FACING`). Proposal: when the scarecrow model lands, store a facing yaw beside each position (placer's
+yaw, saved with the season) and have `QuirkWatch` read it. Settled by: the owner of the scarecrow model naming its facing.
+
+**Answer (Director, D-167):** keep -Z for now; the proposal stands. The Gameplay wiring task for the P5-14 to P5-17 models stores the placer's yaw with each scarecrow and has `QuirkWatch` read it (OPEN_ISSUES).

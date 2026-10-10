@@ -80,7 +80,7 @@ func can_start(verb: StringName, st: Dictionary) -> StringName:
 		&"harvest":
 			if state != &"ripe":
 				return &"not_ripe"
-			return &"" if int(st.get("bag", 0)) < int(Data.value(&"labor", &"carry", &"capacity")) else &"bag_full"
+			return &"" if int(st.get("bag", 0)) < Quirks.carry_cap(st) else &"bag_full"  # P5-09 Hoarding disorder
 		&"clear_plot":
 			return &"" if state in [&"wilted", &"dead"] else &"not_dead"
 	return &"no_such_verb"

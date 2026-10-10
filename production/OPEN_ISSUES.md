@@ -384,3 +384,18 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   (s4.1). Owner: Gameplay Programmer (wiring task).
 - **Shots write `.png.import` under `logs/`.** `logs/` has no `.gdignore`; the files are gitignored. Owner:
   Technical Artist.
+
+## Found at the P5-09 review (QA, 2026-10-09)
+
+- **Grandiose may be too strong.** A walking player escapes every bear trap without reacting (D-167). Settle by
+  playtest; tune `quirks.json` `grandiose` grace if the trap race never happens. Owner: Game Designer.
+- **Nyctophobia has no visible effect yet.** No carried lantern exists; `Store.lantern_mult` is host-only. The
+  lantern drawer must use `Quirks.local(&"light_radius_mult")`. Owner: Gameplay Programmer.
+- **Scarecrow facing.** Store the placer's yaw with each scarecrow and have `QuirkWatch` read it (Q-276). Owner:
+  Gameplay Programmer (model wiring task).
+- **Host-only `--quirks` without `--lobby` draws no quirk** (only lobby start and joins call `Roles.sync`). Test
+  harness only. Owner: Gameplay Programmer.
+- **Dyspraxia drops are lost** like on death; the Game Designer should confirm. Names are not saved, so a loaded
+  season's reveal shows "A farmhand" for anyone not seen since. Owner: Game Designer, Gameplay Programmer.
+- **P5-04 must call `Quirks.reroll(season)`** on a new season and set `Quirks.season_n` on load. Owner: Director at
+  the P5-04 merge.

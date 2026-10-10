@@ -460,9 +460,10 @@ func _local(delta: float) -> void:
 		stamina = maxf(stamina - delta, 0.0)
 		exhausted = stamina <= 0.0
 	else:
-		stamina = minf(stamina + float(sprint_rec["max_s"]) / float(sprint_rec["refill_s"]) * delta, sprint_max())
+		stamina = minf(stamina + float(sprint_rec["max_s"]) / float(sprint_rec["refill_s"]) / float(Quirks.local(&"sprint_refill_mult")) * delta, sprint_max())
 	stamina = minf(stamina, sprint_max())  # Tainted or Shaken mid-sprint: the shorter tank
-	var speed := Data.speed(&"crouch" if crouching else (&"sprint" if sprinting else &"walk")) * speed_mult
+	var quirk_mult := float(Quirks.local(&"crouch_speed_mult") if crouching else (1.0 if sprinting else Quirks.local(&"walk_speed_mult")))  # P5-09 Hoarding disorder
+	var speed := Data.speed(&"crouch" if crouching else (&"sprint" if sprinting else &"walk")) * speed_mult * quirk_mult
 	var wish := (global_transform.basis * Vector3(dir.x, 0, dir.y)).normalized() * speed
 	if _pushing:  # P4-32: held at the handle slot, moving with the cart (the host pins the same spot)
 		wish = Vector3(slot.x - global_position.x, 0.0, slot.z - global_position.z) / delta

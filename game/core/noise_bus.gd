@@ -33,4 +33,4 @@ func emit_kind(kind: StringName, position: Vector3, source_peer: int, mult: floa
 func emit_voice(position: Vector3, volume_byte: int, source_peer: int) -> void:
 	var rec := Data.record(&"creature", &"noise_voice")
 	var r := float(rec["radius_m"]) * pow(float(volume_byte) / float(rec["byte_max"]), float(rec["exponent"]))
-	emit(position, r, &"voice", source_peer)
+	emit(position, r * float(Quirks.effect(source_peer, &"voice_radius_mult")), &"voice", source_peer)  # P5-09 ADHD

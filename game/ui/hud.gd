@@ -106,6 +106,9 @@ func _status() -> String:
 		out += "\nTainted: wash at the well"
 	if player.shaken_s > 0.0:
 		out += "\nShaken: out of breath for %d s" % ceili(player.shaken_s)
+	if Quirks.mine != &"" and not player.ghost:
+		out += "
+Quirk: %s (only you can see this)" % Quirks.display_name(Quirks.mine)  # P5-09
 	return out
 
 
@@ -190,7 +193,7 @@ func _slots(farm: Node) -> Array:
 		out.append(["Seeds: " + ", ".join(seeds), "Hold %s on an empty plot: plant %s. %s: change" % [
 				_key(&"interact"), Data.record(&"crops", sow).get("name", sow), _key(&"cycle_seed")]])
 	if int(c.get("bag", 0)) > 0:
-		out.append(["Crops %d/%d" % [int(c.bag), int(Data.value(&"labor", &"carry", &"capacity"))], "Hold %s at the town stand: sell" % _key(&"interact")])
+		out.append(["Crops %d/%d" % [int(c.bag), int(Data.value(&"labor", &"carry", &"capacity")) + int(Quirks.local(&"carry_extra_slots", 0))], "Hold %s at the town stand: sell" % _key(&"interact")])
 	if int(st.team.get(&"flare_gun", 0)) > 0:
 		out.append(["Flare gun, %d shot%s" % [st.flare_shots, "" if st.flare_shots == 1 else "s"], "%s: fire (scares it off, loud)" % _key(&"fire_flare")])
 	if int(st.team.get(&"scarecrow", 0)) > st.scarecrows.size():

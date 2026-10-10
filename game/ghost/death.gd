@@ -107,7 +107,11 @@ func dawn() -> void:
 		Log.event(&"dawn_step", {"step": String(s), "day": Clock.day})
 		call(StringName("step_" + s), farm, final)
 	for p in _dead.keys():
-		respawn(p)
+		var late := float(Quirks.effects(Quirks.held(p)).get("dawn_body_delay_s", 0.0))  # P5-09 Narcolepsy: last to get a body
+		if late > 0.0:
+			get_tree().create_timer(late).timeout.connect(respawn.bind(p))  # respawn checks `_dead.has`; the headcount already counted them
+		else:
+			respawn(p)
 	var ripe := 0
 	for t in farm.targets.values():
 		if t.get("state") == &"ripe":

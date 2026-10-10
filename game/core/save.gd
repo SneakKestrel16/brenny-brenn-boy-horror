@@ -18,7 +18,7 @@ const SCHEMA := 1
 const KEEP := 3  ## dawn files kept besides latest.json (doc 05 s17)
 const CHUNK := 16384  ## bytes per `apply_dawn_save` packet
 const MAX_BYTES := 4 * 1024 * 1024
-const GAME_FLAGS: Array[String] = ["streamer_safe", "no_live_clips"]  ## P4-11 puts these on Game; saved only if present
+const GAME_FLAGS: Array[String] = ["streamer_safe", "no_live_clips", "quirks_on"]  ## P4-11 puts these on Game; saved only if present
 
 static var pending: Dictionary = {}  ## host: a loaded save's state, applied once Main has built the world
 static var own_by_uid: Dictionary = {}  ## host: store `per_player` items by player uid (the store keys by peer id)
@@ -77,7 +77,7 @@ static func build(tree: SceneTree, final: bool = false) -> Dictionary:
 		"headcount": farm.headcount, "coins": farm.coins, "final_extra": farm.final_extra, "free_scrap": farm.free_scrap,
 		"plots": plots,
 		"store": {"team": team, "own": own, "scrap": store.scrap_bought, "flare": store.flare_shots, "crows": crows, "plots": store.plots.duplicate()},
-		"roles": Game.roles.duplicate(), "uids": uids(),
+		"roles": Game.roles.duplicate(), "quirks": Game.quirks.duplicate(), "uids": uids(),
 		"extras": {}, "game": {},
 	}
 	var pz: Node = farm.targets.get("prize_pumpkin")
@@ -339,6 +339,7 @@ static func apply_pending(main: Node) -> void:
 		if Game.get(k) != null:
 			Game.set(k, s.game[k])
 	Game.roles = s.get("roles", {}).duplicate()
+	Game.quirks = s.get("quirks", {}).duplicate()
 	Roles.sync()
 	death.step_free_scrap(farm, false)  # the save was written before step 7; the dawn we resume finishes it
 	Log.event(&"save_loaded", {"season_id": Game.season_id, "day": int(s.get("day", 0)), "coins": farm.coins, "debt_paid": debt.paid,

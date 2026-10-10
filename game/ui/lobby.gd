@@ -31,6 +31,7 @@ var _roster: Label
 var _cards: VBoxContainer
 var _difficulty: OptionButton
 var _streamer: CheckBox
+var _quirks: CheckBox
 var _go: Button  ## host: Start the season; client: Ready
 var _lineup: LineUp
 var _autostart_t := 0.0
@@ -314,6 +315,11 @@ func _ui() -> void:
 	_streamer.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_streamer.toggled.connect(func(on: bool) -> void: Game.set_group_settings(Game.difficulty, on))
 	rv.add_child(_streamer)
+	_quirks = CheckBox.new()
+	_quirks.text = "Quirks (each player gets a private quirk; revealed at season end)"
+	_quirks.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_quirks.toggled.connect(Quirks.set_on)
+	rv.add_child(_quirks)
 	var menu := HBoxContainer.new()
 	var settings := Button.new()
 	settings.text = "Settings"
@@ -442,6 +448,8 @@ func _refresh() -> void:
 	_difficulty.disabled = not Game.is_host()
 	_streamer.set_pressed_no_signal(Game.streamer_safe)
 	_streamer.disabled = not Game.is_host()
+	_quirks.set_pressed_no_signal(Game.quirks_on)
+	_quirks.disabled = not Game.is_host()
 	if Game.is_host():
 		_go.text = "START THE SEASON" if Game.all_ready() else "Waiting for everyone\nto be ready"
 		_go.disabled = not Game.all_ready()
