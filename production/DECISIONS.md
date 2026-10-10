@@ -1241,3 +1241,9 @@ library with 3 options each. The re-check failed only on a DC step at the file e
 confirmed every file starts and ends on 0. No melody; all quieter than `ui_confirm`. The splice join check found
 Q-291, settled by P5-19 (D-176). The CEO listen (doc 08 s14 item 12) picks among options A to C.
 **Why:** QA (handoffs/P5-07.md "QA review", "QA re-check") plus the Director's edge check.
+
+### D-178 · 2026-10-09 · Director · P5-24 merged
+P5-24 (next season goes through the lobby: roles picked again, quirks re-rolled, `Imposter.pick` per season, a
+season-start save at day 1) passed QA on the first review, including a 4-instance season 1 to season 2 run and a load
+of the season-start save. The two doc 05 wording fixes QA asked for were made by the Director at merge.
+**Why:** QA PASS (handoffs/P5-24.md "QA review"); `test_p5_24_lobby` 2 instances and smoke pass on main.

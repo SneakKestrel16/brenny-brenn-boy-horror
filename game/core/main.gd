@@ -75,4 +75,7 @@ func _ready() -> void:
 		add_child(DevConsole.new())
 	add_child(WaitingCard.new())  # P4-10: a season never plays on with one human
 	Save.apply_pending(self)  # P4-10: a loaded season's state goes into the live nodes (host)
+	if Game.season_sting:  # P5-24: every peer, once, when a next season leaves the lobby
+		Game.season_sting = false
+		Soundscape.play_2d(&"ui_season_start_sting")
 	Log.event(&"main_ready", {"players": Game.players.keys()})

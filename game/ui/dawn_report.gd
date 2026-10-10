@@ -149,6 +149,7 @@ func _show(report: Dictionary) -> void:
 	_label("Season %d  Day %d" % [int(report.get("season", 1)), int(report.day)], 16, INK, HORIZONTAL_ALIGNMENT_CENTER)
 	if not String(report.get("trait_line", "")).is_empty():
 		_label(report.trait_line, 15, RED_INK, HORIZONTAL_ALIGNMENT_CENTER)
+		Soundscape.play_2d(&"ui_trait_gained")  # P5-24: with the report line, never names the trait (doc 03 s22.1)
 	_box.add_child(HSeparator.new())
 	for row: Array in report.ledger:  # [label, coins, red]; shown as applied, never applied here
 		var h := HBoxContainer.new()

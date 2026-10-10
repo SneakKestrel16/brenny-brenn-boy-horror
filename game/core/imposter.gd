@@ -99,6 +99,16 @@ static func pick() -> void:
 		_tell(who)
 
 
+## Host, a new season (P5-24): forget last season's pick; `pick` rolls again at the next match start. Keeps the
+## public toggle and the dev `forced` setting.
+static func clear_pick() -> void:
+	uid = ""
+	picked_name = ""
+	picked = false
+	_used.clear()
+	_last_ms.clear()
+
+
 ## Host: send the secret to the peer whose profile uid is `who`, and to nobody else.
 static func _tell(who: String) -> void:
 	for p in Net.profiles:

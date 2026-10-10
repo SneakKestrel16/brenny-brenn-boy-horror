@@ -68,6 +68,7 @@ func _host(game: Node, main: Node) -> void:
 				if not game.can_start_next_season():
 					_end(false, "a won season cannot start the next")
 					return
+				game.lobby_autostart = 2  # P5-24: season 2 goes through the lobby; the QA autostart leaves it
 				game.start_next_season()
 				_step = 2
 				_done_at = _t + 5.0

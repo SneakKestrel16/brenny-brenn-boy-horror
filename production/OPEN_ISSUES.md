@@ -397,7 +397,7 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   harness only. Owner: Gameplay Programmer.
 - **Dyspraxia drops are lost** like on death; the Game Designer should confirm. Names are not saved, so a loaded
   season's reveal shows "A farmhand" for anyone not seen since. Owner: Game Designer, Gameplay Programmer.
-- **P5-04 must call `Quirks.reroll(season)`** on a new season and set `Quirks.season_n` on load. Owner: Director at
+- ~~**P5-04 must call `Quirks.reroll(season)`**~~ Closed by P5-24 (D-178). on a new season and set `Quirks.season_n` on load. Owner: Director at
   the P5-04 merge.
 
 ## Found at the P5-17 review (QA, 2026-10-09)
@@ -428,10 +428,10 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 
 ## Found at the P5-04 review (QA, 2026-10-09)
 
-- **Roles are not re-pickable between seasons.** Route the next season through the lobby (`in_lobby = true`,
+- ~~**Roles are not re-pickable between seasons.**~~ Closed by P5-24 (D-178). Route the next season through the lobby (`in_lobby = true`,
   carry applied at match start); that also gives the quirk re-roll and P5-11's `Imposter.pick` per season a home.
   Owner: Gameplay (follow-up task).
-- **No save until season 2's first dawn.** A crash before it loses the carry. Owner: Gameplay.
+- ~~**No save until season 2's first dawn.**~~ Closed by P5-24 (D-178): season-start save. A crash before it loses the carry. Owner: Gameplay.
 - **Trait seed after a load is not reproducible.** Owner: Gameplay / AI Programmer.
 - **`splice_master` trait** stays out of the pool until the splice handles more than two segments (Q-272).
   Owner: Game Designer (data), AI Programmer.
@@ -462,7 +462,7 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   toggle before the private secret. Owner: Gameplay.
 - **`check_logs.py` rule for forced imposter sessions** (Q-304): treat `imposter_picked` with `forced: true` like a
   `dev_toy` session. Owner: QA.
-- **Imposter pick on a new season**: covered by P5-24.
+- ~~**Imposter pick on a new season**~~: closed by P5-24 (D-178).
 
 ## Found at the P5-21 review (QA, 2026-10-09)
 
@@ -483,3 +483,11 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   Owner: CEO, then Audio.
 - **No callers wired** for the four P5-07 cues. Handed to running rows: `ui_cosmetic_buy` P5-05,
   `ui_season_start_sting` and `ui_trait_gained` P5-24, `ui_imposter_reveal` P5-25. Owner: Gameplay; P5-08 checks.
+
+## Found at the P5-24 review (QA, 2026-10-09)
+
+- **`trait_report_pending` is not saved.** A season loaded from its season-start save never prints the new trait
+  line and never plays `ui_trait_gained`. Owner: Gameplay.
+- **No "Season N" label in the lobby.** Owner: Gameplay (UI).
+- **Lobby bottom buttons overlap**: START THE SEASON covers Settings and Leave to menu (older than P5-24). Owner:
+  Gameplay (UI).

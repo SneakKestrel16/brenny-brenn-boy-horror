@@ -38,7 +38,8 @@ var season_uids: Array = []  ## host: a loaded save sets the season's player uid
 var roles: Dictionary = {}  ## host: player_uid -> role id, kept for the season so a rejoiner keeps theirs (P4-09; the save is P4-10)
 var quirks_on := OS.get_cmdline_user_args().has("--quirks")  ## group option (doc 01 Quirks, D-158): off by default, host picks in the lobby (`--quirks` for QA); saved with the season
 var quirks: Dictionary = {}  ## host: player_uid -> quirk id, kept for the season so a rejoiner keeps theirs (P5-09)
-var season_no := 1  ## P5-04 (doc 01 "Next season"): which season of the campaign this is; every peer mirrors it, the save keeps it
+var season_sting := false  ## P5-24: a next season came through the lobby; Main plays the season-start sting once
+var season_no := 1 ## P5-04 (doc 01 "Next season"): which season of the campaign this is; every peer mirrors it, the save keeps it
 var traits: Array = []  ## P5-04: creature trait ids gained so far (doc 03 s22), kept to the campaign's end; clients only print them in the Dawn Report
 var carry: Dictionary = {}  ## host: what the finished season hands the next (Campaign.build_carry), applied once by Save.apply_pending
 var season_lost := true  ## host: the finished season's result (SeasonAwards); only a won season can start the next
@@ -179,7 +180,8 @@ func _start_clock() -> void:
 	if Save.pending.is_empty():
 		Clock.start()
 	else:
-		Clock.start(int(Save.pending.get("day", 1)), &"dawn")
+		# a season-start save (P5-24) resumes at the start of its day, a dawn save at that dawn
+		Clock.start(int(Save.pending.get("day", 1)), &"day" if bool(Save.pending.get("season_start", false)) else &"dawn")
 
 
 ## P4-10 (doc 05 s17): host a saved season. `ref` is a path to a save file or a season id under `<Net.user_dir()>/saves/`.
@@ -225,11 +227,13 @@ func _go_main() -> void:
 
 ## Host (P5-04, doc 01 "Next season"): the finished season was won and the campaign has another.
 func can_start_next_season() -> bool:
-	return is_host() and Clock.season_over and not season_lost and season_no < Campaign.seasons_max()
+	return is_host() and not in_lobby and Clock.season_over and not season_lost and season_no < Campaign.seasons_max()
 
 
 ## Host: starts the next season of the campaign. Upgrades, plots and savings carry (doc 02 s21); the creature gains a
-## trait (doc 03 s22); Main reloads on every peer, so the rest resets (doc 02 s21.3). Returns false if it may not start.
+## trait (doc 03 s22). P5-24: everyone goes back to the lobby; roles are picked again, `start_match` then redraws the
+## quirks, rolls `Imposter.pick`, starts the clock, and Main applies the carry and writes the season-start save.
+## The rest resets with the Main reload (doc 02 s21.3). Returns false if it may not start.
 func start_next_season() -> bool:
 	if not can_start_next_season():
 		return false
@@ -247,12 +251,14 @@ func start_next_season() -> bool:
 	Save.own_by_uid = {}
 	Save.battery_by_uid = {}
 	Save.tally_left = {}
+	season_uids = []  # a loaded season's lock ends: the new roster is whoever starts it
+	roles.clear()  # picked again in the lobby
+	Imposter.clear_pick()  # host only; every peer drops `me` in apply_next_season
 	apply_next_season(season_no, traits, true)
 	Net.to_peers(&"apply_next_season", [season_no, traits, true])
 	for p in players:
 		players[p] = {"voice_setting": voice_setting_of(p)}
-	Quirks.reroll(season_no)  # P5-09: quirks are redrawn each season; reroll runs Roles.sync
-	Clock.start()
+	Quirks.reroll(season_no)  # P5-09: clears the quirks; the draw is at start_match (Quirks.sync skips the lobby)
 	return true
 
 
@@ -265,6 +271,12 @@ func apply_next_season(p_season: int, p_traits: Array, reload: bool) -> void:
 		return
 	console_open = false
 	Clock.season_over = false
+	in_lobby = true  # P5-24: the next season starts from the lobby, on every peer
+	season_sting = true  # Main plays `ui_season_start_sting` once the lobby is left
+	lobby_ready.clear()
+	match_roster.clear()
+	Imposter.me = false
+	Quirks.mine = &""
 	if not is_host():
 		for p in players:
 			players[p] = {"voice_setting": voice_setting_of(p)}
@@ -410,6 +422,7 @@ func leave_session(reason: StringName = &"left") -> void:
 	roles.clear()
 	quirks.clear()
 	quirks_on = false
+	season_sting = false
 	Quirks.mine = &""
 	Quirks.season_n = 1
 	season_no = 1
