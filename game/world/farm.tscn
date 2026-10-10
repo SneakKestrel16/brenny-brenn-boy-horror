@@ -371,6 +371,9 @@ size = Vector3(1.6, 0.02, 17.400000000000002)
 [sub_resource type="BoxMesh" id="BoxMesh_113"]
 size = Vector3(1.6, 0.02, 18.659015211904823)
 
+[sub_resource type="BoxMesh" id="BoxMesh_113b"]
+size = Vector3(1.6, 0.02, 4.6)
+
 [sub_resource type="CylinderMesh" id="CylinderMesh_114"]
 top_radius = 0.25
 bottom_radius = 0.25
@@ -1010,7 +1013,7 @@ material_override = SubResource("StandardMaterial3D_3")
 shape = SubResource("BoxShape3D_65")
 
 [node name="Well" type="StaticBody3D" parent="Props" groups=["well"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0.5, 10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49, 0.5, -20)
 collision_layer = 1
 collision_mask = 0
 
@@ -1887,7 +1890,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46, 0, 30)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -62, 0, 0)
 
 [node name="crow_09" type="Marker3D" parent="Markers" groups=["crow_perches"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -23, 0, 11)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51, 0, -19)
 
 [node name="scarecrow_01" type="Marker3D" parent="Markers" groups=["scarecrow_spots"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -5.5)
@@ -2010,7 +2013,7 @@ transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 112.5, 0.01, -5.0)
 mesh = SubResource("BoxMesh_99")
 material_override = SubResource("StandardMaterial3D_7")
 
-[node name="ToWell1" type="MeshInstance3D" parent="Paths"]
+[node name="ToYard1" type="MeshInstance3D" parent="Paths"]
 transform = Transform3D(0.32379, 0, -0.94613, 0, 1, 0, 0.94613, 0, 0.32379, -13.75, 0.01, 5.15)
 mesh = SubResource("BoxMesh_100")
 material_override = SubResource("StandardMaterial3D_7")
@@ -2078,6 +2081,11 @@ material_override = SubResource("StandardMaterial3D_7")
 [node name="ToMoon1" type="MeshInstance3D" parent="Paths"]
 transform = Transform3D(0.73861, 0, -0.67413, 0, 1, 0, 0.67413, 0, 0.73861, 66.75, 0.01, 11.5)
 mesh = SubResource("BoxMesh_113")
+material_override = SubResource("StandardMaterial3D_7")
+
+[node name="ToWell1" type="MeshInstance3D" parent="Paths"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 49.0, 0.01, -21.5)
+mesh = SubResource("BoxMesh_113b")
 material_override = SubResource("StandardMaterial3D_7")
 
 [node name="FieldA_N" type="Node3D" parent="Fences"]
@@ -3093,7 +3101,7 @@ font_size = 96
 outline_size = 24
 
 [node name="Well" type="Node3D" parent="Signs"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, 6.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.5, 0, -18)
 
 [node name="Post" parent="Signs/Well" instance=ExtResource("m11")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 0.0, 0.0, 0.0)
@@ -3163,7 +3171,7 @@ mesh = SubResource("CylinderMesh_123")
 material_override = SubResource("StandardMaterial3D_12")
 
 [node name="Windpump" type="Node3D" parent="Landmarks"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0, 7)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.5, 0, -20)
 
 [node name="Mast" type="MeshInstance3D" parent="Landmarks/Windpump"]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 0, 4.5, 0)

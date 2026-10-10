@@ -104,7 +104,7 @@ out.
 | Pegboard | (-15, 30.5), inside on the back wall | | faces the door | "The tool shed > Pegboard" |
 | Generator | (-11, -6), 3 m off the barn's west wall | 2 × 1 m | | "Nights > Generator"; "From day 6 ... bangs the barn doors while circling to the generator" ("Light is the rule") |
 | Fuel drum | (-10, 27), beside the shed door | 1 m | | "the drum by the shed is free and infinite; the walk is the cost" ("Nights") |
-| Well | (-25, 10) | 2 m | | "Taint > Cure", "Senses > Hearing" (well pump) |
+| Well | (49, -20), P5-47 (was (-25, 10)) | 2 m | | "Taint > Cure", "Senses > Hearing" (well pump) |
 | Shipping crate and store | (72, 5) | 2 × 1 m | | "Crops" (field B "by the shipping crate"), "Store" ("Bought by the shipping crate") |
 | Town stand | (120, -5) | 3 × 2 m | | "Core Loop" (sell at the town stand), "AI Director > Town stand" |
 | Farm gate | (105, -5), in the clearing's east fence | 6 m wide | | "Nights > Length", "Winning and losing" |
@@ -338,8 +338,8 @@ lines from the corn" in DD Phase 1 (doc 01 "Build Plan").
 - **Crow perches** (doc 01 "Ghosts > The crow", "Jumpscares > Fake-outs"): crow_01 (30, 1) field A
   fence; crow_02 (72, -12) field B fence; crow_03 (13, 2) strip 2's tip; crow_04 (-47, 38) by the
   pumpkin; crow_05 (60, 17) moonflower bed; crow_06 (-24, -27) pen gate; crow_07 (46, 30) strip 3's
-  edge; crow_08 (-62, 0) west ring edge; crow_09 (-23, 11) on the well, which is 32 m from corn,
-  so ghosts there see the creature only through crows (section 8.4).
+  edge; crow_08 (-62, 0) west ring edge; crow_09 (51, -19) on the well (P5-47), 5 m from strip 3's tip,
+  so ghosts there see the corn edge directly (section 8.4); the crow gives a second view.
 - **Scarecrow spots** (doc 01 "Jumpscares > The scarecrow moved", "Store > More scarecrows"):
   scarecrow_01 (30, -5.5) and scarecrow_02 (72, -5.5) are the field scarecrows at the start (2,
   `placeholder`); scarecrow_03 (20, 20), _04 (-40, 20), _05 (60, -30), _06 (90, 20) and _07 (-8,
@@ -371,9 +371,9 @@ without needing 60 m of open ground in every direction (inference; the procedure
 | Barn door | Shed door | 30.0 |
 | Farmhouse door | Shed door | 39.7 |
 | Generator | Fuel drum | 33.0 |
-| Barn door | Well | 26.9 |
-| Well | Shed door | 18.9 |
-| Well | Farmhouse door | 22.4 |
+| Barn door | Well | 52.9 |
+| Well | Shed door | 78.8 |
+| Well | Farmhouse door | 96.1 |
 | Barn door | Field A centre | 30.5 |
 | Field A centre | Field B centre | 42.0 |
 | Barn door | Field B centre | 72.2 |
@@ -384,7 +384,7 @@ without needing 60 m of open ground in every direction (inference; the procedure
 | Farmhouse door | Prize Pumpkin | 33.1 |
 | Shed door | Prize Pumpkin | 32.8 |
 | Barn door | Prize Pumpkin | 57.4 |
-| Well | Prize Pumpkin | 31.8 |
+| Well | Prize Pumpkin | 109.7 |
 | Field B centre | Town stand | 48.0 |
 | Farm gate | Town stand | 15.0 |
 | Escape spots | Pen gate | 60.2 to 119.6 (section 7.3) |
@@ -399,10 +399,10 @@ max distance 80 m (`placeholder`), so beyond 80 m a voice is silent.
 | Band | Pairs on this farm | What it means |
 |---|---|---|
 | About 10 m (up to 11) | Plots within one field (10.8 m at most in the 12-plot grid, 12.7 m with a headcount row); field B and the crate (10.5) | Tested at 10 m |
-| 11 to 30 m | Barn door and generator (12.5); well to shed, farmhouse and barn; barn to shed; field B to moonflowers | Tested at 10 and 30 m |
-| 30 to 60 m | Barn to field A (30.5), fields to each other (42), barn to farmhouse (45), pumpkin to barn (57) | Tested at 30 and 60 m |
-| 60 to 80 m | Barn to moonflowers (63.9), barn to field B (72.2) | Audible but beyond the tested 60 m |
-| Over 80 m | Barn to town stand, pumpkin to the far field, anything to the stand from the yard | Silent: a seller or a guard can't be called by voice from across the farm |
+| 11 to 30 m | Barn door and generator (12.5); well to both field centres (23.9, 27.2); barn to shed; field B to moonflowers | Tested at 10 and 30 m |
+| 30 to 60 m | Barn to field A (30.5), barn to well (52.9), fields to each other (42), barn to farmhouse (45), pumpkin to barn (57) | Tested at 30 and 60 m |
+| 60 to 80 m | Barn to moonflowers (63.9), barn to field B (72.2), well to shed (78.8) | Audible but beyond the tested 60 m |
+| Over 80 m | Barn to town stand, pumpkin to the far field, anything to the stand from the yard, well to farmhouse (96.1) and to the Prize Pumpkin (109.7) | Silent: a seller or a guard can't be called by voice from across the farm |
 
 - **Most calls fall inside the tested range, two don't.** Field to field (42 m), barn to field A
   (30.5 m) and yard to pumpkin (57.4 m from the barn door) are at most 60 m. **Barn to field B
@@ -428,13 +428,13 @@ Doc 01 "Who hears a lure": day lures reach a player "only with no teammate withi
 - Work spots under 15 m apart: the shed and its drum (5.1 m), field B and the crate (10.5 m), and
   the **barn door and the generator (12.5 m)**. So a teammate at the barn door shields a refueller
   at the generator from day lures, but not at the drum (28.8 m from the barn door). Every other pair
-  of work spots is 18.9 m or more apart, so any errand done alone can be lured. (The farm gate and
+  of work spots is 20.8 m or more apart (moonflower bed to the crate), so any errand done alone can be lured. (The farm gate and
   the town stand are 15.0 m apart, and lures at the stand are less likely anyway, D-115.)
 - A spotter watching a disarm (doc 01 "Night Traps > Spotting") stands within 15 m to block lures,
   and every trap spot has open ground within 15 m to stand on, except the deep spots, which are 10
   to 13 m into the ring (inference: the spotter must enter the corn there).
 - Every lure-exposed work spot has corn within 20 m for the lure to come from (section 8.4) except
-  the generator (23 m) and the well (32 m); lures there come from the yard's corn edges at range
+  the generator (23 m); lures there come from the yard's corn edges at range
   (doc 03's lure distance settles whether that's close enough).
 
 ### 8.4 The 20 m ghost radius
@@ -455,7 +455,7 @@ beyond that, only through animals and crows. Nearest corn to each work spot:
 | Shipping crate | 10.8 | Yes (P5-31, Patch3; was 20.0) |
 | Farm gate | 4.0 | Yes (the lane's corn) |
 | Generator | 23.0 | No: the pen's animals and crow_06, 25 m away, react for it |
-| Well | 32.2 | No: crow_09 sits on the well |
+| Well | 5.0 | Yes (P5-47: strip 3's tip; was 32.2 m in the yard); crow_09 also sits on it |
 
 ### 8.5 The 20 m pumpkin radius and the 30 m door rule
 
@@ -464,7 +464,7 @@ lit doorway's light doesn't count"; gnawed "on any night nobody is within 20 m".
 
 - The nearest door is 32.8 m away, so the nearest lit-door light (6 m, `placeholder`) ends 26.8 m
   from the pumpkin, outside the 20 m circle. No guard can count time from a doorway.
-- No work spot is within 20 m (the well is 31.8 m): guarding is a job of its own (doc 01
+- No work spot is within 20 m (the nearest is the shed door at 32.8 m): guarding is a job of its own (doc 01
   "Splitting up").
 - Strip 1's tip is 7 m away. Inside the circle: cover_10 (9.0 m), trap_17 (11.0), trap_18 (11.4),
   crow_04 (5.0) and the moved-scarecrow spot scarecrow_04 (14.8). Just outside: cover_11 (20.2) and
@@ -502,19 +502,20 @@ at a door may leave through its own building's 1 m margin.
 | Fuel drum to generator | none | 33.0 | 11.0 |
 | Barn door to Prize Pumpkin | none | 57.4 | 19.1 |
 | Farmhouse door to Prize Pumpkin | none | 33.1 | 11.0 |
-| Well to Prize Pumpkin | none | 31.8 | 10.6 |
-| Well to field A centre | (19, 3) | 58.5 | 19.5 |
-| Well to field B centre | (19, 3), (45, -16), (53, -16) | 106.5 | 35.5 |
-| Well to moonflower bed | (19, 3), (45, -16), (53, -16) | 123.4 | 41.1 |
-| Well to barn door | none | 26.9 | 9.0 |
+| Well to Prize Pumpkin | (19, 3), (11, 3) | 111.1 | 37.0 |
+| Well to field A centre | none | 23.9 | 8.0 |
+| Well to field B centre | none | 27.2 | 9.1 |
+| Well to moonflower bed | (53, -16) | 44.3 | 14.8 |
+| Well to barn door | (19, 3), (11, 3) | 57.2 | 19.1 |
 | Barn door to shed door | none | 30.0 | 10.0 |
 
 - **Watering refills:** cans fill at the well only, 2 plots per fill (doc 02 section 2.2, both
-  `placeholder`; the well-only reading is doc 02's inference). So watering field A costs a 117 m
-  round trip per 2 plots and field B 213 m. A pump at each field would be a new element and needs a
+  `placeholder`; the well-only reading is doc 02's inference). So watering field A costs a 48 m
+  round trip per 2 plots and field B 54 m (P5-47: was 117 m and 213 m with the well in the yard); the Prize Pumpkin
+  is now a 222 m round trip per can. A pump at each field would be a new element and needs a
   doc 01 change.
-- **For doc 02 section 2.4**, which used this doc's first-draft walks: `d_well` is now 58.5 m
-  (field A) and 106.5 m (field B, was 109.7); the trade loop field B → stand → crate → B is
+- **For doc 02 section 2.4**, which used this doc's first-draft walks: `d_well` is now 23.9 m
+  (field A), 27.2 m (field B), 44.3 m (moonflower bed) and 111.1 m (Prize Pumpkin) after P5-47 (was 58.5, 106.5, 123.4, 31.8); the trade loop field B → stand → crate → B is
   48.0 + 49.0 + 10.5 = 107.5 m (unchanged); field A → stand → crate → A is
   94.2 + 49.0 + 54.6 = 197.8 m (doc 02 used 209.7 via field B). Both shorten the walks a little,
   so doc 02's P ≈ 9 to 11 rises slightly (Q-015 item 4).
@@ -543,9 +544,8 @@ coordinates, so nothing moves when DD Phase 2 widens it:
   markers. Cover_03 (47, -4) lies 1 m inside the temporary east wall, so it is also usable in Phase 1.
 - **Out:** farmhouse, field B, moonflower bed, Prize Pumpkin, shipping crate, town stand, gate,
   cart route, strips 1 and 3.
-- In Phase 1 the well is 7 m from the temporary west wall instead of 32 m from corn in the full
-  farm, so washing is riskier there; Taint isn't in Phase 1 (doc 01 "Build Plan > Phase 3"), so
-  only watering refills are affected.
+- In Phase 1 the well stays in the yard (-25, 10), 7 m from the temporary west wall, as in the first draft; only the full farm moves it between the fields (P5-47). Taint isn't in Phase 1 (doc 01 "Build Plan > Phase 3"), so only
+  watering refills are affected.
 
 ## 10. Doc 01 elements checklist
 
@@ -670,18 +670,18 @@ collider edge, not its centre:
 - **Paths** (packed dirt, visual only, no collision, 2 cm high; P5-21, CEO: every structure leads to
   another and the stray barn-back path to the pen is gone): the 3 m cart route path (section 6.1) and
   1.6 m side paths, all in `PATHS` in `build_farm.py`. Network, each a straight leg or two:
-  barn door (-2.5, 1.3) to well (-25, 9); well to farmhouse door (-45, 1); well to shed door (-15, 25);
+  barn door (-2.5, 1.3) to the yard junction (-25, 9); junction to farmhouse door (-45, 1); junction to shed door (-15, 25);
   shed door to fuel drum (-10, 26); farmhouse to Prize Pumpkin (-46, 31); generator (-11, -5.5) down to
-  the barn-to-well path; well north to the pen gate (-24, -27); barn door east (2.5, 1.3) to (10, 1.5), then
+  the barn-to-junction path; junction north to the pen gate (-24, -27); barn door east (2.5, 1.3) to (10, 1.5), then
   to the cart route at (10, 8.5); crate (73.5, 5) east to (90, 5), then north to the route at (90, -10.8);
-  crate (72.5, 5.2) to the moonflower bed (61, 17.8). The gate and town stand sit on the route lane. So the network is
+  crate (72.5, 5.2) to the moonflower bed (61, 17.8); well (49, -20): a stub (49, -23) to (49, -20) off the cart route (P5-47, `ToWell`). The gate and town stand sit on the route lane. So the network is
   two connected groups, east and west, that meet across the open ground in front of the barn door; every
   building and prop is on one. Each strip reaches 0.8 m (half its width) past its end points, so the barn-door paths start at
   x = +-2.5 and none enters the 1.2 m doorway lane; none touches a field, plot, corn block or wall, and the
   parked cart at (5, 6) stays clear of every side path.
 - **Signs** (post with a 2.6 m label that faces the camera and darkens at night): FIELD A (21.5, 0.5),
   FIELD B (63.5, -8), MOONFLOWERS (55, 17), STORE (75, 6.5), TOWN (102, -10), PRIZE PUMPKIN (-42, 28),
-  TOOL SHED (-11, 23.5), PEN (-20.5, -25.5), FARMHOUSE (-39, 3), WELL (-22, 6.5).
+  TOOL SHED (-11, 23.5), PEN (-20.5, -25.5), FARMHOUSE (-39, 3), WELL (52.5, -18).
 
 ### 14.3 Landmarks
 
@@ -692,7 +692,7 @@ All visual only.
 |---|---|---|---|
 | Silo | (6, -53), in the north ring behind the barn | 14 m + dome | North |
 | Water tower | (40, 64), in the south ring | 17 m | South |
-| Windpump | (-28, 7), beside the well | 9 m | The well and the west yard |
+| Windpump | (45.5, -20), beside the well (P5-47; was (-28, 7)) | 9 m | The well between the fields |
 | Gate arch | (105, -5), over the farm gate | 4.9 m, "TOWN" facing west | The way out |
 | Hay stack | (38, 12), off the audio test line (z 16) | 1.6 m | Yard clutter by field A |
 | Wood pile | (-20, 29), by the shed | 0.9 m | Yard clutter by the shed |
@@ -716,7 +716,7 @@ it and Stalk and lures start from it (the creature walks through corn, no nav me
 
 - Rules kept (checked by `check_farm.gd`, all PASS): every marker, tree canopy, path, fence and
   doc 04 s8.7 walk stays clear of the patches; every corn distance in section 8.4 for the pumpkin, drum, barn door,
-  shed door, pen gate, generator, well and farm gate is unchanged; the cart route's closest pass to
+  shed door, pen gate, generator and farm gate is unchanged; the cart route's closest pass to
   corn is still 3.7 m. Gaps between patches and old corn are 3 m or more (Patch5 to the east ring), so players always have a way round.
 - Changed: corn within field B's centre is now 12 m (was 20 m), and within the crate 10.8 m (was 20 m).
   Field B is no longer at the ghost 20 m limit; the ghost sees corn edges there (section 8.4).

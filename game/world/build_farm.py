@@ -164,12 +164,13 @@ TREES = ([(f"Orchard{i + 1}", x, z, "round") for i, (x, z) in enumerate(
          + [(f"SouthGrove{i + 1}", x, z, "round") for i, (x, z) in enumerate(((-27, 47), (-22, 51), (-19, 44)))])
 PATHS = [  # side paths, 1.6 m; the 3 m cart route path is drawn from ROUTE in generate()
          # P5-21: every structure joins the network; each strip reaches w/2 = 0.8 m past its end points, so the barn-door paths start at x +-2.5, z 1.3 to stay out of the 1.2 m door lane
-         ("ToWell", [(-2.5, 1.3), (-25, 9)], 1.6), ("ToHouse", [(-25, 9), (-45, 1)], 1.6),
+         ("ToYard", [(-2.5, 1.3), (-25, 9)], 1.6), ("ToHouse", [(-25, 9), (-45, 1)], 1.6),
          ("ToShed", [(-25, 11), (-15, 25)], 1.6), ("ToDrum", [(-15, 25), (-10, 25), (-10, 26)], 1.6),
          ("ToPumpkin", [(-45, 1), (-44, 20), (-46, 31)], 1.6),
          ("ToGen", [(-11, -5.5), (-11, 4.5)], 1.6), ("ToPen", [(-25, 9), (-24, -27)], 1.6),
          ("ToRoute", [(2.5, 1.3), (10, 1.5), (10, 8.5)], 1.6),
-         ("ToCrate", [(73.5, 5), (90, 5), (90, -10.8)], 1.6), ("ToMoon", [(72.5, 5.2), (61, 17.8)], 1.6)]
+         ("ToCrate", [(73.5, 5), (90, 5), (90, -10.8)], 1.6), ("ToMoon", [(72.5, 5.2), (61, 17.8)], 1.6),
+         ("ToWell", [(49, -23), (49, -20)], 1.6)]  # P5-47: the well stands between the fields, a stub off the cart route
 FENCES = [("FieldA_N", 23, -14, 28, -14), ("FieldA_N2", 32, -14, 37, -14), ("FieldA_S", 23, 0, 28, 0),
           ("FieldA_S2", 32, 0, 37, 0), ("FieldB_N", 65, -11, 70, -11), ("FieldB_N2", 74, -11, 79, -11),
           ("Moon_W", 56, 18, 56, 26), ("Moon_S", 56, 26, 64, 26), ("Moon_E", 64, 18, 64, 26),
@@ -177,12 +178,12 @@ FENCES = [("FieldA_N", 23, -14, 28, -14), ("FieldA_N2", 32, -14, 37, -14), ("Fie
 SIGNS = [("FieldA", 21.5, 0.5, "FIELD A"), ("FieldB", 63.5, -8, "FIELD B"), ("Moonflowers", 55, 17, "MOONFLOWERS"),
          ("Store", 75, 6.5, "STORE"), ("Town", 102, -10, "TOWN  >"), ("Pumpkin", -42, 28, "PRIZE PUMPKIN"),
          ("Shed", -11, 23.5, "TOOL SHED"), ("Pen", -20.5, -25.5, "PEN"), ("Farmhouse", -39, 3, "FARMHOUSE"),
-         ("Well", -22, 6.5, "WELL")]
+         ("Well", 52.5, -18, "WELL")]  # P5-47
 
 
 def landmarks() -> None:
     """Visual-only landmarks tall enough to read over the corn: silo north (behind the barn), water tower south,
-    windpump at the well, an arch over the farm gate. No collision: the silo and tower stand in the ring corn."""
+    windpump beside the well (P5-47: between the fields), an arch over the farm gate. No collision: the silo and tower stand in the ring corn."""
     node("Silo", "Node3D", "Landmarks", f"transform = {tf(6, 0, -53)}\n")
     cyl("Landmarks/Silo", "Body", 0, 0, 3.5, 14, "metal")
     vis("Landmarks/Silo", "Dome", sub("SphereMesh", "radius = 3.5\nheight = 3.5\nis_hemisphere = true\nradial_segments = 12\nrings = 4\n"), "metal", 0, 14, 0)
@@ -191,7 +192,7 @@ def landmarks() -> None:
         vbox("Landmarks/WaterTower", f"Leg{i}", lx, lz, 0.3, 0.3, 10, "trunk")
     cyl("Landmarks/WaterTower", "Tank", 0, 0, 3, 5, "rust", y0=10)
     cyl("Landmarks/WaterTower", "Roof", 0, 0, 3.3, 2, "rust", y0=15, top=0.0)
-    node("Windpump", "Node3D", "Landmarks", f"transform = {tf(-28, 0, 7)}\n")
+    node("Windpump", "Node3D", "Landmarks", f"transform = {tf(45.5, 0, -20)}\n")
     cyl("Landmarks/Windpump", "Mast", 0, 0, 0.15, 9, "metal")
     cyl("Landmarks/Windpump", "Tail", 0, -1, 0.05, 0.1, "metal", y0=9)
     vbox("Landmarks/Windpump", "Rotor", 0, 0.3, 3.2, 0.1, 3.2, "metal", y0=7.4)
@@ -258,6 +259,9 @@ P1_IDS = {"trap": {1, 2, 3, 4, 5, 6, 15, 16, 19, 22}, "cover": {1, 2, 3, 9, 12, 
 # route, off the walks of doc 04 s8.7 and clear of tree canopies; the last is a strip off the ring. Cover points 17..22 sit inside.
 PATCHES = [(68, 78, -40, -20), (94, 100, -30, -16), (78, 84, 14, 30), (57, 60, -8, 0), (99, 102, 16, 30),
            (66, 72, 38, 55)]
+# P5-47 (CEO STOP 6, doc 04 s4): the well stands between field A and field B, at the north tip of strip 3 (open ground
+# midway between the fields, 1.5 m off the cart route edge, 5 m from corn, 4 m off the A to B walk). Phase 1 keeps the yard well.
+WELL, WELL_P1, CROW_WELL = (49, -20), (-25, 10), (51, -19)
 ROUTE = [(5, 6), (5, 8), (15, 9), (40, 5), (41, -24), (58, -24), (66, -14), (82, -14), (105, -5)]  # doc 04 s6.1 R0..R8; R0 parked east of the barn door, P5-18
 
 
@@ -374,7 +378,7 @@ def generate(full: bool) -> str:
 
     # Props
     props = [("Generator", -11, -6, 2, 1, 1.2, "generator"), ("FuelDrum", -10, 27, 1, 1, 1.0, "fuel_drum"),
-             ("Well", -25, 10, 2, 2, 1.0, "well")]
+             ("Well", *(WELL if full else WELL_P1), 2, 2, 1.0, "well")]
     if full:
         props += [("ShippingCrate", 72, 5, 2, 1, 1.0, "store_crate"), ("TownStand", 120, -5, 3, 2, 1.0, "sell_box")]
     else:
@@ -440,7 +444,7 @@ def generate(full: bool) -> str:
             marker(M, f"cover_{i:02d}", x, z, "creature_cover")
     for i, x, z in CROWS:
         if keep("crow", i):
-            marker(M, f"crow_{i:02d}", x, z, "crow_perches")
+            marker(M, f"crow_{i:02d}", *(CROW_WELL if full and i == 9 else (x, z)), "crow_perches")  # crow_09 perches on the well
     for i, x, z in SCARECROWS:
         if keep("scarecrow", i):
             marker(M, f"scarecrow_{i:02d}", x, z, "scarecrow_spots")

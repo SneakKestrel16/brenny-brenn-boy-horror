@@ -131,8 +131,8 @@
 <text class="sm" x="368" y="276" text-anchor="middle">generator</text>
 <circle class="pt" cx="400" cy="408" r="4"/>
 <text class="sm" x="428" y="416" text-anchor="middle">fuel drum</text>
-<circle class="pt" cx="340" cy="340" r="4"/>
-<text class="sm" x="340" y="328" text-anchor="middle">well</text>
+<circle class="pt" cx="636" cy="220" r="4"/>
+<text class="sm" x="636" y="208" text-anchor="middle">well</text>
 <circle class="pt" cx="728" cy="320" r="4"/>
 <text class="sm" x="728" y="336" text-anchor="middle">shipping crate + store</text>
 <circle class="pt" cx="252" cy="432" r="4"/>
@@ -242,7 +242,7 @@
 <path class="crow" d="M339,192 L344,195 L349,192 L344,190 Z"/>
 <path class="crow" d="M619,420 L624,423 L629,420 L624,418 Z"/>
 <path class="crow" d="M187,300 L192,303 L197,300 L192,298 Z"/>
-<path class="crow" d="M343,344 L348,347 L353,344 L348,342 Z"/>
+<path class="crow" d="M639,224 L644,227 L649,224 L644,222 Z"/>
 <path d="M555,275.0 H565 M560,272.0 V283.0" stroke="#b9770e" stroke-width="2.5"/>
 <path d="M723,275.0 H733 M728,272.0 V283.0" stroke="#b9770e" stroke-width="2.5"/>
 <path d="M515,377 H525 M520,374 V385" stroke="#b9770e" stroke-width="2.5"/>

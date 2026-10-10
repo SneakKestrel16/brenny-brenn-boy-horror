@@ -10,6 +10,7 @@ var _cam: Camera3D
 var _frames := 0
 var _target := 90
 var _ms := 0.0
+var _shot := ""  ## --view-shot=path.png saves a screenshot (P5-47; needs a window, not --headless)
 
 
 func _ready() -> void:
@@ -29,6 +30,8 @@ func _ready() -> void:
 			v = Vector3(float(f[0]), float(f[1]), float(f[2]))
 			yaw = float(f[3]) if f.size() > 3 else 0.0
 			pitch = float(f[4]) if f.size() > 4 else 0.0
+		elif a.begins_with("--view-shot="):
+			_shot = a.trim_prefix("--view-shot=")
 		elif a.begins_with("--view-frames="):
 			_target = int(a.trim_prefix("--view-frames="))
 	_cam = Camera3D.new()
@@ -44,6 +47,8 @@ func _process(delta: float) -> void:
 		_ms += delta * 1000.0
 	if _frames < _target:
 		return
+	if _shot != "":
+		get_viewport().get_texture().get_image().save_png(_shot)
 	var total := 0
 	var near := 0
 	var seen := 0

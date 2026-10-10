@@ -98,9 +98,9 @@ func _distances() -> void:
 	_expect("barn-shed", barn.distance_to(shed), 30.0)
 	_expect("farmhouse-shed", house.distance_to(shed), 39.7)
 	_expect("generator-drum", gen.distance_to(drum), 33.0)
-	_expect("barn-well", barn.distance_to(well), 26.9)
-	_expect("well-shed", well.distance_to(shed), 18.9)
-	_expect("well-farmhouse", well.distance_to(house), 22.4)
+	_expect("barn-well", barn.distance_to(well), 52.9)
+	_expect("well-shed", well.distance_to(shed), 78.8)
+	_expect("well-farmhouse", well.distance_to(house), 96.1)
 	_expect("barn-fieldA", barn.distance_to(a), 30.5)
 	_expect("fieldA-fieldB", a.distance_to(b), 42.0)
 	_expect("barn-fieldB (far field)", barn.distance_to(b), 72.2)
@@ -111,7 +111,7 @@ func _distances() -> void:
 	_expect("farmhouse-pumpkin", house.distance_to(pump), 33.1)
 	_expect("shed-pumpkin", shed.distance_to(pump), 32.8)
 	_expect("barn-pumpkin", barn.distance_to(pump), 57.4)
-	_expect("well-pumpkin", well.distance_to(pump), 31.8)
+	_expect("well-pumpkin", well.distance_to(pump), 109.7)
 	_expect("fieldB-townstand", b.distance_to(stand), 48.0)
 	_expect("gate-townstand", gate.distance_to(stand), 15.0)
 	_expect("barn-townstand", barn.distance_to(stand), 120.1)
@@ -184,7 +184,7 @@ func _lure_and_ghost() -> void:
 	_expect("corn near shed door", _corn_dist(spots["shed door"]), 13.4, 0.5)
 	_expect("corn near pen gate", _corn_dist(spots["pen gate"]), 17.0, 0.5)
 	_expect("corn near generator", _corn_dist(spots["generator"]), 23.0, 0.5)
-	_expect("corn near well", _corn_dist(spots["well"]), 32.2, 0.5)
+	_expect("corn near well", _corn_dist(spots["well"]), 5.0, 0.5)
 	_expect("corn near farm gate", _corn_dist(spots["farm gate"]), 4.0, 0.5)
 	# deep spots: 10 m or more inside the ring (doc 04 s7.1) = >= 10 m from the clearing rectangle
 	var clearing := Rect2(-65, -45, 170, 100)
@@ -229,6 +229,13 @@ func _route() -> void:
 	var gate := _p("Props/FarmGate")
 	var last := c.get_point_position(c.point_count - 1)
 	_expect("R8 on the gate", Vector2(last.x, last.z).distance_to(gate), 0.0)
+	# P5-47: the well (2 m box) clears the 3 m route by 1 m or more, edge to edge
+	var wd := 1e9
+	for i in range(1, c.point_count):
+		wd = minf(wd, _seg_dist(_p("Props/Well"), Vector2(c.get_point_position(i - 1).x, c.get_point_position(i - 1).z), Vector2(c.get_point_position(i).x, c.get_point_position(i).z)))
+	print("%s well to route centreline %.1f m (>= 3.5: 1 m half box + 1.5 m half route + 1 m gap)" % ["ok  " if wd >= 3.5 else "FAIL", wd])
+	if wd < 3.5:
+		_fails += 1
 
 
 func _seg_dist(p: Vector2, a: Vector2, b: Vector2) -> float:
@@ -253,12 +260,13 @@ func _cover() -> void:
 	var keep := {"pumpkin": [pump, 20.0], "moonflower": [moon, 8.0], "fuel drum": [drum, 11.0],
 			"barn door": [barn, 12.0], "field A": [a, 12.0], "shed door": [shed, 13.4],
 			"pen gate": [_p("Pen/PenGate"), 17.0], "farmhouse door": [house, 20.0], "field B": [b, 20.0],
-			"crate": [crate, 20.0], "generator": [gen, 23.0], "well": [well, 32.2],
+			"crate": [crate, 20.0], "generator": [gen, 23.0], "well": [well, 5.0],
 			"farm gate": [_p("Props/FarmGate"), 4.0]}
 	# doc 04 s8.7 walks (start, waypoints, end): a canopy on one would lengthen it
 	var walks := [[barn, Vector2(11, 3), Vector2(19, 3), a], [a, Vector2(45, -16), Vector2(53, -16), b],
 			[b, moon], [b, stand], [stand, Vector2(104, -2), crate], [drum, gen], [barn, pump], [house, pump],
-			[well, pump], [well, Vector2(19, 3)], [well, barn], [barn, shed]]
+			[well, a], [well, b], [well, Vector2(53, -16), moon], [well, Vector2(19, 3), Vector2(11, 3), pump],
+			[well, Vector2(19, 3), Vector2(11, 3), barn], [barn, shed]]  # P5-47: the well stands between the fields
 	var route := (_world.get_node("CartRoute") as Path3D).curve
 	var markers := []
 	for g in [&"trap_spots", &"creature_cover", &"crow_perches", &"scarecrow_spots", &"animal_escape_spots",
