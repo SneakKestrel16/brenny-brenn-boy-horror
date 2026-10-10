@@ -1040,7 +1040,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-55 | Gameplay Programmer | Closed doors block players (CEO saw walk-through) and interactions work reliably (CEO STOP 6) | done (QA PASS) | - |
 | P5-56 | AI Programmer | Creature AI as smart as possible: senses, hunting, traps, lures, per-body behaviour; every design change listed in the CEO review doc with a revert (CEO 2026-10-10) | done (QA PASS) | P5-39 |
 | P5-57 | AI Programmer | Overall AI: bot teammates and the AI Director play better (CEO 2026-10-10) | todo | - |
-| P5-58 | Gameplay Programmer | Dev option in the lobby to pick the creature body; test each creature body end to end (CEO 2026-10-10) | todo | - |
+| P5-58 | Gameplay Programmer | Dev option in the lobby to pick the creature body; test each creature body end to end (CEO 2026-10-10) | done (QA PASS) | - |
 | P5-59 | Technical Artist | Improve textures and materials across the farm, buildings, props, creatures (CEO 2026-10-10) | done (QA PASS) | P5-50 |
 | P5-60 | Gameplay Programmer | More emotes (CEO 2026-10-10) | done (QA PASS) | P5-45 |
 | P5-61 | Level Designer | Physical signs instead of floating words: every world Label3D sits on a board, post or paper (CEO 2026-10-10) | todo | P5-48 |

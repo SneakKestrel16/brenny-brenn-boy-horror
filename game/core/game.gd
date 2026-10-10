@@ -27,6 +27,9 @@ var _leaving := false
 var difficulty: StringName = &"short_season" if OS.get_cmdline_user_args().has("--short-season") else &"normal"
 var streamer_safe := OS.get_cmdline_user_args().has("--streamer-safe")  ## group option: live clips are never replayed (P4-11, D-146)
 var seed_value := 0
+## P5-58 (dev): the body the host forces for the season, "body_<x>" or "" for the seed's pick. `--creature-body=<id>`, the
+## lobby dev menu (DevGate) and the console's `creaturebody` set it; `Creature._pick_body` reads it. Clients follow the packets.
+var dev_creature_body := ""
 var debug_view := false
 var bots := 0
 var in_session := false
@@ -113,6 +116,21 @@ func max_players() -> int:
 	return int(Data.record(&"player_scaling", &"headcount").get("max_players", BASE_PLAYERS))
 
 
+## creature.json body ids (`kind` body), in file order.
+func creature_body_ids() -> Array[StringName]:
+	var out: Array[StringName] = []
+	for r in Data.records(&"creature"):
+		if r.get("kind") == "body":
+			out.append(StringName(r.id))
+	return out
+
+
+## `gaunt` or `body_gaunt` -> `body_gaunt`; "" for random or an unknown name.
+func creature_body_id(s: String) -> String:
+	var id := s if s.begins_with("body_") else "body_" + s
+	return id if s != "" and StringName(id) in creature_body_ids() else ""
+
+
 ## Command line (doc 05 section 3), called by Boot. Accepts `--key=value` and `--key value`.
 func parse_args(args: PackedStringArray) -> Dictionary:
 	var out := {}
@@ -137,6 +155,7 @@ func begin(args: Dictionary) -> void:
 		push_error("Game: data failed to load, refusing to start (%d errors)" % Data.errors.size())
 		return
 	seed_value = int(args.get("seed", 0))
+	dev_creature_body = creature_body_id(str(args.get("creature-body", "")))
 	debug_view = args.has("debug-view")
 	bots = int(args.get("bots", 0))
 	lobby_autostart = int(args.get("lobby-start", 0))

@@ -324,6 +324,19 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 			if not DevGate.unlocked() or not Game.is_host():
 				return "? unknown command '%s' (help)" % cmd
 			return Imposter.dev_force(a[0] if not a.is_empty() else "")
+		"creaturebody":  # P5-58 dev: `creaturebody <id|random>` forces the creature's body now and for the season; closed like `toy`
+			if not DevGate.unlocked():
+				return "? unknown command '%s' (help)" % cmd
+			var want := Game.creature_body_id(a[0]) if not a.is_empty() and a[0] != "random" else ""
+			if a.is_empty() or (want == "" and a[0] != "random"):
+				return "? creaturebody random|%s" % "|".join(Array(Game.creature_body_ids().map(func(i: StringName) -> String: return String(i).trim_prefix("body_"))))
+			Game.dev_creature_body = want
+			var cr := main.get_node_or_null("Creature")
+			if cr != null and want != "":
+				cr.body = StringName(want)  # the setter shows the art
+				cr.state_changed.emit(cr.state, cr.body)
+				Net.to_peers(&"apply_creature_state", [cr.state, cr.body])  # clients take the body from this packet
+			return "creature body %s" % (want if want != "" else "random (next season)")
 		"buy":
 			if a.is_empty():
 				return "? buy <store item id>"

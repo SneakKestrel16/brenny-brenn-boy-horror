@@ -1793,6 +1793,8 @@ func _pick_body() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--body="):
 			forced = a.trim_prefix("--body=")
+	if Game.dev_creature_body != "":  # P5-58 (dev): `--creature-body`, the lobby dev menu, `creaturebody`
+		forced = Game.dev_creature_body
 	var seed_n := Game.seed_value if Game.seed_value != 0 else hash(Game.session_id)
 	body = Logic.pick_body(ids, seed_n, forced)
 	if forced != "" and String(body) != forced and String(body) != "body_" + forced:

@@ -37,6 +37,7 @@ var _difficulty: OptionButton
 var _streamer: CheckBox
 var _quirks: CheckBox
 var _imposter: CheckBox
+var _body_pick: OptionButton  ## P5-58: dev only (DevGate), host only
 var _go: Button  ## host: Start the season; client: Ready
 var _title: Label
 var _lineup: LineUp
@@ -358,6 +359,21 @@ func _ui() -> void:
 	_imposter.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_imposter.toggled.connect(func(on: bool) -> void: Imposter.set_enabled(on))
 	rv.add_child(_imposter)
+	if Game.is_host() and DevGate.unlocked():  # P5-58 (dev): force the season's creature body; clients see it in the world
+		var br := HBoxContainer.new()
+		var bl := Label.new()
+		bl.text = "Creature (dev)"
+		br.add_child(bl)
+		_body_pick = OptionButton.new()
+		_body_pick.add_item("Random")
+		for id in Game.creature_body_ids():
+			_body_pick.add_item(String(id).trim_prefix("body_").capitalize())
+			_body_pick.set_item_metadata(_body_pick.item_count - 1, String(id))
+		_body_pick.select(maxi(Game.creature_body_ids().find(StringName(Game.dev_creature_body)) + 1, 0))
+		_body_pick.item_selected.connect(func(i: int) -> void:
+			Game.dev_creature_body = str(_body_pick.get_item_metadata(i)) if i > 0 else "")
+		br.add_child(_body_pick)
+		rv.add_child(br)
 	var menu := HBoxContainer.new()  # P5-28: top right, clear of the panel and the big button
 	menu.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	menu.offset_left = -232
