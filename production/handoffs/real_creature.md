@@ -123,3 +123,4 @@ Install all picks in one batch after the listen. Use the steps under "Installing
 | husk signature (`cre_husk_sig_*`) | B | Freesound 434881 gourd + 610143 seed pods at 17 Hz |
 | gaunt jumpscare (`cre_jumpscare_hit_gaunt`) | C | |
 | scarecrow jumpscare (`cre_jumpscare_hit_scarecrow`) | C | |
+| boar jumpscare (`cre_jumpscare_hit_boar`) | B | |
