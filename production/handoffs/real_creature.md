@@ -128,3 +128,4 @@ Install all picks in one batch after the listen. Use the steps under "Installing
 | gnaw (`cre_gnaw`) | B | |
 | lunge (`cre_lunge`) | A | |
 | flare hit (`cre_flare_hit`) | A | |
+| door bang (`cre_door_bang_*`) | B | |
