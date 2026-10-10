@@ -50,6 +50,7 @@ without a revert.
 | P5-63 | a3c14a0 | Pen fence corners and building walls no longer overlap; watering and fuel cans sit on the ground | `git revert a3c14a0` |
 | P5-66 | 669f05e | A ghost can fly the crow it possesses (move keys and look); it flies home when time runs out | `git revert 669f05e` |
 | P5-67 | 0a69d46 | Wordless 26 s intro cutscene (gate, yard, pumpkin, a shape in the corn, title) replaces the start text | `git revert 0a69d46` |
+| P5-68 | a827ed1 | Jumpscare shows this season's creature model; hallucinations show it as a black silhouette | `git revert a827ed1` |
 
 ## 3. Tests run and what we did
 
@@ -74,3 +75,4 @@ without a revert.
 - **P5-63 walls and cans: Opus QA PASS after a fix.** The "walls clipping" was the pen fence corners (overlapping posts); building corners overlapped only in hidden collision. QA closed a gap the fix opened at the south pen corners. Cans now measured at ground level in a running game. All farm, door and smoke checks PASS.
 - **P5-66 crow flight: Opus QA PASS after fixes.** QA proved real key steering on a client (no test bypass), blocked a bad-data steer from a modified client, and checked ending at time-out, quit and dawn. Open: a player who joins mid-flight does not see that crow.
 - **P5-67 intro: Opus QA PASS after a fix.** A player rejoining mid-season got the whole intro; fixed. Note for you: every shot is in daylight, so the only scare is the brief shape in the corn and its sound. Say if you want it at dusk.
+- **P5-68 jumpscare model: Opus QA PASS.** All four bodies checked day and night. Note: doc 01 says the creature is seen clearly at night only in the dark; the jumpscare flash now lights it for 0.4 s so you can see the model. Say if you want it darker.
