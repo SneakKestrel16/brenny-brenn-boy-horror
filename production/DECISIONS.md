@@ -1119,3 +1119,8 @@ D-160 is a status-only commit subject (batch 1 in progress) with no entry. Rulin
 2. Q-252 item 4: the season-end Dawn Report reveals every player's quirk. Doc 01 "Quirks" carries it; P5-09
    builds it (told mid-task).
 **Why:** CEO, 2026-10-09: "yes to item 1, yes item 4".
+
+### D-162 · 2026-10-09 · CEO · Savings capped at 60 coins
+Q-254: next-season savings (25% of spare coins, rounded down) are capped at 60 coins. Doc 01 "Next season" and
+`data/next_season.json` cite it. Rounding down stays a placeholder.
+**Why:** CEO, 2026-10-09: "yes cap it 60".

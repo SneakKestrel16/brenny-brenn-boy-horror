@@ -15,8 +15,8 @@
     {
       "id": "carry",
       "source": "doc01",
-      "cite": "doc 01 Next season: upgrades and plots, plus spare coins at 25% as savings; doc 02 section 21.2. Rounding down, the cap and the plot clamp are placeholders",
-      "sources": {"savings_rounding": "placeholder", "plots_clamp": "placeholder", "savings_cap_coins": "placeholder"},
+      "cite": "doc 01 Next season: upgrades and plots, plus spare coins at 25% as savings; doc 02 section 21.2. Rounding down and the plot clamp are placeholders; the 60-coin cap is D-162 (CEO, Q-254)",
+      "sources": {"savings_rounding": "placeholder", "plots_clamp": "placeholder", "savings_cap_coins": "D-162"},
       "upgrades": true,
       "plots": true,
       "savings_pct": 25,

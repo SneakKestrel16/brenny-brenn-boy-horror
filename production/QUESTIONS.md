@@ -1430,11 +1430,13 @@ from the traits. Settled by: the Director accepting the targets, or a live seaso
 
 **Answer (Director, 2026-10-09):** targets accepted as placeholders (D-158). Season 3 sits on the 40% floor at 5p and 6p, so recheck after any debt or labor change; a live season 2 playtest settles them.
 
-### Q-254 · 2026-10-09 · Game Designer -> Director · FOR CEO (Director -> CEO, the cap changes doc 01) · open
+### Q-254 · 2026-10-09 · Game Designer -> Director · FOR CEO (Director -> CEO, the cap changes doc 01) · answered
 Savings, doc 02 section 21.2: 25% of spare coins (doc 01), rounded down, capped at 60 coins. The rounding and the
 cap are placeholders. The sim does not model non-plot upgrades (lantern, walkies, scarecrows) or cosmetic
 spending, so it understates season 2 strength and overstates it where cosmetics eat the savings. Settled by:
 a bot or live season 2 log through `compare.py`.
+
+**Answer (CEO, 2026-10-09):** "yes cap it 60" (D-162). Doc 01 "Next season" carries it; rounding down stays a placeholder.
 
 ### Q-255 · 2026-10-09 · Game Designer -> AI Programmer, Gameplay Programmer, Artist (P5-06) · open
 Implementation of traits and quirks. (1) Creature traits are `overrides` arrays in `data/creature_traits.json`

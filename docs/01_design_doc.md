@@ -519,7 +519,7 @@ Trap counts and the disturbance budget scale to 80% at 3 players and 60% at 2, r
 ### Next season
 
 - **A campaign is 3 seasons.** Winning season 3 pays the farm off (D-155).
-- **Carry over:** upgrades and plots, plus spare coins at 25% as savings.
+- **Carry over:** upgrades and plots, plus spare coins at 25% as savings, capped at 60 coins (D-162).
 - **The debt grows.**
 - **The creature gains one new trait,** such as better tool mimicry or more pits.
 - **A new season resets** crops, the Prize Pumpkin, Taint, deaths, the medical bill, traps, pegboard stock,
