@@ -529,10 +529,10 @@ moonflower bed has 4 plots (2 by 2); the Prize Pumpkin patch is 4 m across centr
 
 | Name | Dimensions | Phase |
 |---|---|---|
-| `char_farmer.glb` (rig: idle, walk, run, crouch, interact, emotes wave, point, shrug, scream; 4 tint slots) | 0.5 x 0.3 x 1.8; as built (P5-12) 0.61 x 0.38 x 1.8 (arm width, boot length), 2,152 tris of 4,000; Skeleton3D of 12 bones (`hips`, `spine`, `head`, `hat`, `arm_l/r`, `forearm_l/r`, `thigh_l/r`, `shin_l/r`), 9 animations named as listed, tint slot = material `mat_farmer_overalls`, Taint slot = `mat_farmer_sleeves` | P1 |
+| `char_farmer.glb` (rig: idle, walk, run, crouch, interact, emotes wave, point, shrug, scream; 4 tint slots) | 0.5 x 0.3 x 1.8; as built (P5-40) 0.65 x 0.45 x 1.805 (arm width, boot length), 3,600 tris of 4,000 (P5-40, CEO-approved style change 2026-10-10: shaped body, head with hair and ears, bib overalls); Skeleton3D of 12 bones (`hips`, `spine`, `head`, `hat`, `arm_l/r`, `forearm_l/r`, `thigh_l/r`, `shin_l/r`), 9 animations named as listed, tint slot = material `mat_farmer_overalls`, Taint slot = `mat_farmer_sleeves` | P1 |
 | `char_farmer_ragdoll.glb` (physical bones) | 1.8 | P2 |
 | `char_ghost.glb` (translucent shell of the farmer) | 0.5 x 0.3 x 1.8 | P3 |
-| `hat_<role_id>.glb`, one per role in `data/roles.json` (D-144): farmer straw hat, rancher cowboy hat, mechanic backwards cap with goggles, tracker hunting cap with ear flaps, carpenter hard hat, medic pillbox with red cross, night owl beanie with owl tufts and headlamp, radio operator cap with headphones and antenna, warden campaign hat, medium bent witch hat. Origin at the centre of the band's bottom edge, sits at 1.74 m on the head; up to 300 tris (small prop); vertex colour, nothing emissive | 0.24 to 0.72 wide, up to 0.5 tall (radio antenna) | P4 |
+| `hat_<role_id>.glb`, one per role in `data/roles.json` (D-144): farmer straw hat, rancher cowboy hat, mechanic backwards cap with goggles, tracker hunting cap with ear flaps, carpenter hard hat, medic pillbox with red cross, night owl beanie with owl tufts and headlamp, radio operator cap with headphones and antenna, warden campaign hat, medium bent witch hat. Origin at the centre of the band's bottom edge, sits at 1.74 m on the head; up to 300 tris (small prop); vertex colour, nothing emissive | about 0.38 to 0.72 wide, up to 0.5 tall (radio antenna); crowns widened to clear the hair (P5-40, `tools/blender/build_p5_40_hats.py`) | P4 |
 | `creature_gaunt.glb` | 0.9 x 1.06 x 2.1 (hunched; depth as built in P4-19, head and hump forward) | P1 (placeholder) |
 | `creature_scarecrow.glb`, `creature_scarecrow_head.glb` | 1 x 0.6 x 2.2; as built 1.14 x 0.83 x 2.23 with level arms along the crossbar (P5-12; hat brim and coat set the depth) | P2 |
 | `creature_boar.glb` (with `_chain` part) | 1.2 x 2.38 x 1.4 (length as built in P4-19) | P3 |
@@ -642,9 +642,11 @@ download is run. Build script: `tools/blender/build_p4_40.py` (run line in its d
 ### 15.2 Built in Blender, no outside source
 
 `animal_chicken` (hen: breast, neck, comb, wattle, wings, fanned tail, toed legs; 716 tris), `char_farmer`
-(P5-12: skinned; parts Torso, Head, ArmL, ArmR, LegL, LegR kept as skinned meshes whose joints are now the bones, no hat, head centre z 1.62;
-belt, bib pocket, buttons, straps, hair fringe, ears, cuffs, boot soles and laces; 2,152 tris; 12-bone rig, 9
-animations, tint and Taint material slots; `tools/blender/build_p5_12.py`), P5-12 also rebuilt in Blender
+(P5-40, CEO-approved 2026-10-10: the farmer style changed from the P5-12 blocky body to the smoother, fuller-haired "B" body: shaped torso,
+head with hair and ears, bib overalls with pocket, buttons and straps, cuffs, boots; 3,600 tris; same 12-bone rig, 9
+animations, tint and Taint material slots, front -Z, origin at the feet, 1.80 m; `tools/blender/build_farmer_hq.py`, which supersedes
+`build_p5_12.build_farmer`; the ragdoll is the same body in its `lie` pose, 3,600 tris; the five overalls cosmetics are refitted to it by
+`build_p5_06.refit`, 188 to 780 tris each), P5-12 also rebuilt in Blender
 `tool_watering_can` and `_quiet` (ribbed body, rose, cloth wrap), `tool_walkie_talkie`, `tool_walkie_battery`,
 `tool_flare_gun` (now 0.18 high, grip on the ground), `tool_shed_lock` (round shackle), `tool_scrap`,
 `tool_seed_packet_*` (crimped top, one drawn crop each), `prop_shipping_crate`, `prop_scarecrow_player`,

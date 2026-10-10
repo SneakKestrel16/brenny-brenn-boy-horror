@@ -17,12 +17,18 @@ import math
 import os
 import sys
 
+import bmesh
 import bpy
 from mathutils import Vector
+from mathutils.bvhtree import BVHTree
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_phase4 as B  # noqa: E402
 import build_p5_12 as P  # noqa: E402
+import build_quality_sample as Q  # noqa: E402
+import build_quality_sample2 as Q2  # noqa: E402
+import build_quality_sample3 as Q3  # noqa: E402
+import build_quality_sample4 as Q4  # noqa: E402
 from build_phase4 import BRASS, Part  # noqa: E402
 
 R = 0.185  # crown base radius: covers the farmer hair fringe corners (radius 0.176 at z 1.75 to 1.8) and the back of the hair (y -.156)
@@ -245,35 +251,111 @@ OVERALLS = {  # id: (tint, builder). tint = hex for mat_farmer_overalls.albedo_c
 }
 
 
+# ---------------------------------------------------------------- refit to the B body (CEO 2026-10-10, P5-40)
+# The decoration above is authored on the OLD P5-12 body. build_overalls builds that body for reference, then the new body
+# (via build_quality_sample3.make), subdivides each decoration and moves every vertex from the old surface to the same offset above
+# the new one: a ray from an axis point through the vertex hits the old and the new mesh; new = new hit + (vertex distance - old hit).
+SUB = 0.14# edges longer than this are halved until none is, so a flat stripe can follow the curved chest
+SHOULDER_Z = 1.47  # above this the decoration lies on the shoulder, so its ray goes up
+
+
+def _tree(ob):
+    me = ob.data
+    me.calc_loop_triangles()
+    vs = [ob.location + v.co for v in me.vertices]  # no rotation or parent on the body parts
+    return BVHTree.FromPolygons(vs, [tuple(t.vertices) for t in me.loop_triangles])
+
+
+def _far(tree, o, d, reach=0.6):
+    """Distance along d from o (inside the body) to the farthest surface crossing, or None."""
+    best, p = None, o.copy()
+    for _ in range(8):
+        h = tree.ray_cast(p, d, reach)
+        if h[0] is None:
+            break
+        best = (h[0] - o).dot(d)
+        p = h[0] + d * 1e-4
+    return best
+
+
+def _squeeze(z):  # build_quality_sample3.reshape_body leg narrowing
+    return 1 - 0.09 * min(1.0, max(0.0, (0.72 - z) / 0.2)) * min(1.0, max(0.0, (z - 0.24) / 0.08))
+
+
+def refit(part, old, new, torso):
+    """Move the Part's vertices (world coords) from the old body mesh (BVH `old`) onto the new one (`new`). Returns the miss count."""
+    bm = part.bm
+    for _ in range(4):
+        long = [e for e in bm.edges if e.calc_length() > (SUB if torso else 3 * SUB)]  # legs are near-straight, the squeeze is gentle
+        if not long:
+            break
+        bmesh.ops.subdivide_edges(bm, edges=long, cuts=1, use_grid_fill=True)
+    miss = 0
+    for v in bm.verts:
+        p = v.co.copy()
+        if torso:
+            # try a ray out from the torso axis first; where either body has no surface there (the shoulder top), a ray up
+            for c_old, d in ((Vector((p.x * 0.5, 0.0, p.z)), None), (Vector((p.x, max(-0.09, min(0.09, p.y)), p.z - 0.12)), Vector((0, 0, 1)))):
+                if d is None:
+                    d = (p - c_old).normalized()
+                c_new = Vector((c_old.x, c_old.y, Q3.fz(c_old.z)))
+                dist = (p - c_old).dot(d)
+                d_old, d_new = _far(old, c_old, d), _far(new, c_new, d)
+                if d_old is not None and d_new is not None:
+                    break
+            if d_old is None or d_new is None:
+                miss += 1
+                v.co = c_new + d * dist
+            else:
+                v.co = c_new + d * (d_new + (dist - d_old))
+            continue
+        else:
+            X = -0.1 if p.x < 0 else 0.1
+            y_ax = leg_axis(p.z)[0]
+            c_old = Vector((X, y_ax, p.z))
+            d = Vector((p.x - X, p.y - y_ax, 0))
+            d = d.normalized() if d.length > 1e-6 else Vector((0, 1, 0))
+            c_new = Vector((X, 0.01 + (y_ax - 0.01) * _squeeze(p.z), p.z))
+        dist = (p - c_old).dot(d)
+        d_old, d_new = _far(old, c_old, d), _far(new, c_new, d)
+        for k in range(1, 6):  # a leg now starts lower than before: probe the surface a little lower, keep the height
+            if d_new is not None or torso:
+                break
+            d_new = _far(new, c_new - Vector((0, 0, 0.02 * k)), d)
+        if d_old is None or d_new is None:
+            miss += 1
+            v.co = c_new + d * dist
+            continue
+        v.co = c_new + d * (d_new + (dist - d_old))
+    return miss
+
+
 def build_overalls(oid, tint, fn):
     name = "char_overalls_" + oid.removeprefix("overalls_")
     B.reset()
     B.Ctx.jitter = 0.0
-    torso = Part("Torso", (0, 0, 1.0))
-    legs = [Part("LegL", (-0.1, 0, 0.98)), Part("LegR", (0.1, 0, 0.98))]
-    fn(torso, legs)
-    for part in (torso, *legs):
-        part.done()
-    arm = P.make_armature()
-    arm["tint"] = tint
-    arm["cosmetic_id"] = oid
-    for ob in list(B.Ctx.objs):
-        if ob.type == "MESH":
-            P.weights(ob, arm)
-    bpy.context.view_layer.update()
-    tris = 0
-    for ob in B.Ctx.objs:
-        if ob.type == "MESH":
-            ob.data.calc_loop_triangles()
-            tris += len(ob.data.loop_triangles)
-    print(f"BUILD {name}: {tris} tris (mid 800 {'ok' if tris <= 800 else 'OVER BUDGET'}) tint {tint}")
-    bpy.ops.object.select_all(action="DESELECT")
-    for ob in B.Ctx.objs:
-        ob.select_set(True)
-    bpy.ops.export_scene.gltf(filepath=os.path.join(B.OUT_GLB, name + ".glb"), export_format="GLB", use_selection=True, export_yup=True,
-                              export_apply=False, export_materials="EXPORT", export_animations=False, export_skins=True,
-                              export_def_bones=False, export_extras=True)
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(B.OUT_BLEND, name + ".blend"), compress=True)
+    P.extra_materials()
+    P.farmer_parts()  # the old body, only as the reference surface
+    olds = {ob.name: _tree(ob) for ob in B.Ctx.objs if ob.type == "MESH"}
+
+    def post():
+        news = {ob.name: _tree(ob) for ob in B.Ctx.objs if ob.type == "MESH"}
+        for ob in list(B.Ctx.objs):
+            bpy.data.objects.remove(ob)
+        B.Ctx.objs = []
+        torso = Part("Torso", (0, 0, 1.0))
+        legs = [Part("LegL", (-0.1, 0, 0.98)), Part("LegR", (0.1, 0, 0.98))]
+        fn(torso, legs)
+        miss = refit(torso, olds["Torso"], news["Torso"], True)
+        for part, nm in zip(legs, ("LegL", "LegR")):
+            miss += refit(part, olds[nm], news[nm], False)
+        print(f"  refit {name}: {miss} vertices without a ray hit")
+        for part in (torso, *legs):
+            part.done()
+
+    Q.HAND["shipped"] = True
+    Q2.BIB_DROP = 0.122
+    Q3.make(name, Q4, body=True, post=post, anims={}, rig_props={"tint": tint, "cosmetic_id": oid})
 
 
 if __name__ == "__main__":

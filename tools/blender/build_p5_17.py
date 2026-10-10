@@ -327,7 +327,8 @@ def ragdoll_lie():
 
 
 def build_ragdoll():
-    build_rigged("char_farmer_ragdoll", F.farmer_parts, F.BONES, F.weights, {"lie": ragdoll_lie}, BUDGET["farmer"], F.extra_materials)
+    import build_farmer_hq  # SUPERSEDED (CEO 2026-10-10): the ragdoll shares the B body with char_farmer
+    build_farmer_hq.build_ragdoll()
 
 
 def ghost_float():  # slow drift: whole body sways, arms hang loose; 3 s loop, nothing quick

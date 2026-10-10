@@ -751,5 +751,4 @@ if __name__ == "__main__":
     for nm, fn, cls in MODELS:
         if not only or nm in only:
             B.build(nm, fn, cls)
-    if not only or "char_farmer" in only:
-        build_farmer()
+    pass  # char_farmer: SUPERSEDED by build_farmer_hq.py (CEO 2026-10-10); `build_farmer` above is the old P5-12 body, kept for reference
