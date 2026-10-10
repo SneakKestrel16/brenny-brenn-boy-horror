@@ -56,7 +56,7 @@ func _ready() -> void:
 	for spec in [[&"well", &"water", WATER_CANS, Vector3(1.6, 0, -0.6)], [&"fuel_drum", &"fuel", FUEL_CANS, Vector3(0.9, 0, 0.5)]]:
 		for node in get_tree().get_nodes_in_group(spec[0]):
 			for i in spec[2]:
-				_make(n, spec[1], (node as Node3D).global_position + spec[3] + Vector3(0, 0, 1.2 * i))
+				_make(n, spec[1], Vector3((node as Node3D).global_position.x, 0.0, (node as Node3D).global_position.z) + spec[3] + Vector3(0, 0, 1.2 * i))  # P5-63: prop box origin is its centre (y 0.5); cans stand on the ground
 				n += 1
 	if Game.is_host():
 		Game.player_left.connect(func(p: int) -> void: drop(p))

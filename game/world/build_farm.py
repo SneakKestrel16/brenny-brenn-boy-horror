@@ -233,14 +233,17 @@ def building(name, door_x, door_z, x0, x1, z0, z1, door_side, h, parent="Buildin
     b = node(name, "Node3D", parent, f"transform = {tf(door_x, 0, door_z)}\n")
     t = 0.3
     lx0, lx1, lz0, lz1 = x0 - door_x, x1 - door_x, z0 - door_z, z1 - door_z
+    # P5-63: N/S walls run the full outer width, W/E walls fill between their inner faces, so corners do not overlap
+    ox0, ox1 = lx0 - t / 2, lx1 + t / 2
     for side, z in (("N", lz0), ("S", lz1)):
         if side == door_side:
-            for nm, a, c in (("WallL", lx0, -1.5), ("WallR", 1.5, lx1)):
+            for nm, a, c in (("WallL", ox0, -1.5), ("WallR", 1.5, ox1)):
                 box(b, f"{side}{nm}", (a + c) / 2, z, c - a, t, h, m)
         else:
-            box(b, f"Wall{side}", (lx0 + lx1) / 2, z, lx1 - lx0, t, h, m)
-    box(b, "WallW", lx0, (lz0 + lz1) / 2, t, lz1 - lz0, h, m)
-    box(b, "WallE", lx1, (lz0 + lz1) / 2, t, lz1 - lz0, h, m)
+            box(b, f"Wall{side}", (ox0 + ox1) / 2, z, ox1 - ox0, t, h, m)
+    iz0, iz1 = lz0 + t / 2, lz1 - t / 2
+    box(b, "WallW", lx0, (iz0 + iz1) / 2, t, iz1 - iz0, h, m)
+    box(b, "WallE", lx1, (iz0 + iz1) / 2, t, iz1 - iz0, h, m)
     node("Door", "Marker3D", b, "", ["doors"], {"building": name.lower()})
     if FULL:  # P5-22: model and door replace the gray-box meshes, collision stays. Door leaves start open; game/interaction/doors.gd swings them and adds the blockers
         hide_meshes(b)
@@ -436,8 +439,8 @@ def generate(full: bool) -> str:
     # Animal pen x -30..-18, z -38..-28, gate (-24,-28), 2 m gap in the south side
     # P4-08: the north, west and east walls are six breakable sections (group fence_sections; broken_fence, doc 03 s10.1)
     for nm, cx, cz, sx, sz in (("NorthW", -27, -38, 6, .2), ("NorthE", -21, -38, 6, .2),
-                               ("WestN", -30, -35.5, .2, 5), ("WestS", -30, -30.5, .2, 5),
-                               ("EastN", -18, -35.5, .2, 5), ("EastS", -18, -30.5, .2, 5)):
+                               ("WestN", -30, -35.45, .2, 4.9), ("WestS", -30, -30.55, .2, 4.9),
+                               ("EastN", -18, -35.45, .2, 4.9), ("EastS", -18, -30.55, .2, 4.9)):  # P5-63: west/east fill between the north and south faces, so corners butt, not overlap
         box("Pen", nm, cx, cz, sx, sz, 1.2, "fence", groups=["fence_sections"])
         pen_fence(nm, sx, sz)
     for nm, cx, cz, sx, sz in (("SouthL", -27.5, -28, 5, .2), ("SouthR", -20.5, -28, 5, .2)):

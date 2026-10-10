@@ -58,40 +58,40 @@ size = Vector3(6, 2.4, 17)
 size = Vector3(6, 2.4, 17)
 
 [sub_resource type="BoxMesh" id="BoxMesh_19"]
-size = Vector3(16, 5, 0.3)
+size = Vector3(16.3, 5, 0.3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_20"]
-size = Vector3(16, 5, 0.3)
+size = Vector3(16.3, 5, 0.3)
 
 [sub_resource type="BoxMesh" id="BoxMesh_21"]
-size = Vector3(6.5, 5, 0.3)
+size = Vector3(6.65, 5, 0.3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_22"]
-size = Vector3(6.5, 5, 0.3)
+size = Vector3(6.65, 5, 0.3)
 
 [sub_resource type="BoxMesh" id="BoxMesh_23"]
-size = Vector3(0.3, 5, 20)
+size = Vector3(0.3, 5, 19.700000000000003)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_24"]
-size = Vector3(0.3, 5, 20)
+size = Vector3(0.3, 5, 19.700000000000003)
 
 [sub_resource type="BoxMesh" id="BoxMesh_25"]
-size = Vector3(1.5, 3, 0.3)
+size = Vector3(1.65, 3, 0.3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_26"]
-size = Vector3(1.5, 3, 0.3)
+size = Vector3(1.65, 3, 0.3)
 
 [sub_resource type="BoxMesh" id="BoxMesh_27"]
-size = Vector3(6, 3, 0.3)
+size = Vector3(6.3, 3, 0.3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_28"]
-size = Vector3(6, 3, 0.3)
+size = Vector3(6.3, 3, 0.3)
 
 [sub_resource type="BoxMesh" id="BoxMesh_29"]
-size = Vector3(0.3, 3, 5)
+size = Vector3(0.3, 3, 4.699999999999999)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_30"]
-size = Vector3(0.3, 3, 5)
+size = Vector3(0.3, 3, 4.699999999999999)
 
 [sub_resource type="BoxMesh" id="BoxMesh_31"]
 size = Vector3(2, 1.2, 1)
@@ -127,10 +127,10 @@ size = Vector3(6, 1.2, 0.2)
 size = Vector3(6, 1.2, 0.2)
 
 [sub_resource type="BoxMesh" id="BoxMesh_42"]
-size = Vector3(0.2, 1.2, 5)
+size = Vector3(0.2, 1.2, 4.9)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_43"]
-size = Vector3(0.2, 1.2, 5)
+size = Vector3(0.2, 1.2, 4.9)
 
 [sub_resource type="BoxMesh" id="BoxMesh_44"]
 size = Vector3(5, 1.2, 0.2)
@@ -317,7 +317,7 @@ material_override = SubResource("StandardMaterial3D_2")
 shape = SubResource("BoxShape3D_20")
 
 [node name="SWallL" type="StaticBody3D" parent="Buildings/Barn"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.75, 2.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.825, 2.5, 0)
 collision_layer = 1
 collision_mask = 0
 
@@ -329,7 +329,7 @@ material_override = SubResource("StandardMaterial3D_2")
 shape = SubResource("BoxShape3D_22")
 
 [node name="SWallR" type="StaticBody3D" parent="Buildings/Barn"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.75, 2.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.825, 2.5, 0)
 collision_layer = 1
 collision_mask = 0
 
@@ -375,7 +375,7 @@ metadata/radius_m = 6.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, 26)
 
 [node name="NWallL" type="StaticBody3D" parent="Buildings/ToolShed"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.25, 1.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.325, 1.5, 0)
 collision_layer = 1
 collision_mask = 0
 
@@ -387,7 +387,7 @@ material_override = SubResource("StandardMaterial3D_2")
 shape = SubResource("BoxShape3D_26")
 
 [node name="NWallR" type="StaticBody3D" parent="Buildings/ToolShed"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.25, 1.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.325, 1.5, 0)
 collision_layer = 1
 collision_mask = 0
 
@@ -625,7 +625,7 @@ material_override = SubResource("StandardMaterial3D_6")
 shape = SubResource("BoxShape3D_41")
 
 [node name="WestN" type="StaticBody3D" parent="Pen" groups=["fence_sections"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.6, -35.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.6, -35.45)
 collision_layer = 1
 collision_mask = 0
 
@@ -637,7 +637,7 @@ material_override = SubResource("StandardMaterial3D_6")
 shape = SubResource("BoxShape3D_43")
 
 [node name="WestS" type="StaticBody3D" parent="Pen" groups=["fence_sections"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.6, -30.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.6, -30.55)
 collision_layer = 1
 collision_mask = 0
 
@@ -649,7 +649,7 @@ material_override = SubResource("StandardMaterial3D_6")
 shape = SubResource("BoxShape3D_43")
 
 [node name="EastN" type="StaticBody3D" parent="Pen" groups=["fence_sections"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.6, -35.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.6, -35.45)
 collision_layer = 1
 collision_mask = 0
 
@@ -661,7 +661,7 @@ material_override = SubResource("StandardMaterial3D_6")
 shape = SubResource("BoxShape3D_43")
 
 [node name="EastS" type="StaticBody3D" parent="Pen" groups=["fence_sections"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.6, -30.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.6, -30.55)
 collision_layer = 1
 collision_mask = 0
 

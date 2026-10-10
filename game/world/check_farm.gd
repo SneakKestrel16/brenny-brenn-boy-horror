@@ -25,6 +25,7 @@ func _run() -> void:
 	_route()
 	_cover()
 	_weave()
+	_overlaps()
 	print("check_farm: %s" % ("PASS" if _fails == 0 else "%d FAIL" % _fails))
 	quit(1 if _fails else 0)
 
@@ -389,3 +390,32 @@ func _weave() -> void:
 		else:
 			_fails += 1
 	print("%d of %d weave blocks pass" % [n_ok, total])
+
+
+## P5-63: no two solid boxes (buildings, pen fences, props) overlap by more than 1 mm per axis (corners crossing,
+## walls poking through walls, z-fighting), and no prop box floats more than 3 cm above the ground.
+## Cans (game/items/cans.gd) spawn at y 0 on the prop's x/z, never on the box centre.
+func _overlaps() -> void:
+	var boxes: Array[AABB] = []
+	var names: Array[String] = []
+	for grp in ["Buildings", "Pen", "Props"]:
+		for b in _world.get_node(grp).find_children("*", "StaticBody3D"):
+			var shape := (b as Node).get_node_or_null("Shape") as CollisionShape3D
+			if shape == null or not shape.shape is BoxShape3D:
+				continue
+			var sz: Vector3 = (shape.shape as BoxShape3D).size
+			var c: Vector3 = (b as Node3D).global_position
+			boxes.append(AABB(c - sz / 2, sz))
+			names.append(str((b as Node).get_path()).trim_prefix(str(_world.get_path()) + "/"))
+			if grp == "Props" and c.y - sz.y / 2 > 0.03:
+				_fails += 1
+				print("FAIL floating prop %s bottom %.2f m" % [names[-1], c.y - sz.y / 2])
+	var bad := 0
+	for i in boxes.size():
+		for j in range(i + 1, boxes.size()):
+			var o := boxes[i].intersection(boxes[j])
+			if o.size.x > 0.001 and o.size.y > 0.001 and o.size.z > 0.001:
+				bad += 1
+				print("FAIL overlap %s x %s (%s)" % [names[i], names[j], o.size])
+	_fails += bad
+	print("%s %d solid boxes, %d overlaps" % ["ok  " if bad == 0 else "FAIL", boxes.size(), bad])
