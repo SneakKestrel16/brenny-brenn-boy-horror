@@ -1012,7 +1012,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-27 | Gameplay | Wire the P5-26 models; host door state (Q-307) | done (QA PASS, D-186) | P5-26 |
 | P5-28 | Gameplay | Lobby and save fixes: `trait_report_pending` saved, Season N label, bottom buttons overlap | done (QA PASS, D-183) | P5-24 |
 | P5-29 | Gameplay | Playtest 2026-10-09 log fixes: client "Lambda capture freed" errors, lobby READY key-repeat toggling | done (QA PASS, D-185) | |
-| P5-30 | Network & Voice | `Net.to_peers` skips disconnecting peers (Q-342); review the P5-05 net.gd messages (D-180) | todo | P5-08 |
+| P5-30 | Network & Voice | `Net.to_peers` skips disconnecting peers (Q-342); review the P5-05 net.gd messages (D-180) | done (QA PASS) | P5-08 |
 | P5-31 | Level Designer | More corn: cover and routes for the Creature across the farm, most around field B (CEO STOP 6) | todo | P5-08 |
 | P5-32 | 3D | Better crop models: every crop and growth stage (CEO STOP 6) | todo | P5-08 |
 | P5-33 | AI Programmer | Creature AI: more drawn to noise, targets players more often at night; bear trap deaths too quick and random; crows seen more often (CEO STOP 6) | todo | P5-08 |

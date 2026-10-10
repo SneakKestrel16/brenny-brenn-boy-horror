@@ -173,16 +173,17 @@ func join(address: String, default_port: int = DEFAULT_PORT) -> Error:
 
 ## Host to clients: calls the `apply_*` RPC `method` on this node. `targets` empty means every peer.
 ## The one place channel-0 sends leave this machine (doc 06 section 14); a no-op with no peers.
+## A peer mid-disconnect gets nothing (Q-342: two links dropping at once printed "Unable to send packet").
 func to_peers(method: StringName, args: Array = [], targets: Array = []) -> void:
 	if not multiplayer.has_multiplayer_peer() or multiplayer.get_peers().is_empty():
 		return
-	if targets.is_empty() and _refused.is_empty():
+	if targets.is_empty() and _refused.is_empty() and Array(multiplayer.get_peers()).all(_connected):
 		callv(&"rpc", [method] + args)
 		return
 	if targets.is_empty():  # P2-07: a refused peer waiting to be dropped gets nothing but its refusal
 		targets = multiplayer.get_peers()
 	for id in targets:
-		if not _refused.has(id) or method == &"apply_join_refused":
+		if (not _refused.has(id) or method == &"apply_join_refused") and _connected(id):
 			callv(&"rpc_id", [id, method] + args)
 
 
@@ -611,12 +612,14 @@ func apply_store(state: Dictionary) -> void:
 	apply_received.emit(&"store", [state])
 
 
-## P5-05 cosmetics: `buy` or `wear` (id, slot). The host validates and answers `apply_cosmetics` to everyone.
+## P5-05 cosmetics: `buy` or `wear` (id, slot), or `sync` to resend the table. The host validates and answers
+## `apply_cosmetics` to everyone, or `apply_refused(&"cosmetic", why)` to the sender.
 @rpc("any_peer", "call_remote", "reliable")
 func request_cosmetic(op: StringName, id: StringName, slot: StringName) -> void:
 	request_received.emit(&"cosmetic", _sender(), [op, id, slot])
 
 
+## Host to all (P5-05): `{owned: {peer: [ids]}, worn: {peer: {slot: id}}}` for every farmhand in the session.
 @rpc("authority", "call_remote", "reliable")
 func apply_cosmetics(table: Dictionary) -> void:
 	apply_received.emit(&"cosmetics", [table])
