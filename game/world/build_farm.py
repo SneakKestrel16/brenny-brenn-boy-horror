@@ -142,13 +142,28 @@ def fence(name, x0, z0, x1, z1):
             90.0 if abs(z1 - z0) > abs(x1 - x0) else 0.0, length / n / 3)
 
 
-def sign(name, x, z, text):
-    """Visual-only signpost: a post and a billboard label 2.6 m up, shaded so it darkens at night."""
-    s = node(name, "Node3D", "Signs", f"transform = {tf(x, 0, z)}\n")
-    art(s, "Post", "prop_road_sign")  # P5-22
-    node("Label", "Label3D", s, f"transform = {tf(0, 2.3, 0)}\nbillboard = 1\nshaded = true\ndouble_sided = true\n"
-         f'pixel_size = 0.008\nmodulate = Color(1, 0.95, 0.8, 1)\noutline_modulate = Color(0.2, 0.12, 0.05, 1)\n'
-         f'text = "{text}"\nfont_size = 96\noutline_size = 24\n')
+def board_labels(parent, text, w, y, zf, px=0.004):
+    """P5-61: painted text flat on both faces of a board (front +z, back -z), `zf` m off the face. Not billboard."""
+    for nm, yaw in (("Front", 0.0), ("Back", 180.0)):
+        a = math.radians(yaw)
+        c, sn = round(math.cos(a), 5), round(math.sin(a), 5)
+        node(nm, "Label3D", parent, f"transform = Transform3D({c}, 0, {sn}, 0, 1, 0, {-sn}, 0, {c}, 0, {y}, {zf if yaw == 0 else -zf})\n"
+             f'shaded = true\npixel_size = {px}\nmodulate = Color(0.93, 0.88, 0.70, 1)\n'
+             f'outline_modulate = Color(0.16, 0.10, 0.05, 1)\ntext = "{text}"\nfont_size = 96\noutline_size = 12\n'
+             f'width = {int(w / px)}\n')
+
+
+def sign(name, x, z, text, yaw=0.0):
+    """P5-61: a plank board on two posts, visual only (no collision), text painted on both faces. `yaw` turns the
+    faces: 0 faces +-z, 90 faces +-x (toward walkers on a path running along x)."""
+    a = math.radians(yaw)
+    c, sn = round(math.cos(a), 5), round(math.sin(a), 5)
+    s = node(name, "Node3D", "Signs", f"transform = Transform3D({c}, 0, {sn}, 0, 1, 0, {-sn}, 0, {c}, {x}, 0, {z})\n")
+    w = round(0.3 * len(text) + 0.5, 2)
+    for i, px in enumerate((-w / 2 + 0.12, w / 2 - 0.12), 1):
+        vbox(s, f"Post{i}", px, 0, 0.12, 0.12, 2.3, "trunk")
+    vbox(s, "Board", 0, 0, w, 0.08, 0.7, "board", y0=1.45)
+    board_labels(s, text, w, 1.8, 0.05)
 
 
 # P4-27 (doc 04 s13): cover, tree lines and landmarks. Tree canopies keep every work spot's open ground at least
@@ -175,10 +190,10 @@ FENCES = [("FieldA_N", 23, -14, 28, -14), ("FieldA_N2", 32, -14, 37, -14), ("Fie
           ("FieldA_S2", 32, 0, 37, 0), ("FieldB_N", 65, -11, 70, -11), ("FieldB_N2", 74, -11, 79, -11),
           ("Moon_W", 56, 18, 56, 26), ("Moon_S", 56, 26, 64, 26), ("Moon_E", 64, 18, 64, 26),
           ("Gate_N", 104.5, -20, 104.5, -8.5), ("Gate_S", 104.5, -1.5, 104.5, 10)]
-SIGNS = [("FieldA", 21.5, 0.5, "FIELD A"), ("FieldB", 63.5, -8, "FIELD B"), ("Moonflowers", 55, 17, "MOONFLOWERS"),
-         ("Store", 75, 6.5, "STORE"), ("Town", 102, -10, "TOWN  >"), ("Pumpkin", -42, 28, "PRIZE PUMPKIN"),
-         ("Shed", -11, 23.5, "TOOL SHED"), ("Pen", -20.5, -25.5, "PEN"), ("Farmhouse", -39, 3, "FARMHOUSE"),
-         ("Well", 52.5, -18, "WELL")]  # P5-47
+SIGNS = [("FieldA", 21.5, 0.5, "FIELD A", 90), ("FieldB", 63.5, -8, "FIELD B", 90), ("Moonflowers", 55, 17, "MOONFLOWERS", 90),
+         ("Store", 75, 6.5, "STORE", 90), ("Town", 102, -10, "TOWN", 90), ("Pumpkin", -42, 28, "PRIZE PUMPKIN", 0),
+         ("Shed", -11, 23.5, "TOOL SHED", 0), ("Pen", -20.5, -25.5, "PEN", 0), ("Farmhouse", -39, 3, "FARMHOUSE", 90),
+         ("Well", 52.5, -18, "WELL", 0)]  # x, z, text, yaw (P5-61)
 
 
 def landmarks() -> None:
@@ -200,9 +215,11 @@ def landmarks() -> None:
     for nm, z in (("PoleN", -3.2), ("PoleS", 3.2)):
         vbox("Landmarks/GateArch", nm, 0, z, 0.3, 0.3, 4.6, "fence")
     vbox("Landmarks/GateArch", "Beam", 0, 0, 0.4, 7.0, 0.5, "fence", y0=4.4)
-    node("Label", "Label3D", "Landmarks/GateArch", f"transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.25, 4.65, 0)\n"
-         'shaded = true\ndouble_sided = true\npixel_size = 0.01\nmodulate = Color(1, 0.95, 0.8, 1)\n'
-         'outline_modulate = Color(0.2, 0.12, 0.05, 1)\ntext = "TOWN"\nfont_size = 96\noutline_size = 24\n')
+    # P5-61: the TOWN board is nailed across the beam face, text on both faces. Not hung below it: from the farm side a
+    # board under the beam covered P5-48's BRENN FARM road sign 5 m beyond the gate (QA); the beam hides nothing behind.
+    vbox("Landmarks/GateArch", "Board", 0, 0, 0.48, 2.0, 0.42, "board", y0=4.44)
+    node("Text", "Node3D", "Landmarks/GateArch", "transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 4.65, 0)\n")
+    board_labels("Landmarks/GateArch/Text", "TOWN", 1.9, 0, 0.25, 0.004)
     node("HayStack", "Node3D", "Landmarks", f"transform = {tf(38, 0, 12)}\n")
     for i, (hx, hz, hy) in enumerate(((0, 0, 0), (1.3, 0, 0), (0.65, 0, 0.8), (0, 1.1, 0)), 1):
         vbox("Landmarks/HayStack", f"Bale{i}", hx, hz, 1.2, 1.0, 0.8, "hay", y0=hy)
@@ -337,7 +354,8 @@ def generate(full: bool) -> str:
     if full:  # P4-27 cover and landmarks; the Phase 1 scene stays byte-identical
         MATS |= {"path": mat("0.52, 0.43, 0.30, 1"), "trunk": mat("0.33, 0.24, 0.16, 1"),
                  "pine": mat("0.12, 0.26, 0.16, 1"), "leaf": mat("0.22, 0.36, 0.14, 1"),
-                 "metal": mat("0.62, 0.66, 0.70, 1"), "rust": mat("0.55, 0.22, 0.16, 1"), "hay": mat("0.80, 0.68, 0.36, 1")}
+                 "metal": mat("0.62, 0.66, 0.70, 1"), "rust": mat("0.55, 0.22, 0.16, 1"), "hay": mat("0.80, 0.68, 0.36, 1"),
+                 "board": mat("0.36, 0.25, 0.15, 1")}  # P5-61 weathered planks
     node("Farm", "Node3D", None)
     for c in ("Ground", "CornBlockers", "Buildings", "Props", "Fields", "Pen", "Markers", "Regions", "Bounds"):
         node(c, "Node3D", ".")

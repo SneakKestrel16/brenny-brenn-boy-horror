@@ -690,7 +690,7 @@ collider edge, not its centre:
   building and prop is on one. Each strip reaches 0.8 m (half its width) past its end points, so the barn-door paths start at
   x = +-2.5 and none enters the 1.2 m doorway lane; none touches a field, plot, corn block or wall, and the
   parked cart at (5, 6) stays clear of every side path.
-- **Signs** (post with a 2.6 m label that faces the camera and darkens at night): FIELD A (21.5, 0.5),
+- **Signs** (P5-61, CEO: no floating words; as built): a plank board (0.7 m tall, 0.3 m per letter + 0.5 m wide) on two 2.3 m posts, board centre 1.8 m up, visual only (no collision). The Label3D text is flat on both board faces (0.05 m off, not a billboard, shaded so it darkens at night). Boards face +-x on the east-west routes and +-z on the north-south paths. The TOWN label on the gate arch is a board nailed across the beam face (y 4.44..4.86), text on both faces; not hung below the beam, where it covered the BRENN FARM road sign (P5-48) seen through the gate. Positions: FIELD A (21.5, 0.5),
   FIELD B (63.5, -8), MOONFLOWERS (55, 17), STORE (75, 6.5), TOWN (102, -10), PRIZE PUMPKIN (-42, 28),
   TOOL SHED (-11, 23.5), PEN (-20.5, -25.5), FARMHOUSE (-39, 3), WELL (52.5, -18).
 
