@@ -44,6 +44,7 @@ without a revert.
 | P5-59 | f557099 | Weathered look on farm, buildings, props and creatures from a noise shader; scenes 5-12% darker, night yard 10% darker | `git revert f557099`, then delete .godot/imported/*.glb-* to reimport |
 | P5-58 | 3f748d8 | Dev pick of the creature body: --creature-body=<id>, host-only lobby dropdown (DevGate), console creaturebody | `git revert 3f748d8` |
 | P5-61 | f88ef4d | Every world sign is a plank board on posts; TOWN board moved onto the gate beam | `git revert f88ef4d` |
+| P5-57 | a6f4912 | Bots route round walls, do chores by default, open doors, follow the cart; Director fake-outs skip bots. Each switch is a flag in the bots record of data/ai_director.json | `git revert a6f4912` |
 
 ## 3. Tests run and what we did
 
@@ -62,4 +63,4 @@ without a revert.
 - **P5-59 textures: Opus QA PASS after a fix.** The import swap first also hit plots and traps (plot SCRIPT ERROR, trap glow lost); QA kept those on the old material. Tests on main after reimport: import 0 ERROR, smoke PASS, parse_check 222/0, light rig, creature art, farmer body PASS. Watch: night yard is 10% darker; check night readability in the next playtest.
 - **P5-58 creature pick: Opus QA PASS.** QA fixed the body test script (it always exited 1) and made the console switch reach clients at once. On main: all four bodies PASS host + client, import 0 ERROR, parse_check 224/0, grep_rules clean. Open: --creature-body works without DevGate, like --body; body art is static (no rig).
 - **P5-61 signs: Opus QA PASS after a fix.** QA moved the TOWN board onto the gate beam so it no longer covers the BRENN FARM sign. On main: import 0 ERROR, parse_check 224/0, check_farm, test_lore, smoke PASS. Open: the FIELD A board faces east-west, so strip 2 corn hides it from the west.
-- **Paused by CEO (evening).** P5-48, P5-58, P5-59, P5-60, P5-61 are on main. P5-57 bots and AI Director is paused mid-work, uncommitted in worktree `.claude/worktrees/agent-aca3bb009df67105b` (handoff `production/handoffs/P5-57.md` there). P5-62 full test sweep not started.
+- **P5-57 bots and Director: Opus QA PASS.** 12-seed mean short at final payment 877 to 834, deaths 16 to 14; seed 3 is worse with it on (721 to 894); every 4-player bot season is still lost. No crashes in 12 serial seasons. P5-62 full test sweep is next.
