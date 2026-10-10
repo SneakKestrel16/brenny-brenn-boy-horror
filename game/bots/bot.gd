@@ -98,11 +98,26 @@ func _pry(delta: float) -> void:
 			_pin_t = -1000.0  # once per trap
 
 
+## P5-55: a bot moves by position, not move_and_slide, so it honours the barn door itself (the door is at the origin, see BARN).
+## A step across a closed doorway stops it at the threshold and it opens the door (host only, as a player's `open_door`).
+func _door_stops(a: Vector3, b: Vector3) -> bool:
+	if (a.z > 0.0) == (b.z > 0.0) or absf((a.x + b.x) * 0.5) > Doors.GAP_M * 0.5:
+		return false
+	var doors := get_tree().root.get_node_or_null(^"Main/Doors") as Doors
+	if doors == null or doors.open.get("door_barn", true):
+		return false
+	doors.host_set("door_barn", true, peer)
+	return true
+
+
 ## Walk `dist` metres along the path, turning at each point.
 func _step(dist: float) -> void:
 	while dist > 0.0 and not _path.is_empty():
 		var d: Vector3 = _path[0] - _pos
 		d.y = 0.0
+		var to: Vector3 = _path[0] if d.length() <= dist else _pos + d.normalized() * dist
+		if _door_stops(_pos, to):
+			return  # the door is open next step
 		if d.length() <= dist:
 			dist -= d.length()
 			_pos = Vector3(_path[0].x, _pos.y, _path[0].z)
@@ -379,6 +394,10 @@ func _push() -> void:
 
 func _walk(to: Vector3) -> void:
 	_path = [Vector3(to.x, 0.0, to.z)] if Game.full_farm else Route.path(_pos, to)
+	if Game.full_farm and BARN.has_point(Vector2(_pos.x, _pos.z)) != BARN.has_point(Vector2(to.x, to.z)):
+		# P5-55: through the barn door, never the wall (the door guard in `_step` then opens it if closed)
+		var door_in := Vector3(0, 0, -1.5)
+		_path = ([door_in, BARN_DOOR_OUT] if BARN.has_point(Vector2(_pos.x, _pos.z)) else [BARN_DOOR_OUT, door_in]) + _path
 	while not _path.is_empty() and not Game.is_ghost(peer):
 		await get_tree().physics_frame
 

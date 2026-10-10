@@ -188,6 +188,8 @@ func _run() -> void:
 	var in_b := func() -> bool: return br.has_point(Vector2(creature.global_position.x, creature.global_position.z))
 	var inside := Vector3(br.get_center().x, 0.0, br.get_center().y)
 	Game.players[vf].pos = inside
+	var door_id := "door_" + String(creature._rect_names[bi]).to_lower()
+	main.get_node("Doors").host_set(door_id, false, 0)  # QA P5-55: shut, as a player would leave it
 	creature.global_position = creature._door_step(bi, 8.0)
 	creature._scripted = false
 	creature._goal = Vector3.INF
@@ -216,6 +218,33 @@ func _run() -> void:
 		await physics_frame
 		tf += 1.0 / Engine.physics_ticks_per_second
 	_check(in_b.call() or Game.is_ghost(vf), "then it goes in")
+	_check(main.get_node("Doors").open[door_id], "the door it banged on stands open when it goes in (doc 01: enters through a door)")
+	# QA P5-55: a player shuts the door behind it, then the target is outside: it walks out and the door opens once
+	main.get_node("Doors").host_set(door_id, false, 0)
+	var outside: Vector3 = creature._door_step(bi, 14.0)
+	Game.players[vf].pos = outside
+	creature.global_position = Vector3(br.get_center().x, 0.0, br.get_center().y)  # the barn centre, far from the door
+	var opens := [0]
+	var door_cb := func(what: StringName, a: Array) -> void:
+		if what == &"door" and a[0] == door_id and a[1]:
+			opens[0] += 1
+	root.get_node("Net").apply_received.connect(door_cb)
+	var thr: Vector3 = creature._door_step(bi, 0.0)
+	var d_open := -1.0
+	tf = 0.0
+	while in_b.call() and tf < 20.0:
+		creature._seen = {vf: {"position": outside, "t": creature._now}}
+		await physics_frame
+		tf += 1.0 / Engine.physics_ticks_per_second
+		if d_open < 0.0 and main.get_node("Doors").open[door_id]:
+			d_open = Vector2(creature.global_position.x - thr.x, creature.global_position.z - thr.z).length()
+	root.get_node("Net").apply_received.disconnect(door_cb)
+	_check(d_open > 0.0 and d_open <= 2.6, "the door stays shut until it reaches the threshold (opened at %.1f m)" % d_open)
+	_check(opens[0] == 1, "the door opens once on the way out (%d)" % opens[0])
+	_check(not in_b.call(), "it walks out of the building")
+	_check(main.get_node("Doors").open[door_id], "the door it walks out through stands open")
+	await _wait(0.3)
+	_check(creature._banged == -1, "leaving clears the bang, so the next entry bangs again (_banged %d)" % creature._banged)
 	dev.run("gen repair")
 	away.call(vf)
 

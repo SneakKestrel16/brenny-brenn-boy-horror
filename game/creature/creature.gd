@@ -150,7 +150,9 @@ var _hold_t := -INF  ## P5-39: _now when it picked _hold
 var _hold_side := 1.0  ## P5-39: the side a stalk circles to when no cover hides it (+1 or -1, per stalk)
 var _rest: Dictionary = {}  ## P5-39: peer -> _now until which it will not stalk that player again
 var _banged := -1  ## P5-39: the dark building (rect index) it banged on and may enter, -1 for none
-var _bang_until := -INF  ## P5-39: _now when the bang ends
+var _bang_open := false  ## P5-55: a bang is running; the door opens when it ends
+var _exit_open := -1  ## P5-55: the building whose door it opened on its way out, -1 for none
+var _bang_until := -INF ## P5-39: _now when the bang ends
 var _bang_next := -INF  ## P5-39: _now of the next bang sound
 
 # client only
@@ -1361,7 +1363,12 @@ func _move(_delta: float) -> void:
 		if _now >= _bang_next:  # doc 03 section 6: every peer hears it bang on the door
 			_bang_next = _now + 1.0  # placeholder: one bang a second
 			_send_lure(["door_bang", "sound:door_fake", _door_step(_banged, 0.0), -1, &"none", false])
+		_bang_open = true
 		return
+	if _bang_open:  # P5-55, doc 01 "Dark buildings aren't safe": it enters through the door it banged on, so the door opens, once
+		_bang_open = false
+		if _banged >= 0:
+			_open_door(_banged)
 	var d := Vector3.INF if goal == Vector3.INF else goal - global_position
 	if _scripted and state == &"stalk" and d != Vector3.INF and Vector2(d.x, d.z).length() < stop - ARRIVE_M:
 		d = -d  # the target walked closer: back off to stay out of sight (doc 03 section 2)
@@ -1447,18 +1454,33 @@ func _shut_out(to: Vector3) -> Vector3:
 	return to
 
 
+## P5-55: open the door of building `i` if it stands shut (host_set does nothing when already open; no noise).
+func _open_door(i: int) -> void:
+	var doors := get_parent().get_node_or_null(^"Doors") as Doors
+	if doors:
+		doors.host_set("door_" + _rect_names[i].to_lower(), true, 0)
+
+
 ## P5-39, doc 03 section 6 ("Dark buildings: enterable through the door; it always bangs first"): a goal in a dark
 ## building it is outside of becomes the step outside its door; there it bangs for `door_bang_s` (_move holds it
 ## still and sends the sound to every peer), then it may go in and out until it leaves the building for good.
 ## It walked into the dark barn and killed the bots sheltering there without a sound (P5-39 seed 2, nights 1 and 3).
 func _bang_first(to: Vector3) -> Vector3:
+	var at := Vector2(global_position.x, global_position.z)
+	var goal := Vector2(to.x, to.z)
+	for i in _rects.size():  # P5-55: it walks out through the door like any body: a door a player shut opens once, as it reaches it
+		if _rects[i].has_point(at) and not _rects[i].has_point(goal):
+			var sp := _door_step(i, 0.0)
+			if _exit_open != i and at.distance_to(Vector2(sp.x, sp.z)) <= ARRIVE_M + 1.0:
+				_exit_open = i
+				_open_door(i)
+		elif _exit_open == i and not _rects[i].has_point(at):
+			_exit_open = -1
 	if _night_t < 0.0 or _race_mps > 0.0 or _lit():
 		_banged = -1  # power back: _shut_out drives it out, and the next dark entry bangs again
 		return to
-	var at := Vector2(global_position.x, global_position.z)
-	var goal := Vector2(to.x, to.z)
-	if _banged >= 0 and not _rects[_banged].grow(DOOR_STEP_M + 1.0).has_point(at) and not _rects[_banged].has_point(goal):
-		_banged = -1  # it left and is not going back in
+	if _banged >= 0 and not _rects[_banged].has_point(at) and not _rects[_banged].has_point(goal):
+		_banged = -1  # P5-55: it left and is not going back in; the next entry bangs again
 	for i in _rects.size():
 		if i == _banged or not _rects[i].has_point(goal) or _rects[i].has_point(at):
 			continue

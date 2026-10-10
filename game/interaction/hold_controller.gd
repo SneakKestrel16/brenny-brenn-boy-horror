@@ -7,6 +7,7 @@ extends Node
 const Interactable := preload("res://game/interaction/interactable.gd")
 const FlagSpot := preload("res://game/traps_player/flag_spot.gd")
 const REACH_M := 3.0  ## ray length from the eye (placeholder; the host range check is range_m)
+const HoldReg := preload("res://game/interaction/hold_registry.gd")
 const PICK_MASK := 8  ## layer 4 "interactable"
 const FLAG_SEE_THROUGH_M := 1.0  ## placeholder: a target this close behind a flag wins the pick (a trap's half-width plus room)
 const REFUSED_SHOW_MS := 2000  ## how long a refusal reason stays on screen (placeholder)
@@ -209,6 +210,8 @@ static func pick(space: PhysicsDirectSpaceState3D, from: Vector3, to: Vector3) -
 		if hit.is_empty() or not hit.collider.has_meta(&"interactable"):
 			return flag
 		var it: Object = hit.collider.get_meta(&"interactable")
+		if it.get_script() != FlagSpot and not HoldReg.line_clear(space, from, hit.position, 0.05):  # P5-55: not through a wall
+			return flag
 		if it.get_script() != FlagSpot:
 			return it if flag == null or Vector2(flag_at.x, flag_at.z).distance_to(Vector2(hit.position.x, hit.position.z)) <= FLAG_SEE_THROUGH_M else flag
 		if flag == null:

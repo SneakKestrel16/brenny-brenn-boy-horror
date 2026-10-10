@@ -70,6 +70,23 @@ func cancel(peer: int, reason: StringName = &"released", notify: bool = true) ->
 		_reply(peer, &"hold_cancelled", [h.verb, reason])
 
 
+## P5-55: false when a world body (layer 1: walls, closed doors, ground) lies on the line from `from` to `to`, stopping `margin` m
+## short of `to` so a target against a wall, or low on the ground, is not hidden by what it stands on. Shared with HoldController.pick.
+static func line_clear(space: PhysicsDirectSpaceState3D, from: Vector3, to: Vector3, margin: float, exclude: Array[RID] = []) -> bool:
+	var d := to - from
+	if d.length() <= margin:
+		return true
+	var q := PhysicsRayQueryParameters3D.create(from, to - d.normalized() * margin, 1)
+	q.exclude = exclude
+	return space.intersect_ray(q).is_empty()
+
+
+## A door target's own DoorBlock and open leaves: the sight line ends inside them, so they never hide the door itself.
+func _own_bodies(t: Node) -> Array[RID]:
+	var doors = t.get(&"doors")
+	return doors.own_bodies(t.id) if doors != null else ([] as Array[RID])
+
+
 func _validate(peer: int, verb: StringName, id: String) -> StringName:
 	var st: Dictionary = farm.pstate(peer)
 	if Game.is_ghost(peer):
@@ -91,6 +108,8 @@ func _validate(peer: int, verb: StringName, id: String) -> StringName:
 	var reason := &"no_such_verb"
 	if _flat_dist(st.pos, t.target_pos()) > t.range_m:
 		reason = &"out_of_range"
+	elif not line_clear(get_viewport().world_3d.direct_space_state, st.pos + Vector3.UP * 1.6, t.target_pos() + Vector3.UP, 0.5, _own_bodies(t)):
+		reason = &"out_of_sight"  # P5-55: not through a wall (the client ray refuses it too, this is the host's word)
 	elif Interactable.INSTANT_S.has(Interactable.base(verb)) or Interactable.fix_hold_s(verb) > 0.0 \
 			or (Data.has_table(&"labor") and not Data.record(&"labor", Interactable.base(verb)).is_empty()):  # fix_hold_s: P3-06 sabotage
 		reason = t.can_start(verb, st)

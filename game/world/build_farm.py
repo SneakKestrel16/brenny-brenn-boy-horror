@@ -225,7 +225,7 @@ def building(name, door_x, door_z, x0, x1, z0, z1, door_side, h, parent="Buildin
     box(b, "WallW", lx0, (lz0 + lz1) / 2, t, lz1 - lz0, h, m)
     box(b, "WallE", lx1, (lz0 + lz1) / 2, t, lz1 - lz0, h, m)
     node("Door", "Marker3D", b, "", ["doors"], {"building": name.lower()})
-    if FULL:  # P5-22: model and door replace the gray-box meshes, collision stays. Door leaves stand open: no door state in game
+    if FULL:  # P5-22: model and door replace the gray-box meshes, collision stays. Door leaves start open; game/interaction/doors.gd swings them and adds the blockers
         hide_meshes(b)
         model = {"Barn": "barn", "Farmhouse": "farmhouse", "ToolShed": "shed"}[name]
         art(b, "Art", f"bldg_{model}")

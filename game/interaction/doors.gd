@@ -12,10 +12,14 @@ const OPEN_YAW := PI / 2.0  ## leaf swing, left -OPEN_YAW and right +OPEN_YAW wh
 const SWING_S := 0.25
 const GAP_M := 3.0
 const BLOCK_H := 4.0
+const LEAF_W := 1.49  ## door leaf collision box, from the prop_door_* meshes (width from the pivot, height, thickness)
+const LEAF_H := 2.6
+const LEAF_T := 0.22
 
 var open := {}  ## door id -> bool (every peer; authoritative on the host)
 var _leaves := {}  ## door id -> [LeafL, LeafR]
 var _blocks := {}  ## door id -> StaticBody3D
+var _leaf_bodies := {}  ## door id -> [StaticBody3D] one per open leaf (P5-55), solid only while the door stands open
 var _farm: Node
 var _log_farm := OS.get_cmdline_user_args().has("--log-farm")
 
@@ -55,6 +59,24 @@ func _ready() -> void:
 		var art := m.get_parent().get_node_or_null(^"DoorArt")  # only the full farm has door models
 		if art:
 			_leaves[id] = [art.get_node_or_null(^"LeafL"), art.get_node_or_null(^"LeafR")]
+			_leaf_bodies[id] = []
+			for i in 2:  # P5-55: an open leaf sticks out 1.5 m from the jamb and is solid (layer 1, like DoorBlock)
+				var leaf: Node3D = _leaves[id][i]
+				if leaf == null:
+					continue
+				var lb := StaticBody3D.new()
+				lb.name = "LeafBody"
+				lb.collision_layer = 1
+				lb.collision_mask = 0
+				var lc := CollisionShape3D.new()
+				var ls := BoxShape3D.new()
+				ls.size = Vector3(LEAF_W, LEAF_H, LEAF_T)  # leaf meshes: 1.49 wide from the pivot, 0.22 thick (measured)
+				lc.shape = ls
+				lc.position = Vector3(LEAF_W / 2.0 * (1.0 if i == 0 else -1.0), LEAF_H / 2.0, 0.0)
+				lc.disabled = false  # every door starts open
+				lb.add_child(lc)
+				leaf.add_child(lb)
+				_leaf_bodies[id].append(lb)
 		var b := StaticBody3D.new()
 		b.name = "DoorBlock"  # not "Wall*": the creature measures buildings by those names
 		b.collision_layer = 1
@@ -106,6 +128,8 @@ func _on_apply(what: StringName, args: Array) -> void:
 	if _log_farm:
 		Log.event(&"door_seen", {"door_id": id, "open": is_open, "by": int(args[2])})
 	(_blocks[id].get_child(0) as CollisionShape3D).set_deferred(&"disabled", is_open)
+	for lb: Node in _leaf_bodies.get(id, []):
+		(lb.get_child(0) as CollisionShape3D).set_deferred(&"disabled", not is_open)
 	var leaves: Array = _leaves.get(id, [])
 	for i in leaves.size():
 		var leaf: Node3D = leaves[i]
@@ -118,11 +142,24 @@ func _on_apply(what: StringName, args: Array) -> void:
 			create_tween().tween_property(leaf, "rotation:y", yaw, SWING_S)
 
 
+## P5-55: the physics bodies of one door (blocker and leaves), for sight-line rays that end at the door.
+func own_bodies(id: String) -> Array[RID]:
+	var out: Array[RID] = []
+	if _blocks.has(id):
+		out.append((_blocks[id] as CollisionObject3D).get_rid())
+	for lb: CollisionObject3D in _leaf_bodies.get(id, []):
+		out.append(lb.get_rid())
+	return out
+
+
 func _exempt_creature() -> void:
 	var cr := get_tree().get_first_node_in_group(&"creature") as PhysicsBody3D
 	if cr:
 		for b: PhysicsBody3D in _blocks.values():
 			cr.add_collision_exception_with(b)
+		for id: String in _leaf_bodies:
+			for lb: PhysicsBody3D in _leaf_bodies[id]:
+				cr.add_collision_exception_with(lb)
 
 
 # --- QA script (`-- --autodoor`) --------------------------------------------------------------------------

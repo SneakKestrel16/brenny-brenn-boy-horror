@@ -628,8 +628,18 @@ Traps are host-owned (doc 03 section 8). The player side is:
   peer only. `by` 0 means "snap": the leaves jump to the state without the 0.25 s swing.
 - **Collision follows the door**: a closed door enables a `DoorBlock` StaticBody3D (layer 1, 3 x 4 x 0.3 m, in
   the gap, named without `Wall` because `creature.gd` measures buildings by `Wall*` names). The Creature has a
-  collision exception for the blocks: it bangs, then comes in (doc 03 section 6). Bots have no door logic and can
-  be shut out; a closed door is the player's tool.
+  collision exception for the blocks: it bangs, then comes in (doc 03 section 6). Bots move by position, so
+  `bot.gd` handles doors itself (P5-55): a barn crossing is routed through the doorway (`(0,0,-1.5)` and `(0,0,2)`,
+  never the wall) and `_door_stops` makes the bot open a closed barn door (`host_set`, noise by the bot) before it steps
+  through. Players are physical and stopped by the block (`tests/qa/qa_p5_55_door_walk.gd`, host and client).
+  The creature opens the door it banged on, once, when the bang ends and it goes in (`creature.gd` `_move`,
+  `host_set(door, true, 0)`, no noise; doc 01 "enter through a door, always banging on it first"); it opens a shut door
+  when it walks out too, and leaving clears `_banged` so the next entry bangs again. An open leaf is solid
+  too: `LeafBody` (layer 1, 1.49 x 2.6 x 0.22 m, child of each leaf, enabled only while the door is open, creature
+  exempt); the 3 m gap between the leaves stays clear (`tests/qa/qa_p5_55_leaf.gd`).
+- **No holds through walls** (P5-55): `HoldController.pick` drops a pick-body hit when a layer-1 ray from the eye to the hit,
+  stopping 0.05 m short, hits something first. The host does the same in `HoldRegistry._validate` (eye +1.6 m to target +1 m,
+  0.5 m short, ignoring a door target's own DoorBlock and leaves) and refuses with `out_of_sight` (`hold_registry.gd` `line_clear`; `tests/gameplay/test_p5_55_pick_los.gd`).
 - **Models**: `DoorArt/LeafL` and `LeafR` (`prop_door_*`, pivots at the jambs) turn -90 and +90 degrees when open.
 - **`apply_tool(peer, tool_id)`**: the host tells everyone which chore tool a peer holds (`&"hoe"` while a
   `plant` or `clear_plot` hold is in the HoldRegistry, `&""` otherwise); `HeldTools` (`game/player/held_tools.gd`)

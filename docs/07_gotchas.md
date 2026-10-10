@@ -9,3 +9,5 @@
 - **The intro card blocks the first frames:** pass `--no-intro` in measured runs.
 - **An isolated `APPDATA` needs `Godot/` inside it** or the shader cache logs `Unable to create shader cache directory` errors (harmless).
 - **Godot may pick the AMD iGPU on this hybrid machine.** Every run in PERF-01 reported `NVIDIA GeForce RTX 5070`; still check `adapter=` in each probe line.
+- **Door and wall tests: never teleport the player.** The host rubber-bands a teleported client (`speed_violation`), which looked like a client walking through a closed door in P5-55. Walk with `nav_path`. Also read the local player node once: a client's `Game.local_peer()` returns 1 after the host quits, so a later lookup finds the host's proxy (mask 0, no collision).
+- **Bots move by `_pos`, not move_and_slide.** Nothing physical stops them: a straight bot path crossed barn walls, and a closed door did nothing (P5-55). Route and gate them in `bot.gd` (`_walk`, `_door_stops`).
