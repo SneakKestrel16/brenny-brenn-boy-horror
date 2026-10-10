@@ -1013,6 +1013,13 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-28 | Gameplay | Lobby and save fixes: `trait_report_pending` saved, Season N label, bottom buttons overlap | done (QA PASS, D-183) | P5-24 |
 | P5-29 | Gameplay | Playtest 2026-10-09 log fixes: client "Lambda capture freed" errors, lobby READY key-repeat toggling | done (QA PASS, D-185) | |
 | P5-30 | Network & Voice | `Net.to_peers` skips disconnecting peers (Q-342); review the P5-05 net.gd messages (D-180) | todo | P5-08 |
+| P5-31 | Level Designer | More corn: cover and routes for the Creature across the farm, most around field B (CEO STOP 6) | todo | P5-08 |
+| P5-32 | 3D | Better crop models: every crop and growth stage (CEO STOP 6) | todo | P5-08 |
+| P5-33 | AI Programmer | Creature AI: more drawn to noise, targets players more often at night; bear trap deaths too quick and random; crows seen more often (CEO STOP 6) | todo | P5-08 |
+| P5-34 | Gameplay | Barn how-to-play signboard; intro scene with the situation and the goal (CEO STOP 6) | todo | P5-08 |
+| P5-35 | Gameplay | Player models break when Taint shows (CEO STOP 6) | todo | P5-08 |
+| P5-36 | Gameplay | Dev console: message one player; dev menu for the common commands, typed commands kept (CEO STOP 6) | todo | P5-08 |
+| P5-37 | Director | Rename: Taint to Corrupted in every doc and all player-facing text; game named "Farmer's Delight" (CEO STOP 6) | todo | P5-30 to P5-36 |
 | P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | done (QA PASS) | P5-02 to P5-07, P5-09 to P5-29 |
 
 ### P5-02 Phase 5 design and data
@@ -1227,3 +1234,65 @@ Acceptance:
   is false, as `send_bytes` already does. Callers seen: `net.gd:289`, `cosmetics.gd:34`, `debt.gd:84`.
 - D-180: review the P5-05 messages in `net.gd` (Network & Voice owns the file) and record the verdict in the handoff.
 - The P5-08 Run B command (handoff P5-08) reports MULTI PASS with 0 host error lines.
+
+### STOP 6 feedback (CEO, 2026-10-10)
+P5-31 to P5-37 come from the CEO's notes on the STOP 6 build. They run in parallel; P5-37 runs last because it
+touches every file.
+
+### P5-31 More corn
+Owner: Level Designer. Output: `game/world/` edits, doc 04 update, handoff note.
+Acceptance:
+- Add corn so the Creature has more cover and more routes around the farm, most of all around field B (the CEO
+  called it "farm 2"; inference, confirm in the handoff). Keep paths players need open; check_farm passes.
+- Corn rendering stays within the doc 07 performance budget (measure with `perf_probe` before and after).
+- Creature navigation reaches the new corn (nav mesh rebaked if needed); Lurk and Stalk use it in a headless run.
+
+### P5-32 Better crop models
+Owner: 3D Artist. Output: `.glb` and `.blend` files, doc 07 asset list update, handoff note.
+Acceptance:
+- Remodel every crop and each growth stage so it reads at a glance: more shape, leaves and colour than the current
+  placeholders, still low-poly and real scale. Same file names and node origins so no code change is needed.
+- Windowed screenshots of each crop and stage, viewed, in the handoff.
+
+### P5-33 Creature noise, night targeting, bear trap deaths, crows
+Owner: AI Programmer. Output: game and data edits, doc 03 update, handoff note.
+Acceptance:
+- Noise: the Creature is more drawn to noise. At night it must go after players often without the dev console.
+  Read `logs/playtest_20261009/` first: count how often it targeted players and why it did not; tune and fix from
+  that. Numbers in `data/` with `source: placeholder` and a cite.
+- Bear trap: the CEO says it kills people "so quickly and randomly". Find from the logs and code what kills a
+  pinned player and how fast (trap race, `starts_race_by_day`, `death.gd` `caught`). Give the victim a fair window:
+  a clear warning and time for a teammate to free them. Write the cause in the handoff.
+- Crows: show crows more often (perched, flying over, landing in fields). Their sound need not rise with them.
+  P5-27 left a finding: still crows on `crow_perches` share markers with the ghost crow and fake-out burst.
+- Headless runs with log measures before and after for each of the three.
+
+### P5-34 Barn signboard and intro scene
+Owner: Gameplay Programmer. Output: game code and scenes, handoff note.
+Acceptance:
+- A signboard in the barn with directions on how to play: the goal, day jobs, night rules, traps, dawn. Readable in
+  first person from a few metres. Text from doc 01; no new rules.
+- An intro scene before the first day of a new season: what the situation is and what the goal is (doc 01 premise
+  and win condition). Skippable; shown once per new save. Text and voice rules as doc 01; no captions (CEO).
+
+### P5-35 Player models break when tainted
+Owner: Gameplay Programmer. Output: game code, handoff note.
+Acceptance:
+- The CEO saw farmer models break when Taint shows. Reproduce windowed at each Taint stage (`taint_look.gd`, P5-23,
+  `farmer_body.gd`), on host and client, with hats and cosmetics. Fix the cause. Screenshots before and after.
+
+### P5-36 Dev console messages and dev menu
+Owner: Gameplay Programmer. Output: game code, doc 05 update, handoff note.
+Acceptance:
+- A dev console command sends a text message to one named player (peer id or player name, as the peer argument
+  already allows); it shows on that player's screen only.
+- A dev menu (mouse-driven) for the common dev commands, with a player picker where a command takes a peer. The
+  typed console stays for everything else. Same host-only rules as the console.
+
+### P5-37 Rename Taint to Corrupted; game name
+Owner: Director. Output: docs, data text, UI strings, `project.godot`, handoff note.
+Acceptance:
+- "Taint" becomes "Corrupted" ("Corruption" where a noun reads better) in every doc and all player-facing text.
+- Code identifiers, data keys, save keys and log event names stay (`taint_*`): renaming them breaks saves and logs.
+  Docs keep those identifiers verbatim in code spans.
+- The game is named "Farmer's Delight": `project.godot` `config/name`, main menu title, window title, README, doc 01.
