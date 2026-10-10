@@ -41,6 +41,7 @@ without a revert.
 | P5-56 | 644a47b | Creature AI: lurks through corn on routes, waits in cover, avoids repeats, searches nearby cover after losing a chase, sets night traps on busy paths; stuck guard and Harvest Moon fix (D-13). Each of the five changes reverts by setting its number in data/creature.json to 0 | `git revert 644a47b` |
 | P5-48 | a5dc8ce | Lore in game: road sign and bank notice at the gate, intro line, Courier masthead, ten notes on cards pinned to farm surfaces, archive clippings, win lines (D-15) | `git revert a5dc8ce` |
 | P5-60 | 2b53fa1 | Eight more silent emotes and an inner ring on the emote wheel (D-5). Cut one by deleting its row in data/emotes.json | `git revert 2b53fa1` |
+| P5-59 | f557099 | Weathered look on farm, buildings, props and creatures from a noise shader; scenes 5-12% darker, night yard 10% darker | `git revert f557099`, then delete .godot/imported/*.glb-* to reimport |
 
 ## 3. Tests run and what we did
 
@@ -56,3 +57,4 @@ without a revert.
 - **Caps lifted (CEO, evening):** no agent or CPU/RAM limit. All paused work resumed in parallel: P5-48 lore (QA round 2 fixes), P5-57 bots, P5-58 creature pick, P5-59 textures, P5-60 emotes, P5-61 signs.
 - **P5-48 lore: Opus QA round 2 PASS.** QA moved the shed_door card 13 cm off the shed corner. Tests on main: import 0 ERROR, parse_check 222/0, test_lore and test_data PASS, grep_rules 0 violations. Open: road sign posts have no collision (players walk through); the TOWN arch label overlaps the BRENN FARM board from the gate view (P5-61 to fix).
 - **P5-60 emotes: Opus QA PASS (round 2, after flex and cross_arms poses were redone).** Tests on main: import 0 ERROR, parse_check 222/0, test_emotes PASS, grep_rules clean. Open: on day 1 the controls card covers yawn and facepalm on the wheel; the outer ring runs off screen at 640x360.
+- **P5-59 textures: Opus QA PASS after a fix.** The import swap first also hit plots and traps (plot SCRIPT ERROR, trap glow lost); QA kept those on the old material. Tests on main after reimport: import 0 ERROR, smoke PASS, parse_check 222/0, light rig, creature art, farmer body PASS. Watch: night yard is 10% darker; check night readability in the next playtest.
