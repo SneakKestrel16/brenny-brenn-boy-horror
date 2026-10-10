@@ -971,3 +971,10 @@ While clips are being kept, the recording light shows steadily (doc 01 "Recordin
 D-013 reading that proximity capture is not "capture". The "Lobby lines" setting and the recording screen
 go. Doc 06 s16 settles where clips are cut (sender's machine, as barn chatter was) and how the manifest
 shares them (doc 06 s11 clip format, unchanged). Task P4-37.
+### D-147 · 2026-10-09 · CEO · Flare shells are buyable in the store
+Besides the free reload each dawn (doc 01 Store), the team can buy flare shells in the store. Each shell loads one
+shot, up to the gun's capacity (`flare_capacity()`, one more with a Warden). Shells need the flare gun bought.
+**Why:** CEO, 2026-10-09 playtest: "the flare gun has no way to refill its ammo so you get only 2 shots total", then
+"add buyable ammo" (the dawn reload exists but was not reached in a day-1 session and nothing tells players of it).
+**How to apply:** a `flare_shell` row in `data/store.json` with a placeholder price (Game Designer confirms with the
+sim, doc 02 s10). The Dawn Report says when the flare gun was reloaded. Task P4-38.

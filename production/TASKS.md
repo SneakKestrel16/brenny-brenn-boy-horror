@@ -615,6 +615,7 @@ no economy number and can start now.
 | P4-33 | Gameplay | CEO: flag limit per player; remove your own placed flag; flags as small icons on the minimap | done (QA PASS; CEO flag rules D-142) | P4-24 |
 | P4-36 | 3D Artist | CEO: a different hat per role (D-144); ten `hat_<role_id>.glb` for the lobby line-up, later the in-game farmer | done (QA PASS with follow-ups) | — |
 | P4-37 | Network & Voice | CEO: drop the barn recording; auto-record live clips from in-game speech as the default voice setting (D-146) | ready | — |
+| P4-38 | Gameplay, Game Designer | CEO: buyable flare shells in the store (D-147); Dawn Report says the flare gun was reloaded | ready | — |
 | P4-18 | QA | Review each P4 task; 4-instance run; sim `compare` on full-season logs (doc 02 s18.5); doc 09 Phase 4 gate plus the D-068 carried measures | in review | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
@@ -893,6 +894,14 @@ and an Opus QA review passes.
 - Doc 01 "Flags" rules stay: from day 5 the creature can move one flag a night, and the minimap shows
   where the flag is now. Host-authoritative, synced, logged. Same done-when line as P4-22 to P4-28.
 - D-141: remove the teammate dots from the minimap; only the local arrow, layout and flags show.
+
+### P4-38 Buyable flare shells (D-147, CEO 2026-10-09)
+- New store item `flare_shell` in `data/store.json` (+ schema): needs `flare_gun` bought; each buy loads one shot
+  up to `flare_capacity()`; cannot buy when the gun is full. Placeholder price, marked `placeholder`; the Game
+  Designer checks it with the season sim (doc 02 s10) and records it in doc 02.
+- Host-authoritative through the existing store buy path, synced, saved with `flare_shots`, logged.
+- The Dawn Report shows a line when the dawn reload loaded the gun.
+- Docs 01 Store and 02 s10 updated. Same done-when line as P4-22 to P4-28.
 
 ### P4-37 Live clips replace the barn recording (D-146, CEO 2026-10-09)
 - Remove the recording screen and its menu-lobby staging (`lantern_out` and the rest) and the "Lobby lines"
