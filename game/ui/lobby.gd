@@ -29,6 +29,7 @@ const READY_COL := Color(0.62, 0.78, 0.5)  ## muted green
 const NOT_READY_COL := Color(0.78, 0.3, 0.24)  ## dried red
 
 var _roster: Label
+var _name_edit: LineEdit
 var _cards: VBoxContainer
 var _difficulty: OptionButton
 var _streamer: CheckBox
@@ -187,6 +188,7 @@ func _ready() -> void:
 	Game.player_left.connect(func(_p: int) -> void: _refresh_cards(); _refresh())  # a leaver frees their role card and farmer
 	Game.voice_setting_changed.connect(func(_p: int) -> void: _refresh())
 	Game.roles_changed.connect(_refresh)
+	Net.names_changed.connect(_refresh)
 	if not Game.is_host():
 		Net.to_host(&"request_lobby_ready", [false])  # the host answers with everyone's ready marks
 	_refresh()
@@ -296,6 +298,13 @@ func _ui() -> void:
 	rv.add_theme_constant_override(&"separation", 8)
 	right.add_child(rv)
 	_heading(rv, "Farmhands")
+	_name_edit = LineEdit.new()  # P5-20: your name; saved to Settings, sent to the host
+	_name_edit.placeholder_text = "Your name"
+	_name_edit.max_length = Net.NAME_MAX
+	_name_edit.text = Net._clean_name(str(Settings.get_value(&"player_name")))
+	_name_edit.text_submitted.connect(rename)
+	_name_edit.focus_exited.connect(func() -> void: rename(_name_edit.text))
+	rv.add_child(_name_edit)
 	_roster = Label.new()
 	_roster.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_roster.add_theme_font_size_override(&"font_size", 14)
@@ -413,6 +422,17 @@ func _card(id: StringName, title: String, perk: String, mine: bool, taken: bool,
 		b.add_theme_color_override(&"font_color", EMBER)
 	b.pressed.connect(pick.bind(id))
 	_cards.add_child(b)
+
+## P5-20: keep `text` as the player's name (Settings) and ask the host to use it. The host may add a number
+## to keep names apart: the roster and name tag show it; the field keeps what was typed,
+## so Settings never saves the suffix.
+func rename(text: String) -> void:
+	var n := Net._clean_name(text)
+	if n == str(Settings.get_value(&"player_name")):  # unchanged (focus-out after Enter, or the host's "Farmer 2" kept apart)
+		return
+	Settings.set_value(&"player_name", n)
+	Settings.save()
+	Net.to_host(&"request_name", [n])
 
 
 ## Ask the host for `id` (empty = no role); the host refuses a taken role or a started match.

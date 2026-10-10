@@ -340,6 +340,7 @@ CONTRACTS section 7 and needs the Director (D-010). D-013 confirms `request_lant
 | `apply_join_refused(reason)` | host → joiner | — | `full` (the D-038 player cap), `match_in_progress` (uid not on the match roster), `not_in_season` (a loaded save's lobby, uid not in the save), `no_identity` (running match, no `request_join` within 10 s). `version_mismatch` (section 5 step 3: `protocol_version` or `build_id` differs from the host's; checked first, the host also logs `net_join_version`). The main menu shows one line per reason |
 | `apply_roster(roster)` | host → all | — | slot, uid, name, voice setting, role, alive/ghost/farmhand |
 | `request_role(role_id)` | client → host | host: lobby only, one player per role | Doc 01 "Roles" (optional); the result is the role in `apply_roster` |
+| `request_name(name)` | any peer → host | host: lobby only, known peers; cleaned and made unique; the result is the name in `apply_roster` | P5-20 |
 | `request_lobby_ready(on)` | client → host | host: lobby only, roster peers only; sender from `_sender()` | D-092; P4-23 menu lobby |
 | `apply_lobby_ready(peers)` | host → all | authority only; clients mirror `Game.lobby_ready` | D-092 |
 | `request_clips_ready(digest)` | client → host, channel 3 | host | Section 12: what the client holds (an md5, so no clips is never empty) |

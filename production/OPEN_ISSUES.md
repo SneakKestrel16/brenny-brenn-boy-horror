@@ -449,3 +449,9 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 
 - **Town stand collision (Q-281).** `bldg_town_stand.glb` sits at (0, -0.5, -0.96) over the unchanged 3 x 1 x 2 box in
   `farm.tscn`; check footprint and facing against doc 04 in a windowed session. Owner: Level Designer.
+
+## Found at the P5-20 review (QA, 2026-10-09)
+
+- **Tests write the real settings file.** `user://settings.cfg` is not separated by `--profile`, so name tests
+  overwrite the CEO's `player_name` (both restore it on exit). Separate settings per profile. Owner: Gameplay.
+- **Name field has no label** once it has text ("Your name" is placeholder only). Owner: Gameplay (cosmetic).

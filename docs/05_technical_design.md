@@ -905,7 +905,10 @@ Screens are client-side presentation of host data (`game/ui/`), shown at dawn an
   Left: the role cards (P4-09; a taken role greyed out, all locked when a loaded season keeps its roles,
   which clients learn from `apply_roles`' `locked` key, D-143). Right: a roster with each player's voice
   setting, the join code, doc 01's Discord line, the group settings (difficulty and streamer-safe; host
-  edits, `Game.set_group_settings`, everyone sees them). Bottom right: one big button. A client's button toggles Ready
+  edits, `Game.set_group_settings`, everyone sees them). Above the roster a name field (P5-20): Enter or
+  focus-out saves `player_name` to Settings and sends `request_name(name)`; the host cleans it
+  (`Net._clean_name`: no line breaks or `[ ]`, 24 characters, blank -> "Farmer"), keeps it unique ("Farmer 2"),
+  updates `Net.profiles`, resends `apply_roster`, and both ends emit `Net.names_changed`. Lobby only. Bottom right: one big button. A client's button toggles Ready
   (`request_lobby_ready(on)`; the host logs `lobby_ready {player, on}` and broadcasts
   `apply_lobby_ready(peers)` into `Game.lobby_ready`; a joiner sends `false` to get everyone's marks). The
   host's button, "Start the season", is enabled when `Game.all_ready()` (every other human ready; bots

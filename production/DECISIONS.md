@@ -1203,3 +1203,11 @@ the slots only when the table has `colours`, so quirk-only tables do not wipe th
 becomes P5-23, the big-head toy stays a sphere. Follow-up rows P5-22 (wire the P5-14 to P5-17 models) and P5-24 (next
 season through the lobby) added.
 **Why:** QA PASS with fixes (handoffs/P5-13.md "QA review").
+
+### D-173 · 2026-10-09 · Director · P5-20 merged
+P5-20 (players type their own name in the lobby, CEO request) passed QA with two fixes, made by the Director before
+merge: the `rename()` doc comment now says the field keeps what was typed while the roster and name tag show the
+host's suffix, and an unrelated whitespace change in `net.gd` is reverted. The host cleans names (24 characters, no
+BBCode or line breaks, blank becomes "Farmer"), keeps them unique with a number, and refuses renames after the start.
+A host-assigned suffix never reaches Settings.
+**Why:** QA PASS with fixes (handoffs/P5-20.md "QA review"); CEO 2026-10-09 "not everyone shows up as farmer".

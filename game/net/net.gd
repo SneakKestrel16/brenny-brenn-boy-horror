@@ -23,6 +23,9 @@ signal teleport_received(position: Vector3)
 ## P4-10 (doc 06 s5 "Host left"): the host quit (`how` quit) or went silent (`timeout`). The pause menu shows the card.
 signal host_left(how: StringName)
 
+## P5-20: `profiles` changed (a rename or a new roster); the lobby rewrites its name tags.
+signal names_changed
+
 const PROTOCOL_VERSION := 1  ## doc 06 section 5 `request_join`; a joiner with another one (or another build id) is refused
 const BANDWIDTH_S := 10.0  ## doc 06 s14: `net_bandwidth` interval
 const NAME_MAX := 24  ## display name characters kept (placeholder)
@@ -126,8 +129,22 @@ static func _valid_uid(uid: String) -> bool:
 
 
 static func _clean_name(n: String) -> String:
+	for c in ["\n", "\r", "\t"]:  # P5-20: no line breaks or BBCode tags in a name
+		n = n.replace(c, " ")
+	n = n.replace("[", "").replace("]", "")
 	n = n.strip_edges().substr(0, NAME_MAX)
 	return n if not n.is_empty() else "Farmer"
+
+
+## P5-20: `n` cleaned, and "Farmer" -> "Farmer 2", "Farmer 3" ... while another peer already has it.
+func _unique_name(peer: int, n: String) -> String:
+	n = _clean_name(n)
+	var out := n
+	var k := 2
+	while profiles.keys().any(func(p: int) -> bool: return p != peer and profiles[p].get("name") == out):
+		out = "%s %d" % [n.substr(0, NAME_MAX - 3), k]
+		k += 1
+	return out
 
 
 ## Client. `address` is `ip` or `ip:port` (IPv6 literals take the default port).
@@ -504,7 +521,7 @@ func request_join(protocol_version: int, build_id: String, uid: String, display_
 				_on_peer_disconnected(old)
 				_refused[old] = true  # swallows the old peer's own disconnect signal
 				multiplayer.multiplayer_peer.disconnect_peer(old)
-	profiles[peer] = {"uid": uid, "name": _clean_name(display_name)}
+	profiles[peer] = {"uid": uid, "name": _unique_name(peer, display_name)}
 	if waiting:  # a roster player back in a running match: in as a ghost until dawn (Death reads the flag)
 		_admit(peer, true)
 		return
@@ -517,6 +534,19 @@ func request_join(protocol_version: int, build_id: String, uid: String, display_
 func apply_roster(peers: Array, p_profiles: Dictionary) -> void:
 	profiles = p_profiles
 	Game.apply_roster(peers)
+	names_changed.emit()
+
+
+## P5-20: a player renames themself in the lobby. The host cleans it, keeps it unique, and resends the roster.
+## Refused once the match has started (the name is on the Dawn Report and awards by then).
+@rpc("any_peer", "call_remote", "reliable")
+func request_name(display_name: String) -> void:
+	var peer := _sender()
+	if not Game.is_host() or not Game.in_lobby or not profiles.has(peer):
+		return
+	profiles[peer]["name"] = _unique_name(peer, display_name)
+	to_peers(&"apply_roster", [Game.players.keys(), profiles])
+	names_changed.emit()
 
 
 @rpc("authority", "call_remote", "reliable")

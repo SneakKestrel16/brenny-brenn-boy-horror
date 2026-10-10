@@ -1002,7 +1002,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-17 | 3D Artist | Missing models: crow, hands, road items, ragdoll, ghost shell (Q-266) | done (QA PASS, D-168) | P5-12 |
 | P5-18 | Level Designer | Cart parks clear of the barn doorway (CEO, 2026-10-09: "the cart shouldnt block the doorway to the barn") | done (QA PASS, D-172) | |
 | P5-19 | Network & Voice | `VoiceSplice.word_break` finds real silent frames (Q-291, confirmed at the P5-07 review) | in progress | |
-| P5-20 | Gameplay | Players type their own name in the lobby before start (CEO 2026-10-09: "not everyone shows up as farmer") | in progress | |
+| P5-20 | Gameplay | Players type their own name in the lobby before start (CEO 2026-10-09: "not everyone shows up as farmer") | done (QA PASS, D-173) | |
 | P5-21 | Level Designer | Paths connect every structure to another; remove the stray path behind the barn to the animal pen (CEO 2026-10-09) | in progress | P5-18 |
 | P5-22 | Gameplay | Wire the P5-14 to P5-17 models: buildings, traps, pegboard, tools, crops, corn, crows, hands, road items, ragdoll, ghost shell | todo | P5-13 |
 | P5-23 | Gameplay | Wire the primitives left by P5-13 (Q-283): death corpse, Taint look, hats, Taint sleeves, `interact` animation, cart lantern glass | todo | P5-13 |
