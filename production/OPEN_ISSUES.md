@@ -333,3 +333,11 @@ Source: `production/handoffs/P4-33.md` "QA review" (PASS). Items 1 to 3 sent bac
 1. **Night owl tufts read as cat ears** (two upright 4-sided cones, `tools/blender/build_phase4.py:768-769`). Fallback: the handoff's pompom, or flatter outward-tilted tufts. CEO to look first. 3D Artist.
 2. **The 14-energy lobby spot** (`game/ui/lobby.tscn:16`) washes the local player's hat near-white (navy beanie, straw hat). Technical Artist.
 3. Fixed at merge: lobby farmers faced away, hiding every hat's front (Q-242); `LineUp._farmer` now turns them 180 degrees. Director checked by screenshot.
+
+## Found at the P4-34 D-116 re-review (QA, 2026-10-09)
+
+Source: `production/handoffs/P4-34.md` "QA re-review, D-116" (PASS with follow-ups). None blocks.
+
+1. **Stand death rate unconfirmed against D-116's "about 1 in 10"**: 2 stand deaths in 32 nights on 16 fresh seeds; pooled with P4-34's independent seeds about 2 in 56. Seasons that share a `--seed` share the stand stream, so they are not independent samples. Game Designer: tune `town_stand.reach_night_chance` / `kill_mult` on 50 or more distinct seeds.
+2. **On a stand night the nudge leaves the farm players** whenever anyone is at the stand (`game/ai_director/ai_director.gd:327`), not only when the guard is the only one outside (Q-225 option b). Bots at the farm never die at night, so the effect needs a 2-instance session. Game Designer / AI Programmer.
+3. **Exit segfault after `season_ended`** in headless bot seasons, about 1 in 35 runs (`logs/p434/seasons3/short3p_2`, `logs/qa_d116/s13.log`, rc 139). Data is complete. Possibly related to the lobby exit crash above (inference; a crash trace would settle it).
