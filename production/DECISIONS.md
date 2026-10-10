@@ -978,3 +978,13 @@ shot, up to the gun's capacity (`flare_capacity()`, one more with a Warden). She
 "add buyable ammo" (the dawn reload exists but was not reached in a day-1 session and nothing tells players of it).
 **How to apply:** a `flare_shell` row in `data/store.json` with a placeholder price (Game Designer confirms with the
 sim, doc 02 s10). The Dawn Report says when the flare gun was reloaded. Task P4-38.
+### D-148 · 2026-10-09 · CEO · Phase 4 human playtest skipped; economy tuning waits for a fully playable game
+The P4-18 gate runs without human playtest seasons (`tools/qa/playtest/checklist_p4.md` is not required) and
+without the economy targets: the sim `compare` within 15 points (doc 02 s18.5) and the "teams sometimes win and
+sometimes lose" check move to a later economy pass, once the game is fully playable. Prices added before then
+(such as `flare_shell`, D-147) stay `placeholder`.
+**Why:** CEO, 2026-10-09: "we will skip the phase 4 playtest, the economy can be fixed after its considered fully
+playable".
+**How to apply:** P4-18 closes on the automated checks only: each P4 task reviewed, a 4-instance run over ENet,
+headless with no new errors. Then STOP 5. The economy pass is a later task; nobody tunes prices against the sim
+until it is opened.
