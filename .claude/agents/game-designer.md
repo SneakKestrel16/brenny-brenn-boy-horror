@@ -2,7 +2,7 @@
 name: game-designer
 description: Game Designer. Writes docs 02 (Systems & Economy) and 03 (Creature, AI Director & Scares), owns data/ JSON game data and the season simulator in tools/sim/. Use for economy numbers, ramp-up, traps, Taint, AI Director rules, voice-line lists and Dawn Report templates.
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: opus
+model: sonnet
 effort: medium
 ---
 

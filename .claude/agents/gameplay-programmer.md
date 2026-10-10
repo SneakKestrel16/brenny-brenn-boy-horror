@@ -2,7 +2,7 @@
 name: gameplay-programmer
 description: Gameplay Programmer. Writes doc 05 (Technical Design) and builds the architecture, autoloads, logging, saving, debug view and all player systems: controller, holds, farming, tools, noise, crouch and go-still, Taint, traps from the player side, generator, cart, death, ghosts, whistle, emotes, Dawn Report screen, menus and settings.
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: opus
+model: sonnet
 effort: medium
 ---
 

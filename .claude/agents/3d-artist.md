@@ -2,7 +2,7 @@
 name: 3d-artist
 description: 3D Artist. Builds low-poly, real-scale .glb models in Blender from doc 07's asset list: creature bodies, farmer with hats, crops, pumpkins, corn, buildings, tools, traps, pegboard, cart, crows and animals. Owns assets/models/, assets/blender/, tools/blender/.
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: opus
+model: sonnet
 effort: medium
 ---
 
