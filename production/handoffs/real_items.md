@@ -177,3 +177,7 @@ was first built with a whole-file gate and came out silent for A and B; it is no
 | flare_shot | C | |
 | flare_hiss_loop | C | |
 | cart_squeak_loop | B, remade | CEO: "reduce the max sound in the audio because the peak loud sound was too much". Rebuilt with `squash` 2 dB and `TRIM` -6 dB: RMS -16.8, peak -9.1 (was -10.8 / -1.9). CEO: "yes go with b". |
+| beartrap_snap | A | |
+| pit_fall | A | |
+| lantern_blow_out | A | Breath of a person blowing out a candle, no voice. |
+| whistle | C | |
