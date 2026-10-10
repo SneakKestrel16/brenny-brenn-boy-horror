@@ -110,3 +110,11 @@ chase files play the loop 3 times to hear the seam):
   that no option uses are not referenced and need not be committed.
 - Scratch measurement tools (`fs.py`, `ana.py`, `pulse.py`, `bands.py`) and spectrogram PNGs are in
   `logs/scratch_rc/` (git-ignored).
+
+## CEO picks (2026-10-09 listen)
+
+Install all picks in one batch after the listen. Use the steps under "Installing picks" above.
+
+| Sound | Pick | CEO note |
+|---|---|---|
+| gaunt signature (`cre_gaunt_sig_*`) | C | "just go with c for now and make a note that its not the best": placeholder pick, find a better real source later |

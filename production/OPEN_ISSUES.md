@@ -341,3 +341,9 @@ Source: `production/handoffs/P4-34.md` "QA re-review, D-116" (PASS with follow-u
 1. **Stand death rate unconfirmed against D-116's "about 1 in 10"**: 2 stand deaths in 32 nights on 16 fresh seeds; pooled with P4-34's independent seeds about 2 in 56. Seasons that share a `--seed` share the stand stream, so they are not independent samples. Game Designer: tune `town_stand.reach_night_chance` / `kill_mult` on 50 or more distinct seeds.
 2. **On a stand night the nudge leaves the farm players** whenever anyone is at the stand (`game/ai_director/ai_director.gd:327`), not only when the guard is the only one outside (Q-225 option b). Bots at the farm never die at night, so the effect needs a 2-instance session. Game Designer / AI Programmer.
 3. **Exit segfault after `season_ended`** in headless bot seasons, about 1 in 35 runs (`logs/p434/seasons3/short3p_2`, `logs/qa_d116/s13.log`, rc 139). Data is complete. Possibly related to the lobby exit crash above (inference; a crash trace would settle it).
+
+## Found at the D-149 creature sound listen (CEO, 2026-10-09)
+
+Source: `production/handoffs/real_creature.md` "CEO picks".
+
+1. **The gaunt signature is a stand-in.** The CEO picked option C (a flicked clipboard as joint clicks) "for now" and noted "its not the best". Audio Designer: find a better real joint, knuckle or beetle-click recording later. Settled when the CEO picks a replacement by ear.
