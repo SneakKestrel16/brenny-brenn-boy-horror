@@ -385,26 +385,28 @@ m clearing, about 9,000 m2, plus strips of about 90, 47, 70, 17 m of 6 m width, 
 - **Per-peer cost.** Four players on one machine render four windows (QA multi, 4 instances), so the
   per-instance cost is what matters. Each instance renders only its own camera.
 
-### 10.2 Budget (all `unmeasured`, `placeholder`)
+### 10.2 Budget (measured 2026-10-10 on the RTX 5070, P5-38; the budget numbers stay `placeholder`)
 
-| Item | Budget per instance |
-|---|---|
-| Frame time at 1280x720 | 16.6 ms (60 fps) with 4 instances running on the CEO's machine |
-| Draw calls | 1,500 or fewer |
-| Triangles on screen | 1,500,000 or fewer |
-| Corn stalk instances drawn | 25,000 or fewer |
-| Shadow-casting lights | 4 or fewer |
-| Texture memory | 256 MB or less per instance |
+| Item | Budget per instance | Measured, worst of 4 spots, day and night (`measured`) |
+|---|---|---|
+| Frame time at 1280x720 | 16.6 ms (60 fps) with 4 instances running on the CEO's machine | vsync on (100 Hz): 100.0 fps, worst 10.0 ms, 0 frames over 33 ms. Vsync off: 2.0 to 2.4 ms average (410 to 505 fps), worst 16.5 ms. GPU 0.5 to 0.8 ms |
+| Draw calls | 1,500 or fewer | 48 to 181 (road view 403 to 418) |
+| Triangles on screen | 1,500,000 or fewer | 65,000 to 174,000 |
+| Corn stalk instances drawn | 25,000 or fewer | `unmeasured`. Inference: the triangle counts (65k to 174k) bound it. A stalk-instance count printed from the MultiMeshes in range would settle it |
+| Shadow-casting lights | 4 or fewer | `unmeasured` (no counter in the probe; a count of `Light3D` with `shadow_enabled` would settle it) |
+| Texture memory | 256 MB or less per instance | 105 MB texture, 221 to 232 MB video |
+
+Method and per-spot numbers: `production/handoffs/P5-38.md`. All rows pass with wide margin, so no render cut from step 4 below was made. GPU: NVIDIA GeForce RTX 5070 on every instance.
 
 The CEO's machine (this one, read from Windows for this doc): AMD Ryzen 7 9800X3D (8 cores), NVIDIA
 GeForce RTX 5070 plus an AMD integrated GPU, 31 GB RAM. Godot may pick the AMD integrated GPU by
 default on a hybrid system, which would make every number worse; the profiling run records which
-adapter each instance used (see gotchas).
+adapter each instance used (see [07_gotchas.md](07_gotchas.md)).
 
 ### 10.3 Profiling procedure (to be run, not reasoned)
 
-Required before the budget is marked measured. Needs a scene with the corn in it (DD Phase 1 corn
-walls at x -32..-57 and 46..71, doc 04 s9) so cannot be run yet.
+Run in P5-38 (2026-10-10) with `tests/qa/perf_probe.gd`; the corn exists now. Original note: needed a scene with the corn in it (DD Phase 1 corn
+walls at x -32..-57 and 46..71, doc 04 s9).
 
 1. `uv run tools/qa/multi.py -n 4` with the debug view on, each instance placed at a different spot
    (inside the clearing facing the corn wall, in the corn lane, at the barn door, on the road).
@@ -588,6 +590,8 @@ from doc 02 (inference; settled by the Game Designer if the pen holds other spec
 - **P5:** cosmetics, live clips, next season. Out of scope.
 
 ## 13. Gotchas
+
+Render and profiling traps from the P5-38 run: [07_gotchas.md](07_gotchas.md).
 
 - **A pulsing anything looks like a flicker.** Auto exposure, bloom pulse, emissive wobble, candle
   noise in a light, lightning. All forbidden (section 4.3). Flicker is the one signal the whole

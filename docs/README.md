@@ -17,6 +17,8 @@ Director, not resolved in the lower doc.
 | [09](09_playtest_plan.md) | Playtest Plan | QA / Reviewer | In review (PP-10) |
 | [10](10_install_and_updates.md) | Install and updates | Director | Done (P1-22) |
 
+Render and profiling traps: [07_gotchas.md](07_gotchas.md).
+
 File names follow `NN_snake_case_title.md`, for example `06_networking_and_voice.md`. Each doc
 gets a `gotchas` section (or a sibling `NN_gotchas.md` page once it grows) for traps that cost time.
 Inference is marked as inference, with what would settle it.

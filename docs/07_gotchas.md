@@ -1,0 +1,11 @@
+# Doc 07 gotchas (render and profiling)
+
+- **Vsync hides headroom.** The CEO's monitor runs 100 Hz with vsync on, so every windowed run reads 100.0 fps, 10.0 ms and "worst 10.0 ms". Run with `--disable-vsync` to see the real frame cost. (PERF-01 / P5-38, measured 2026-10-10.)
+- **`Performance.TIME_PROCESS` and `TIME_PHYSICS_PROCESS` are per-second maxima, not per-frame values** (inference from Godot's `process_max` in `main/main.cpp`, not read in source; evidence: a probe run printed 5.48 ms against a 1.47 ms average frame, and 11.6 ms on a 10 ms vsync frame). Do not read them as a script cost. Settle it by reading `main.cpp`. Use `viewport_set_measure_render_time` plus `viewport_get_measured_render_time_cpu/gpu` for render cost, and frame time with vsync off for the total. The probe prints them as `process_max_ms` and `physics_max_ms`.
+- **Toggling `set_process(false)` per script group is too noisy to rank costs** at this scale (about 0.3 ms noise, one-off 100 ms stalls). A cost under 1 ms needs the editor profiler on the CEO's machine.
+- **The host's quit shows "The host left." on every client.** A probe screenshot or a draw-call read taken after the host quits measures the dialog, not the scene. Keep the host running past the clients' sampling window.
+- **Quitting the host first spikes its frame to about 135 ms** (client disconnect cleanup). End the clients first or ignore the last seconds.
+- **A teleport trips the host speed check** (`speed_violation`, spams the log and may clamp the player). `--probe-pos=` does not switch the check off: it raises the speed cap to 1000 m/s (like `--autosweep`), so clamped `speed_violation` events can still log (3 seen in the QA run).
+- **The intro card blocks the first frames:** pass `--no-intro` in measured runs.
+- **An isolated `APPDATA` needs `Godot/` inside it** or the shader cache logs `Unable to create shader cache directory` errors (harmless).
+- **Godot may pick the AMD iGPU on this hybrid machine.** Every run in PERF-01 reported `NVIDIA GeForce RTX 5070`; still check `adapter=` in each probe line.

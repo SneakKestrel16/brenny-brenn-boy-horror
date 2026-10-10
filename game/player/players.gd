@@ -180,7 +180,7 @@ func _on_bytes(from: int, pkt: PackedByteArray) -> void:
 
 ## Host only. Validates one frame against the host's own state for the peer, keeps and relays the
 ## (possibly clamped) result, and emits footstep Noise once per stride from the same stream.
-var _qa_free := OS.get_cmdline_user_args().has("--autosweep")  # QA: the sweep script teleports between work spots
+var _qa_free := OS.get_cmdline_user_args().has("--autosweep") or " ".join(OS.get_cmdline_user_args()).contains("--probe-pos=")  # QA: the sweep script and tests/qa/perf_probe.gd (PERF-01) teleport between spots
 
 
 func submit(peer: int, f: Dictionary) -> void:
