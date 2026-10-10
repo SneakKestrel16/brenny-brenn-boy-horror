@@ -1408,7 +1408,7 @@ approval or edit, then a doc 01 edit.
 
 **Answer (CEO, 2026-10-09):** "yes" (D-155). Doc 01 "Next season" carries the wording.
 
-### Q-252 · 2026-10-09 · Game Designer -> Director (CEO for items 1, 2 and 4) · FOR CEO (Director -> CEO) · open
+### Q-252 · 2026-10-09 · Game Designer -> Director (CEO for items 1, 2 and 4) · FOR CEO (Director -> CEO) · answered
 Imposter mode and Quirks, doc 02 section 22 (D-153). (1) FOR CEO (changes doc 01): imposter minimum 4 players. The model's imposter loss is 204 s a day, about 0.38 of one
 player's 540 s day (about 13% of 3p labor); the sim's 3p final clear still falls from 58.9% to 27.0% because the
 final clear is a steep cliff. (2) The imposter wins when the final payment is
@@ -1418,6 +1418,8 @@ in the season-end Dawn Report; doc 01 says only that others learn by watching (p
 and CEO answers, then doc 01 wording.
 
 **Answer (item 2, CEO, 2026-10-09):** "yes" (D-155): only a missed final payment is an imposter win; a Notice is not. Doc 01 "Imposter mode" carries it. **Item 3 (Director):** both options default to off, as doc 01 says of each toggle (D-158). Items 1 and 4 stay open for the CEO.
+
+**Answer (items 1 and 4, CEO, 2026-10-09):** "yes to item 1, yes item 4" (D-161): Imposter mode needs at least 4 players; the season-end Dawn Report reveals every quirk. Doc 01 carries both.
 
 ### Q-253 · 2026-10-09 · Game Designer -> Director · answered
 Later-season targets and debt growth, doc 02 section 21.4 and 21.6. Targets: first payment 80 to 90% for teams

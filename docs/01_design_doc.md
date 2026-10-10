@@ -576,7 +576,8 @@ creature. The one exception is the opt-in Imposter mode below.
 
 ### Imposter mode (opt-in, placeholder, after DD Phase 4)
 
-A lobby toggle, off by default, for groups who want betrayal on top of the creature.
+A lobby toggle, off by default, for groups who want betrayal on top of the creature. It needs at least
+4 players (D-161).
 - **The toggle means "maybe", not "yes".** With it on, each season has a placeholder 50% chance of
   one imposter and 50% of none. Nobody knows which, so the toggle alone proves nothing.
 - **The imposter keeps a real role.** Everyone picks roles in the lobby first; the host's game then
@@ -673,7 +674,7 @@ Group options: the "no live clips" toggle, streamer-safe mode and Quirks.
 
 With Quirks on, every player starts the season with one random quirk: a mental disorder, played
 for laughs, that is half handicap, half joke. Quirks use real disorder names (D-052). Each player
-sees their own quirk; others learn it by watching.
+sees their own quirk; others learn it by watching. The season-end Dawn Report reveals every quirk (D-161).
 - **Anxiety disorder:** Shaken lasts twice as long, but sprint refills faster.
 - **Nyctophobia:** their lantern lights half as far.
 - **ADHD:** their voice carries 50% further, so lures favour them.

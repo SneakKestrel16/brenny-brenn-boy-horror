@@ -1112,3 +1112,10 @@ crouch. Rulings:
    of all models" (D-154). P5-08 depends on them.
 **Why:** QA PASS with fixes (handoffs/P5-12.md "QA review"); CEO, 2026-10-09: "those colors are good but add 2
 more for up to 6 players".
+
+### D-161 · 2026-10-09 · CEO, Director · Imposter minimum and quirk reveal
+D-160 is a status-only commit subject (batch 1 in progress) with no entry. Rulings:
+1. Q-252 item 1: Imposter mode needs at least 4 players. Doc 01 "Imposter mode" and `data/imposter.json` cite it.
+2. Q-252 item 4: the season-end Dawn Report reveals every player's quirk. Doc 01 "Quirks" carries it; P5-09
+   builds it (told mid-task).
+**Why:** CEO, 2026-10-09: "yes to item 1, yes item 4".

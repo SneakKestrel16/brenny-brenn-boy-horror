@@ -5,7 +5,7 @@
     {
       "id": "rule",
       "source": "placeholder",
-      "cite": "doc 01 Imposter mode (50% chance, one imposter, keeps a real role, wins on foreclosure, lies and never kills, Dawn Report reveals); doc 02 section 22.1. min_players 4 (sim: the imposter loss is about 13% of 3p labor, but the steep final-clear cliff drops the 3p final clear from 58.9% to 27%) is inference (Q-252 item 1, FOR CEO); wins_when is D-155 (CEO, Q-252 item 2)",
+      "cite": "doc 01 Imposter mode (50% chance, one imposter, keeps a real role, wins on foreclosure, lies and never kills, Dawn Report reveals); doc 02 section 22.1. min_players 4 (sim: the imposter loss is about 13% of 3p labor, but the steep final-clear cliff drops the 3p final clear from 58.9% to 27%) is D-161 (CEO, Q-252 item 1); wins_when is D-155 (CEO, Q-252 item 2)",
       "sources": {"chance_pct": "doc01", "max_imposters": "doc01", "keeps_role": "doc01", "kills": "doc01"},
       "chance_pct": 50,
       "max_imposters": 1,
