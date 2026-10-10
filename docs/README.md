@@ -16,6 +16,7 @@ Director, not resolved in the lower doc.
 | [08](08_audio_design_and_sound_list.md) | Audio Design & Sound List | Audio Designer | In review (PP-09) |
 | [09](09_playtest_plan.md) | Playtest Plan | QA / Reviewer | In review (PP-10) |
 | [10](10_install_and_updates.md) | Install and updates | Director | Done (P1-22) |
+| [11](11_lore_and_backstory.md) | Lore and Backstory | CEO | Placeholder for CEO review (P5-48) |
 
 Render and profiling traps: [07_gotchas.md](07_gotchas.md).
 

@@ -1030,6 +1030,8 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-45 | Gameplay | More emotes (CEO STOP 6) | todo | P5-08 |
 | P5-46 | Gameplay | Mouse sensitivity setting (CEO STOP 6) | todo | P5-08 |
 | P5-47 | Level Designer | Move the well between field A and field B (CEO STOP 6) | todo | P5-08 |
+| P5-48 | Gameplay | Lore in game from doc 11: road sign, intro line, masthead, notes, archive, win line (CEO STOP 6) | todo | P5-37 |
+| P5-49 | Technical Artist | Corn looks like grass: rework stalks to read as corn (CEO STOP 6) | todo | P5-38 |
 | P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | done (QA PASS) | P5-02 to P5-07, P5-09 to P5-29 |
 
 ### P5-02 Phase 5 design and data
@@ -1336,6 +1338,9 @@ Owner: Technical Artist. Output: `game/debug/` toy visuals, handoff note.
 Acceptance:
 - The nuke dev toy's mushroom cloud and glow look better: shaped, layered and coloured, rising and spreading
   over the 14 s. Keep doc 05 s25's rules: no white flash, glow ramp limits, safe mode hides it. Windowed screenshots.
+- Added by the CEO 2026-10-10: the nuke can be placed on a chosen player (console `toy nuke <name or peer id>`, dev
+  menu pick). Every player in the blast radius ragdolls and is launched away from the centre, harder the nearer they
+  stand. Host-authoritative and synced; a 2-instance run shows the near player flies farther than the far one.
 
 ### P5-42 Big heads texture
 Owner: Gameplay Programmer. Output: `game/debug/dev_toys.gd` fix, handoff note.
@@ -1372,3 +1377,26 @@ Owner: Level Designer. Output: `game/world/` edits, doc 04 update, handoff note.
 Acceptance:
 - The well moves between field A (x 24..36) and field B (x 66..78). Paths, crow perch crow_09, the well pump sound,
   the Taint cure use and the doc 04 distance table follow it; check_farm passes.
+
+### More STOP 6 feedback (CEO, 2026-10-10, third batch)
+
+### P5-48 Lore in game
+Owner: Gameplay Programmer (Game Designer for the note table, 3D Artist for the sign). Output: text and props per
+doc 11 s5, handoff note.
+Acceptance:
+- Deliver doc 11 s5 in its suggested order: the road sign and Dawn Report masthead ("The Halvers Creek Courier"),
+  the intro card line (s6.2), the onboarding notes (s6.3, one per verb, at their places), the Dawn Report "From the
+  archive" clipping per dawn (s6.4, in order across 21 dawns), and the campaign win lines (s6.5).
+- Doc 11 s1 rules hold: text only, no new rule, no captions or voice, no image of the boy, nothing says the day is
+  safe. Player-facing text says "Corrupted", not "Taint" (P5-37). The well note follows the well's P5-47 position.
+- All text is data, not code, so the CEO can edit it. Doc 11 s7 open questions stay open; text stays `placeholder`.
+- Windowed screenshots of each piece; headless import 0 ERROR.
+
+### P5-49 Corn that looks like corn
+Owner: Technical Artist (3D Artist for new stalk meshes). Output: corn models/materials, doc 07 update, handoff note.
+Acceptance:
+- The CEO says the corn "looks like grass, it should look like corn". Stalks read as corn at every distance: a
+  thick jointed stalk, broad arching leaves off the nodes, tassels on top, ears with husks on the side, a taller
+  plant than a person, and corn colours (doc 07 palette). Wild corn ring and field strips both.
+- Stays inside doc 07 s10 budget on the road and corn lane probe spots (tests/qa/perf_probe.gd, P5-38 numbers);
+  cover and sight-blocking (doc 04) unchanged. Before/after windowed screenshots, day and night, viewed.
