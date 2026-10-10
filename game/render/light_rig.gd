@@ -129,7 +129,7 @@ func _apply() -> void:
 	if _override >= 0.0:
 		c = _override_tint
 	_light.light_color = c
-	_light.light_energy = energy * lvl
+	_light.light_energy = energy * lvl * HorrorScares.lamp_mult  # P5-53: steady local dimming for the Horror role; never animated
 	_light.visible = lvl > 0.001
 	_lamp_mat.emission = c
 	_lamp_mat.emission_energy_multiplier = 3.0 * lvl

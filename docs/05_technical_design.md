@@ -1533,3 +1533,20 @@ The console panel has a left column, the dev menu: a player picker (filled from 
 ### Big heads (P5-42)
 
 The `big_heads` toy scales the farmer's own `head` bone (`FarmerBody.set_head_scale`, via `HeadScaler`, a `SkeletonModifier3D` that sets the bone's pose scale after the animation each frame), so the skinned head texture and the `hat` bone below it (cosmetic hats) grow together. It replaced a separate white sphere that floated over the real head and hid the hat. The creature's `ToyHead` sphere is unchanged.
+
+## 29. Horror role scares (P5-53)
+
+`HorrorScares` (`game/player/horror_scares.gd`, `class_name`, added by `main.gd` before `sweep`) runs on every peer but is
+active only when `Roles.of(Game.local_peer()) == &"horror"` and the player is not a ghost (or the dev console `horror <kind>`
+forced it for 20 s on that machine). It never sends an RPC and never touches host state.
+
+- Darker world: static `HorrorScares.ambient_mult` / `fog_mult` / `lamp_mult` (1.0 when inactive), read by `WorldLook._apply`
+  (ambient energy, fog density) and `LightRig` (lamp energy). Nothing flickers a light; only ghosts do.
+- Local scares: `silhouette` reuses `Scares._present(&"hallucination", ...)`, whispers use `Soundscape` or the `lure` event
+  through `Net.apply_received` (same path and voice-setting rules as the creature's copied voices), `steps` follows the
+  player until `turned`, `shadow` is a local mesh, `grab` jolts the camera.
+- Sixth sense: the host's `Scares._sixth_sense` (dusk and night) sends a private `chill` through `apply_scare` to the Horror
+  peer when the real creature is within `chill_range_m` (`DirectorLogic.chill_due`); `_present` calls the `horror_scares` group.
+  Fake chills come from the role's own loop. The client cannot tell them apart.
+- Logging: `horror_scare {kind, result, local}` and `horror_chill {target, real}`; `scare` is not used, so `check_logs` is unchanged.
+- Data: `roles.json` `horror` (placeholders, doc 03 s23). Tests: `tests/gameplay/test_horror.gd`, `tests/net/test_p5_53_horror.gd`.

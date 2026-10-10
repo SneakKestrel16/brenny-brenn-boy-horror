@@ -54,6 +54,8 @@ const HELP := """Commands (host only unless marked):
   shaken [peer]             Shaken for taint.json's 60 s (default: you)
   msg <peer> <text>         show a text message on that player's screen only (P5-36)
   whisper [peer|name]       P5-43: the whisper scare on that one player only (default: you)
+  horror <kind>             P5-53: a Horror-role scare on your own screen: silhouette, whisper, name_whisper,
+                            steps, shadow, grab, chill (local only, role not needed; forces the darker world)
   debug                     toggle the debug view (F3)
   clear                     clear this console (any peer)"""
 
@@ -503,6 +505,16 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? whisper [peer|name]"
 			var reply := _host("scare", PackedStringArray(["whisper", str(p)]))
 			return reply + " (no teammate clip 25 m+ away to replay: hush and log only, silent where the director would drop it)" if "no_teammate_clip" in reply else reply
+		"horror":  # P5-53: one Horror-role scare on THIS machine's screen, role or not (local only, nothing sent)
+			var hs: HorrorScares
+			for c in main.get_children():
+				if c is HorrorScares:
+					hs = c
+			if hs == null or a.is_empty() or not StringName(a[0]) in HorrorScares.KINDS + [&"chill"]:
+				return "? horror <silhouette|whisper|name_whisper|steps|shadow|grab|chill>"
+			hs.forced_until_msec = Time.get_ticks_msec() + 20000
+			var r := hs.run(StringName(a[0]))
+			return "horror %s: %s" % [a[0], r if r else "nowhere to put it / no clip"]
 		"debug":
 			var dv := main.get_node_or_null("DebugView")
 			if dv == null:

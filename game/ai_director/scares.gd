@@ -30,6 +30,8 @@ var _creature: Node
 var _d: Dictionary = {}  ## scare kind (without `scare_`) -> record
 var _rules: Dictionary = {}
 var _t := 0.0
+var _t_total := 0.0  ## P5-53: seconds this node has run; the sixth sense's cooldowns read it
+var _chill_at: Dictionary = {}  ## P5-53: peer -> `_t_total` of their last real chill
 var _busy: Dictionary = {}  ## peer -> a scare in its build-up
 var _wrong_today := 0
 var _own: Dictionary = {}  ## peer -> own-voice scares this season
@@ -66,10 +68,12 @@ func _physics_process(delta: float) -> void:
 		return
 	_disarm_lunges()
 	_t += delta
+	_t_total += delta
 	if _t < TICK_S:
 		return
 	_t = 0.0
 	_crows(TICK_S)
+	_sixth_sense()
 	if _rng.randf() < FAKE_OUT_CHANCE_PER_S * TICK_S:
 		_fake_out()  # inference: doc 01 does not say when fake-outs fire; at random, so they tell nothing
 	var peers: Array = Game.players.keys().filter(func(p: int) -> bool: return p > 0 and _alive(p))  # a bot has nobody to scare
@@ -88,12 +92,31 @@ func _physics_process(delta: float) -> void:
 			return
 
 
+## P5-53 sixth sense: the Horror role gets a private chill (no position sent) while the real creature is within
+## `chill_range_m`. Not a scare: no budget, no cost. It reveals nothing alone because the Horror peer also
+## makes fake chills (`horror_scares.gd`). Logged as `horror_chill`, not `scare`.
+func _sixth_sense() -> void:
+	if not Clock.phase in [&"dusk", &"night"]:
+		return
+	var hz := Roles.perks(&"horror")
+	for p: int in Game.players.keys():
+		if p <= 0 or not _alive(p) or Roles.of(p) != &"horror":
+			continue
+		if Logic.chill_due(_creature.global_position.distance_to(Game.players[p].pos), float(hz.chill_range_m),
+				_t_total - float(_chill_at.get(p, -INF)), float(hz.chill_cooldown_s)):
+			_chill_at[p] = _t_total
+			_send(&"chill", p, true, Vector3.ZERO, "")
+			Log.event(&"horror_chill", {"target": p, "real": true})
+
+
 ## A kind for `p` by weight among the open records that fit where `p` is; empty for none.
 func _pick(p: int) -> StringName:
 	var kinds: Array[StringName] = []
 	var w := PackedFloat32Array()
 	for k in TIMED:
 		var x := Logic.scare_weight_of(_d[k], _day_for(k, p), _dir.third(), bool(Game.players[p].get("tainted", false)))
+		if k == &"hallucination" and Roles.of(p) == &"horror":
+			x *= float(Roles.perks(&"horror").hallucination_weight_mult)  # P5-53: the Horror role sees about twice as many
 		if x > 0.0 and fits(k, p) == "":
 			kinds.append(k)
 			w.append(x)
@@ -398,6 +421,9 @@ func _present(kind: StringName, slot: int, pos: Vector3, extra: String) -> void:
 			_flyover(pos, extra)
 		&"crow_land":
 			_land(pos, extra)
+		&"chill":
+			get_tree().call_group(&"horror_scares", &"chill", true)  # P5-53: sent to the Horror peer alone
+			return  # not a scare: no scare_applied line (check_logs pairs those with `scare`)
 	if not Game.is_host() and Game.local_peer() == slot:
 		Log.event(&"scare_applied", {"kind": String(kind)})
 

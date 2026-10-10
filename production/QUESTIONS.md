@@ -1658,3 +1658,15 @@ P5-39 (CEO "improve the creature's AI") added two as-built notes to doc 03 secti
 
 ### Q-352 · 2026-10-10 · Gameplay Programmer (P5-52) -> CEO · open
 **FOR CEO.** P5-52 built the Crowkeeper from the approved pitch, so doc 01 now lacks its row. Please approve adding to doc 01 "Roles": "Crowkeeper: places up to 2 bait perches at a field or corn edge; anything within about 8 m of a perch (a teammate, a loose animal, the creature, the creature's fake crows) flushes its crows, and the cawing is a noise the creature hears. A perch never shows who or what set it off." Placeholders until you say otherwise (all in `data/roles.json` `crowkeeper`, doc 02 s15): 2 perches, 8 m flush radius, 12 m between perches, 20 s cooldown per perch; the owner does not trigger their own perch (inference: they would every time they tend the field); pen animals do not (they pace all day); perches are lost at dawn (not saved). Also for the Game Designer: doc 03 s3.1 needs a `crow_flush` noise row (placeholder 25 m, `creature.json` `noise_crow_flush`). Key: P (`place_perch`). The hat is a placeholder colour in `game/ui/lobby.gd`, pending a model.
+
+### Q-349 · 2026-10-10 · Gameplay Programmer (P5-53) -> Director · open · FOR CEO
+The Horror role asks for "darker, flickering light". Doc 01 says only ghosts flicker lights, so P5-53 built dimming only (ambient x0.55, lamps x0.6, fog x2.0, no flicker). Settled by: the CEO allowing a local-only flicker for the Horror player (a doc 01 change), or keeping dimming.
+
+### Q-350 · 2026-10-10 · Gameplay Programmer (P5-53) -> Director · open · FOR CEO
+Doc 01 has no Horror role and its hallucination rules do not allow the role's scares. Doc 03 s23.1 lists four placeholder exceptions: scares outside the AI Director's budget, the own-voice whisper beyond the per-season clip replay cap, the fake grab as a jolt, and near-field edge shadows. Settled by: the CEO approving them as a doc 01 Roles row and hallucination-rule amendment.
+
+### Q-351 · 2026-10-10 · Gameplay Programmer (P5-53) -> Audio Designer · open
+The Horror role reuses placeholder sounds: `vox_stranger_*` (whispers), `cre_presence_swell` (chill), `cre_jumpscare_hit` (fake grab), `sfx_step_corn` (steps behind). Settled by: real whisper, chill and fake-grab stinger sounds in the catalog.
+
+### Q-353 · 2026-10-10 · Gameplay Programmer (P5-53) -> Director · open
+The "name whispered in their own recorded voice" scare replays one of the player's own recorded clips, because the game cannot make their name in their voice (inference). It runs only when their voice setting replays it (doc 06 s11). Settled by: the CEO or Audio Designer, if a name-specific clip (a recorded "say your name" prompt, CEO-approved, not in the repo) is wanted.

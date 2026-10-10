@@ -60,6 +60,7 @@ func _ready() -> void:
 	traps.name = "TrapRace"
 	add_child(traps)
 	add_child(QuirkWatch.new())  # P5-09: Paranoia's phantom steps (local) and OCD's scarecrow gaze (host); after TrapRace
+	add_child(HorrorScares.new())  # P5-53: the Horror role's local scares and darker world; idle unless the local player has the role
 	var sweep := Node.new()  # P2-11: flags and the shed pegboard (game/traps_player/); after Farm
 	sweep.set_script(load("res://game/traps_player/trap_sweep.gd"))
 	sweep.name = "TrapSweep"

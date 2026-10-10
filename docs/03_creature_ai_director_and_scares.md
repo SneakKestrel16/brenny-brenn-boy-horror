@@ -1230,3 +1230,36 @@ exist yet; the AI Programmer adds it (Q-255).
 - Campaign sim: only `more_pits` and `extra_hands` (ramp-up counts) move its numbers; the other
   eight change chase, detection, lures or items, which the sim does not model (inference; a bot
   season would settle it). Doc 02 21.6 reports the per-trait final clear.
+
+## 23. Horror role scares (DD Phase 5, P5-53) - PLACEHOLDER
+
+Game Designer to confirm. Every number is a placeholder in `data/roles.json` (`horror.perks`). Source: CEO picks of
+2026-10-10 (P5-53); doc 01 "Roles" has no Horror row yet (Q-350). Everything below is local to the Horror player's peer
+(`game/player/horror_scares.gd`): no other peer sees, hears or logs it, and nothing in it can hurt the player.
+
+| Scare | What the Horror player gets | Placeholder |
+|---|---|---|
+| Darker world | Ambient light, lamps and fog density scaled; no flicker | ambient x0.55, lamps x0.6, fog x2.0 |
+| More hallucinations | The AI Director's hallucination weight doubles for that player | x2.0, from day 5 |
+| Silhouette | A hallucination put in view by the role, not the AI Director | every 50-110 s, 18-40 m |
+| Whisper | A teammate's real clip, or a stranger line, from a spot nearby | every 60-140 s, 10-22 m |
+| Own-voice whisper | The player's own recorded clip from the corn (the "name" scare) | every 150-300 s, 6-12 m |
+| Steps behind | Footsteps behind that close in while moving, and stop when the player turns more than 35 degrees | every 70-160 s, 14 s, 3.5 m to 2.0 m |
+| Edge shadow | A black shape 50-75 degrees off the view axis; gone when it comes within 20 degrees of the centre | every 80-170 s, 5-11 m |
+| Fake grab | A camera jolt and a stinger, then nothing: nothing is held, dropped, locked or slowed | every 200-420 s, 2 a day, 0.35 s |
+| Sixth sense | A slow dark-blue vignette and a swell when the real creature is within 30 m (host-sent, `Scares._sixth_sense`), and also on 40% of hallucinations, 30% of whispers and a random fake about every 50 s, so it is never proof | cooldown 25 s |
+
+### 23.1 Exceptions to doc 01's hallucination rules (placeholder, FOR CEO in Q-350)
+
+1. The role's scares are extra to the AI Director's budget and do not count against its once-per-season-per-player and
+   spacing limits. They only reach the Horror player, who chose them.
+2. The own-voice whisper replays the Horror player's own clips more than doc 01 allows a clip to be replayed in a season.
+   It still honours doc 06 s11: only when that player's voice setting replays it (`Game.replays_voice`), never with Off or
+   streamer-safe, and it uses the same `lure` path as the creature's copied voices. It is the player's own clip, not the
+   real name (the game cannot make the name in their voice; inference, Q-353).
+3. The fake grab is a jolt, not a grab: no catch, no pin, no Corruption, no loss of items.
+4. The edge shadow is a near-field shape that vanishes on sight; doc 01's hallucinations are distant silhouettes.
+
+Settings: `reduce_scares` doubles every interval and drops the edge shadow and the fake grab. `camera_shake` 0 removes the
+jolt (the sound stays). No white flash anywhere (doc 07 s4.3). `photosensitive_safe` needs no extra handling: the world
+only dims, and the vignette ramps in 0.8 s.

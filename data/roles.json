@@ -147,6 +147,43 @@
       "sources": {
         "perks": "placeholder"
       }
+    },
+    {
+      "id": "horror",
+      "source": "placeholder",
+      "cite": "doc 01 Roles (placeholder role); P5-53, CEO pick 2026-10-10: every scare is local to this player's peer and can never hurt them. Doc 03 s23.1 records the hallucination-rule exceptions. All numbers placeholder, tune by feel",
+      "name": "Horror",
+      "perks": {
+        "dark_ambient_mult": 0.55,
+        "dark_fog_mult": 2.0,
+        "dark_lamp_mult": 0.6,
+        "flicker": false,
+        "hallucination_from_day": 5,
+        "hallucination_weight_mult": 2.0,
+        "silhouette_every_s": [50, 110],
+        "silhouette_distance_m": [18, 40],
+        "whisper_every_s": [60, 140],
+        "whisper_distance_m": [10, 22],
+        "name_whisper_every_s": [150, 300],
+        "name_whisper_distance_m": [6, 12],
+        "chill_range_m": 30,
+        "chill_cooldown_s": 25,
+        "chill_fake_share": 0.4,
+        "steps_every_s": [70, 160],
+        "steps_max_s": 14,
+        "steps_gap_m": [3.5, 2.0],
+        "steps_turn_deg": 35,
+        "shadow_every_s": [80, 170],
+        "shadow_edge_deg": [50, 75],
+        "shadow_gone_deg": 20,
+        "shadow_distance_m": [5, 11],
+        "grab_every_s": [200, 420],
+        "grab_max_per_day": 2,
+        "grab_jolt_s": 0.35
+      },
+      "sources": {
+        "perks": "placeholder"
+      }
     }
   ]
 }

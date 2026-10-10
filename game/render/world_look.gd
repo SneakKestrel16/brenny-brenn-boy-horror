@@ -241,10 +241,10 @@ func _apply(s: Dictionary) -> void:
 	_sun.light_color = s.sun_col
 	_sun.light_energy = s.sun_e
 	_env.ambient_light_color = s.amb_col
-	_env.ambient_light_energy = s.amb_e
+	_env.ambient_light_energy = s.amb_e * HorrorScares.ambient_mult  # P5-53: the Horror role's own darker world (1.0 for anyone else)
 	_env.fog_light_color = s.fog_col
-	_env.fog_density = s.fog_d
-	_env.fog_height_density = 0.0 if low else s.fog_d * 4.0  # ground fog layer (doc 07 s3 night row); off on low (s6)
+	_env.fog_density = s.fog_d * HorrorScares.fog_mult
+	_env.fog_height_density = 0.0 if low else s.fog_d * HorrorScares.fog_mult * 4.0  # ground fog layer (doc 07 s3 night row); off on low (s6)
 	_sky.sky_top_color = s.sky_top
 	_sky.sky_horizon_color = s.sky_hor
 	_sky.ground_horizon_color = s.sky_hor

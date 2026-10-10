@@ -50,6 +50,11 @@ static func scare_weight_of(rec: Dictionary, day: int, third: int, tainted: bool
 	return float(rec.weight) * (float(rec.get("tainted_mult", 1.0)) if tainted else 1.0)
 
 
+## P5-53 sixth sense: a real chill is due when the creature is within `range_m` and the cooldown has run.
+static func chill_due(dist_m: float, range_m: float, since_s: float, cooldown_s: float) -> bool:
+	return dist_m <= range_m and since_s >= cooldown_s
+
+
 ## Doc 03 section 7.2 and 11.4: the day's trap race start distance. `u` is a roll in -1..1. A normal
 ## trap keeps `floor_m` (pry plus `min_spare_s` at the approach speed); a deep trap has no floor.
 static func race_m(base_m: float, bend_m: float, u: float, floor_m: float) -> float:

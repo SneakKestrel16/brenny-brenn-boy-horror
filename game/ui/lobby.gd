@@ -21,7 +21,8 @@ const PERK_TEXT := {&"farmer": "+1 crop every 5th harvest", &"rancher": "faster 
 		&"carpenter": "builds and fixes fences faster, builds cheaper", &"medic": "frees teammates faster, cheaper bills",
 		&"night_owl": "quieter at night, picks moonflowers faster", &"radio_operator": "walkie reaches further, voice carries",
 		&"warden": "more flare shots, faster reload", &"medium": "ghost voices through less static",
-			&"crowkeeper": "bait perches: crows burst when anything moves near"}
+			&"crowkeeper": "bait perches: crows burst when anything moves near",
+			&"horror": "darker world, more things that are not there; nothing can hurt you"}
 
 ## Placeholder palette (doc 07 s1 night: dark, warm lantern accents; D-140: no bright colours from the reference).
 const INK := Color(0.86, 0.8, 0.68)  ## parchment text
@@ -60,7 +61,8 @@ class LineUp extends Node3D:
 			&"carpenter": [Color(0.55, 0.36, 0.18), 0.22, 0.1], &"medic": [Color(0.7, 0.68, 0.62), 0.2, 0.12],
 			&"night_owl": [Color(0.16, 0.16, 0.22), 0.26, 0.2], &"radio_operator": [Color(0.32, 0.36, 0.24), 0.2, 0.1],
 			&"warden": [Color(0.3, 0.2, 0.14), 0.3, 0.18], &"medium": [Color(0.3, 0.16, 0.28), 0.24, 0.24],
-				&"crowkeeper": [Color(0.1, 0.1, 0.12), 0.3, 0.1]}
+				&"crowkeeper": [Color(0.1, 0.1, 0.12), 0.3, 0.1],
+				&"horror": [Color(0.05, 0.05, 0.06), 0.28, 0.26]}
 
 	## Called by Voice, the recording light and the lobby; makes the farmer if `peer` is in the game.
 	func player(peer: int) -> Node3D:
