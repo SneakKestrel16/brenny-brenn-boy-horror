@@ -998,7 +998,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-13 | Gameplay | Wire the upgraded models in: creature glb for the capsule (Q-150), farmer rig, unused models | in progress | P5-12, P5-03 |
 | P5-14 | 3D Artist | Missing models: buildings (barn, shed, farmhouse, well, fences, gates, doors) (Q-266) | in progress | P5-12 |
 | P5-15 | 3D Artist | Missing models: traps (all kinds), pegboard, tools (hoe, shovel, fuel can, whistle) (Q-266) | in progress | P5-12 |
-| P5-16 | 3D Artist | Missing models: crop growth stages, corn (Q-266) | in progress | P5-12 |
+| P5-16 | 3D Artist | Missing models: crop growth stages, corn (Q-266) | done (QA PASS, D-166) | P5-12 |
 | P5-17 | 3D Artist | Missing models: crow, hands, road items, ragdoll, ghost shell (Q-266) | in progress | P5-12 |
 | P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-17 |
 

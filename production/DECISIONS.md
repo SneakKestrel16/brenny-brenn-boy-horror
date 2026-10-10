@@ -1138,3 +1138,10 @@ the farmer's fringe no longer pokes through. Eleven cosmetics (6 hats on the `ha
 goes to P5-05. The handoff's Q-286 (doc 07 s11 cosmetic rows, stale s8 line) is filed in OPEN_ISSUES rather than
 QUESTIONS: it needs no decision.
 **Why:** QA PASS with fixes (handoffs/P5-06.md "QA review").
+
+### D-166 · 2026-10-09 · Director · P5-16 merged
+P5-16 (crop growth stages and corn models, 22 models) passed QA with two fixes, made before merge: the moonflower
+bloom centre no longer clips to pure white at night (vertex colour `#7FE6D8`), and `corn_stalk_lod1` matches lod0 at
+2.4 m. Models are not wired into the game yet; the Gameplay wiring task for the P5-14 to P5-17 models takes them.
+D-165 stays reserved for the P5-13 colour-slot ruling (Q-282).
+**Why:** QA PASS with fixes (handoffs/P5-16.md "QA review").

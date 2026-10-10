@@ -376,3 +376,11 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   scope. Owner: Technical Artist (doc 07).
 - **Overalls pattern gap at the knee.** Plaid and striped lines part slightly at the bent knee mid-stride.
   Owner: 3D Artist.
+
+## Found at the P5-16 review (QA, 2026-10-09)
+
+- **Wiring notes for the crop and corn models.** Wilted models use `mat_flat_lit` with baked droop, not doc 07 s7
+  `mat_crop_wilted`; the moonflower's 3 m OmniLight (s7) is not in the glb and must come from the light registry
+  (s4.1). Owner: Gameplay Programmer (wiring task).
+- **Shots write `.png.import` under `logs/`.** `logs/` has no `.gdignore`; the files are gitignored. Owner:
+  Technical Artist.
