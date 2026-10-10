@@ -143,6 +143,8 @@ static func sync() -> void:
 	var table := {"locked": not Game.season_uids.is_empty()}  # P4-35: clients grey the cards of a loaded season too
 	for p in Game.players:
 		table[p] = String(Game.roles.get(_uid(p), ""))
+	Game.assign_colours()  # P5-13 (D-165): the farmer colours ride the same table
+	table["colours"] = Game.colour_slots.duplicate()
 	apply(table)
 	Net.to_peers(&"apply_roles", [table])
 	Quirks.sync()  # P5-09: each player's own quirk rides the same RPC, to that peer only
@@ -154,6 +156,8 @@ static func apply(table: Dictionary) -> void:
 		Game.roles_changed.emit()
 		return  # a private quirk-only table (Quirks.sync)
 	_locked = bool(table.locked)
+	if not Game.is_host() and table.has("colours"):
+		Game.colour_slots = table.get("colours", {}).duplicate()
 	for p in table:
 		if p is int and Game.players.has(p):
 			Game.players[int(p)].role = StringName(String(table[p]))

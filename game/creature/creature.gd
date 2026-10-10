@@ -87,7 +87,13 @@ const TRACK_EVERY_S := 0.1  ## placeholder: a tracked fix goes into its memory t
 const TRAP_KINDS := {&"bear": [&"bear_trap", "bear_4p"], &"pit": [&"pit", "pit_4p"]}  ## traps.json id, ramp_up field; bells wait (enabled false)
 
 var state: StringName = &"lurk"
-var body: StringName = BODY
+var body: StringName = BODY:
+	set(v):
+		body = v
+		_show_body()
+var _art: Node3D  ## P5-13: the body glb
+var _art_body: StringName = &""
+var _ghost_rim := false
 var target := 0  ## peer the creature is after, 0 for none
 
 # host only
@@ -150,16 +156,7 @@ func _ready() -> void:
 	collision_layer = 4  # layer 3 creature
 	collision_mask = 1  # world only: it walks through corn (D-023)
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
-	var mesh := MeshInstance3D.new()  # placeholder body until the Technical Artist's model
-	var cap := CapsuleMesh.new()
-	cap.height = 2.4
-	cap.radius = 0.4
-	mesh.mesh = cap
-	mesh.position.y = 1.2
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.08, 0.06, 0.05)
-	mesh.material_override = mat
-	add_child(mesh)
+	_show_body()  # P5-13: the body glb (the capsule collider below stays, Q-150)
 	var shape := CollisionShape3D.new()
 	shape.shape = CapsuleShape3D.new()
 	(shape.shape as CapsuleShape3D).radius = 0.4
@@ -238,7 +235,32 @@ func _ready() -> void:
 		_start_night.call_deferred()  # after the TrapSweep sibling is ready: theft reads the pegboard
 
 
+## P5-13 (Q-150): the season's body glb in place of the capsule; shared materials and, on a ghost's own
+## screen, the cold rim (CreatureLook). Named `creature_<id>.glb`, front -Z like the yaw.
+func _show_body() -> void:
+	if not is_inside_tree() or body == _art_body:
+		return
+	var id := String(body).trim_prefix("body_")
+	var path := "res://assets/models/creature_%s.glb" % ("corn_husk" if id == "husk" else id)  # body_husk -> creature_corn_husk
+	if not ResourceLoader.exists(path):
+		push_warning("Creature: no model for %s" % body)
+		return
+	if _art:
+		remove_child(_art)
+		_art.queue_free()
+	_art = (load(path) as PackedScene).instantiate()
+	_art.name = "Art"
+	CreatureLook.apply(_art)
+	add_child(_art)
+	_art_body = body
+	_ghost_rim = false
+
+
 func _physics_process(delta: float) -> void:
+	var gv := Game.is_ghost(Game.local_peer())
+	if gv != _ghost_rim and _art:
+		_ghost_rim = gv
+		CreatureLook.ghost_view(_art, gv)
 	if not Game.is_host():
 		global_position = global_position.lerp(_target_pos, 1.0 - exp(-10.0 * delta))
 		rotation.y = lerp_angle(rotation.y, _target_yaw, 1.0 - exp(-10.0 * delta))

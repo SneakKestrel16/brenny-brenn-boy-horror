@@ -11,6 +11,7 @@ extends Control
 ## `--lobby-ready` goes through Ready and Start the season instead; `--role=<id>` picks a role.
 
 const DISCORD_LINE := "The creature can't hear Discord, and you can't hear where your friends are."
+const FarmerBody := preload("res://game/player/farmer_body.gd")
 const VOICE_NAMES := {"off": "Off", "live_clips": "Live clips"}
 const DIFFICULTIES: Array[StringName] = [&"easy", &"normal", &"nightmare"]
 
@@ -76,30 +77,30 @@ class LineUp extends Node3D:
 			var f := player(order[i])
 			if f == null:
 				continue
+			if f.get_meta(&"slot", -1) != _rank(order[i]):  # the host changed the slot
+				f.set_meta(&"slot", _rank(order[i]))
+				(f.get_node("Body") as FarmerBody).tint(_rank(order[i]))
 			var slot := ((i + 1) >> 1) * (1 if i % 2 == 1 else -1)  # 0, +1, -1, +2, -2, ...
 			f.position = Vector3(slot * SPACING, 0.0, -absf(slot) * STEP_BACK)
 			for t in TAGS:
 				(f.get_node(t[0]) as Node3D).position.y = t[1] + (TAG_LIFT if absi(slot) % 2 == 1 else 0.0)
 			_tag(f, order[i])
 
+	## D-159, D-165: the farmer colour is the host's slot (it arrives with the role table); until then the place in the sorted roster.
+	func _rank(peer: int) -> int:
+		var ids: Array = Game.players.keys()
+		ids.sort()
+		var s := Game.colour_of(peer)
+		return s if s >= 0 else maxi(ids.find(peer), 0)
+
 	func _farmer(peer: int) -> Node3D:
 		var f := Node3D.new()
 		f.name = str(peer)
 		f.rotation.y = PI  # face the camera at +Z; models and hats front -Z (Q-242)
 		add_child(f)
-		var body := CapsuleMesh.new()  # the in-game body is the same placeholder capsule (player.gd)
-		body.radius = 0.3
-		body.height = 1.5
-		f.add_child(_mesh(body, Color(0.2, 0.24, 0.3), Vector3(0, 0.75, 0)))  # overalls
-		var head := SphereMesh.new()
-		head.radius = 0.16
-		head.height = 0.32
-		f.add_child(_mesh(head, Color(0.62, 0.5, 0.4), Vector3(0, 1.62, 0)))
-		var arm := CapsuleMesh.new()
-		arm.radius = 0.075
-		arm.height = 0.7
-		for side in [-1, 1]:
-			f.add_child(_mesh(arm, Color(0.36, 0.28, 0.22), Vector3(side * 0.36, 1.0, 0.0)))  # shirt sleeves
+		var body := FarmerBody.new(_rank(peer))  # P5-13: the in-game rigged farmer, in the colour the game gives
+		body.name = "Body"
+		f.add_child(body)
 		for line in TAGS:
 			var l := Label3D.new()
 			l.name = line[0]

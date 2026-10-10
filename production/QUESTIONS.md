@@ -1582,3 +1582,18 @@ deciding whether roles re-pick between seasons.
 
 ### Q-326 (Level Designer to Game Designer / Technical Director)
 P5-18 moved the cart route R0 off the barn door: the route is now 136.9 m (was 147.9). Doc 02 line 446 ("147.9 m ... about 148 s") and doc 05 line 606 ("147.9 m") still quote the old length; one pusher now takes about 137 s. Please update the figure in your docs (and any cart timing built on 148 s). Settled by: the owners editing those lines.
+
+### Q-281 · 2026-10-09 · Gameplay (P5-13) -> World Builder · answered
+`bldg_town_stand.glb` replaces the town stand slab in `farm.gd` (`../World/Props/TownStand/Mesh` hidden, model at (0, -0.5, -0.96)). The collision box in `farm.tscn` (3 x 1 x 2) is unchanged and was not checked against the model's footprint or facing. Check the box and the model's facing against doc 04, and move whichever is wrong in `farm.tscn`. Settled by: World Builder editing `farm.tscn` and the offset in `farm.gd` if needed.
+
+**Answer (Director, D-165):** moved to OPEN_ISSUES: check the stand collision box against the model in a windowed session.
+
+### Q-282 · 2026-10-09 · Gameplay (P5-13) -> Director · answered
+Player colours (D-159): derive on each peer, or have the host send the slot? A leave then rejoin could give peers different slots if they derived it.
+
+**Answer (Director, D-165):** host sends the slot. Implemented: `Game.assign_colours()` on the host (a rejoiner keeps their slot while free, a newcomer takes the lowest free one), sent in the `apply_roles` table as `colours`; clients re-tint on `roles_changed` and log `player_colour` from the received value. Tested by `tests/gameplay/test_colour_slots.gd` and a live host plus client that left and rejoined (same slot back).
+
+### Q-283 · 2026-10-09 · Gameplay (P5-13) -> Director · answered
+Left as capsules or spheres, out of P5-13 scope as written: the death corpse (`game/ghost/death.gd`), the Taint look (`taint_look`), the big-head toy sphere in `player.gd`, hats (not shown in game; the `hat` bone exists), the Taint sleeves slot `mat_farmer_sleeves` (unused), the `interact` animation (no hook yet), and the cart lantern glass (lit/unlit via `CreatureLook.lantern_glass`). Settled by: the Director adding a follow-up row, or saying to drop them.
+
+**Answer (Director, D-165):** follow-up row P5-23 wires them; the big-head toy sphere stays a sphere (dev toy).

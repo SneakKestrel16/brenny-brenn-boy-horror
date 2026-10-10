@@ -23,15 +23,16 @@ var paid := false
 var _gnaw_day := 0  ## host: day of the last gnaw (one gnaw per night, doc 03 s10)
 var guard_s: Dictionary = {}  ## host, this night: peer -> seconds within guard radius
 var _night_closed := true
-var _mesh: MeshInstance3D
+var _mesh: Node3D  ## P5-13: pumpkin_prize_<size>[_gnawed].glb, origin at its base
+var _mesh_key := &""
 var _home: Node3D
 
 
 func _ready() -> void:
 	_home = get_parent() as Node3D
-	_mesh = MeshInstance3D.new()
-	_mesh.mesh = SphereMesh.new()
-	_home.add_child(_mesh)
+	var patch: Node3D = load("res://assets/models/pumpkin_patch.glb").instantiate()  # P5-13: the 4 m patch stays where the pumpkin grows
+	_home.get_parent().add_child.call_deferred(patch)
+	patch.position = _home.position
 	Net.apply_received.connect(_on_apply)
 	if Game.is_host():
 		Clock.day_changed.connect(func(_d: int) -> void: watered = false; _send())
@@ -332,17 +333,17 @@ func _process(_d: float) -> void:
 
 
 func _lift() -> float:
-	return float(DIAMETER_M[rank()]) * 0.4 + (1.2 if carrier != 0 else (farm.cart.BED_Y if on_cart() else 0.0))
+	return (1.2 if carrier != 0 else (farm.cart.BED_Y if on_cart() else 0.0))
 
 
 func _refresh() -> void:
-	if _mesh == null:
-		return
+	var key := StringName("%s%s" % [SIZES[rank()], "_gnawed" if drops > 0 else ""])
+	if key != _mesh_key:
+		_mesh_key = key
+		var old := _mesh
+		_mesh = (load("res://assets/models/pumpkin_prize_%s.glb" % key) as PackedScene).instantiate()
+		_home.add_child(_mesh)
+		if old:
+			old.queue_free()
 	_mesh.visible = planted and not judged
-	var d: float = DIAMETER_M[rank()]
-	(_mesh.mesh as SphereMesh).radius = d / 2.0
-	(_mesh.mesh as SphereMesh).height = d * 0.8
 	_mesh.position.y = _lift()
-	var m := StandardMaterial3D.new()
-	m.albedo_color = Color(0.45, 0.2, 0.1) if drops > 0 else Color(0.9, 0.5, 0.1)  # darker = gnawed (art: pumpkin_prize_gnawed)
-	_mesh.material_override = m

@@ -444,3 +444,8 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   Designer (doc 02), Technical Director (doc 05).
 - **Doc 01 "Harvest Moon" act 1 and doc 03 s14** say "load the cart in the lit barn"; sync to "beside the lit barn
   door" (D-172). Owner: Game Designer.
+
+## Found at the P5-13 review (QA, 2026-10-09)
+
+- **Town stand collision (Q-281).** `bldg_town_stand.glb` sits at (0, -0.5, -0.96) over the unchanged 3 x 1 x 2 box in
+  `farm.tscn`; check footprint and facing against doc 04 in a windowed session. Owner: Level Designer.

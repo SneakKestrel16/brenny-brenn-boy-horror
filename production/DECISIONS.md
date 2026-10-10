@@ -1194,3 +1194,12 @@ beside the lit barn door": the 3 m load range still reaches the 6 m lit-doorway 
 deviation from doc 01 / doc 03 s14 ("in the lit barn"); do not move the cart back to the door. Q-326 (docs 02 and 05
 quote 147.9 m) stays open for its owners, folded into their next doc task.
 **Why:** QA PASS (handoffs/P5-18.md "QA review"); CEO 2026-10-09 "the cart shouldnt block the doorway to the barn".
+
+### D-165 · 2026-10-09 · Director · P5-13 merged; host sends colour slots
+P5-13 (wire the upgraded models: creature glb on the capsule, farmer rig, prize pumpkin, cart, plots) passed QA with
+fixes, all made before merge. The host assigns farmer colour slots and sends them in the `apply_roles` table as
+`colours`; a rejoiner keeps their slot while free, clients never derive one (Q-282). Merged with P5-09: clients write
+the slots only when the table has `colours`, so quirk-only tables do not wipe them. Q-281 goes to OPEN_ISSUES; Q-283
+becomes P5-23, the big-head toy stays a sphere. Follow-up rows P5-22 (wire the P5-14 to P5-17 models) and P5-24 (next
+season through the lobby) added.
+**Why:** QA PASS with fixes (handoffs/P5-13.md "QA review").

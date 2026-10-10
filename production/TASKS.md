@@ -995,7 +995,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-10 | Gameplay, Network & Voice | Dev toys behind the machine-hash gate (doc 01 "Dev toys", D-044, D-045) | done (QA PASS, D-157; hash Q-261) | P5-01 |
 | P5-11 | Gameplay | Imposter mode and its hidden dev setting (doc 01 "Imposter mode", D-043, D-044) | in progress | P5-02, P5-10 gate |
 | P5-12 | 3D Artist, Technical Artist | Overall upgrade of every model; farmer rig, animations and tint slots (D-154) | done (QA PASS, D-159) | P5-01 |
-| P5-13 | Gameplay | Wire the upgraded models in: creature glb for the capsule (Q-150), farmer rig, unused models | in progress | P5-12, P5-03 |
+| P5-13 | Gameplay | Wire the upgraded models in: creature glb for the capsule (Q-150), farmer rig, unused models | done (QA PASS, D-165) | P5-12, P5-03 |
 | P5-14 | 3D Artist | Missing models: buildings (barn, shed, farmhouse, well, fences, gates, doors) (Q-266) | done (QA PASS, D-170) | P5-12 |
 | P5-15 | 3D Artist | Missing models: traps (all kinds), pegboard, tools (hoe, shovel, fuel can, whistle) (Q-266) | done (QA PASS, D-169) | P5-12 |
 | P5-16 | 3D Artist | Missing models: crop growth stages, corn (Q-266) | done (QA PASS, D-166) | P5-12 |
@@ -1004,7 +1004,10 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-19 | Network & Voice | `VoiceSplice.word_break` finds real silent frames (Q-291, confirmed at the P5-07 review) | in progress | |
 | P5-20 | Gameplay | Players type their own name in the lobby before start (CEO 2026-10-09: "not everyone shows up as farmer") | in progress | |
 | P5-21 | Level Designer | Paths connect every structure to another; remove the stray path behind the barn to the animal pen (CEO 2026-10-09) | in progress | P5-18 |
-| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-20 |
+| P5-22 | Gameplay | Wire the P5-14 to P5-17 models: buildings, traps, pegboard, tools, crops, corn, crows, hands, road items, ragdoll, ghost shell | todo | P5-13 |
+| P5-23 | Gameplay | Wire the primitives left by P5-13 (Q-283): death corpse, Taint look, hats, Taint sleeves, `interact` animation, cart lantern glass | todo | P5-13 |
+| P5-24 | Gameplay | Next season through the lobby: roles re-picked, quirk reroll, `Imposter.pick`, season-start save (P5-04 follow-up) | todo | P5-04, P5-11 |
+| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-24 |
 
 ### P5-02 Phase 5 design and data
 Owner: Game Designer. Output: doc 02, doc 03, `data/`, `tools/sim/`; handoff note.
@@ -1141,3 +1144,26 @@ Acceptance (each row, for its group):
 - Gameplay still uses primitives; wiring is a later Gameplay task, so no game code changes here.
 - Before and after screenshots in day and night light (the primitive is the "before").
 - Import headless with no new errors; smoke passes.
+
+### P5-22 Wire the P5-14 to P5-17 models
+Owner: Gameplay Programmer (Level Designer for `farm.tscn` collision). Output: game code, handoff note.
+Acceptance:
+- Every model built by P5-14 to P5-17 replaces its gray-box or primitive stand-in; gray-box collision stays unless the
+  Level Designer moves it. Follow the wiring notes in OPEN_ISSUES (P5-14 to P5-17 reviews).
+- No new light flicker; `trap_glint` shown by angle or distance, never a blink; ragdoll `lie` never autoplays with
+  physical bones on.
+- Two-instance run shows the same models on both peers; smoke and existing tests pass.
+
+### P5-23 Wire the P5-13 leftover primitives
+Owner: Gameplay Programmer. Output: game code, handoff note.
+Acceptance:
+- Q-283 items use the farmer rig or models: death corpse (`game/ghost/death.gd`), Taint look (`tool_hands`), hats on
+  the `hat` bone, `mat_farmer_sleeves` for Taint, the `interact` animation on interact, cart lantern glass.
+- The big-head dev toy stays a sphere. Two-instance run and smoke pass.
+
+### P5-24 Next season through the lobby
+Owner: Gameplay Programmer. Output: game code, doc 05, handoff note.
+Acceptance:
+- Starting the next season returns everyone to the lobby: roles re-picked, quirks rerolled, `Imposter.pick` run when
+  imposter mode is on, and the season-start save written (P5-04 OPEN_ISSUES).
+- Two-instance run through a season end into season 2 shows the same state on both peers.

@@ -43,6 +43,8 @@ var traits: Array = []  ## P5-04: creature trait ids gained so far (doc 03 s22),
 var carry: Dictionary = {}  ## host: what the finished season hands the next (Campaign.build_carry), applied once by Save.apply_pending
 var season_lost := true  ## host: the finished season's result (SeasonAwards); only a won season can start the next
 var trait_report_pending := false  ## host: the new season's first Dawn Report prints the trait's `report_line` once
+var colours: Dictionary = {}  ## host: player key (uid, else "peer<id>") -> farmer colour slot, kept for the season so a rejoiner keeps theirs if it is free (P5-13, D-165)
+var colour_slots: Dictionary = {}  ## peer -> colour slot (index into FarmerBody.COLOURS): the host's table, mirrored on clients by `Roles.apply`
 var console_open := false  ## the dev console or a menu has the keyboard (D-031); Player and HoldController ignore game input
 var free_mouse := OS.get_cmdline_user_args().has("--free-mouse")  ## test runs never capture the mouse (multi.py passes it)
 
@@ -274,6 +276,40 @@ func match_ready() -> bool:
 	return Voice.clips.ready_to_start()
 
 
+## Host (P5-13, D-165): give every player here a farmer colour slot. A stored slot is kept when no one else present
+## holds it; the others take the lowest free one (max_players is 6, so there is always one; past that it wraps).
+func assign_colours() -> void:
+	var keys := {}
+	var peers: Array = players.keys()
+	peers.sort()
+	for p in peers:
+		var uid := str(Net.profiles.get(p, {}).get("uid", ""))
+		keys[p] = uid if uid != "" else "peer%d" % p
+	var used := {}
+	colour_slots = {}
+	for p in peers:
+		var s := int(colours.get(keys[p], -1))
+		if s >= 0 and not used.has(s):
+			used[s] = true
+			colour_slots[p] = s
+	for p in peers:
+		if colour_slots.has(p):
+			continue
+		var s := 0
+		while used.has(s):
+			s += 1
+		used[s] = true
+		colour_slots[p] = s
+		colours[keys[p]] = s
+
+
+## The farmer colour slot of `peer`, or -1 until the host's table arrives. The host assigns on demand.
+func colour_of(peer: int) -> int:
+	if is_host():
+		assign_colours()
+	return int(colour_slots.get(peer, -1))
+
+
 ## Host: a match with a roster is running (D-048). A host started straight into the farm (debug, QA) has no roster and stays open.
 func match_started() -> bool:
 	return not in_lobby and not match_roster.is_empty()
@@ -381,6 +417,8 @@ func leave_session(reason: StringName = &"left") -> void:
 	season_lost = true
 	trait_report_pending = false
 	Data.clear_overrides()
+	colours.clear()
+	colour_slots.clear()
 	Save.pending = {}
 	Save.own_by_uid = {}
 	Save.battery_by_uid = {}

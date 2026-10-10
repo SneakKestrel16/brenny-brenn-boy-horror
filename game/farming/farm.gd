@@ -41,6 +41,13 @@ func _ready() -> void:
 			var s := Station.new()
 			s.kind = g[1]
 			_attach(n, s, g[2], Vector3(2.0, 1.0, 2.0))
+	var stand := get_node_or_null(^"../World/Props/TownStand") as Node3D  # P5-13: bldg_town_stand.glb for the grey box
+	var stand_box := stand.get_node_or_null(^"Mesh") as Node3D if stand else null
+	if stand_box:
+		stand_box.visible = false
+		var art: Node3D = load("res://assets/models/bldg_town_stand.glb").instantiate()
+		art.position = Vector3(0.0, -0.5, -0.96)  # the node sits 0.5 up; the model's base is at 0 and its middle 0.96 m behind its origin
+		stand.add_child(art)
 	for n in get_tree().get_nodes_in_group(&"pumpkin_patch"):  # P4-05: the Prize Pumpkin
 		_attach(n, PrizePumpkin.new(), "prize_pumpkin", Vector3(3.0, 2.0, 3.0))
 	var world := get_node_or_null(^"../World")

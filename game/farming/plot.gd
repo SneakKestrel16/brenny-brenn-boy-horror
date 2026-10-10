@@ -15,11 +15,17 @@ var locked := false  ## the upgrade row starts locked (doc 04 section 9)
 var bed := false  ## the night-crop bed (doc 04 section 5.2)
 var taint_id := 0  ## host: the Taint source a dead crop left (doc 01 Crops: moonflower)
 var _mesh: MeshInstance3D
+var _soil: Node3D
 
 
 func _ready() -> void:
 	var night := Crops.night_crop()
 	bed = night != &"" and String(get_parent().get_meta(&"field", "")) == String(night)
+	var slab := get_parent().get_node_or_null(^"Mesh") as MeshInstance3D  # P5-13: the scene's flat slab becomes crop_plot.glb
+	if slab:
+		slab.visible = false
+		_soil = (load("res://assets/models/crop_plot.glb") as PackedScene).instantiate()
+		get_parent().add_child(_soil)
 	_mesh = MeshInstance3D.new()
 	_mesh.mesh = BoxMesh.new()
 	(get_parent() as Node3D).add_child(_mesh)
@@ -204,6 +210,15 @@ func _refresh() -> void:
 		&"dead":
 			h = 0.2
 			m.albedo_color = Color(0.05, 0.03, 0.05)
+	if _soil:  # dry or wet soil: the glb's vertex colours, darkened and cooled when watered (doc 07 s11, `mat_soil_wet`)
+		for mi in _soil.find_children("*", "MeshInstance3D", true, false):
+			var src := (mi as MeshInstance3D).mesh.surface_get_material(0)
+			var key := &"soil_wet" if watered else &"soil_dry"  # one dry and one wet copy, kept on the shared source material
+			if not src.has_meta(key):
+				var own := src.duplicate() as StandardMaterial3D
+				own.albedo_color = Color(0.55, 0.58, 0.7) if watered else Color.WHITE
+				src.set_meta(key, own)
+			(mi as MeshInstance3D).set_surface_override_material(0, src.get_meta(key))
 	_mesh.visible = h > 0.0
 	(_mesh.mesh as BoxMesh).size = Vector3(0.6, maxf(h, 0.01), 0.6)
 	_mesh.position.y = h / 2.0

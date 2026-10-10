@@ -19,8 +19,8 @@ const SQUEAK_M := 25.0  ## placeholder: no creature.json `noise_cart_squeak` row
 const OUT_X := 78.0  ## doc 03 s14, doc 04 s6: past the fields
 const BED_Y := 0.9  ## prop_cart.glb bed floor at y 0.87 to 0.9 above the wheel base (vertex levels, P4-27)
 const KNOCK_CAMERA_S := 2.0  ## placeholder: the knocked pusher's knockdown camera
-const LANTERN := Vector3(0.0, 1.86, -1.3)  ## front of the cart (it faces -Z along the route)
-## P4-32: the push handle bar of prop_cart.glb (tools/blender/build_phase4.py `cart()`: x -0.55..0.55, Blender
+const LANTERN := Vector3(0.0, 1.86, -1.3)  ## front of the cart (it faces -Z along the route); used when the glb has no `LanternSocket`
+## P4-32: the push handle bar of prop_cart.glb (tools/blender/build_p5_12.py cart: x -0.55..0.55, Blender
 ## y -1.45 is +Z here, 1.05 m above the model base). The `Handle` marker follows the model's height.
 const HANDLE_Z := 1.45
 const HANDLE_UP := 1.05
@@ -65,7 +65,8 @@ static func build(world: Node) -> Node3D:
 	b.add_child(handle)
 	var spot := Node3D.new()
 	spot.name = "Lantern"
-	spot.position = LANTERN
+	var socket := m.find_child("LanternSocket", true, false) as Node3D  # P5-13 (Q-247 N1): where the model hangs it
+	spot.position = socket.position if socket else LANTERN
 	spot.add_to_group(&"lightrig_spots")  # world_look puts the LightRig here; the ghost light system reaches it (doc 03 s14)
 	spot.set_meta(&"radius_m", 7.0)  # doc 07 s5 cart lantern: #FFB45A, 7 m, 1.2 (LightRig defaults)
 	spot.set_meta(&"own_power", true)  # oil, not the generator (lights.gd)
@@ -339,6 +340,11 @@ func _process(delta: float) -> void:
 	var rig := _rig()
 	if rig:
 		Lights.set_own(rig, act in [LOADING, PUSH, GATE_RUN])
+		if not rig.has_meta(&"box_hidden"):  # P5-13: the rig's grey lamp box is the placeholder for the glb lantern
+			rig.set_meta(&"box_hidden", true)
+			for mi in rig.find_children("*", "MeshInstance3D", false, false):
+				if (mi as MeshInstance3D).mesh is BoxMesh:
+					(mi as MeshInstance3D).visible = false
 	var go := moving()
 	_spot.rotation.x = sin(Time.get_ticks_msec() / 300.0) * (0.12 if go else 0.0)  # doc 07 s5: swings with the cart
 	if go != _squeak.playing and _squeak.stream:

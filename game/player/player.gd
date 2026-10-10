@@ -11,9 +11,11 @@ const GRAVITY := 20.0
 const JUMP_V := 5.0  ## P5-10 low gravity jump speed, m/s (placeholder; with 0.2 gravity it floats about 3 m up for 2.5 s)
 const RESUME_S := 1.5  ## placeholder: stamina needed to sprint again after running dry (doc 02 section 2.2 gives max and refill only)
 const TaintScript := preload("res://game/player/taint.gd")
+const FarmerBody := preload("res://game/player/farmer_body.gd")
 const PROXY_SMOOTH := 15.0  ## exponential smoothing rate for proxies (ponytail: no snapshot buffer)
 
 var peer := 0
+var colour_slot := 0  ## P5-13 (D-159): index into FarmerBody.COLOURS; Players sets it on every peer before the body is made
 var is_local := false
 var players: Node  ## the Players manager
 
@@ -37,9 +39,9 @@ var _fuel_can: MeshInstance3D
 var _shovel: MeshInstance3D  ## P2-11 placeholder props
 var _trap_prop: MeshInstance3D
 var _shape: CollisionShape3D
-var _mesh: MeshInstance3D
-var _arm: Node3D  ## P3-11 emote arm, made on first use
-var _emote_tw: Tween
+var _mesh: FarmerBody  ## P5-13: the rigged farmer (FarmerBody), origin at the feet
+var _emote_s := 0.0  ## seconds left of an emote animation
+var _prev_pos := Vector3.ZERO
 var _seq := 0
 var _send_t := 0.0
 var _sprint_any := false  ## sprinted at any point since the last packet (the host judges the whole interval's speed)
@@ -66,8 +68,7 @@ func _ready() -> void:
 	_shape = CollisionShape3D.new()
 	_shape.shape = CapsuleShape3D.new()
 	add_child(_shape)
-	_mesh = MeshInstance3D.new()
-	_mesh.mesh = CapsuleMesh.new()
+	_mesh = FarmerBody.new(colour_slot)
 	add_child(_mesh)
 	_apply_height(false)
 	_cam = Camera3D.new()
@@ -165,9 +166,8 @@ func _apply_height(crouch: bool) -> void:
 	(_shape.shape as CapsuleShape3D).height = h
 	(_shape.shape as CapsuleShape3D).radius = r
 	_shape.position.y = h / 2.0
-	(_mesh.mesh as CapsuleMesh).height = h
-	(_mesh.mesh as CapsuleMesh).radius = r
-	_mesh.position.y = h / 2.0
+	_mesh.scale = Vector3.ONE * body_scale  # crouching is the farmer's crouch animation, not a squash
+	_mesh.position = Vector3.ZERO
 	if _head:
 		var s := head_scale * body_scale
 		_head.scale = Vector3.ONE * s
@@ -196,7 +196,7 @@ func set_head_scale(s: float) -> void:
 ## P5-10 disco: one frame of the dance at time `t` (bob 1.5 per second, a slow spin). Visual only; `dance_end` undoes it.
 func dance(t: float) -> void:
 	_mesh.rotation.y = t * 2.0
-	_mesh.position.y = (HEIGHT_CROUCH if crouching else HEIGHT_STAND) * body_scale / 2.0 + 0.15 * absf(sin(t * PI * 1.5))
+	_mesh.position.y = 0.15 * absf(sin(t * PI * 1.5))
 
 
 func dance_end() -> void:
@@ -210,7 +210,7 @@ func ragdoll(dir: Vector3, secs: float) -> void:
 	if _toy_tw:
 		_toy_tw.kill()
 	var ld := global_transform.basis.inverse() * dir
-	var base := (HEIGHT_CROUCH if crouching else HEIGHT_STAND) * body_scale / 2.0
+	var base := 0.0
 	_toy_tw = create_tween()
 	_toy_tw.tween_method(_ragdoll_pose.bind(ld, base), 0.0, 1.0, secs)
 	_toy_tw.tween_callback(func() -> void:
@@ -269,6 +269,7 @@ func _physics_process(delta: float) -> void:
 		if ve:
 			ve.volume_db = _peer_gain_db()
 	_held.visible = not ghost
+	_animate(delta)
 	if _head:
 		_head.visible = head_scale != 1.0 and _mesh.visible
 	rotation.y = yaw
@@ -318,43 +319,32 @@ func shake(seconds: float, mult: float) -> void:
 	speed_mult = mult
 
 
-## P3-11 (doc 05 s14): an emote on this body, every peer. Placeholder motion, no art or animation yet:
-## an arm (child of the body mesh, so seen exactly where the body is) waves or points, a shrug bobs the
-## body, a scream swells it. The owner sees nothing on itself (first person, its mesh is hidden).
+## P3-11 (doc 05 s14), P5-13: an emote on this body, every peer: the farmer's wave, point, shrug or scream
+## animation. The owner sees nothing on itself (first person, its mesh is hidden).
 func play_emote(kind: StringName) -> void:
-	if _emote_tw:
-		_emote_tw.kill()
-	if not _arm:
-		_arm = Node3D.new()
-		_arm.position = Vector3(RADIUS, 0.4, 0.0)  # shoulder, in body-mesh space (placeholder)
-		var a := MeshInstance3D.new()
-		var b := BoxMesh.new()
-		b.size = Vector3(0.1, 0.6, 0.1)
-		a.mesh = b
-		a.position.y = -0.3  # hangs from the shoulder pivot
-		_arm.add_child(a)
-		_mesh.add_child(_arm)
-	_arm.rotation = Vector3.ZERO
-	_mesh.scale = Vector3.ONE
-	_arm.visible = kind == &"wave" or kind == &"point"
-	_emote_tw = create_tween()
-	match kind:
-		&"wave":
-			_arm.rotation.x = PI
-			for i in 3:
-				_emote_tw.tween_property(_arm, "rotation:z", 0.4, 0.2)
-				_emote_tw.tween_property(_arm, "rotation:z", -0.4, 0.2)
-		&"point":
-			_arm.rotation.x = PI / 2.0 + pitch  # along the look direction
-			_emote_tw.tween_interval(1.5)
-		&"shrug":
-			_emote_tw.tween_property(_mesh, "scale:y", 1.08, 0.2)
-			_emote_tw.tween_property(_mesh, "scale:y", 1.0, 0.3)
-		&"scream":
-			_emote_tw.tween_property(_mesh, "scale", Vector3(1.2, 1.05, 1.2), 0.15)
-			_emote_tw.tween_interval(0.8)
-			_emote_tw.tween_property(_mesh, "scale", Vector3.ONE, 0.3)
-	_emote_tw.tween_callback(func() -> void: _arm.visible = false)
+	if kind in [&"wave", &"point", &"shrug", &"scream"] and _mesh.has_anim(kind):
+		_emote_s = _mesh.shot(kind)
+
+
+## Locomotion animation from the speed this body actually moves (local and proxy alike); an emote plays out first.
+func _animate(delta: float) -> void:
+	var v := Vector2(global_position.x - _prev_pos.x, global_position.z - _prev_pos.z).length() / maxf(delta, 0.0001)
+	_prev_pos = global_position
+	if v > 20.0:
+		v = 0.0  # a spawn or teleport, not a run
+	if _emote_s > 0.0:
+		_emote_s -= delta
+		if _emote_s > 0.0:
+			return
+	var walk := Data.speed(&"walk")
+	if crouching:
+		_mesh.loop(&"crouch", 1.0 if v < 0.3 else 1.5)
+	elif v > walk * 1.3:
+		_mesh.loop(&"run", clampf(v / Data.speed(&"sprint"), 0.8, 1.3))
+	elif v > 0.3:
+		_mesh.loop(&"walk", clampf(v / walk, 0.6, 1.4))
+	else:
+		_mesh.loop(&"idle")
 
 
 ## Dead (doc 05 section 14): no body, no collision. Local: fly with the camera. Others: hidden from the living.
@@ -487,3 +477,10 @@ func _local(delta: float) -> void:
 		players.submit_local(_seq, global_position, yaw, pitch, _crouch_all, _sprint_any)
 		_sprint_any = false
 		_crouch_all = true
+
+
+## P5-13 (D-165): the host's colour slot arrived (or changed): re-tint the body.
+func set_colour_slot(slot: int) -> void:
+	colour_slot = slot
+	if _mesh:
+		_mesh.tint(slot)

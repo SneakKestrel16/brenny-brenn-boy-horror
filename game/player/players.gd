@@ -4,6 +4,7 @@ extends Node3D
 ## validates (CONTRACTS section 5).
 
 const PlayerScript := preload("res://game/player/player.gd")
+const FarmerBody := preload("res://game/player/farmer_body.gd")
 const SpeedCheck := preload("res://game/player/speed_check.gd")
 const StillRing := preload("res://game/player/still_ring.gd")
 
@@ -14,6 +15,7 @@ const STRIDE_M := 1.6  ## doc 05 section 6 `step_stride_m` (placeholder)
 var _send_t := 0.0
 var _slots: Dictionary = {}  ## peer -> barn spawn index in use
 var _players: Dictionary = {}  ## peer -> Player
+var _logged_colour: Dictionary = {}  ## peer -> the slot last logged and applied
 var _log_moves := false
 var _inside_s: Dictionary = {}  ## host: peer -> seconds spent in a building this night
 ## Floor rects (x, z, w, d) of the Barn and the ToolShed from build_farm.py (doc 04 section 4).
@@ -23,8 +25,11 @@ const BUILDINGS := [Rect2(-8, -20, 16, 20), Rect2(-18, 26, 6, 5)]
 
 func _ready() -> void:
 	_log_moves = OS.get_cmdline_user_args().has("--log-moves")
-	for p in Game.players:
+	var first: Array = Game.players.keys()
+	first.sort()
+	for p in first:
 		_spawn(p)
+	Game.roles_changed.connect(_on_roles)
 	Game.player_joined.connect(_spawn)
 	Game.player_left.connect(_despawn)
 	Net.bytes_received.connect(_on_bytes)
@@ -102,6 +107,10 @@ func _spawn(peer: int) -> void:
 	pl.name = str(peer)
 	pl.peer = peer
 	pl.is_local = peer == Game.local_peer()
+	var cs := Game.colour_of(peer)  # -1 on a client until the host's table arrives (`_on_roles`)
+	pl.colour_slot = maxi(cs, 0)
+	if cs >= 0:
+		_log_colour(peer, cs)
 	pl.players = self
 	var spawns := get_tree().get_nodes_in_group(&"player_spawns")
 	add_child(pl)
@@ -127,8 +136,24 @@ func _free_slot(count: int) -> int:
 	return best
 
 
+## P5-13 (D-159, D-165): the host assigns colour slots (`Game.assign_colours`) and sends them with the role table;
+## a client re-tints each player when the table arrives, and logs the received value.
+func _on_roles() -> void:
+	for peer in _players:
+		var slot := Game.colour_of(peer)
+		if slot >= 0 and slot != _logged_colour.get(peer, -1):
+			(_players[peer] as Node).call(&"set_colour_slot", slot)
+			_log_colour(peer, slot)
+
+
+func _log_colour(peer: int, slot: int) -> void:
+	_logged_colour[peer] = slot
+	Log.event(&"player_colour", {"peer": peer, "slot": slot, "hex": FarmerBody.colour(slot).to_html(false)})
+
+
 func _despawn(peer: int) -> void:
 	_slots.erase(peer)
+	_logged_colour.erase(peer)
 	if _players.has(peer):
 		_players[peer].queue_free()
 		_players.erase(peer)
