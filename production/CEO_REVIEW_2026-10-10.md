@@ -22,6 +22,7 @@ without a revert.
 | D-8 | Horror role: you picked "flickering light", but doc 01 says only ghosts flicker lights. Built as dimming only (Q-349) | Dimming, no flicker | P5-53 |
 | D-9 | Horror role: four exceptions to doc 01's hallucination rules (Q-350, doc 03 s23.1) | Built, placeholder | P5-53 |
 | D-10 | Horror role: the "name whisper" replays the player's own recorded clip, not their actual name (only if their voice setting allows) | Own clip | P5-53 |
+| D-11 | "Walking through closed doors": who did you see? Tests show players cannot pass a closed door (2310 tries, 0 passes). Found and being fixed: the creature walked through a closed barn door after banging; open door leaves had no collision; the pegboard could be used through the shed wall; bots (only with --bot-chores) crossed the barn wall | All four fixed in P5-55 | P5-55 handoff |
 
 ## 2. Changes made (commit, what, how to revert)
 
