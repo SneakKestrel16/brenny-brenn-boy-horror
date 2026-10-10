@@ -368,3 +368,11 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 - **`test_harness.py` `MultiArgs` fails on main** (2 tests): `multi.py` now appends `--profile=p<n>` and
   `--`, which the tests do not expect. Owner: QA.
 
+## Found at the P5-06 review (QA, 2026-10-09)
+
+- **Role hats show the farmer's fringe.** `hat_farmer` and `hat_warden` (crown radius 0.13 m) let the hair
+  fringe poke through; the cosmetic hats use 0.185 m. Owner: 3D Artist.
+- **Doc 07 lacks cosmetics.** s11.7 has no rows for the 11 cosmetics, and s8 still says cosmetics are out of
+  scope. Owner: Technical Artist (doc 07).
+- **Overalls pattern gap at the knee.** Plaid and striped lines part slightly at the bent knee mid-stride.
+  Owner: 3D Artist.

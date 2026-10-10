@@ -989,7 +989,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-03 | Network & Voice, AI Programmer | Spliced lures from live clips, day 4 on (doc 03 s12.1 splice row, doc 06 "A lure") | done (QA PASS, D-156) | P5-01 |
 | P5-04 | Gameplay, AI Programmer | Next season: carry-over, savings, debt growth, one new creature trait, saved and loaded | in progress | P5-02 |
 | P5-05 | Gameplay | Cosmetics: store items once the debt is paid, equip, synced, saved | in progress | P5-02 |
-| P5-06 | 3D Artist, Technical Artist | Cosmetic hats and overalls models and tint slots (doc 07 s8) | in progress | P5-02 |
+| P5-06 | 3D Artist, Technical Artist | Cosmetic hats and overalls models and tint slots (doc 07 s8) | done (QA PASS, D-164) | P5-02 |
 | P5-07 | Audio Designer | Phase 5 sounds: season-start sting, cosmetic purchase, splice join check (doc 08) | in progress | P5-02, P5-03 |
 | P5-09 | Gameplay, AI Programmer | Quirks group option: ten quirks, one random per player per season (doc 01 "Quirks", D-052) | in progress | P5-02 |
 | P5-10 | Gameplay, Network & Voice | Dev toys behind the machine-hash gate (doc 01 "Dev toys", D-044, D-045) | done (QA PASS, D-157; hash Q-261) | P5-01 |

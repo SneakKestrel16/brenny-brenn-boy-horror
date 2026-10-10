@@ -1130,3 +1130,11 @@ Q-261: the CEO's machine hash is in `DevGate.HASHES` (`game/core/dev_gate.gd`). 
 dev setting (P5-11) open on that PC only. The print script output matched on the Director's run, and
 `test_dev_gate.gd` prints PASS (gate open). More PCs need one more hash each.
 **Why:** CEO, 2026-10-09, pasted the hash.
+
+### D-164 · 2026-10-09 · Director · P5-06 merged
+P5-06 (cosmetic models) passed QA with one fix, made before merge: the party cone got a 0.11 m straight band so
+the farmer's fringe no longer pokes through. Eleven cosmetics (6 hats on the `hat` bone, 5 skinned overalls with
+`tint` and `cosmetic_id` extras). The handoff's view on Q-255 item 3 (the cosmetic hat replaces the role hat)
+goes to P5-05. The handoff's Q-286 (doc 07 s11 cosmetic rows, stale s8 line) is filed in OPEN_ISSUES rather than
+QUESTIONS: it needs no decision.
+**Why:** QA PASS with fixes (handoffs/P5-06.md "QA review").
