@@ -274,6 +274,7 @@ func _admit(id: int, rejoin: bool = false) -> void:
 			to_peers(&"apply_voice_setting", [p, Game.voice_setting_of(p)], [id])
 	to_peers(&"apply_clock", [Clock.day, Clock.phase, Clock.t_phase], [id])
 	Roles.sync()  # P4-09: a rejoiner gets their role back
+	Imposter.sync_to(id)  # P5-11: the toggle; the secret only if `id` is the imposter
 	Log.event(&"player_joined", {"player": id})
 	Game.player_joined.emit(id)
 
@@ -852,6 +853,25 @@ func request_emote(emote_id: StringName) -> void:
 @rpc("authority", "call_remote", "reliable")
 func apply_whistle(peer: int, position: Vector3) -> void:
 	apply_received.emit(&"whistle", [peer, position])
+
+
+## P5-11 (doc 01 "Imposter mode"): the lobby toggle, to every peer. Public by design.
+@rpc("authority", "call_remote", "reliable")
+func apply_imposter_toggle(on: bool) -> void:
+	Imposter.enabled = on
+	Imposter.me = false  # a re-pick (dev, next season) clears the old imposter; the secret, if theirs, follows
+
+
+## P5-11: sent by the host to the imposter's peer ALONE (never broadcast, never a "false" to anyone else).
+@rpc("authority", "call_remote", "reliable")
+func apply_imposter_secret() -> void:
+	Imposter.me = true
+
+
+## P5-11: the imposter's kit action. The host drops it unless `_sender()` is the imposter, and never replies.
+@rpc("any_peer", "call_remote", "reliable")
+func request_imposter_act(kind: StringName, at: Vector3) -> void:
+	Imposter.act(_sender(), kind, at)
 
 
 ## P5-10 (doc 01 "Dev toys", doc 05 s25): the host started toy `toy` for `seconds` (0 = a one-shot such as a

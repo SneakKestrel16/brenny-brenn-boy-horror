@@ -112,6 +112,7 @@ func _host_end() -> void:
 		for p: int in names:  # current names win; players who left keep the last name `Quirks.sync` saw
 			Quirks.last_name[str(Net.profiles[p].get("uid", ""))] = names[p]
 		res["quirks"] = Quirks.reveal(Game.quirks, Quirks.last_name)
+	res["imposter_line"] = Imposter.reveal_line()  # P5-11
 	Net.to_peers(&"apply_season_awards", [res])
 	show_card(res)
 
@@ -130,6 +131,8 @@ func show_card(res: Dictionary) -> void:
 	_label(LOSS_HEAD if lost else WIN_HEAD, 22, RED_INK if lost else INK, HORIZONTAL_ALIGNMENT_CENTER)
 	_label("Day %d" % int(res.day), 16, INK, HORIZONTAL_ALIGNMENT_CENTER)
 	_box.add_child(HSeparator.new())
+	if String(res.get("imposter_line", "")) != "":  # P5-11: the secret is told at season end
+		_label(res.imposter_line, 16, RED_INK, HORIZONTAL_ALIGNMENT_CENTER)
 	for a: Dictionary in res.awards:
 		var l := _label(a.line, 18, INK, HORIZONTAL_ALIGNMENT_LEFT)
 		l.modulate.a = 0.0

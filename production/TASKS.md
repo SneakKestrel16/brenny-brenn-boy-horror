@@ -993,7 +993,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-07 | Audio Designer | Phase 5 sounds: season-start sting, cosmetic purchase, splice join check (doc 08) | in progress | P5-02, P5-03 |
 | P5-09 | Gameplay, AI Programmer | Quirks group option: ten quirks, one random per player per season (doc 01 "Quirks", D-052) | done (QA PASS, D-167) | P5-02 |
 | P5-10 | Gameplay, Network & Voice | Dev toys behind the machine-hash gate (doc 01 "Dev toys", D-044, D-045) | done (QA PASS, D-157; hash Q-261) | P5-01 |
-| P5-11 | Gameplay | Imposter mode and its hidden dev setting (doc 01 "Imposter mode", D-043, D-044) | in progress | P5-02, P5-10 gate |
+| P5-11 | Gameplay | Imposter mode and its hidden dev setting (doc 01 "Imposter mode", D-043, D-044) | done (QA PASS, D-174) | P5-02, P5-10 gate |
 | P5-12 | 3D Artist, Technical Artist | Overall upgrade of every model; farmer rig, animations and tint slots (D-154) | done (QA PASS, D-159) | P5-01 |
 | P5-13 | Gameplay | Wire the upgraded models in: creature glb for the capsule (Q-150), farmer rig, unused models | done (QA PASS, D-165) | P5-12, P5-03 |
 | P5-14 | 3D Artist | Missing models: buildings (barn, shed, farmhouse, well, fences, gates, doors) (Q-266) | done (QA PASS, D-170) | P5-12 |
@@ -1007,7 +1007,8 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-22 | Gameplay | Wire the P5-14 to P5-17 models: buildings, traps, pegboard, tools, crops, corn, crows, hands, road items, ragdoll, ghost shell | todo | P5-13 |
 | P5-23 | Gameplay | Wire the primitives left by P5-13 (Q-283): death corpse, Taint look, hats, Taint sleeves, `interact` animation, cart lantern glass | todo | P5-13 |
 | P5-24 | Gameplay | Next season through the lobby: roles re-picked, quirk reroll, `Imposter.pick`, season-start save (P5-04 follow-up) | todo | P5-04, P5-11 |
-| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-24 |
+| P5-25 | Gameplay | Imposter `pegboard_mark` and interaction holds for the kit (Q-303) | todo | P5-11 |
+| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-25 |
 
 ### P5-02 Phase 5 design and data
 Owner: Game Designer. Output: doc 02, doc 03, `data/`, `tools/sim/`; handoff note.
@@ -1167,3 +1168,12 @@ Acceptance:
 - Starting the next season returns everyone to the lobby: roles re-picked, quirks rerolled, `Imposter.pick` run when
   imposter mode is on, and the season-start save written (P5-04 OPEN_ISSUES).
 - Two-instance run through a season end into season 2 shows the same state on both peers.
+
+### P5-25 Imposter pegboard mark and kit holds
+Owner: Gameplay Programmer. Output: game code, doc 05, handoff note.
+Acceptance:
+- `pegboard_mark`: the imposter can mark a false trap on the pegboard. Clients see the lie on a separate display array
+  (the host's `filled` stays true); touching the slot resets it. Nothing on a client reveals who marked it.
+- Kit actions (`whistle_throw`, `gate_prop`, `false_flag`, `pegboard_mark`) use interaction holds with a hold bar like
+  other actions. Keys: placeholders until the CEO picks (Q-303).
+- `test_imposter_sync` 4 instances still passes; no client log holds the imposter's uid.

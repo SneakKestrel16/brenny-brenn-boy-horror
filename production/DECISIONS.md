@@ -1211,3 +1211,11 @@ host's suffix, and an unrelated whitespace change in `net.gd` is reverted. The h
 BBCode or line breaks, blank becomes "Farmer"), keeps them unique with a number, and refuses renames after the start.
 A host-assigned suffix never reaches Settings.
 **Why:** QA PASS with fixes (handoffs/P5-20.md "QA review"); CEO 2026-10-09 "not everyone shows up as farmer".
+
+### D-174 · 2026-10-09 · Director · P5-11 merged
+P5-11 (imposter mode, behind its lobby toggle, with the machine-hash dev pick) passed QA on the second review. The
+first review failed on five points (notice, gate cap, stale `me` after a repick, doc row, reveal wording); all fixed.
+Rulings: Q-301 accept (a loaded season or host takeover re-rolls; the uid stays out of the shared save). Q-302 accept
+(the toggle stays on below 4 players, inert). Q-303 accept the cuts; follow-up row P5-25 adds `pegboard_mark` and kit
+holds, the CEO picks keys. Q-304 accept (QA rule in `check_logs.py`). Q-305 built as the CEO ruled.
+**Why:** QA PASS (handoffs/P5-11.md "QA re-review"); reruns on main pass.

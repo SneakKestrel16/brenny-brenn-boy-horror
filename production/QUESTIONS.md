@@ -1597,3 +1597,22 @@ Player colours (D-159): derive on each peer, or have the host send the slot? A l
 Left as capsules or spheres, out of P5-13 scope as written: the death corpse (`game/ghost/death.gd`), the Taint look (`taint_look`), the big-head toy sphere in `player.gd`, hats (not shown in game; the `hat` bone exists), the Taint sleeves slot `mat_farmer_sleeves` (unused), the `interact` animation (no hook yet), and the cart lantern glass (lit/unlit via `CreatureLook.lantern_glass`). Settled by: the Director adding a follow-up row, or saying to drop them.
 
 **Answer (Director, D-165):** follow-up row P5-23 wires them; the big-head toy sphere stays a sphere (dev toy).
+
+### Q-301 · 2026-10-09 · Gameplay (P5-11) -> Director · answered
+A loaded season re-rolls the imposter. The dawn save is copied to every client (Save.send_to_clients), so storing the imposter uid in it would leak the secret to every peer's disk. The same goes for a host crash handing the session to another host: the secret lived only in the old host's memory. Proposal: accept (the toggle persists in the lobby, the roll happens again at the next match start). Settled by: Director/CEO, or a save format that keeps the uid host-side only.
+
+**Answer (Director, D-174):** accept. A loaded season or host takeover re-rolls the imposter at the next match start; the uid never goes in the shared save.
+### Q-302 · 2026-10-09 · Gameplay (P5-11) -> Director · answered
+Below 4 players (D-161) I disable the lobby checkbox and `Imposter.pick` ignores the toggle. If a player leaves the lobby while the box is on, it stays on but does nothing until 4 are back. Alternative: also switch it off. Settled by: Director picking one.
+
+**Answer (Director, D-174):** accept. The box stays on below 4 players and does nothing until 4 are back.
+### Q-303 · 2026-10-09 · Gameplay (P5-11) -> Director · answered
+Imposter kit built: `whistle_throw`, `gate_prop`, `false_flag` (a normal flag placed as a lie). Cut: `pegboard_mark` (the host's `filled` board is also every client's display, so a lie needs a separate display array and a "touch resets" rule) and `door_prop` (no player-operated door exists to open or close; doc 03 s6's 3 s bang is a creature action). Kit keys are placeholders, `[` throws a whistle, `]` leaves the pen gate open, with no hold bar. Settled by: Director adding a follow-up task, or the CEO choosing controls.
+
+**Answer (Director, D-174):** accept the cuts. Follow-up row P5-25 adds `pegboard_mark` and kit holds; the CEO picks the keys.
+### Q-304 · 2026-10-09 · Gameplay (P5-11) -> Director · answered
+The dev setting forces an imposter even below 4 players and with the toggle off, for the CEO's testing. A session that used it logs `imposter_picked` with `forced: true`. Proposal: `check_logs.py` (QA) treats a forced session like a `dev_toy` session. Settled by: QA/Director.
+
+**Answer (Director, D-174):** accept. QA adds a `check_logs.py` rule treating a `forced: true` session like a `dev_toy` session (OPEN_ISSUES).
+### Q-305 · 2026-10-09 · Gameplay (P5-11) -> Director · answered
+Reveal wording. CEO ruling 2026-10-09: the end reveal says who the imposter was AND whether they won or lost: "THE IMPOSTER WAS <name>. The imposter won." / "The imposter lost." / "There was no imposter." ("The farm held" dropped: wrong on a Harvest Moon loss card.) Built as ruled (`Imposter.line`). Shows under "THE SEASON IS OVER" in the final Dawn Report and on the Season Awards card, only when the toggle was on or a dev pick forced one.

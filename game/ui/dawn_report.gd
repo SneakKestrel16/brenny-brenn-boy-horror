@@ -126,6 +126,8 @@ func _build() -> void:
 	if Game.trait_report_pending and not Game.traits.is_empty():  # the new trait's line, once (doc 03 s22.1)
 		report.trait_line = String(Data.record(&"creature_traits", StringName(Game.traits[-1])).get("report_line", ""))
 	Game.trait_report_pending = false
+	if report.get("final", false):
+		report["imposter_line"] = Imposter.reveal_line()  # P5-11: the one place the secret is told to all
 	Net.to_peers(&"apply_dawn_report", [report])
 	_show(report)
 
@@ -177,6 +179,8 @@ func _show(report: Dictionary) -> void:
 		replays += s.replays.size()
 	if report.get("final", false):  # the last dawn: the season is over (the Season Awards screen is not built)
 		_label("THE SEASON IS OVER", 20, RED_INK, HORIZONTAL_ALIGNMENT_CENTER)
+		if String(report.get("imposter_line", "")) != "":
+			_label(report.imposter_line, 16, RED_INK, HORIZONTAL_ALIGNMENT_CENTER)
 		if not Game.is_host():
 			Clock.end_season()  # a client learns it here (apply_clock has no season flag); the host's clock ends it after DAWN_S
 	_label("Click to read on", 12, Color(INK, 0.5), HORIZONTAL_ALIGNMENT_CENTER)

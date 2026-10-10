@@ -66,6 +66,7 @@ func _ready() -> void:
 	var toys := DevToys.new()  # P5-10: dev toys (D-044 gate); idle until the console runs one
 	toys.name = "DevToys"
 	add_child(toys)
+	add_child(ImposterInput.new())  # P5-11: the imposter's kit keys (idle unless Imposter.me)
 	add_child(DawnReport.new())  # P3-12: before Death logs its first dawn
 	add_child(SeasonAwards.new())  # P4-15: after DawnReport, so its clicks win
 	add_child(PauseMenu.new())  # P2-10

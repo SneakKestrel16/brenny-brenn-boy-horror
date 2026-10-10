@@ -455,3 +455,11 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 - **Tests write the real settings file.** `user://settings.cfg` is not separated by `--profile`, so name tests
   overwrite the CEO's `player_name` (both restore it on exit). Separate settings per profile. Owner: Gameplay.
 - **Name field has no label** once it has text ("Your name" is placeholder only). Owner: Gameplay (cosmetic).
+
+## Found at the P5-11 review (QA, 2026-10-09)
+
+- **`Imposter.dev_force` docstring is stale**: it says "nothing is broadcast", but a repick broadcasts the public
+  toggle before the private secret. Owner: Gameplay.
+- **`check_logs.py` rule for forced imposter sessions** (Q-304): treat `imposter_picked` with `forced: true` like a
+  `dev_toy` session. Owner: QA.
+- **Imposter pick on a new season**: covered by P5-24.

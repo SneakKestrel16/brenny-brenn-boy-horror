@@ -202,6 +202,10 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 			if a.is_empty():
 				return "? toy shrink|disco|nuke|low_gravity|big_heads|confetti|chicken"
 			return main.get_node("DevToys").run(StringName(a[0]))
+		"imposter":  # P5-11 hidden dev setting (D-044): closed unless DevGate.unlocked(); host only; peers see nothing different
+			if not DevGate.unlocked() or not Game.is_host():
+				return "? unknown command '%s' (help)" % cmd
+			return Imposter.dev_force(a[0] if not a.is_empty() else "")
 		"buy":
 			if a.is_empty():
 				return "? buy <store item id>"

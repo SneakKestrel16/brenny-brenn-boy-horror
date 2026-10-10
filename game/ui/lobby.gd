@@ -34,6 +34,7 @@ var _cards: VBoxContainer
 var _difficulty: OptionButton
 var _streamer: CheckBox
 var _quirks: CheckBox
+var _imposter: CheckBox
 var _go: Button  ## host: Start the season; client: Ready
 var _lineup: LineUp
 var _autostart_t := 0.0
@@ -330,6 +331,11 @@ func _ui() -> void:
 	_quirks.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_quirks.toggled.connect(Quirks.set_on)
 	rv.add_child(_quirks)
+	_imposter = CheckBox.new()  # P5-11: off by default (D-158); needs 4 players (D-161)
+	_imposter.text = "Imposter mode (4+ players; one may secretly work against the farm)"
+	_imposter.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_imposter.toggled.connect(func(on: bool) -> void: Imposter.set_enabled(on))
+	rv.add_child(_imposter)
 	var menu := HBoxContainer.new()
 	var settings := Button.new()
 	settings.text = "Settings"
@@ -471,6 +477,8 @@ func _refresh() -> void:
 	_streamer.disabled = not Game.is_host()
 	_quirks.set_pressed_no_signal(Game.quirks_on)
 	_quirks.disabled = not Game.is_host()
+	_imposter.set_pressed_no_signal(Imposter.enabled)
+	_imposter.disabled = not Game.is_host() or Game.humans() < Imposter.min_players()
 	if Game.is_host():
 		_go.text = "START THE SEASON" if Game.all_ready() else "Waiting for everyone\nto be ready"
 		_go.disabled = not Game.all_ready()

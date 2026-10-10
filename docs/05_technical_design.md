@@ -1177,6 +1177,9 @@ the QA changes.
 | `whistle` | host, on an accepted whistle | `player`, `position` (`[x, z]`), `cooldown_s` | Doc 01 "Whistle"; P3-11 cooldown check |
 | `emote` | host, on an accepted emote | `player`, `emote` (`wave`, `point`, `shrug`, `scream`), `position` (`[x, z]`) | Doc 01 "Emotes"; P3-11 rate-limit check. Refusals of both are `hold_refused` with `verb` `whistle` or `emote` and `reason` `cooldown`, `rate_limit`, `unknown_emote`, `ghost` or `no_player` |
 | `dev_toy` | host, when a dev toy starts (P5-10) | `toy` (`shrink`, `disco`, `nuke`, `low_gravity`, `big_heads`, `confetti`, `chicken`), `seconds` (0 = until dawn), `player` | Doc 01 "Dev toys": a session that used a toy is not a play session. `check_logs.py` drops the session from every measure and lists it (`dev_toy_sessions`). Section 25 |
+| `imposter_picked` | host only, at match start (and each next season) | `season`, `roster_id` (profile uid), `forced` | Doc 02 s22.1. Only the host's own log has it; no client ever logs or receives it. Section 26 |
+| `group_settings_imposter` | host, when the lobby toggle changes | `enabled` | Doc 01 "Imposter mode" (default off, D-158). Public setting. Section 26 |
+| `imposter_action` | host only, when a kit action succeeds | `kind` (`whistle_throw`, `gate_prop`), `position` | Doc 02 s22.1. Host log only. Section 26 |
 
 The event names and fields in the first table are final; the second table is a proposal
 (`placeholder`) and adding an event never needs the Director (CONTRACTS section 10 asks only that
@@ -1422,3 +1425,21 @@ Source: doc 01 "Next season", [doc 02](02_systems_and_economy.md) section 21, [d
 - **Save.** The dawn save adds `season_no` and `traits`; `Game.load_season` restores both and re-applies the overrides.
 - **Log events.** `trait_gained` {season, trait, seed} once per season start; `season_started` {season, savings, spare, coins, plots, plots_carried, upgrades, headcount, traits}.
 - **Tests.** `tests/gameplay/test_next_season.gd` (overrides, draw, savings, plots clamp, season debt) and the 2-instance `tests/net/test_p5_04_e2e.gd` (header has the command). Open points: Q-271 to Q-275.
+
+## 27. Imposter mode (P5-11)
+
+Doc 01 "Imposter mode", "Rejoining"; doc 02 s22; `data/imposter.json`; D-155, D-158, D-161. Code: `game/core/imposter.gd` (static class `Imposter`, like `Roles`), `game/core/imposter_input.gd` (kit keys), small hooks in `game.gd`, `net.gd`, `lobby.gd`, `dawn_report.gd`, `season_awards.gd`, `dev_console.gd`.
+
+**State.** `Imposter.enabled` (the lobby toggle, every peer, default off) and `Imposter.me` (only the imposter's own client). `uid`, `picked_name`, `forced` exist on the host only.
+
+**Pick.** `Game.start_match` calls `Imposter.pick()` after `Roles.sync()`. It rolls only when the toggle is on and at least `min_players` (4) humans are in; the box is disabled in the lobby below 4 and the pick ignores the toggle there. `chance_pct` 50 decides, then one human at random. The secret goes with `Net.to_peers(&"apply_imposter_secret", [], [peer])` to that peer alone. Nobody else is sent a "no". P5-04 calls `Imposter.pick()` again at each next season (`rerolled_each_season`).
+
+**What never leaves the host.** The uid is not in the dawn save (that file is copied to every client), not in any broadcast, not in a client log. Inference: a loaded season therefore re-rolls (Q-301).
+
+**Rejoin.** `Net._admit` calls `Imposter.sync_to(id)`: the toggle always, the secret only when the profile uid matches. Test: `tests/net/test_imposter_sync.gd` (rejoin run, port 53763).
+
+**Win.** `Imposter.won()` is `Debt.lost` (final payment missed) and nothing else: a first-payment Foreclosure Notice and a Harvest Moon wipe are not an imposter win (D-155). The reveal line goes into the final Dawn Report (`report.imposter_line`) and the Season Awards card, only when the toggle was on or a dev pick forced one.
+
+**Kit.** `request_imposter_act(kind, at)` is an `any_peer` RPC; `Imposter.act` drops it silently unless the sender is the imposter, alive, within the per-night/day caps and cooldown of `imposter.json`. Built: `whistle_throw` (noise `whistle` at a point up to 25 m away, sound broadcast as peer 0) and `gate_prop` (the section nearest the pen gate stands open, like a fence break). `false_flag` needs no new code: the imposter plants a normal flag with its own three slots and lies by where it puts it. Not built: `pegboard_mark`, `door_prop` (Q-303).
+
+**Dev setting.** Console `imposter <peer id|name|me|none|off>` (host only, answers "unknown command" and is not in `help` unless `DevGate.unlocked()`): forces the pick, even below 4 players. In a running match it picks at once and tells only that peer. Test: the host script uses `Imposter.dev_force` with `--dev-gate-test-hash=`.

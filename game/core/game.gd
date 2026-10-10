@@ -333,6 +333,7 @@ func start_match() -> void:
 	Log.event(&"match_started", {"players": players.keys(), "difficulty": String(difficulty), "streamer_safe": streamer_safe})
 	Net.to_peers(&"apply_match_start")
 	Roles.sync()  # after the players were rebuilt above (P4-09)
+	Imposter.pick()  # P5-11: after roles lock; the secret goes to one peer only
 	_go_main()
 
 
@@ -419,6 +420,7 @@ func leave_session(reason: StringName = &"left") -> void:
 	Data.clear_overrides()
 	colours.clear()
 	colour_slots.clear()
+	Imposter.reset()  # P5-11
 	Save.pending = {}
 	Save.own_by_uid = {}
 	Save.battery_by_uid = {}
