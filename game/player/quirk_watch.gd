@@ -2,7 +2,7 @@ class_name QuirkWatch
 extends Node
 ## P5-09: the two quirks that run on their own timers (data/quirks.json). Built once by Main.
 ## Paranoia (this client only): now and then a footstep behind the player that is not there. Played locally through the
-##   Soundscape; never NoiseBus (the creature cannot hear it), never sent, never a ghost voice, radio or light flicker,
+##   Soundscape; never NoiseBus (the creature cannot hear it), never sent, never a ghost voice, radio or light effect,
 ##   and it moves no tension (doc 01 Quirks, Photosensitivity safety: audio only).
 ## OCD (host): standing in a scarecrow's gaze for the dwell time makes that player Shaken (never Taint), once per
 ##   scarecrow per player per cooldown. A scarecrow has no stored facing yet: inference, the front arc is world -Z

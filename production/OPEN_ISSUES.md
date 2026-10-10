@@ -494,7 +494,7 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 
 ## Found at the P5-25 review (QA, 2026-10-09)
 
-- **`grep_rules.py` flicker rule fails on comments** in `game/player/quirk_watch.gd:5` and `game/player/quirks.gd:7`
+- ~~**`grep_rules.py` flicker rule fails on comments**~~ Fixed by the Director: comments reworded. in `game/player/quirk_watch.gd:5` and `game/player/quirks.gd:7`
   (commit 037d8fb). Reword the comments or teach the rule to skip comments. Owner: Gameplay or QA.
 - **Whistle hold placeholder** `Imposter.WHISTLE_HOLD_S` 1.0 until `imposter.json` gets `hold_s` (Q-340). Owner:
   Game Designer.

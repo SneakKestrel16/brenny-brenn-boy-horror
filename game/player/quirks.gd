@@ -4,7 +4,7 @@ extends RefCounted
 ## replacement and seeded by host seed + season + roster, kept by uid so a rejoiner keeps theirs (doc 01 "Rejoining") and
 ## saved with the season. Numbers are in `data/quirks.json`; nothing here is a number. A quirk never shows the creature
 ## clearly, harms it, fakes an honest signal or touches debt and prices, and none of them flashes anything: the
-## only light flicker in the game is the ghosts' (doc 01 "Photosensitivity safety").
+## only flashing light in the game is the ghosts' (doc 07 s4.4, doc 01 "Photosensitivity safety").
 ## Host: `Game.quirks` (uid -> id) is the truth and `Game.players[peer].quirk` its live view (host only, never sent).
 ## A client learns only its own, in `mine`, through the `apply_roles` RPC (`sync`). Everyone learns all at season end
 ## (`reveal`, shown on the Season Awards card).
