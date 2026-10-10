@@ -43,6 +43,7 @@ without a revert.
 | P5-60 | 2b53fa1 | Eight more silent emotes and an inner ring on the emote wheel (D-5). Cut one by deleting its row in data/emotes.json | `git revert 2b53fa1` |
 | P5-59 | f557099 | Weathered look on farm, buildings, props and creatures from a noise shader; scenes 5-12% darker, night yard 10% darker | `git revert f557099`, then delete .godot/imported/*.glb-* to reimport |
 | P5-58 | 3f748d8 | Dev pick of the creature body: --creature-body=<id>, host-only lobby dropdown (DevGate), console creaturebody | `git revert 3f748d8` |
+| P5-61 | f88ef4d | Every world sign is a plank board on posts; TOWN board moved onto the gate beam | `git revert f88ef4d` |
 
 ## 3. Tests run and what we did
 
@@ -60,3 +61,4 @@ without a revert.
 - **P5-60 emotes: Opus QA PASS (round 2, after flex and cross_arms poses were redone).** Tests on main: import 0 ERROR, parse_check 222/0, test_emotes PASS, grep_rules clean. Open: on day 1 the controls card covers yawn and facepalm on the wheel; the outer ring runs off screen at 640x360.
 - **P5-59 textures: Opus QA PASS after a fix.** The import swap first also hit plots and traps (plot SCRIPT ERROR, trap glow lost); QA kept those on the old material. Tests on main after reimport: import 0 ERROR, smoke PASS, parse_check 222/0, light rig, creature art, farmer body PASS. Watch: night yard is 10% darker; check night readability in the next playtest.
 - **P5-58 creature pick: Opus QA PASS.** QA fixed the body test script (it always exited 1) and made the console switch reach clients at once. On main: all four bodies PASS host + client, import 0 ERROR, parse_check 224/0, grep_rules clean. Open: --creature-body works without DevGate, like --body; body art is static (no rig).
+- **P5-61 signs: Opus QA PASS after a fix.** QA moved the TOWN board onto the gate beam so it no longer covers the BRENN FARM sign. On main: import 0 ERROR, parse_check 224/0, check_farm, test_lore, smoke PASS. Open: the FIELD A board faces east-west, so strip 2 corn hides it from the west.
