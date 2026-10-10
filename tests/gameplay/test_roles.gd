@@ -83,6 +83,7 @@ func _lobby(Game: Node) -> void:
 	_check(Game.all_ready(), "client marked ready")
 	line.sync()
 	_check(line.player(2).get_node("Status").text == "READY", "tag shows the client ready")
+	Game._ready_msec.clear()  # P5-29 debounce (READY_GAP_MS) would swallow an instant toggle-back
 	Game.on_lobby_ready_request(2, false)
 	_check(not Game.all_ready(), "client took Ready back")
 	Game.players.erase(2)

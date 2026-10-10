@@ -1036,7 +1036,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-51 | Level Designer | More corn inside the farm, so the creature can move through it, not only round the edges (CEO STOP 6) | todo | P5-49, P5-47, P5-39 |
 | P5-52 | Gameplay | Crowkeeper role: bait perches that flush crows (CEO STOP 6) | todo | P5-37 |
 | P5-53 | Gameplay | Horror role: everything is scarier for that player (CEO STOP 6) | todo | P5-37, CEO picks ideas |
-| P5-54 | Gameplay Programmer | Fix `tests/gameplay/test_roles.gd` failing on main: "client took Ready back" at line 87 (found in P5-37 QA) | todo | - |
+| P5-54 | Gameplay Programmer | Fix `tests/gameplay/test_roles.gd` failing on main: "client took Ready back" at line 87 (found in P5-37 QA) | done (QA PASS) | - |
 | P5-55 | Gameplay Programmer | Closed doors block players (CEO saw walk-through) and interactions work reliably (CEO STOP 6) | todo | - |
 | P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | done (QA PASS) | P5-02 to P5-07, P5-09 to P5-29 |
 
