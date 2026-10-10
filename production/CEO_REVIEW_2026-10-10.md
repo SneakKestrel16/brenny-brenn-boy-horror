@@ -47,6 +47,7 @@ without a revert.
 | P5-57 | a6f4912 | Bots route round walls, do chores by default, open doors, follow the cart; Director fake-outs skip bots. Each switch is a flag in the bots record of data/ai_director.json | `git revert a6f4912` |
 | P5-62 | bcc1e78 | Full test sweep: 110 of 111 checks pass; three stale tests fixed, two issues filed | `git revert bcc1e78` |
 | P5-64 | e8138ab | Barn sign board cut to a short summary, one fact per line, bigger font | `git revert e8138ab` |
+| P5-63 | a3c14a0 | Pen fence corners and building walls no longer overlap; watering and fuel cans sit on the ground | `git revert a3c14a0` |
 
 ## 3. Tests run and what we did
 
@@ -68,3 +69,4 @@ without a revert.
 - **P5-57 bots and Director: Opus QA PASS.** 12-seed mean short at final payment 877 to 834, deaths 16 to 14; seed 3 is worse with it on (721 to 894); every 4-player bot season is still lost. No crashes in 12 serial seasons. P5-62 full test sweep is next.
 - **P5-64 barn sign: Opus QA PASS after a fix.** QA put back "The creature copies voices" (the core threat, doc 01). Import 0 ERROR, parse_check 225/0, grep_rules clean, smoke PASS. Open: blank lines between sections do not show on the board.
 - **P5-62 full sweep: 110 of 111 pass.** Fail: the P5-58 screenshot script frames day corn instead of the creature (filed, test only). Three stale tests fixed. Still owed: a run from a cleared .godot cache, which needs your game closed.
+- **P5-63 walls and cans: Opus QA PASS after a fix.** The "walls clipping" was the pen fence corners (overlapping posts); building corners overlapped only in hidden collision. QA closed a gap the fix opened at the south pen corners. Cans now measured at ground level in a running game. All farm, door and smoke checks PASS.
