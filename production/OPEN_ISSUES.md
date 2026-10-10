@@ -347,3 +347,4 @@ Source: `production/handoffs/P4-34.md` "QA re-review, D-116" (PASS with follow-u
 Source: `production/handoffs/real_creature.md` "CEO picks".
 
 1. **The gaunt signature is a stand-in.** The CEO picked option C (a flicked clipboard as joint clicks) "for now" and noted "its not the best". Audio Designer: find a better real joint, knuckle or beetle-click recording later. Settled when the CEO picks a replacement by ear.
+2. **All D-149 sound picks are stand-ins.** The CEO, 2026-10-09: "make a note to redo all these sounds at a later date as im not compltely satisfied with them but they will work for now". Every pick from the D-149 listen (creature, animal, item, radio, UI) ships for now. Audio Designer: redo them all in a later sound pass, starting from better real recordings. Settled when the CEO re-listens and approves each sound.
