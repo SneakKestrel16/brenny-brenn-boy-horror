@@ -9,12 +9,15 @@ extends SceneTree
 var _out := "logs/renders/p5_12/after"
 var _only: PackedStringArray = []
 var _before := false  # P5-17: draw primitive stand-ins instead of the glb
+var _back := false  # P5-26 --back: turn the model 180 deg to view it from the +Z side
 
 
 func _initialize() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			_out = a.trim_prefix("--out=")
+		elif a == "--back":
+			_back = true
 		elif a == "--before":
 			_before = true
 		elif a.begins_with("--only="):
@@ -172,6 +175,8 @@ func _run() -> void:
 			inst = _standin(name)
 		else:
 			inst = (load("res://assets/models/%s.glb" % name) as PackedScene).instantiate()
+		if _back:
+			inst.rotation.y = PI
 		if name == "tool_hoe" and not _prim and not _before:
 			inst.rotation.y = PI / 2.0  # thin blade is edge-on from the front: turn it to show the blade
 		world.add_child(inst)

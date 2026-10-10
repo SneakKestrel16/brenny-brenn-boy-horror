@@ -512,7 +512,11 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 
 - **P5-22 re-review skipped** (CEO, D-181). P5-08 covers it: networked clue, glint and rust-pan shots with an armed
   trap. Owner: QA.
-- **No models yet** for trap_tripwire, the field scarecrow, perched crows, clue decals (fresh dirt, bent stalks, cut
-  stalk), window glow and lit road lamps; hoe and whistle have no visual. Owner: 3D Artist / Gameplay.
+- ~~**No models yet**~~ Most existed; P5-26 (D-182) built the rest. Wiring them is P5-27. Owner: Gameplay.
 - **Doors are static open** (Q-307: no host door state). **Scarecrow facing yaw** not wired. Owner: Gameplay.
 - **Ragdoll is a static `lie` pose** (Q-322 fallback). Owner: Gameplay.
+
+## Found at the P5-26 review (QA, 2026-10-09)
+
+- **Doc 07 s11 sizes** for `trap_tripwire_sprung`, `prop_scarecrow_field` and `prop_window_glow` are not synced to the
+  as-built sizes in `production/handoffs/P5-26.md`. Owner: Technical Artist.

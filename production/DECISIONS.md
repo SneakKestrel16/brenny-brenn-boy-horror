@@ -1272,3 +1272,10 @@ failed its first review on a corn LOD gap, see-through corn, box held props and 
 all four, plus the corn far band, the dead crow yaw and the trap night glow. The CEO chose to skip the re-review to
 land the models. The P5-22 death corpse covers P5-23's corpse item.
 **Why:** CEO, 2026-10-09: "focus on connecting existing models, skip tests for now". Main: import 0 ERROR, smoke PASS.
+
+### D-182 · 2026-10-09 · Director · P5-26 builds only the three missing models
+Most models listed as missing in the P5-22 OPEN_ISSUES already existed (trap_tripwire, the clue decals, tool_hoe,
+tool_whistle, prop_road_lamp with emissive glass and a `LightRig` empty, the `animal_crow` `idle` perched pose). P5-26
+added `trap_tripwire_sprung`, `prop_scarecrow_field` and `prop_window_glow`. QA failed the first window glow on a
+z-fight facing outward; the mullions now stand proud of both faces. P5-27 wires all of them and lights the road lamps.
+**Why:** QA confirmed the existing models fit their doc 07 s11 rows; rebuilding them would add nothing.

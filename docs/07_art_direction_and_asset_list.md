@@ -652,6 +652,12 @@ yoke; layout, wheel centres and the `LanternSocket` and `PumpkinSlot` Empties un
 `tool_lantern`, `tool_lantern_bright` (bail handle, vent chimney), `bldg_town_stand` (plank counter and back wall,
 scalloped striped awning, hanging sign, jars, turnip crate, lamp; origin and 3.0 m width unchanged).
 
+P5-26 status of the s11 rows it named: built in P5-15/P5-17 (`trap_tripwire` set, `trap_fresh_dirt_decal`,
+`trap_bent_stalks`, `corn_stalk_cut`, `tool_hoe`, `tool_whistle`, `prop_road_lamp` with emissive glass and `LightRig`,
+`animal_crow` whose `idle` clip is the perched pose); built in P5-26 (`tools/blender/build_p5_26.py`):
+`trap_tripwire_sprung` (260 tris, 0.33 x 3.06 x 0.81 m), `prop_scarecrow_field` (648 tris, 0.85 x 0.72 x 2.06 m),
+`prop_window_glow` (36 tris, 0.94 x 0.04 x 0.94 m, `mat_emissive_warm`). Placement notes: `production/handoffs/P5-26.md`.
+
 ### 15.3 Looked at and rejected (all CC0, Quaternius via Poly Pizza)
 
 | Poly Pizza id | Asset | Why not |
