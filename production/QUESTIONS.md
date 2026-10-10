@@ -1095,6 +1095,10 @@ stalk picks it, and the chase ends without a kill. Trample drops to 2 plots a ni
 generator 1) with no night death. Also for the Game Designer: is a player parked at the town stand all
 night meant to count as "attending" the farm? If not, `_track_night` should skip players in sanctuary
 (AI Programmer change once you rule).
+Update (P4-34, D-115): the stand is no longer a sanctuary, and a guard there still counts as outside.
+In 12 bot seasons the guard was never killed (1 kill roll in 84 nights), so trample stays 2 a night as
+in P4-21. The sim needs no stand-guard death model yet; it needs the unattended term (or the guard
+assumption) only. Revisit if Q-225 gives the creature reach to the stand.
 
 ### Q-162 · 2026-10-09 · AI Programmer -> QA · open
 P4-21. In a headless bot season the host (peer 1) is idle, but the debt scales by
@@ -1114,7 +1118,7 @@ stale `held_prize`, so `hold_registry.gd` refuses every verb but `set_down_prize
 refusals per season). Bots now claim the pumpkin so only one lifts, but two humans can still hit it.
 Suggested fix: in `complete`, return without effect when `carrier != 0`, or re-run `can_start` there.
 
-### Q-164 · 2026-10-09 · QA -> Director · item 2 answered D-089
+### Q-164 · 2026-10-09 · QA -> Director · item 2 answered D-115 (replaces D-089)
 P4-21 review (FAIL). Three items:
 1. **Bug, AI Programmer:** `game/bots/bot.gd:286` `_keeps_payment` lets bots buy moonflowers (`grow_days` 0)
    from the first-payment money on day 3. At 2p no bot harvests at night (the sole bot is the sentinel),
@@ -1130,6 +1134,14 @@ P4-21 review (FAIL). Three items:
    13 builder seasons and 1 of 2 QA seasons have 3 deaths.
 **Answer to 2 (CEO, 2026-10-09):** close the hole. Players in the town stand sanctuary do not count as
 outside. D-089, P4-31.
+**Answer to 2, revised (CEO, 2026-10-09, D-115; built in P4-34):** D-115 replaces D-089, and P4-31 is not
+merged. The stand is no longer a sanctuary. Within 10 m of it, lures, scares, stalk picks, knock-offs and
+kills are less likely but never impossible (`ai_director.json` `town_stand`, placeholder multipliers). A
+player there still counts as outside, so the guard keeps the "Unattended farm" term at 0, but now at a
+risk: a creature that commits there can kill them. Bots keep the stand job. P4-34 bot seasons: economy
+matches P4-21 (trample 2 a night), 0 deaths at the stand in 84 nights, because the creature rarely reaches
+the stand (Q-225).
+
 ### Q-175 · 2026-10-09 · Gameplay Programmer -> Network & Voice, Director · answered D-092
 P4-23 (menu lobby). Two RPCs added to `game/net/net.gd` (your file; edited to keep the lobby testable end
 to end, please review or rewrite): `request_lobby_ready(on: bool)` (client -> host) and
@@ -1156,6 +1168,22 @@ Soundscape still plays the barn room tone in the lobby (Audio's `_in_barn`), whi
 Players still spawn at the six barn spawn markers at match start (doc 04 s13): "players spawn on the
 farm" read as those markers (inference; the CEO can name another spawn area).
 
+### Q-225 · 2026-10-09 · AI Programmer -> Game Designer · answered D-116
+P4-34 (D-115). The town stand guard cannot die in practice, whatever the `town_stand` multipliers say.
+The stand (farm.tscn `Sanctuary`, x 120, z -5) is about 100 m from where the creature lurks. The doc 03
+s18 scripted night gives it 15 s of stalk at 2.5 m/s and 10 s of chase at 5.5 m/s before the retreat
+(data/phase1.json, data/creature.json), about 92 m. In 12 P4-34 bot seasons (84 nights) the stalk pick
+went to the guard on about 1 night in 2, and the chase reached the guard once (`kill` roll, lost at
+`kill_mult` 0.2). Later hunting needs hearing or sight of the guard, which 100 m of distance rules out
+(walk 12 m, sight 15 m). So the guard's risk comes from geography, not the multipliers. If D-115 means
+"the guard dies sometimes", one of these must change: (a) the scripted stalk starts the creature toward
+the target region before 60 s, (b) the AI Director nudges its region toward the stand when only the
+guard is outside, or (c) a longer scripted chase. (a) and (b) are AI Programmer changes once you rule;
+the multipliers can then be tuned against bot seasons. Settled by: your ruling, then a re-run of the 12
+seasons.
+**Answer (CEO, 2026-10-09):** "yes", the creature must sometimes go after a player at the town stand.
+Built as (b) in P4-34, D-116: on a stand night (`town_stand.reach_night_chance`, placeholder 0.5) the
+nudge jumps to the stand's region while a player is there. Bot-season numbers in the P4-34 handoff.
 **Answer (CEO, 2026-10-09):** the menu lobby should look "similar to" a Fortnite-style concept lobby the
 CEO linked (behance.net project module 35f8a0200404059): the players' characters stand side by side in
 a lit 3D scene, the local player in the centre spotlight, each name with READY or NOT READY above the head,

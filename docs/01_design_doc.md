@@ -164,7 +164,7 @@ A tension meter in the spirit of Left 4 Dead. It cycles **build-up → peak → 
 - Players who haven't been scared are more likely targets.
 - **Private events count toward both limits:** targeted lures, hallucinations and the wrong count.
 
-**Sanctuary:** within 10 m of the town stand there are no lures, scares or kills. The clock still runs and nothing grows there.
+**Town stand:** within 10 m of the town stand lures, scares and kills are less likely, never impossible (D-115). A player there still guards the farm, but is not safe. The clock still runs and nothing grows there.
 
 ---
 

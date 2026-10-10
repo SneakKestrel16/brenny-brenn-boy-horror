@@ -93,10 +93,25 @@
       "scared_weight": 1,
       "wrong_count_per_team_per_day": 1,
       "own_voice_per_player_per_season": 1,
-      "sanctuary_m": 10,
       "sources": {
         "unscared_weight": "placeholder",
         "wrong_count_per_team_per_day": "placeholder"
+      }
+    },
+    {
+      "id": "town_stand",
+      "source": "placeholder",
+      "cite": "D-115; doc 01 Town stand; doc 03 section 11.5: within radius_m of the town stand (the marker's radius_m wins) each <kind>_mult is the chance a lure, scare, stalk pick, knock-off or kill on a player there goes ahead; one roll per kind and player holds reroll_s; D-116: reach_night_chance is the chance a night is a stand night, when the AI Director's nudge jumps to the stand's region while a living player is there; reroll_s 300 is one night (data/season.json night_s, doc 01 Nights) so stalk_mult is a per-night chance, not a delay; target a guard dies about 1 night in 10 (0.5 x 0.5 x 0.4 upper bound)",
+      "radius_m": 10,
+      "lure_mult": 0.25,
+      "scare_mult": 0.25,
+      "stalk_mult": 0.5,
+      "knock_off_mult": 0.25,
+      "kill_mult": 0.4,
+      "reroll_s": 300,
+      "reach_night_chance": 0.5,
+      "sources": {
+        "radius_m": "doc01"
       }
     },
     {
@@ -137,7 +152,7 @@
     {
       "id": "scare_jumpscare",
       "source": "doc01",
-      "cite": "doc 03 section 13; doc 01 Jumpscares: Shaken, never Taint; not in a trap race, sanctuary or lit building",
+      "cite": "doc 03 section 13; doc 01 Jumpscares: Shaken, never Taint; not in a trap race or lit building; less likely at the town stand (town_stand.scare_mult, D-115)",
       "big": true,
       "private": true,
       "opens_day": 1,

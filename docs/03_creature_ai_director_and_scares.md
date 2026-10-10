@@ -393,8 +393,9 @@ any state, so a lone player who keeps the creature busy still meets planned trap
 | Trap kept in a building | vanishes only if the building went dark; if lit all night it is not stolen, and at dawn it turns up unarmed in the corn at a random `trap_spot`, as a pickup | doc 01 "Night Traps"; D-053 (unarmed is inference) |
 | Day-time traps | traps stay armed by day; day traps are the source of trap races | doc 01 "Day Deaths" |
 
-- **A trap is never placed in sanctuary** (10 m of the town stand, doc 04) or within 6 m of a lit
-  doorway (placeholder).
+- **A trap is never placed within 6 m of a lit doorway** (placeholder). No `trap_spot` lies within
+  10 m of the town stand (doc 04), so no trap lands there; the stand has no trap rule of its own
+  (D-115).
 - **At most one trap in any 8 m circle** (placeholder), so the player can disarm one at a time.
 - **Full wipe.** Traps +2 and farm damage x2 (doc 02 section 14); the extra traps are 1 bear and 1
   pit (placeholder, `full_wipe_extra_mix`).
@@ -419,8 +420,8 @@ any state, so a lone player who keeps the creature busy still meets planned trap
   within hearing radius; never true positions). A set picks one at random and uses free spots within
   25 m of it (`region: heard`), else the nearest free spot (`nearest`); nothing heard yet gives a
   random spot (`none`). `trap_changed set` logs `region` and `work_m`.
-- **Spot rules.** Not used by another trap; deep spots bear only; not within the sanctuary marker's
-  `radius_m` (default 10 m); not within 6 m of a lit doorway (generator powered); not within 8 m of
+- **Spot rules.** Not used by another trap; deep spots bear only; not within 6 m of a lit doorway
+  (generator powered); not within 8 m of
   another trap; not within 4 m of a living player (placeholder, so nobody watches it appear). No
   spot: `trap_skipped` `reason: no_spot`.
 - **Supply (D-053).** Every bear set uses a stolen trap (`trap_changed` `stolen: true`); pits need
@@ -438,7 +439,7 @@ any state, so a lone player who keeps the creature busy still meets planned trap
   `board:<slot>`, `from`, `lock`, `day`, `supply`, and `player` for hands).
 - **Lit building.** A trap held at nightfall in a building with the generator powered is not
   stolen. If the player still holds it in a building at dawn, and the building never went dark, it
-  leaves their hands and turns up unarmed at a random free `trap_spot` outside sanctuary
+  leaves their hands and turns up unarmed at a random free `trap_spot`
   (`trap_moved`: `trap`, `from_building`, `to_spot`, `player`; `trap_changed` state `loose` to every
   peer). The pickup (`game/creature/trap_pickup.gd`) uses the `disarm_bear` hold until a pick-up verb
   exists (Q-056); it refuses `hands_full` and logs `trap_changed` `picked_up`.
@@ -590,12 +591,12 @@ Doc 01 "AI Director > Scare rules".
 m) and trap race distance (section 7), and the day's scare targets. It never adds a death
 condition (doc 01 "Day Deaths").
 
-### 11.5 Private events, sanctuary
+### 11.5 Private events, town stand
 
 | Rule | Detail | Source |
 |---|---|---|
 | Private events | go to one player only (`apply_scare` with a target slot, doc 06 section 7) | doc 01 "Voice mimicry" |
-| Sanctuary | within 10 m of the town stand: no lures, scares or kills | doc 01 "Town stand"; doc 04 sec 8 |
+| Town stand | within 10 m of the town stand: lures, scares, stalk picks, Harvest Moon knock-offs and kills on a player there are less likely, never impossible. Each goes ahead on a won roll at its `ai_director.json` `town_stand` multiplier (placeholders: lure 0.25, scare 0.25, stalk 0.5, knock-off 0.25, kill 0.4; one roll per kind and player per night, D-116). A player there still counts as outside for the "Unattended farm" term | doc 01 "Town stand"; D-115; doc 04 sec 8 |
 | Targeted day lure | only the target hears; no teammate within 15 m of the **source** (the lure's origin) | doc 01 "Voice mimicry" |
 | Dawn Report | replays targeted lures | doc 01 "Dawn Report" |
 
@@ -613,6 +614,13 @@ are `placeholder`. Regions are `Area3D` nodes in the level scene; adjacency is c
   region is allowed for presentation, not hunting). This is allowed only as a region: doc 01
   "Hunting and presentation".
 - Nudge cooldown 20 s (placeholder).
+- **Stand nights (D-116).** At nightfall the AI Director rolls `town_stand.reach_night_chance`
+  (placeholder 0.5). On a stand night, while a living player is within the town stand radius, the nudge
+  jumps straight to that player's region (`town_road`) instead of one hop: the stand is about 100 m from
+  the farm, and hops would outlast the scripted stalk (section 18). The section 11.5 stand rolls still
+  gate the stalk pick and the kill, so the guard is reached on some nights and dies on fewer
+  (target about 1 night in 10, placeholder: 0.5 x `stalk_mult` 0.5 x `kill_mult` 0.4 at most). The roll
+  hold `reroll_s` is one night (300 s), so a guard who stays is not re-rolled until the stalk wins.
 
 ### 11.7 Debug
 
@@ -640,8 +648,16 @@ Creature) runs on the host only; the pure rules are in `director_logic.gd` and c
 - **Scare budget.** A day lure is a private event: the target is picked among outdoor living players
   that pass `scare_ok` (1 per player per day, 120 s apart), weighted unscared 3 : 1. Counts reset on
   `Clock.day_changed`.
-- **Sanctuary.** `allow` refuses every kind for a player within the sanctuary radius (marker
-  `radius_m`, else `scare_rules.sanctuary_m`); a chase on that player ends as `retreat` / `sanctuary`.
+- **Town stand (P4-34, D-115).** For a player within the stand radius (farm.tscn `Sanctuary` marker
+  `radius_m`, else `town_stand.radius_m`) `allow` adds a `stand_ok(kind, peer)` roll for `lure`,
+  `day_lure`, `stalk`, `scare` and `kill`, after the profile has allowed the event; a chase is not rolled
+  (the kill at its end is). The creature asks `stand_ok` itself for the scripted night's stalk pick and
+  lure and for a Harvest Moon knock-off. A roll is won at `town_stand.<kind>_mult`; one roll per kind and
+  player holds `reroll_s` (300 s, one night, D-116), so asking every frame cannot wear it down. Rolls use
+  their own seeded stream (`seed + 7`; scares use `seed + 5`) and log `town_stand_roll` (`kind`, `player`, `won`). A chase that reaches its target
+  on a lost kill roll ends as `retreat` / `town_stand` and the player lives; on a won roll the player dies
+  as anywhere else. `tests/creature/test_p4_34.gd` checks both. `roll_stand_night()` sets `stand_night`
+  at nightfall and logs `town_stand_night` (`day`, `reach`); `_nudge` reads it (section 11.6, D-116).
 - **Daily roll.** At start and at each dawn (for the next day) it rolls `deep_m`, `earshot_m`,
   `trap_race_m` and `deep_trap_race_m` and logs `daily_roll`. A normal trap race keeps a floor of
   (pry hold + `min_spare_s`) at the approach speed, 21 m; a deep trap has none. `trap_race.gd` reads the
@@ -719,7 +735,7 @@ Doc 01 "Voice mimicry". Playback is doc 06's `apply_lure`; **choosing** is here.
   target: 25 m from the source (12.2). No place for the chosen voice: the stranger from any place.
 - **Day.** From the start of the day's second third (11.3), one attempt every 90 s (placeholder) at
   a random living outdoor player; sent to the target only; the creature stays in cover (no state
-  change). Sanctuary and the scare budget (11.4, 11.5) wait for the AI Director.
+  change). The town stand and the scare budget (11.4, 11.5) wait for the AI Director.
 - **Night.** As Phase 1 (section 4.2 lurk to lure), sent to everyone (target slot -1), the host
   included (`apply_lure` is `call_remote`, so the host plays its share locally).
 - **Tells.** Voice lures (clip, stranger): a third none, else one of `echo`, `pitch_up`,
@@ -762,8 +778,8 @@ model** (doc 01 "Make them land").
 - **Rarity.** At most one wrong count and one own-voice scare per team per day (placeholder). The
   AI Director rolls the rest from its profile (section 11).
 - **Jumpscares never occur during a trap race,** where the creature's reach is the kill (section 7).
-- **Jumpscares do not occur** in sanctuary, in a lit building, or within 20 s of another big scare
-  on the same player (the 2-min rule, section 11.4).
+- **Jumpscares do not occur** in a lit building, or within 20 s of another big scare on the same
+  player (the 2-min rule, section 11.4). At the town stand they are less likely (section 11.5).
 - **Hallucination placement** uses true positions (presentation, section 11); the silhouette stands
   15 to 30 m away, in a place the player can see (placeholder). It disappears when looked at for
   1.5 s or when the player moves 5 m toward it.
@@ -785,7 +801,7 @@ record by `opens_day` and `from_third` and applies `tainted_mult`.
 - **Timing.** Every second the host tries the living human players in a seeded random order (bots
   are skipped: nobody sits behind them to be scared). A player gets a scare only when the AI Director
   allows a big scare (`allow(&"scare", peer)`: third 2 or 3, phase peak, the per-peak count, 1 per day,
-  120 s apart, not in sanctuary) and a roll of `SCARE_CHANCE_PER_S` (0.05, placeholder: a 20 s peak
+  120 s apart, a won town stand roll at the stand) and a roll of `SCARE_CHANCE_PER_S` (0.05, placeholder: a 20 s peak
   scares a player about 2 times in 3) hits, so a peak does not always bring one ("rare", "randomizes").
   A player already in a build-up is skipped. The kind is a weighted pick among the open records that fit
   where the player is. Inference: scares wait for a day peak, so they stay rare. The
@@ -868,11 +884,13 @@ cart counts out only if it is past the fields (x > 78, doc 04 sec 6).
 - **Profile.** The `harvest_moon` profile ignores tension thresholds; the AI Director follows the
   acts (section 11.2).
 - **Knock-offs.** The creature attacks the pusher it senses loudest (section 3.1). One knock-off
-  per 15 s at most (placeholder, `harvest_knock_cooldown_s`).
+  per 15 s at most (placeholder, `harvest_knock_cooldown_s`). A pusher within 10 m of the town stand
+  is knocked off only on a won `town_stand.knock_off_mult` roll, and killed only on a won
+  `kill_mult` roll (section 11.5, D-115); the stand is never a safe zone for the cart.
 - **Nobody pushing.** While the cart is in act 2 or 3 and nobody pushes it, the creature goes for
   the living player it senses nearest the cart (sensed positions only, section 3) and chases them
   as at night: a catch kills. The knock-off cooldown and the stall bites are unchanged, and the
-  lit-building and sanctuary rules still hold (sections 6 and 11.5). In act 2 an unpushed cart lets
+  lit-building rule and the town stand rolls still hold (sections 6 and 11.5). In act 2 an unpushed cart lets
   the AI Director allow that chase. Source: the CEO's Harvest Moon test, where players stopped
   and started pushing and the creature stood off (P4-25).
 - **The gate run** is the final 30 m of the route (R7 to the gate, doc 04 sec 6.1, 3.7 m from corn
@@ -898,7 +916,7 @@ cart counts out only if it is past the fields (x > 78, doc 04 sec 6).
   `night_trap`, `harvest_moon` (placeholder ids).
 - **Ghost hand-off.** The ghost sees the creature as a smeared silhouette within 20 m (section 13);
   its voice carries static; dead voices are used more by the creature (section 12).
-- **No death in sanctuary** (section 11.5).
+- **Death at the town stand** is less likely, never impossible (section 11.5, D-115).
 
 ## 16. Voice-line list
 

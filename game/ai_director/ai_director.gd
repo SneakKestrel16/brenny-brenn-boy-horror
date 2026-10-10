@@ -35,6 +35,9 @@ var _scares: Dictionary = {}  ## peer -> peak scares this peak
 var _steps: Dictionary = {}  ## peer -> step noise meter gain in the current second
 var _step_t := 0.0
 var _rng := RandomNumberGenerator.new()
+var _stand_rng := RandomNumberGenerator.new()  ## D-115 town stand rolls: its own stream, the other picks stay as they were
+var _stand: Dictionary = {}  ## "kind:peer" -> [until, won]: the current town stand roll
+var stand_night := false  ## D-116: tonight the nudge goes to the town stand's region while a player is there
 
 
 func _ready() -> void:
@@ -49,6 +52,7 @@ func _ready() -> void:
 	for r in Data.records(&"ai_director"):
 		_d[String(r.id)] = r
 	_rng.seed = Game.seed_value + 4  # its own stream: the creature's picks stay as they were
+	_stand_rng.seed = Game.seed_value + 7  # scares.gd takes + 5
 	_relax_s = float(_d.phases.relax_min_s)
 	Clock.day_changed.connect(func(_d2: int) -> void:
 		_big.clear()
@@ -57,6 +61,9 @@ func _ready() -> void:
 		if p == &"dawn":
 			_roll(Clock.day + 1)
 			wander_region = ""
+			stand_night = false
+		elif p == &"night":
+			roll_stand_night()
 		_events.clear())
 	_setup.call_deferred()  # after the farm and the Creature are in the tree
 	_roll(Clock.day)
@@ -180,13 +187,17 @@ func third() -> int:
 
 
 ## Doc 03 sections 11.2 to 11.5: may the creature do `kind` to `peer` now? Kinds: `lure` and `stalk`
-## (night build-up events), `chase` (night peak), `kill`, `day_lure` (private) and `scare` (big). Sanctuary
-## blocks all of them. `peer` 0 (a noise with no player) is always allowed. Without the director: yes.
+## (night build-up events), `chase` (night peak), `kill`, `day_lure` (private) and `scare` (big). At the town
+## stand a lure, stalk, kill or scare also needs a won `stand_ok` roll (D-115). `peer` 0 (a noise with no
+## player) is always allowed. Without the director: yes.
 func allow(kind: StringName, peer: int) -> bool:
 	if not _ok or peer == 0:
 		return true
-	if Game.players.has(peer) and _creature and _creature._in_sanctuary(Game.players[peer].pos):
-		return false
+	# The stand roll comes last, so only an event the profile already allows spends one.
+	return _profile_allows(kind, peer) and (kind == &"chase" or stand_ok(&"lure" if kind == &"day_lure" else kind, peer))
+
+
+func _profile_allows(kind: StringName, peer: int) -> bool:
 	if _profile_id() == &"harvest_moon":  # section 14: acts, not tension; no lures or scares; act 3 a guaranteed peak
 		# P4-25: in act 2 an unpushed cart frees a chase too (section 14 "Nobody pushing")
 		return kind in [&"kill", &"stalk"] or (kind == &"chase" and (_cart_act() == 3 or (_cart_act() == 2 and get_tree().get_first_node_in_group(&"cart").pushers.is_empty())))
@@ -206,6 +217,28 @@ func allow(kind: StringName, peer: int) -> bool:
 		&"scare":
 			return third() >= 2 and phase == &"peak" and int(_scares.get(peer, 0)) < int(pr.peak_big_scares_per_player) and _scare_ok(peer)
 	return false
+
+
+## D-115, doc 03 section 11.5: near the town stand `kind` (`lure`, `scare`, `stalk`, `knock_off`, `kill`) on
+## `peer` goes ahead only on a won roll at `town_stand.<kind>_mult`. One roll per kind and player holds for
+## `reroll_s`, so an ask every frame cannot wear it down. True away from the stand and without the director.
+func stand_ok(kind: StringName, peer: int) -> bool:
+	if not _ok or not Game.players.has(peer) or _creature == null or not _creature._at_stand(Game.players[peer].pos):
+		return true
+	var ts: Dictionary = _d.town_stand
+	var key := "%s:%d" % [kind, peer]
+	var r: Array = _stand.get(key, [-INF, false])
+	if _now >= float(r[0]):
+		r = [_now + float(ts.reroll_s), _stand_rng.randf() < float(ts[String(kind) + "_mult"])]
+		_stand[key] = r
+		Log.event(&"town_stand_roll", {"kind": String(kind), "player": peer, "won": r[1]})
+	return r[1]
+
+
+## D-116: at nightfall, is tonight a stand night (`town_stand.reach_night_chance`)? See `_nudge`.
+func roll_stand_night() -> void:
+	stand_night = _stand_rng.randf() < float(_d.town_stand.reach_night_chance)
+	Log.event(&"town_stand_night", {"day": Clock.day, "reach": stand_night})
 
 
 func _scare_ok(peer: int) -> bool:
@@ -281,6 +314,8 @@ func region_rect(r: String) -> Rect2:
 
 ## Doc 03 section 11.6: one hop of the wander region toward the region with the most living players (their
 ## true region: presentation, region only). P4-12: `jump` (the Harvest Moon acts 2 and 3) goes there in one step.
+## D-116: on a stand night it jumps to the region of a living player at the town stand instead; hops from
+## the farm (about 100 m) would outlast the scripted stalk, and the guard could never be reached.
 func _nudge(jump := false) -> void:
 	if _creature == null or _regions.is_empty():
 		return
@@ -289,6 +324,10 @@ func _nudge(jump := false) -> void:
 		if _alive(p):
 			var r := region_of(Game.players[p].pos)
 			count[r] = int(count.get(r, 0)) + 1
+			if stand_night and Clock.phase == &"night" and _creature._at_stand(Game.players[p].pos):
+				count = {r: 1}
+				jump = true
+				break
 	if count.is_empty():
 		return
 	var toward: String = count.keys().reduce(func(a: String, b: String) -> String: return a if count[a] >= count[b] else b)

@@ -1073,7 +1073,7 @@ records of section 10.1. See each file for the exact fields.
 | `foreclosure_penalty_rounding` | "ceil" | placeholder |
 | `foreclosure_seized_plots` | 2 | doc01 Debt and payments |
 | `foreclosure_seizure_order` | ["dearest_upgrade_over_2_plots", "bought_plots", "starting_plots"] | placeholder |
-| `sanctuary_m` | 10 | doc01 The AI Director |
+| `sanctuary_m` | 10 | doc01 The AI Director > Town stand. The old id stays; since D-115 the radius lowers creature interaction and is no sanctuary. The game reads `ai_director.json` `town_stand.radius_m` (doc 03 section 11.5), not this row |
 | `plots_per_player` | 6 | doc01 Crops |
 | `chore_share_pct` | 33 | doc01 Season simulator |
 | `pegboard_bear_slots` | 5 | placeholder |

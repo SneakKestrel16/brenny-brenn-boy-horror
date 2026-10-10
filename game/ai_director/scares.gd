@@ -1,7 +1,7 @@
 extends Node
 ## Doc 03 section 13: the scares (P3-05). Node `Scares`, added by `main.gd` after the Creature.
 ## Host: while the AI Director allows a big scare on a player (`allow(&"scare", peer)`: day, third 2 or 3,
-## peak, the scare budget, not in sanctuary), rolls a chance each second; on a hit it picks a `scare_*`
+## peak, the scare budget, a won town stand roll there (D-115)), rolls a chance each second; on a hit it picks a `scare_*`
 ## record (ai_director.json) by weight among the open ones that fit where the player is. It sends the
 ## build-up, checks the rules again after it, then spends the budget, sends the scare (private: the target
 ## only; public: all), applies the cost and logs `scare`. Every peer plays what it is sent.
@@ -133,7 +133,7 @@ func fits(kind: StringName, p: int) -> String:
 
 
 ## Host: play `kind` on `p` (the AI Director allowed it, or the dev console `forced` it). The build-up first;
-## then, unless forced, the rules again: a target who went indoors, into a trap race or sanctuary, or died
+## then, unless forced, the rules again: a target who went indoors, into a trap race, lost the town stand roll, or died
 ## gets no scare and spends no budget (`scare_dropped`).
 func fire(kind: StringName, p: int, hold: Dictionary = {}, forced := false) -> void:
 	var rec: Dictionary = _d[kind]

@@ -110,7 +110,7 @@
 <circle class="circle20" cx="252" cy="432" r="80"/>
 <circle class="circle30" cx="260" cy="300" r="120"/>
 <circle class="sanct" cx="920" cy="280" r="40"/>
-<text class="sm" x="920" y="336" text-anchor="middle">sanctuary 10 m</text>
+<text class="sm" x="920" y="336" text-anchor="middle">town stand 10 m</text>
 <rect class="p1" x="312" y="120" width="312" height="400"/>
 <text class="lbl" x="468" y="112" text-anchor="middle">DD Phase 1 area (x -32 to 46)</text>
 <circle class="pt" cx="440" cy="300" r="4"/>

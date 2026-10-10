@@ -1217,7 +1217,7 @@ presets for release (inference: settled by the Director when a release preset ex
   - **Traps:** every trap spot from `trap_spots`, its trap kind, set/sprung state, and flags. Spots
     never used are grey.
   - **World:** the region graph (doc 03 section 11.6) as coloured polygons, the cart route polyline
-    (R0 to R8), the sanctuary circle, the lit-building radii, the light registry (lit/unlit),
+    (R0 to R8), the town stand circle, the lit-building radii, the light registry (lit/unlit),
     the generator fuel, plots with water state.
   - **Lures:** active lures as a line from the creature to the lure position with `lure_id` and the
     seconds left in the 8 s window, and the target's moved metres so far.

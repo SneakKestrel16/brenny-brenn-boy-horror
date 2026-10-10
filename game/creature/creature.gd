@@ -185,7 +185,7 @@ func _ready() -> void:
 	if not Game.is_host():
 		return
 	_pick_body()
-	_num[&"sanctuary_m"] = float(Data.value(&"ai_director", &"scare_rules", &"sanctuary_m"))  # Q-089: the AI Director asks even without --phase1
+	_num[&"stand_m"] = float(Data.value(&"ai_director", &"town_stand", &"radius_m"))  # Q-089: the AI Director asks even without --phase1
 	if not Data.has_table(&"phase1"):
 		push_warning("Creature: Phase 1 creature needs --phase1; idle")
 		return
@@ -377,7 +377,7 @@ func _harvest_moon(delta: float) -> void:
 		_goal = Vector3.INF
 		_set_state(&"lurk", &"gate_run", 0)  # the guaranteed peak cuts a knock-off retreat short; a flare's holds
 	if state in [&"chase", &"retreat", &"lure"]:
-		_hunt(delta)  # act 3 chase and every retreat run as at night (catch, sanctuary, losing it)
+		_hunt(delta)  # act 3 chase and every retreat run as at night (catch, losing it)
 		return
 	if cart.pushers.is_empty():  # P4-25: nobody pushing: it goes for the sensed player nearest the cart, as at night
 		var best := 0
@@ -412,7 +412,7 @@ func _harvest_moon(delta: float) -> void:
 	if cart.act == cart.GATE_RUN and p != 0 and _dir.allow(&"chase", p):
 		_dir.spend(&"chase", p)
 		_set_state(&"chase", &"gate_run", p)
-	elif cart.act == cart.PUSH and near and cart.pushers.has(p) and cart.knock_ready():
+	elif cart.act == cart.PUSH and near and cart.pushers.has(p) and cart.knock_ready() and _dir.stand_ok(&"knock_off", p):
 		_set_state(&"chase", &"knock_off", p)  # the lunge carries the chase tell before the hit
 	else:
 		_set_state(&"stalk", &"heard_" + String(heard.kind) if heard and int(heard.peer) == p else &"seen", p)
@@ -421,7 +421,7 @@ func _harvest_moon(delta: float) -> void:
 func _run_script() -> void:
 	if _stalk_at < 0.0 and _night_t >= _num[&"scripted_lurk_s"]:
 		for p in Game.players:
-			if _alive(p) and _outdoor(Game.players[p].pos):
+			if _alive(p) and _outdoor(Game.players[p].pos) and _dir.stand_ok(&"stalk", p):  # D-115: at the town stand on a won roll
 				_stalk_at = _night_t
 				target = p
 				break
@@ -444,9 +444,10 @@ func _run_script() -> void:
 					_end_chase(&"lit_building", &"lit_building")
 				elif state == &"chase" and _t_state >= _num[&"chase_tell_s"] and _goal.distance_to(global_position) <= _num[&"reach_m"]:
 					_scripted = false
-					if _dir.allow(&"kill", target):  # sanctuary: no kill (doc 03 section 11.5)
+					var kill: bool = _dir.allow(&"kill", target)  # D-115: at the town stand only on a won roll
+					if kill:
 						caught.emit(target)
-					_set_state(&"retreat", &"reached", target)
+					_set_state(&"retreat", &"reached" if kill else &"town_stand", target)
 		&"retreat":
 			_goal_retreat()
 		&"lurk":
@@ -458,7 +459,7 @@ func _run_script() -> void:
 ## Doc 03 section 4.2 lurk -> lure: it heard `p` and a lure source fits (section 12.1). Outside the scripted
 ## night the AI Director budgets it (section 11.2).
 func _try_lure(p: int) -> bool:
-	if not _alive(p) or _now - _last_lure_t < LURE_COOLDOWN_S or not (_scripted or _dir.allow(&"lure", p)) or not _play_lure(p):
+	if not _alive(p) or _now - _last_lure_t < LURE_COOLDOWN_S or not (_dir.stand_ok(&"lure", p) if _scripted else _dir.allow(&"lure", p)) or not _play_lure(p):
 		return false
 	if not _scripted:
 		_dir.spend(&"lure", p)
@@ -516,13 +517,13 @@ func _hunt(delta: float) -> void:
 			var sensed := _sensed_pos(target, {})
 			if sensed != Vector3.INF:
 				_goal = sensed
-			if _alive(target) and not _dir.allow(&"kill", target):
-				_end_chase(&"retreat", &"sanctuary")  # doc 03 section 11.5: no kill within 10 m of the town stand
-			elif _alive(target) and _sheltered(Game.players[target].pos):  # P4-25: before the catch, so no kill in the light
+			if _alive(target) and _sheltered(Game.players[target].pos):  # P4-25: before the catch, so no kill in the light
 				_end_chase(&"lit_building", &"lit_building")
 			elif _alive(target) and _t_state >= _num[&"chase_tell_s"] and Game.players[target].pos.distance_to(global_position) <= _num[&"reach_m"]:
-				caught.emit(target)
-				_end_chase(&"retreat", &"reached")
+				var kill: bool = _dir.allow(&"kill", target)  # D-115: at the town stand only on a won roll
+				if kill:
+					caught.emit(target)
+				_end_chase(&"retreat", &"reached" if kill else &"town_stand")
 			elif not _alive(target) or (_chase_t >= _num[&"chase_commit_s"] and _lose_t >= _num[&"chase_lose_quiet_s"]):
 				_end_chase(&"lost", &"lost")
 		&"retreat":
@@ -976,7 +977,7 @@ func _place_trap(kind: StringName, late := false) -> void:
 	_arm(pick.node, kind, {"stolen": kind == &"bear", "region": pick.region, "work_m": pick.work_m, "late": late})
 
 
-## A free `trap_spots` marker for `kind`: no deep spot for a pit, none in sanctuary or within LIT_DOOR_M of
+## A free `trap_spots` marker for `kind`: no deep spot for a pit, none within LIT_DOOR_M of
 ## a lit doorway, none within TRAP_GAP_M of another trap, none within CLUE_M of a living player (it is
 ## not set under someone's feet; true positions here only avoid players). Region: a spot within REGION_M
 ## of a random heard work point, else the nearest to it; nothing heard yet: any free spot.
@@ -984,7 +985,7 @@ func _pick_spot(kind: StringName) -> Dictionary:
 	var free: Array = []
 	for n: Node3D in get_tree().get_nodes_in_group(&"trap_spots"):
 		var m := n.global_position
-		if _traps.has(String(n.name)) or (kind != &"bear" and n.get_meta("kind", "") == "deep") or _in_sanctuary(m) or _in_lit_doorway(m):
+		if _traps.has(String(n.name)) or (kind != &"bear" and n.get_meta("kind", "") == "deep") or _in_lit_doorway(m):
 			continue
 		if _traps.values().any(func(t: Dictionary) -> bool: return t.position.distance_to(m) < TRAP_GAP_M):
 			continue
@@ -1005,9 +1006,10 @@ func _pick_spot(kind: StringName) -> Dictionary:
 	return {"node": n, "region": "heard" if not near.is_empty() else "nearest", "work_m": snappedf(n.global_position.distance_to(w), 0.1)}
 
 
-func _in_sanctuary(pos: Vector3) -> bool:
+## D-115: within the town stand's radius (farm.tscn `Sanctuary` marker), where the AI Director's `stand_ok` rolls apply.
+func _at_stand(pos: Vector3) -> bool:
 	for s: Node3D in get_tree().get_nodes_in_group(&"sanctuary"):
-		if s.global_position.distance_to(pos) <= float(s.get_meta("radius_m", _num[&"sanctuary_m"])):  # the marker's radius wins
+		if s.global_position.distance_to(pos) <= float(s.get_meta("radius_m", _num[&"stand_m"])):  # the marker's radius wins
 			return true
 	return false
 
@@ -1084,7 +1086,7 @@ func _dawn_traps() -> void:
 		if farm == null or not _alive(p) or not bool(Game.players[p].get("trap", false)) or _building(Game.players[p].pos) == "":
 			continue
 		var free := get_tree().get_nodes_in_group(&"trap_spots").filter(func(n: Node3D) -> bool:
-			return not _traps.has(String(n.name)) and not _in_sanctuary(n.global_position))
+			return not _traps.has(String(n.name)))
 		if free.is_empty():
 			continue
 		var n: Node3D = free[_rng.randi() % free.size()]
