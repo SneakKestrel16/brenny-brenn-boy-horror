@@ -560,3 +560,16 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 - **Perched crows on burst markers:** `world_props.gd` puts still crows on the `crow_perches` markers that the ghost
   crow and fake-out burst also use. A still crow may sit where a burst launches (inference); a playtest look settles it.
 - **No independent sync run:** QA's own 3-instance door run was not permitted; evidence is the implementer's `logs/p5_27/multi5`.
+
+## Found at the P5-62 sweep (QA, 2026-10-10)
+
+- **`shot_p5_58.gd` shoots daylight corn, not the creature at night.** `"$GODOT" --audio-driver Dummy --path .
+  --resolution 960x540 -s res://tests/creature/shot_p5_58.gd -- --host --lobby-start=1 --no-intro --port=26361
+  --free-mouse --creature-body=boar --out=<png>` prints `shot: body body_boar` but the PNG shows the HUD in corn by day
+  (known since the P5-58 merge: the shot camera sits inside the corn). The header and `shots_p5_58.sh` still promise a
+  night shot. Fix the tool or delete both. Owner: Gameplay.
+- **Exit-time audio leak in the windowed P5-44 screens check.** `"$GODOT" --audio-driver Dummy --path .
+  res://tests/qa/qa_p5_44_46.tscn -- --mode=screens --free-mouse --port=26404` prints `QA_SCREENS PASS` then
+  `ERROR: 1 resources still in use at exit` (`--verbose`: `res://assets/audio/ui_trait_gained.wav`, AudioStreamWAV and
+  AudioStreamPlaybackWAV still held when the Dawn Report's sound is playing at quit). Exit noise, not a gameplay
+  fault (inference: a playback freed before quit would settle it). Owner: QA.

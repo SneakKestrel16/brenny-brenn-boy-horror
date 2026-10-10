@@ -42,6 +42,7 @@ func _init() -> void:
 		push_error("fake_peer: ENet %s failed: %s" % [_role, error_string(err)])
 		quit(1)
 		return
+	(_mp as SceneMultiplayer).server_relay = false  # star topology like net.gd `_use`: else the Net autoload pins clients it has no ENet peer for
 	_mp.multiplayer_peer = peer
 	_mp.peer_connected.connect(_on_peer_connected)
 	_mp.server_disconnected.connect(_on_server_disconnected)

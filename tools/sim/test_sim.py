@@ -88,8 +88,8 @@ class Tests(unittest.TestCase):
             self.assertEqual((total, first, total - first), (want["total"], want["first"], want["final"]), f"{players}p")
         self.assertEqual({p: DATA["debt"]["season"]["derived_by_players"][str(p)]["total"] for p in (2, 3, 4)}, {2: 767, 3: 1105, 4: 1313})
 
-    def test_roles_and_phase4_data(self):  # P4-03: ten roles, the two new disturbances enabled with a fix, animals
-        self.assertEqual(len(DATA["roles"]), 10)
+    def test_roles_and_phase4_data(self):  # P4-03: ten roles, plus Crowkeeper (P5-52) and Horror (P5-53), the two new disturbances enabled with a fix, animals
+        self.assertEqual(len(DATA["roles"]), 12)
         for r in DATA["roles"].values():
             self.assertTrue(r["perks"])
         for sid in ("broken_fence", "pumpkin_gnaw"):

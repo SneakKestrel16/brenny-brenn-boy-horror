@@ -1044,7 +1044,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-59 | Technical Artist | Improve textures and materials across the farm, buildings, props, creatures (CEO 2026-10-10) | done (QA PASS) | P5-50 |
 | P5-60 | Gameplay Programmer | More emotes (CEO 2026-10-10) | done (QA PASS) | P5-45 |
 | P5-61 | Level Designer | Physical signs instead of floating words: every world Label3D sits on a board, post or paper (CEO 2026-10-10) | done (QA PASS) | P5-48 |
-| P5-62 | QA | Full test sweep on main after the batch; fix or file every failure (CEO 2026-10-10) | todo | P5-48 to P5-61 |
+| P5-62 | QA | Full test sweep on main after the batch; fix or file every failure (CEO 2026-10-10) | done (2 issues filed) | P5-48 to P5-61 |
 | P5-63 | Level Designer | Walls clipping into each other; floating watering cans: fix every overlap and floating prop (CEO playtest 2026-10-10) | todo | - |
 | P5-64 | Gameplay Programmer | Barn sign board: short summary instead of the long text (CEO playtest 2026-10-10) | done (QA PASS) | - |
 | P5-65 | AI Programmer | Creature just stood still during the day: find why and fix (CEO playtest 2026-10-10) | todo | - |
