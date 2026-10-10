@@ -163,8 +163,8 @@ section 8 (voice) and doc 08 section 9.3 (whistle).
 
 1. The tester stands at `audio_listener` with a random heading and a screen showing the three
    candidate positions (the marker ids) but not which one is active.
-2. One sound (voice or whistle) plays from one source, once, about 1.1 s for the whistle and one
-   short line for the voice. No repeats.
+2. One sound (voice or whistle) plays from one source, once, about 0.9 s for the whistle
+   (`sfx_whistle` is 0.87 s since the D-149 install) and one short line for the voice. No repeats.
 3. The tester picks the marker they heard. The game logs `spatial_audio_trial` (`sound`,
    `distance_m`, `correct`, `angle_error_deg`, `marker`, `guessed_marker`, `listener`; doc 05 section
    18).

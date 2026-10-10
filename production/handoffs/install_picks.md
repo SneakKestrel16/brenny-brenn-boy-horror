@@ -17,8 +17,8 @@ Audio Designer. Nothing set in TASKS.md. Not committed (the Director commits).
   the gaunt signature is a stand-in (CEO: "not the best", find a better real source later) and that the CEO wants
   all creature sounds redone later. `production/OPEN_ISSUES.md` is not mine: the Director may add that entry
   (it has none now).
-- Tool edits: both scripts' `LISTEN` folder now points under `logs/listen/` (was the CEO's `Music\ceo_listen`;
-  nothing was written there). `CHASE["gaunt"]` changed B to C.
+- Tool edits: `CHASE["gaunt"]` changed B to C. The installer also pointed both scripts' `LISTEN` under
+  `logs/listen/`; the Director reverted that, since the CEO listens from `Music\ceo_listen` (see N1).
 
 ## Name notes (no code changed)
 
@@ -87,3 +87,48 @@ gaunt signature and chase (stand-in), cart squeak (new peak), flare shot and cow
 - Gaunt signature is a stand-in; all creature sounds to be redone (CEO). Needs a better real source later.
 - `cre_door_bang_02/03`, `cre_corn_part_03` built but not loaded (see above).
 - Source licence flags unchanged: 831713 is foley, 610143 may be processed, 146339 not used.
+
+## QA review
+
+**PASS** (2026-10-09, commit 3122160). One pre-existing loop bug found and filed (Q-249); it is not caused by this
+install and does not block it.
+
+1. **Picks.** QA rebuilt every candidate from the committed `tools/audio/real_creature.py` and
+   `real_animals_items.py` in a scratch tree (temp copies with `LISTEN` pointed into the scratch tree, the
+   pre-commit `assets/audio/*.wav` as the RMS reference, so the build matches what the installer saw). All 80 files
+   (27 creature, 51 item, 2 `alt/`) are sample-identical to the CEO's picked option in the "CEO picks" tables of
+   `real_creature.md` and `real_items.md` (gaunt C, scarecrow A, boar A, husk B; jumpscares C/C/B/C; gnaw B, lunge A,
+   flare hit A, door B, corn A remade, presence A; items as listed, cart B remade). `alt/sfx_animal_panic_02/03` are
+   pig panic C and cow panic C. Nothing in `game/`, `tests/` or `tools/` references `assets/audio/alt/`; the two
+   `.import` files only import them (default params). They still ship in an export (about 0.35 MB).
+2. **Loops.** All eight loops are seamless at full length (end-to-start jump 0.0000 to 0.023, below each file's
+   99th-percentile sample step). `.import` files unchanged; loop flags are set in code (`Soundscape._stream`,
+   `voice_chain.gd`, `walkie.gd`), as before. But see Q-249: those code paths set `loop_end` from
+   `data.size() / 2`, and the wavs import as QOA (`compress/mode=2`, format 3), so every code-set loop wraps
+   early. Measured: `cre_gaunt_sig_chase` playback position never passes 0.797 s of 4.0 s (headless, Dummy driver).
+   Same with the old files: pre-existing.
+3. **Lengths.** No game code reads a stream length or times anything to the flare shot, whistle, cow panic or
+   creature one-shots. Panics are gated by `PANIC_GAP_S` 12 s (cow panic 2.66 s fits); jumpscare knockdown is a
+   fixed 2.0 s (`scares.gd`), audio lengths unchanged. Doc drift only: doc 08 s9.3 still describes `sfx_whistle` as
+   "~1.1 s ... rising chirp"; it is now a 0.87 s real metal whistle, peak 2.93 kHz, 99 percent of energy in
+   2.4-3.6 kHz (Audio Designer to update). QA updated its own doc 09 s5 ("about 0.9 s").
+4. **Licences.** 55 mp3s, 55 `LICENSE.txt` lines, all CC0. The 38 new mp3s are byte-identical to the downloads in
+   `C:/Users/Ockey/fc_dl/`. Each new id's Freesound page shows `publicdomain/zero/1.0` (26 from the saved pages,
+   12 creature ids fetched live today). Every Freesound id cited in doc 08 s13.2/13.3 has a licence line (452609,
+   461839, 613567, 635052 are older lines). Doc 08 rows cite source id, author and cut; s13.2 has a licence column,
+   s13.3 states CC0 for all in its header. FilmCow audio is not in the repo.
+5. **Names.** Every `Soundscape.CATALOG` id with its `n` variants (88 files) and every literal
+   `res://assets/audio/` path in `game/` exists; chase sigs for all four bodies exist. Nothing code loads is
+   missing; `cre_door_bang_02/03` and `cre_corn_part_03` are only unbuilt extras (`n` 1 and 2).
+6. **Smoke.** Headless import 0 ERROR lines. `smoke.py --scene res://game/world/farm.tscn -- --port=48610`:
+   SMOKE PASS (`logs/qa/smoke_20261009_200223`). `grep_rules.py`: all ok, only the 2 known `lobby.tscn` warnings.
+   Multi-instance run skipped (no networked change).
+
+Notes (no action needed to pass):
+- N1. The handoff says both scripts' `LISTEN` now point under `logs/listen/`. Not so in the commit: both still
+  write to `C:\Users\Ockey\Music\ceo_listen\...` (`real_creature.py:13`, `real_animals_items.py:20`); only
+  `CHASE` changed. A rerun writes into the CEO's folder. Audio Designer: fix the scripts or the handoff.
+- N2. `logs/listen/` has no `.gdignore`, so each editor import also imports the ~470 candidate wavs (local only,
+  git-ignored).
+- N3. `sfx_lantern_blow_out` is a person's breath (Reitanna 242867, CC0), no voice; CEO-picked. Fine under the
+  no-real-voices rule as read by QA.

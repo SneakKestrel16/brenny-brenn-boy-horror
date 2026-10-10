@@ -1373,3 +1373,15 @@ Settled by: a P4-40 follow-up commit fixing F1 and F2, then a QA re-review.
 (animals scaled to the s11.7 rows; cart and lantern rows recorded as built per Director decision). P4-40 PASS, see the
 handoff "QA re-review". N1 (`cart.gd` lantern not at `LanternSocket`) is still open for Gameplay; it does not block P4-40.
 (Renumbered from Q-244, which clashed with the P4-37 Q-244 on main.)
+
+### Q-249 · 2026-10-09 · QA -> Director (for Audio Designer, Network & Voice Programmer, Gameplay Programmer) · open
+Install-picks review (pre-existing bug, not caused by commit 3122160). Code that makes a wav loop sets
+`loop_end = s.data.size() / 2` (`game/audio/soundscape.gd` `_stream()`, `game/voice/voice_chain.gd:107`,
+`game/voice/walkie.gd:234`). The wavs import as QOA (`compress/mode=2`; loaded `format` = 3), so `data.size()` is
+the compressed size, about a fifth of the PCM size. `cre_gaunt_sig_chase` (192000 frames) gets `loop_end` 38860:
+measured headless, its playback position never passes 0.797 s of 4.0 s. The same holds for every chase sig, the
+cart squeak (`cart.gd` via `_stream`), both heartbeats, the ambience layers, the radio static and the crackle. The
+loop jumps at an arbitrary point, so the seamless seams are never used, and it may click.
+Fix (inference, one line per site): `loop_end = int(round(s.get_length() * s.mix_rate))`, as `game/voice/voice.gd:205`
+already does; or import the loop files with `compress/mode=0`. Settled by: the fix, then the same probe showing a
+4.0 s chase loop reaching 3.9 s before it wraps.
