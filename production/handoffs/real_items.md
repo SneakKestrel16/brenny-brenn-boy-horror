@@ -163,3 +163,13 @@ was first built with a whole-file gate and came out silent for A and B; it is no
 - Shop bell A jingles about four times; the brief said two strikes (B and C have two).
 - The picks change no gameplay, file names or lengths of loops; installing is a copy to `assets/audio/`,
   plus a doc 08 section 13 row per pick (source, author, cut).
+
+## CEO picks (2026-10-09 listen)
+
+| Sound | Pick | Notes |
+|---|---|---|
+| animal_chicken | A | |
+| animal_chicken_panic | A | |
+| animal_pig | C | |
+| animal_pig_panic | A | CEO: "save option c because i might switch to that later". At install, also keep C (for example `assets/audio/alt/`). |
+| animal_cow | A | |
