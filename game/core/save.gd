@@ -272,6 +272,7 @@ static func apply_pending(main: Node) -> void:
 			if enabled():  # P5-24: a crash before the first dawn must not lose the carry
 				var st := build(main.get_tree())
 				st.season_start = true  # resumes at the start of this day, not its dawn (Game._start_clock)
+				st.trait_report_pending = Game.trait_report_pending  # P5-28: only the season-start save owes the trait line
 				write_state(st, Game.season_id, true)
 		return
 	var s := pending

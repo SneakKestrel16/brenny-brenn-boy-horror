@@ -1279,3 +1279,10 @@ tool_whistle, prop_road_lamp with emissive glass and a `LightRig` empty, the `an
 added `trap_tripwire_sprung`, `prop_scarecrow_field` and `prop_window_glow`. QA failed the first window glow on a
 z-fight facing outward; the mullions now stand proud of both faces. P5-27 wires all of them and lights the road lamps.
 **Why:** QA confirmed the existing models fit their doc 07 s11 rows; rebuilding them would add nothing.
+
+### D-183 · 2026-10-09 · Director · `trait_report_pending` lives only in the season-start save
+P5-28 first saved the flag in every `Save.build()`. QA found that the dawn save, written at dawn step 6 before the
+Dawn Report consumes the flag, then repeated the trait line on every load. The flag is now written only on the
+season-start state (`apply_pending`, next to `season_start = true`); dawn saves never carry it, old saves load false.
+The lobby shows "Season N" and its right panel scrolls above START.
+**Why:** doc 03 s22.1 prints the trait line once; QA re-review loads of both save kinds confirm it.

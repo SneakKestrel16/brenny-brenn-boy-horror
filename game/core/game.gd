@@ -204,6 +204,7 @@ func load_season(ref: String, port: int = Net.DEFAULT_PORT) -> Error:
 	difficulty = StringName(str(s.get("difficulty", "normal")))
 	season_no = int(s.get("season_no", 1))  # P5-04: the campaign's season and gained traits come back with the save
 	traits = s.get("traits", []).duplicate()
+	trait_report_pending = bool(s.get("trait_report_pending", false))  # P5-28: a season-start save still owes the trait line
 	Data.apply_traits(traits)
 	Quirks.season_n = season_no  # P5-09: the quirk draw seed follows the loaded season
 	for k in s.get("game", {}):  # group options (streamer-safe) before the lobby opens, so joiners get them at admit
@@ -216,6 +217,7 @@ func load_season(ref: String, port: int = Net.DEFAULT_PORT) -> Error:
 		Save.pending = {}
 		season_id = ""
 		season_uids = []
+		trait_report_pending = false
 		season_no = 1  # the load set them (and the overrides) before the host failed
 		traits = []
 		Data.clear_overrides()

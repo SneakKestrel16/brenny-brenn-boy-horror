@@ -36,6 +36,7 @@ var _streamer: CheckBox
 var _quirks: CheckBox
 var _imposter: CheckBox
 var _go: Button  ## host: Start the season; client: Ready
+var _title: Label
 var _lineup: LineUp
 var _autostart_t := 0.0
 var _qa_ready := false
@@ -289,12 +290,12 @@ func _box(parent: Node3D, size: Vector3, at: Vector3, col: Color) -> MeshInstanc
 
 ## Side panels and the big button over the stage (layout from D-140).
 func _ui() -> void:
-	var title := Label.new()
-	title.text = "THE LOBBY"
-	title.add_theme_font_size_override(&"font_size", 44)
-	title.add_theme_color_override(&"font_color", INK)
-	title.position = Vector2(32, 20)
-	add_child(title)
+	_title = Label.new()
+	_title.text = "THE LOBBY"
+	_title.add_theme_font_size_override(&"font_size", 44)
+	_title.add_theme_color_override(&"font_color", INK)
+	_title.position = Vector2(32, 20)
+	add_child(_title)
 	var left := _panel(Control.PRESET_LEFT_WIDE, 300)
 	var lv := VBoxContainer.new()
 	left.add_child(lv)
@@ -307,10 +308,14 @@ func _ui() -> void:
 	_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_cards)
 	var right := _panel(Control.PRESET_RIGHT_WIDE, 300)
-	right.offset_bottom = -130  # the big button sits under it
+	right.offset_bottom = -118  # the big button sits under it (P5-28: the panel ends above it and scrolls)
+	var rscroll := ScrollContainer.new()
+	rscroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	right.add_child(rscroll)
 	var rv := VBoxContainer.new()
+	rv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rv.add_theme_constant_override(&"separation", 8)
-	right.add_child(rv)
+	rscroll.add_child(rv)
 	_heading(rv, "Farmhands")
 	_name_edit = LineEdit.new()  # P5-20: your name; saved to Settings, sent to the host
 	_name_edit.placeholder_text = "Your name"
@@ -349,7 +354,11 @@ func _ui() -> void:
 	_imposter.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_imposter.toggled.connect(func(on: bool) -> void: Imposter.set_enabled(on))
 	rv.add_child(_imposter)
-	var menu := HBoxContainer.new()
+	var menu := HBoxContainer.new()  # P5-28: top right, clear of the panel and the big button
+	menu.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	menu.offset_left = -232
+	menu.offset_top = 28
+	menu.offset_right = -32
 	var settings := Button.new()
 	settings.text = "Settings"
 	settings.pressed.connect(func() -> void: add_child(SettingsMenu.new()))
@@ -358,7 +367,7 @@ func _ui() -> void:
 	leave.text = "Leave to menu"
 	leave.pressed.connect(Game.leave_session)
 	menu.add_child(leave)
-	rv.add_child(menu)
+	add_child(menu)
 	_go = Button.new()
 	_go.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 	_go.offset_left = -332
@@ -463,6 +472,7 @@ func pick(id: StringName) -> void:
 
 
 func _refresh() -> void:
+	_title.text = "THE LOBBY  -  Season %d" % Game.season_no  # P5-28
 	_lineup.sync()
 	var t := ""
 	for p in Game.players:

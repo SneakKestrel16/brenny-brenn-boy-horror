@@ -486,10 +486,10 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 
 ## Found at the P5-24 review (QA, 2026-10-09)
 
-- **`trait_report_pending` is not saved.** A season loaded from its season-start save never prints the new trait
+- ~~**`trait_report_pending` is not saved.**~~ Fixed by P5-28 (D-183). A season loaded from its season-start save never prints the new trait
   line and never plays `ui_trait_gained`. Owner: Gameplay.
-- **No "Season N" label in the lobby.** Owner: Gameplay (UI).
-- **Lobby bottom buttons overlap**: START THE SEASON covers Settings and Leave to menu (older than P5-24). Owner:
+- ~~**No "Season N" label in the lobby.**~~ Fixed by P5-28. Owner: Gameplay (UI).
+- ~~**Lobby bottom buttons overlap**~~ Fixed by P5-28.: START THE SEASON covers Settings and Leave to menu (older than P5-24). Owner:
   Gameplay (UI).
 
 ## Found at the P5-25 review (QA, 2026-10-09)
@@ -529,3 +529,8 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 - **Corn reads as flat cards up close**, the far band as a striped hedge. It still blocks sight. Art pass is the
   Technical Artist's call. Owner: Technical Artist.
 - **`--clue-shot` overwrites** when two traps arm in the same frame; arm traps seconds apart. Owner: QA.
+
+## Found at the P5-28 review (QA, 2026-10-09)
+
+- **Imposter toggle below the fold** at 1280x720 with 4+ players, exactly when it becomes usable (the panel scrolls
+  79 px). Shorter checkbox text or a taller panel fixes it. Owner: Gameplay (UI).
