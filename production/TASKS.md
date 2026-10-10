@@ -1033,7 +1033,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-48 | Gameplay | Lore in game from doc 11: road sign, intro line, masthead, notes, archive, win line (CEO STOP 6) | todo | P5-37 |
 | P5-49 | Technical Artist | Corn looks like grass: rework stalks to read as corn (CEO STOP 6) | done (QA PASS) | P5-38 |
 | P5-50 | Technical Artist | Improve the lighting: day, dusk, night, interiors (CEO STOP 6) | done (QA PASS) | P5-49 |
-| P5-51 | Level Designer | More corn inside the farm, so the creature can move through it, not only round the edges (CEO STOP 6) | todo | P5-49, P5-47, P5-39 |
+| P5-51 | Level Designer | More corn inside the farm, so the creature can move through it, not only round the edges (CEO STOP 6) | done (QA PASS) | P5-49, P5-47, P5-39 |
 | P5-52 | Gameplay | Crowkeeper role: bait perches that flush crows (CEO STOP 6) | done (QA PASS) | P5-37 |
 | P5-53 | Gameplay | Horror role: everything is scarier for that player (CEO STOP 6) | done (QA PASS) | P5-37, CEO picks ideas |
 | P5-54 | Gameplay Programmer | Fix `tests/gameplay/test_roles.gd` failing on main: "client took Ready back" at line 87 (found in P5-37 QA) | done (QA PASS) | - |

@@ -68,6 +68,15 @@
 <rect class="corn" x="668" y="268" width="12" height="32"/>
 <rect class="corn" x="836" y="364" width="12" height="56"/>
 <rect class="corn" x="704" y="452" width="24" height="68"/>
+<rect class="corn" x="608" y="120" width="24" height="56"/>
+<rect class="corn" x="528" y="196" width="56" height="24"/>
+<rect class="corn" x="416" y="120" width="40" height="60"/>
+<rect class="corn" x="472" y="420" width="24" height="100"/>
+<rect class="corn" x="520" y="396" width="64" height="16"/>
+<rect class="corn" x="648" y="472" width="56" height="24"/>
+<rect class="corn" x="728" y="432" width="48" height="28"/>
+<rect class="corn" x="776" y="392" width="40" height="20"/>
+<rect class="corn" x="288" y="460" width="24" height="60"/>
 <text class="sm" x="500" y="180" text-anchor="middle">Strip 2</text>
 <text class="sm" x="636" y="480" text-anchor="middle">Strip 3</text>
 <text class="sm" x="252" y="500" text-anchor="middle">Strip 1</text>
@@ -234,6 +243,24 @@
 <text class="mk" x="842" y="400.8" text-anchor="middle">c21</text>
 <polygon class="cover" points="716,449 721,458 711,458"/>
 <text class="mk" x="716" y="466.8" text-anchor="middle">c22</text>
+<polygon class="cover" points="620,147 625,156 615,156"/>
+<text class="mk" x="620" y="164.8" text-anchor="middle">c23</text>
+<polygon class="cover" points="552,199 557,208 547,208"/>
+<text class="mk" x="552" y="216.8" text-anchor="middle">c24</text>
+<polygon class="cover" points="436,143 441,152 431,152"/>
+<text class="mk" x="436" y="160.8" text-anchor="middle">c25</text>
+<polygon class="cover" points="484,427 489,436 479,436"/>
+<text class="mk" x="484" y="444.8" text-anchor="middle">c26</text>
+<polygon class="cover" points="552,395 557,404 547,404"/>
+<text class="mk" x="552" y="412.8" text-anchor="middle">c27</text>
+<polygon class="cover" points="676,475 681,484 671,484"/>
+<text class="mk" x="676" y="492.8" text-anchor="middle">c28</text>
+<polygon class="cover" points="752,435 757,444 747,444"/>
+<text class="mk" x="752" y="452.8" text-anchor="middle">c29</text>
+<polygon class="cover" points="796,393 801,402 791,402"/>
+<text class="mk" x="796" y="410.8" text-anchor="middle">c30</text>
+<polygon class="cover" points="300,467 305,476 295,476"/>
+<text class="mk" x="300" y="484.8" text-anchor="middle">c31</text>
 <path class="crow" d="M555,304 L560,307 L565,304 L560,302 Z"/>
 <path class="crow" d="M723,252 L728,255 L733,252 L728,250 Z"/>
 <path class="crow" d="M487,308 L492,311 L497,308 L492,306 Z"/>

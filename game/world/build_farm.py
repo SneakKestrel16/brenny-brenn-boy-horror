@@ -247,7 +247,9 @@ TRAPS = [  # id, x, z, kind
     (21, 100, 10, "edge"), (22, 30, -55, "deep")]
 COVER = [(1, 13, -6), (2, 17, -8), (3, 47, -4), (4, 51, -6), (5, 49, -13), (6, 51, 18), (7, 72, -47), (8, 80, 57),
          (9, -6, 40), (10, -47, 42), (11, -67, 30), (12, -24, -47), (13, 107, 8), (14, -9, -47), (15, 30, 57),
-         (16, -42, 57), (17, 73, -21.5), (18, 95.5, -17.5), (19, 81, 15.5), (20, 58.5, -4), (21, 100.5, 23), (22, 69, 39.5)]
+         (16, -42, 57), (17, 73, -21.5), (18, 95.5, -17.5), (19, 81, 15.5), (20, 58.5, -4), (21, 100.5, 23), (22, 69, 39.5),
+         (23, 45, -36), (24, 28, -23), (25, -1, -37), (26, 11, 34), (27, 28, 26), (28, 59, 46), (29, 78, 36), (30, 89, 25.5),
+         (31, -35, 44)]
 CROWS = [(1, 30, 1), (2, 72, -12), (3, 13, 2), (4, -47, 38), (5, 60, 17), (6, -24, -27), (7, 46, 30), (8, -62, 0),
          (9, -23, 11)]
 SCARECROWS = [(1, 30, -5.5), (2, 72, -5.5), (3, 20, 20), (4, -40, 20), (5, 60, -30), (6, 90, 20), (7, -8, -32)]
@@ -259,6 +261,11 @@ P1_IDS = {"trap": {1, 2, 3, 4, 5, 6, 15, 16, 19, 22}, "cover": {1, 2, 3, 9, 12, 
 # route, off the walks of doc 04 s8.7 and clear of tree canopies; the last is a strip off the ring. Cover points 17..22 sit inside.
 PATCHES = [(68, 78, -40, -20), (94, 100, -30, -16), (78, 84, 14, 30), (57, 60, -8, 0), (99, 102, 16, 30),
            (66, 72, 38, 55)]
+# P5-51 (doc 04 s16, CEO: the creature "only really around the edges"): corn woven through the middle. Hedges and strips join
+# the ring to the farm's centre; each keeps the doc 04 s8.4 corn distances, 6 m from plots, 3.7 m from the cart route and
+# 1 m from every s8.7 walk (check_farm.gd). Cover points 23..31 sit inside, in this order.
+WEAVE = [(42, 48, -45, -31), (22, 36, -26, -20), (-6, 4, -45, -30), (8, 14, 30, 55), (20, 36, 24, 28), (52, 66, 43, 49),
+         (72, 84, 33, 40), (84, 94, 23, 28), (-38, -32, 40, 55)]
 # P5-47 (CEO STOP 6, doc 04 s4): the well stands between field A and field B, at the north tip of strip 3 (open ground
 # midway between the fields, 1.5 m off the cart route edge, 5 m from corn, 4 m off the A to B walk). Phase 1 keeps the yard well.
 WELL, WELL_P1, CROW_WELL = (49, -20), (-25, 10), (51, -19)
@@ -352,7 +359,8 @@ def generate(full: bool) -> str:
         corn = [("RingNorth", -90, 130, -70, -45), ("RingSouth", -90, 130, 55, 80), ("RingWest", -90, -65, -45, 55),
                 ("RingEastN", 105, 130, -45, -9), ("RingEastS", 105, 130, -1, 55),
                 ("Strip1", -50, -44, 40, 55), ("Strip2", 12, 18, -45, 2), ("Strip3", 46, 52, -15, 55),
-                ("Strip4", -9, -3, 38, 55)] + [(f"Patch{i + 1}", *r) for i, r in enumerate(PATCHES)]
+                ("Strip4", -9, -3, 38, 55)] + [(f"Patch{i + 1}", *r) for i, r in enumerate(PATCHES)] \
+                + [(f"Weave{i + 1}", *r) for i, r in enumerate(WEAVE)]
     else:
         corn = [("RingNorth", -32, 46, -70, -45), ("RingSouth", -32, 46, 55, 80),
                 ("TempWallWest", -57, -32, -45, 55), ("TempWallEast", 46, 71, -45, 55),

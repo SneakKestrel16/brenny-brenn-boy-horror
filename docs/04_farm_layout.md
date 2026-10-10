@@ -28,6 +28,8 @@ the diagram.
 12. [Questions raised](#12-questions-raised)
 13. [Built scenes (P2-02)](#13-built-scenes-p2-02)
 14. [Cover, tree lines and landmarks (P4-27)](#14-cover-tree-lines-and-landmarks-p4-27)
+15. [More corn (P5-31, CEO STOP 6)](#15-more-corn-p5-31-ceo-stop-6)
+16. [Corn through the farm (P5-51)](#16-corn-through-the-farm-p5-51)
 
 ## 1. Conventions
 
@@ -52,7 +54,7 @@ up. Every shape in it has its coordinates in sections 3 to 7, so it can be check
 
 | Mark | Meaning |
 |---|---|
-| Green | Corn (ring and strips) |
+| Green | Corn (ring, strips, patches and the section 16 weave) |
 | Brown blocks | Buildings; white circle with black outline = a door or fixed prop |
 | Tan grid, dashed lower row | Field plots; the dashed row is the upgrade row; the dotted row outside a field is the headcount row (section 5.1) |
 | Purple squares | Moonflower bed |
@@ -332,6 +334,15 @@ lines from the corn" in DD Phase 1 (doc 01 "Build Plan").
 | cover_20 | (58.5, -4) | Field B, west (Patch4) |
 | cover_21 | (100.5, 23) | Field B, south-east (Patch5) |
 | cover_22 | (69, 39.5) | Moonflower bed, crate (Patch6) |
+| cover_23 | (45, -36) | The well and the cart route's R4 corner (Weave1, section 16) |
+| cover_24 | (28, -23) | Field A's north side (Weave2) |
+| cover_25 | (-1, -37) | Behind the barn, the pen's east side (Weave3) |
+| cover_26 | (11, 34) | Yard south of the audio band, shed and drum (Weave4) |
+| cover_27 | (28, 26) | Orchard edge, field A's south side (Weave5) |
+| cover_28 | (59, 46) | Moonflower bed from the south (Weave6) |
+| cover_29 | (78, 36) | Moonflower bed's south-east side, between Patch6 and Patch3 (Weave7) |
+| cover_30 | (89, 25.5) | East of the crate, gate's south wing (Weave8) |
+| cover_31 | (-35, 44) | Prize Pumpkin from the east (Weave9) |
 
 ### 7.3 Crows, scarecrows, pen and escape spots
 
@@ -467,7 +478,7 @@ lit doorway's light doesn't count"; gnawed "on any night nobody is within 20 m".
 - No work spot is within 20 m (the nearest is the shed door at 32.8 m): guarding is a job of its own (doc 01
   "Splitting up").
 - Strip 1's tip is 7 m away. Inside the circle: cover_10 (9.0 m), trap_17 (11.0), trap_18 (11.4),
-  crow_04 (5.0) and the moved-scarecrow spot scarecrow_04 (14.8). Just outside: cover_11 (20.2) and
+  cover_31 (16.3, P5-51, Weave9), crow_04 (5.0) and the moved-scarecrow spot scarecrow_04 (14.8). Just outside: cover_11 (20.2) and
   cover_16 (24.5), which watch the guard from the ring. So the guard stands in the open with corn
   and a cover point close by.
 
@@ -606,7 +617,7 @@ findings are Q-017.
 unchanged) and `farm.tscn` (the full farm). `farm.tscn` adds the farmhouse, strips 1 and 3, the full ring
 (layer 5 boxes, road lane left open), field B, the moonflower bed (4 plots, `field = moonflower`), the
 shipping crate (group `store_crate`), 8 headcount plots (`Plot29` to `Plot36`, D-039: 36 `plot_spots` in all, 24 field + 8 headcount + 4 moonflower), the town stand (group `sell_box`) with a `sanctuary` marker (10 m; the group keeps its old name, D-115),
-the farm gate, the Prize Pumpkin marker, `CartRoute` (R0 to R8), all 22 trap spots, 22 cover points (16 + 6 in the P5-31 corn, section 15), 9 crow
+the farm gate, the Prize Pumpkin marker, `CartRoute` (R0 to R8), all 22 trap spots, 31 cover points (16 + 6 in the P5-31 corn, section 15, + 9 in the P5-51 weave, section 16), 9 crow
 perches, 7 scarecrow spots, 4 escape spots, 4 audio markers, 6 barn spawns (D-038), the pegboard with
 `pegboard_bear_slots` slot markers (5, read from `data/season.json`), and in the barn a `RecordingSpot`
 (0, -15) and `BarnLantern` (-5, -17; also in group `lightrig_spots`, radius 6, so `world_look.gd` puts the real `LightRig` there, Q-054 item 4) (placeholder positions, inference: inside the barn, away from the door).
@@ -723,4 +734,43 @@ it and Stalk and lures start from it (the creature walks through corn, no nav me
   Section 5.1 ("6 m or more from corn") holds for every plot and headcount row (Patch4 ends 6 m from x 66).
 - I tried a seventh strip (x -52..-46, z -45..-25, north of the farmhouse) and dropped it: it sits on
   the West tree line (West2, 3, 5).
-- Phase 2 scene totals: 22 cover points (`check_farm.gd` counts it).
+- Phase 2 scene totals after P5-31: 22 cover points. P5-51 (section 16) adds nine more, 31 in all (`check_farm.gd` counts it).
+
+## 16. Corn through the farm (P5-51)
+
+The CEO said the creature "moves through corn but it's only really around the edges". Sections 3 and 15 put
+corn on the ring, four strips and six islands, and the middle of the clearing stayed open ground (the creature
+crossed it in plain sight). `build_farm.py` list `WEAVE` adds nine `CornBlockers` (`Weave1` to `Weave9`, layer 5,
+2.4 m) to `farm.tscn` only (`farm_phase1.tscn` is unchanged). Each has a `creature_cover` point (cover_23 to
+cover_31, section 7.2) inside it, so Lurk wander, Stalk and the night lures start from it. Each block either
+touches the ring or an older corn block, or leaves a gap of 3 m or more, so no sliver gaps.
+
+| Block | Rectangle | Cover | Role |
+|---|---|---|---|
+| Weave1 | x 42..48, z -45..-31 | cover_23 (45, -36) | Reaches south from the north ring to the well and the R4 corner of the cart route |
+| Weave2 | x 22..36, z -26..-20 | cover_24 (28, -23) | Hedge on field A's north side, between the barn and the field |
+| Weave3 | x -6..4, z -45..-30 | cover_25 (-1, -37) | Behind the barn, the pen's east side; the barn's door is on the south wall (z 0), so no doorway is touched |
+| Weave4 | x 8..14, z 30..55 | cover_26 (11, 34) | Reaches north from the south ring into the yard, south of the audio band (section 8) |
+| Weave5 | x 20..36, z 24..28 | cover_27 (28, 26) | Orchard edge, field A's south side |
+| Weave6 | x 52..66, z 43..49 | cover_28 (59, 46) | Joins strip 3 to Patch6 and covers the moonflower bed's south side |
+| Weave7 | x 72..84, z 33..40 | cover_29 (78, 36) | Links Patch6 to Patch3 along the south side of the moonflower bed; 28 m south of the crate (72, 5), so it is cover on the way, not at the crate |
+| Weave8 | x 84..94, z 23..28 | cover_30 (89, 25.5) | East of the crate, south wing of the gate approach; reached by a detour, see below |
+| Weave9 | x -38..-32, z 40..55 | cover_31 (-35, 44) | Second strip beside the Prize Pumpkin (Strip 1 is the first) |
+
+- Rules kept (checked by `check_farm.gd` `_weave()`, "9 of 9 weave blocks pass"): every plot and headcount row 6 m or more
+  away (section 5.1), the cart route 3.7 m or more (section 6), every doc 04 s8.7 walk 1 m or more, every marker, tree
+  canopy, path, fence and side path clear, the well (49, -20) and all work spots reachable, no block in the audio band
+  (x -30..38, z 10..22), the Prize Pumpkin 30 m or more from any door, and the s8.4 corn distances to the drum, doors,
+  pen gate, generator and farm gate unchanged. Day safety is unchanged: the Creature uses cover points only at night
+  (day cover is cover_15 under the AI Director's keep-out, inference from reading `creature.gd` and `ai_director.gd`).
+- Reaching them: `check_corn_creature.gd` now covers cover_17 to cover_31. In Lurk the Creature reaches each new point from the ring in 11 to 29 s,
+  except cover_30 (51 s: it detours east around the crate and store, inference from the position it stopped at; a
+  longer test wait settles it). Stalk from each point reaches a stand-off or chases.
+- Bot season measure (`tests/creature/test_p5_51.gd`, seed 1 and 2, 3 nights, free bots): the Creature stood in the
+  new corn 10 s and 7 s of 900 (0 s before). Bots keep it on one goal most nights (cover_01 240 to 287 s of 900 in
+  Lurk), so the seasons barely move it. The direct measure is the wander draw: of 400 draws per region from the middle of the farm,
+  `pen` 400, `pumpkin` 100, `field_a` 85, `moonflower` 149 and `yard` 0 / `field_b` 0 pick a new point.
+  Inference: free bots do not pull it around enough to show the corn; a playtest settles it.
+- Perf (doc 07 s10.2, one windowed instance, vsync off, day, 20 s): barn door 1.01 ms / 195 draws, clearing 0.88 /
+  81, corn lane 0.90 / 47, road 1.15 / 387, new spot (28, -12) facing Weave2 0.95 ms / 162 draws, 60k prims. All under the budget; no
+  spot over 33 ms. (P5-38's 2.2 ms figures came from four instances at once.)

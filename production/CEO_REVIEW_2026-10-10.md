@@ -34,6 +34,7 @@ without a revert.
 | P5-53 | 9aa255b | Horror role: darker world and private scares for that player only (D-8, D-9, D-10) | `git revert 9aa255b` (test_roles count also covers P5-52; fix by hand if reverting only one) |
 | P5-50 | 80a94c9 | Warm interior fill light in barn, farmhouse and tool shed; also fixes a P5-53 compile break in test_light_rig | `git revert 80a94c9` (reverting also brings back the test_light_rig break; revert 9aa255b too) |
 | P5-55 | 4c229d3 | Doors: creature opens a shut door instead of walking through; open door leaves are solid; nothing usable through walls; bots use the barn doorway | `git revert 4c229d3` |
+| P5-51 | (this commit, see `git log --grep P5-51`) | More corn inside the farm (weave blocks and nine new cover points) so the creature can move through it, not only round the edges | `git revert <P5-51 commit>` |
 
 ## 3. Tests run and what we did
 
@@ -44,4 +45,5 @@ without a revert.
   `Get-CimInstance Win32_Process -Filter "Name like 'Godot%'" | Where-Object { $_.CommandLine -match 'audio-driver Dummy' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`
 - **P5-55 doors: four Opus QA rounds, PASS.** Tests on main: import 0 ERROR, parse_check 215/0, door, leaf, bot-door, pick-through-wall and creature tests all PASS.
 - **test_light_rig broke after P5-53** (LightRig needed the Game autoload); fixed in 80a94c9.
-- **Work paused for the cap:** P5-48 lore rework, P5-51 corn, P5-56 creature AI, P5-57 bots, P5-58 creature pick, P5-59 textures, P5-60 emotes, P5-61 signs. They resume one at a time.
+- **P5-51 corn: two Opus QA rounds, PASS.** Round 1 found the stalk test could never fail; fixed. Tests on main: import 0 ERROR, parse_check 217/0, grep_rules clean, check_farm PASS, check_corn_creature PASS, test_p5_51 PASS. Open (Q-354, AI task later): on bot nights the creature still spends most of the night in the open clearing (806 of 900 s); 8 of 15 stalk test points can't fail.
+- **Work paused for the cap:** P5-48 lore rework, P5-56 creature AI, P5-57 bots, P5-58 creature pick, P5-59 textures, P5-60 emotes, P5-61 signs. They resume one at a time.

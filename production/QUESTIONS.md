@@ -1670,3 +1670,6 @@ The Horror role reuses placeholder sounds: `vox_stranger_*` (whispers), `cre_pre
 
 ### Q-353 · 2026-10-10 · Gameplay Programmer (P5-53) -> Director · open
 The "name whispered in their own recorded voice" scare replays one of the player's own recorded clips, because the game cannot make their name in their voice (inference). It runs only when their voice setting replays it (doc 06 s11). Settled by: the CEO or Audio Designer, if a name-specific clip (a recorded "say your name" prompt, CEO-approved, not in the repo) is wanted.
+
+### Q-354 · 2026-10-10 · QA (P5-51 review) -> AI Programmer · open
+`tests/creature/test_p5_51.gd` seed 1 has the Creature in the open clearing for 806 of 900 night seconds (ring 4, old inner corn 80, Weave 10). Doc 03 s4 lurk moves between cover points, and the CEO wants it moving through corn. Inference: the bots hold it on one goal (cover_01, 240 to 287 s per the P5-51 handoff). Also from the round 2 review: 8 of the 15 `check_corn_creature` Stalk points (cover_23..29 and 31) start within 12 m of the player, so they pass even with a frozen creature; the other 7 can fail. Settled by: an AI task tracing the lurk goals on a bot season, or a playtest; moving those OPEN points to 14 to 15 m closes the test gap.

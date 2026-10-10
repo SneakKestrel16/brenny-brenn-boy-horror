@@ -24,6 +24,7 @@ func _run() -> void:
 	_lure_and_ghost()
 	_route()
 	_cover()
+	_weave()
 	print("check_farm: %s" % ("PASS" if _fails == 0 else "%d FAIL" % _fails))
 	quit(1 if _fails else 0)
 
@@ -45,7 +46,7 @@ func _group(g: StringName) -> Array:
 
 
 func _counts() -> void:
-	var want := {&"trap_spots": 22, &"creature_cover": 22, &"crow_perches": 9, &"scarecrow_spots": 7,
+	var want := {&"trap_spots": 22, &"creature_cover": 31, &"crow_perches": 9, &"scarecrow_spots": 7,
 			&"animal_escape_spots": 4, &"spatial_audio_markers": 4, &"player_spawns": 6, &"plot_spots": 36,
 			&"pegboard_spots": 1, &"pegboard_slots": 5, &"recording_spots": 1, &"barn_lantern": 1, &"doors": 3,
 			&"lightrig_spots": 4, &"generator": 1, &"fuel_drum": 1, &"well": 1, &"sell_box": 1, &"store_crate": 1,
@@ -302,3 +303,89 @@ func _cover() -> void:
 	print("%s %d of %d trees clear of work spots, markers, cart route, walks and audio band" % [
 			"ok  " if bad == 0 else "FAIL", _world.get_node("Trees").get_child_count() - bad,
 			_world.get_node("Trees").get_child_count()])
+
+
+func _rect_dist(r: Rect2, p: Vector2) -> float:
+	return p.distance_to(Vector2(clampf(p.x, r.position.x, r.end.x), clampf(p.y, r.position.y, r.end.y)))
+
+
+func _seg_rect_dist(r: Rect2, a: Vector2, b: Vector2) -> float:
+	var best := 1e9
+	for k in 201:
+		best = minf(best, _rect_dist(r, a.lerp(b, k / 200.0)))
+	return best
+
+
+## P5-51 (doc 04 s16): the Weave corn keeps 6 m from plots, 3.7 m from the cart route, 1 m from every s8.7 walk and from
+## markers, off trees, side paths and the audio band; holds exactly one cover point; and leaves no sliver under 3 m to other corn.
+func _weave() -> void:
+	print("-- doc 04 s16 weave corn (P5-51)")
+	var barn := _p("Buildings/Barn")
+	var walks := [[barn, Vector2(11, 3), Vector2(19, 3), _centre("a")], [_centre("a"), Vector2(45, -16), Vector2(53, -16), _centre("b")],
+			[_centre("b"), _centre("moonflower")], [_centre("b"), _p("Props/TownStand")],
+			[_p("Props/TownStand"), Vector2(104, -2), _p("Props/ShippingCrate")], [_p("Props/FuelDrum"), _p("Props/Generator")],
+			[barn, _p("Props/PrizePumpkin")], [_p("Buildings/Farmhouse"), _p("Props/PrizePumpkin")], [_p("Props/Well"), _centre("a")],
+			[_p("Props/Well"), _centre("b")], [_p("Props/Well"), Vector2(53, -16), _centre("moonflower")],
+			[_p("Props/Well"), Vector2(19, 3), Vector2(11, 3), _p("Props/PrizePumpkin")],
+			[_p("Props/Well"), Vector2(19, 3), Vector2(11, 3), barn], [barn, _p("Buildings/ToolShed")]]
+	var route := (_world.get_node("CartRoute") as Path3D).curve
+	var covers := _group(&"creature_cover")
+	var n_ok := 0
+	var total := 0
+	for b in _world.get_node("CornBlockers").get_children():
+		if not String(b.name).begins_with("Weave"):
+			continue
+		total += 1
+		var r := _corn_rect(b.name)
+		var why := []
+		for p in _group(&"plot_spots"):
+			if _rect_dist(r, Vector2(p.global_position.x, p.global_position.z)) < 7.4:  # 6 m from the plot edge (1.4 m half plot)
+				why.append("plot " + p.name)
+		for i in range(1, route.point_count):
+			var q0 := route.get_point_position(i - 1)
+			var q1 := route.get_point_position(i)
+			if _seg_rect_dist(r, Vector2(q0.x, q0.z), Vector2(q1.x, q1.z)) < 3.65:
+				why.append("route leg R%d" % i)
+		for w in walks:
+			for i in range(1, w.size()):
+				if _seg_rect_dist(r, w[i - 1], w[i]) < 1.0:
+					why.append("walk %s-%s" % [w[i - 1], w[i]])
+		for g in [&"trap_spots", &"crow_perches", &"scarecrow_spots", &"animal_escape_spots", &"spatial_audio_markers", &"player_spawns"]:
+			for m in _group(g):
+				if _rect_dist(r, Vector2(m.global_position.x, m.global_position.z)) < 1.0:
+					why.append("marker " + m.name)
+		var inside := 0
+		for c in covers:
+			if r.has_point(Vector2(c.global_position.x, c.global_position.z)):
+				inside += 1
+		if inside != 1:
+			why.append("%d cover points inside" % inside)
+		for t in _world.get_node("Trees").get_children():
+			var rad: float = ((t.get_node("Shape") as CollisionShape3D).shape as CylinderShape3D).radius
+			if _rect_dist(r, Vector2(t.global_position.x, t.global_position.z)) < rad:
+				why.append("tree " + t.name)
+		if r.intersects(Rect2(-30, 10, 68, 12)):
+			why.append("audio band")
+		for pth in _world.get_node("Paths").get_children():
+			var sz: Vector3 = (pth as MeshInstance3D).mesh.size
+			var g := (pth as Node3D).global_transform
+			for sx in [-0.5, 0.0, 0.5]:
+				for sy in [-0.5, 0.0, 0.5]:
+					var wp: Vector3 = g * Vector3(sx * sz.x, 0, sy * sz.z)
+					if r.grow(0.5).has_point(Vector2(wp.x, wp.z)):
+						why.append("path " + pth.name)
+		for o in _world.get_node("CornBlockers").get_children():
+			if o == b:
+				continue
+			var ro := _corn_rect(o.name)
+			var gap := maxf(maxf(ro.position.x - r.end.x, r.position.x - ro.end.x), maxf(ro.position.y - r.end.y, r.position.y - ro.end.y))
+			if gap > 0.0 and gap < 3.0:
+				why.append("%.1f m sliver to %s" % [gap, o.name])
+			if gap < 0.0:
+				why.append("overlaps " + o.name)
+		print("%s %s %s: %s" % ["ok  " if why.is_empty() else "FAIL", b.name, r, why])
+		if why.is_empty():
+			n_ok += 1
+		else:
+			_fails += 1
+	print("%d of %d weave blocks pass" % [n_ok, total])
