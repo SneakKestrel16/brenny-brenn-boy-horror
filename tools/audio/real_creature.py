@@ -175,7 +175,10 @@ def door(o, v):  # v = variant 0..2
     k = (f"closet door close {v+1}", f"screen door close {v+1}", "closet door close 4")[v]
     return mix((lead_in(seg(load(623701), 0, 1.6)), 0, 1.0), (lead_in(load(k)), 0.0, 0.8))
 def corn(o, v):
-    if o == "A": a = pool(755839, 3, thr=-14, maxlen=1.0, hp=80)[v]
+    if o == "A":  # CEO 2026-10-09 "the sound should match each corn he goes through": one brush per stalk, 0.05-0.10 s apart, no dead air
+        rng = np.random.default_rng(v); g = pool(755839, 12, thr=-14, maxlen=0.25, hp=80); hits, t = [], 0.0
+        while t < 0.95: hits.append((g[rng.integers(len(g))], t, rng.uniform(0.7, 1.0))); t += rng.uniform(0.05, 0.10)
+        a = mix(*hits)
     elif o == "B": a = fade(seg(load(613567), (8.0, 20.0, 30.0)[v], (9.0, 21.0, 31.0)[v]), 0.2, 0.25)
     else:
         b = pool(f"bushes {(3, 8, 15)[v]}", 1, maxlen=1.0, hp=80)[0]
@@ -236,13 +239,15 @@ def build(only):
                 write(f"{LISTEN}/jumpscare_{body}_{o}.wav", a)
     if want("cornstand"): report("cornstand_613567_20s", corn_ref)
     for o in "ABC":
-        for name, fn, db, n_s in (("cre_door_bang", door, -13.8, 1.6), ("cre_corn_part", corn, -10.2, 1.0)):
+        for name, fn, db, n_s in (("cre_door_bang", door, -13.8, 1.6), ("cre_corn_part", corn, -20.0, 1.0)):
             if not want(name): continue
             vs = []
             for v in range(3):
-                a = finish(fit(fn(o, v), n_s), db, 0.001, 0.25 if n_s > 1 else 0.15)
+                a = finish(fit(fn(o, v), n_s), db, 0.001, 0.25 if n_s > 1 else 0.05)
+                if name == "cre_corn_part": a = 0.25*np.tanh(a/0.25)  # CEO 2026-10-09 "reduce the max sound and make it softer": soft-limit peaks to about -12 dBFS
                 write(f"{OUT}/{name}_{o}_0{v+1}.wav", a); report(f"{name}_{o}_0{v+1}", a); vs.append(a)
-            write(f"{LISTEN}/{name[4:]}_{o}.wav", np.concatenate([vs[0], GAP, vs[1], GAP, vs[2]]))
+            gap = [] if name == "cre_corn_part" else [GAP]  # corn: variants back to back, a walk through the stalks
+            write(f"{LISTEN}/{name[4:]}_{o}.wav", np.concatenate([vs[0], *gap, vs[1], *gap, vs[2]]))
         for name, opts in ONE.items():
             if not want(name): continue
             a, db, fi, fo = opts[o]

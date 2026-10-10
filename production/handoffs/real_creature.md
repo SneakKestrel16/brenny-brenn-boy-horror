@@ -129,3 +129,4 @@ Install all picks in one batch after the listen. Use the steps under "Installing
 | lunge (`cre_lunge`) | A | |
 | flare hit (`cre_flare_hit`) | A | |
 | door bang (`cre_door_bang_*`) | B | |
+| corn part (`cre_corn_part_*`) | A, remade | CEO: "reduce the max sound and make it softer, its way too loud", then "the sound should match each corn he goes through". Rebuilt as one 755839 brush per stalk, 0.05-0.10 s apart, RMS -20 dB soft-limited to peak about -12 dBFS, no silent gaps. CEO: "just go with it". |
