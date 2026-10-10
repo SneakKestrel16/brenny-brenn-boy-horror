@@ -13,6 +13,7 @@ extends Node
 
 const Logic := preload("res://game/ai_director/director_logic.gd")
 const Crops := preload("res://game/farming/crops.gd")
+const Bot := preload("res://game/bots/bot.gd")  ## P5-57: `knob`, the ai_director.json `bots` flags
 const TIMED: Array[StringName] = [&"jumpscare", &"shed", &"whisper", &"own_voice", &"wrong_count", &"hallucination"]
 const BUILDUP_S := 3.0  ## placeholder: build-up before the scare lands (doc 03 section 13 "built up")
 const TICK_S := 1.0
@@ -256,8 +257,9 @@ func _fake_out(forced := false) -> bool:
 		return false
 	var best: Node3D = null
 	var best_d := INF
+	var humans := bool(Bot.knob(&"fake_out_humans_only"))  # P5-57: a bot sees nothing
 	for p: int in Game.players.keys().filter(_alive):
-		if not _creature._outdoor(Game.players[p].pos):
+		if (humans and p < 0) or not _creature._outdoor(Game.players[p].pos):
 			continue
 		for n: Node3D in get_tree().get_nodes_in_group(&"crow_perches"):
 			var dist := n.global_position.distance_to(Game.players[p].pos)

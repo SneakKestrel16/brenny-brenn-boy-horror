@@ -12,6 +12,9 @@ extends Node
 ## P4-21: from dusk to dawn bots wait in the lit barn (generator jobs aside) and one waits at the town stand
 ## (safer, never safe: D-115), so the farm is never unattended; bots keep the first payment before buying
 ## seeds, plant and water the Prize Pumpkin, pry themselves out of a bear trap, and move only on send steps.
+## P5-57 (CEO 2026-10-10 "improve overall AI"): on the full farm bots do chores by default, walk a grid around walls
+## (bot_grid.gd), open any closed door with the `open_door` hold, ask the store before buying a seed and follow the
+## moving cart. Each change has a flag in ai_director.json `bots` (false is the behaviour before P5-57).
 
 const Route := preload("res://game/bots/bot_route.gd")
 const Frame := preload("res://game/player/move_frame.gd")
@@ -47,6 +50,7 @@ var peer := 0
 var players: Node
 var farm: Node
 var claims: Dictionary  ## shared by every bot (Bots): target id -> bot peer, so two bots never pick the same plot
+var bots: Node  ## the Bots node: its shared walk grid (P5-57)
 var rng := RandomNumberGenerator.new()
 
 var _pos := Vector3.ZERO
@@ -59,8 +63,20 @@ var _pin_t := 0.0
 
 func _ready() -> void:
 	_pos = players.player(peer).global_position  # the spawn marker Players picked
-	if not Game.full_farm or OS.get_cmdline_user_args().has("--bot-chores"):  # P2-07: bot_route.gd is Phase 1 only
+	# P2-07: bot_route.gd is Phase 1 only. P5-57 `chores_default`: never under a `-s` test script, whose bots stand still.
+	if not Game.full_farm or OS.get_cmdline_user_args().has("--bot-chores") or (knob(&"chores_default") and get_tree().get_script() == null):
 		_run.call_deferred()
+
+
+## P5-57: a field of ai_director.json `bots`, false when the table is not loaded or with `--bot-knobs-off` (every flag
+## off: the behaviour before P5-57, for a same-seed comparison) or `--bot-knob-off=a,b` (those flags off).
+static func knob(field: StringName) -> Variant:
+	if not Data.has_table(&"ai_director"):
+		return false
+	for a: String in OS.get_cmdline_user_args():
+		if a == "--bot-knobs-off" or (a.begins_with("--bot-knob-off=") and field in a.trim_prefix("--bot-knob-off=").split(",")):
+			return false
+	return Data.record(&"ai_director", &"bots").get(field, false)
 
 
 func _physics_process(delta: float) -> void:
@@ -100,14 +116,33 @@ func _pry(delta: float) -> void:
 
 ## P5-55: a bot moves by position, not move_and_slide, so it honours the barn door itself (the door is at the origin, see BARN).
 ## A step across a closed doorway stops it at the threshold and it opens the door (host only, as a player's `open_door`).
+## P5-57 `door_hold`: every door, in the door marker's frame (the gap runs along local x, the door plane is local z 0), and the
+## bot holds `open_door` as a player does (range and sight checked by the host); the host's word alone only if refused.
 func _door_stops(a: Vector3, b: Vector3) -> bool:
-	if (a.z > 0.0) == (b.z > 0.0) or absf((a.x + b.x) * 0.5) > Doors.GAP_M * 0.5:
-		return false
 	var doors := get_tree().root.get_node_or_null(^"Main/Doors") as Doors
-	if doors == null or doors.open.get("door_barn", true):
+	if doors == null:
 		return false
-	doors.host_set("door_barn", true, peer)
-	return true
+	if not knob(&"door_hold"):
+		if (a.z > 0.0) == (b.z > 0.0) or absf((a.x + b.x) * 0.5) > Doors.GAP_M * 0.5 or doors.open.get("door_barn", true):
+			return false
+		doors.host_set("door_barn", true, peer)
+		return true
+	for id: String in doors.open:
+		if doors.open[id] or not farm.targets.has(id):
+			continue
+		var frame := (farm.targets[id].get_parent() as Node3D).global_transform.affine_inverse()
+		var la := frame * a
+		var lb := frame * b
+		if (la.z > 0.0) == (lb.z > 0.0) or absf((la.x + lb.x) * 0.5) > Doors.GAP_M * 0.5:
+			continue
+		var h: Dictionary = farm.registry.holds.get(peer, {})
+		if h.is_empty():
+			Net.request_received.emit(&"hold", peer, [&"open_door", id])  # what Net's `request_hold` RPC emits
+			h = farm.registry.holds.get(peer, {})
+		if h.get("verb", &"") != &"open_door":
+			doors.host_set(id, true, peer)  # refused, or busy with another hold (pushing the cart)
+		return true
+	return false
 
 
 ## Walk `dist` metres along the path, turning at each point.
@@ -142,6 +177,8 @@ func _run() -> void:
 		if job[0] == &"shelter":
 			var spot := SHELTER_SPOT + Vector3(2.0 * (absi(peer) % 4) - 3.0, 0, 0)  # side by side, never on one spot
 			_path = [spot] if BARN.has_point(Vector2(_pos.x, _pos.z)) else [BARN_DOOR_OUT, spot]  # in by the door, not through a wall
+			if bots and bots.grid():
+				_path = bots.grid().path(_pos, spot)
 			while not _path.is_empty() and not Game.is_ghost(peer):
 				await get_tree().physics_frame
 			await _wait(1.0)
@@ -322,9 +359,15 @@ func _scrap_ok() -> bool:
 
 ## D-093: planting uses a seed of the plot's crop (the bot's plain `plant`); with none left the bot buys one.
 # ponytail: one at a time from anywhere (`near` false), as `_scrap_ok`; keeps the simulator's cash timing.
+## P5-57 `seed_coin_check`: ask the store first, so a bot with no coins never logs `store_refused` every frame.
 func _plantable(plot: Node, st: Dictionary) -> bool:
 	var why: StringName = plot.can_start(&"plant", st)
-	return why == &"" or (why == &"no_seeds" and farm.store.buy_seeds(peer, plot.crop_for(&"plant"), 1, false) == &"")
+	if why != &"no_seeds":
+		return why == &""
+	var crop: StringName = plot.crop_for(&"plant")
+	if knob(&"seed_coin_check") and farm.store.seed_why_not(peer, crop, 1, false) != &"":
+		return false
+	return farm.store.buy_seeds(peer, crop, 1, false) == &""
 
 
 ## P2-27: the job that gets a can of `kind` into the hands: put down the wrong one, else pick up the nearest free one.
@@ -381,6 +424,12 @@ func _do(verb: StringName, id: String) -> void:
 func _push() -> void:
 	var cart: Node = farm.cart
 	await _walk(cart.target_pos())
+	if knob(&"follow_cart"):  # P5-57: the cart rolls while others push; catch up with where it is now, not where it was
+		var limit := get_tree().create_timer(30.0)
+		while not Game.is_ghost(peer) and limit.time_left > 0.0 and Vector2(_pos.x - cart.target_pos().x, _pos.z - cart.target_pos().z).length() > cart.range_m - 0.5:
+			_path = [Vector3(cart.target_pos().x, 0.0, cart.target_pos().z)]
+			await get_tree().physics_frame
+		_path.clear()
 	if Game.is_ghost(peer):
 		return
 	Net.request_received.emit(&"hold", peer, [&"push_cart", "cart"])
@@ -394,7 +443,9 @@ func _push() -> void:
 
 func _walk(to: Vector3) -> void:
 	_path = [Vector3(to.x, 0.0, to.z)] if Game.full_farm else Route.path(_pos, to)
-	if Game.full_farm and BARN.has_point(Vector2(_pos.x, _pos.z)) != BARN.has_point(Vector2(to.x, to.z)):
+	if bots and bots.grid():
+		_path = bots.grid().path(_pos, to)  # P5-57: around walls, fences and props, through doorways
+	elif Game.full_farm and BARN.has_point(Vector2(_pos.x, _pos.z)) != BARN.has_point(Vector2(to.x, to.z)):
 		# P5-55: through the barn door, never the wall (the door guard in `_step` then opens it if closed)
 		var door_in := Vector3(0, 0, -1.5)
 		_path = ([door_in, BARN_DOOR_OUT] if BARN.has_point(Vector2(_pos.x, _pos.z)) else [BARN_DOOR_OUT, door_in]) + _path

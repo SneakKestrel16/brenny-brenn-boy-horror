@@ -149,6 +149,20 @@
       "perch_empty_s": 60
     },
     {
+      "id": "bots",
+      "source": "placeholder",
+      "cite": "P5-57 (CEO 2026-10-10 'improve overall AI'); doc 01 Testing > Bot teammates; doc 03 section 21. Each flag turns one bot or AI Director change off again (false = the behaviour before P5-57). chores_default: full-farm bots do chores without --bot-chores (never under a -s test script). grid_route: bots walk a 1 m grid around walls, fences and props (cell_m, body_m) and pay corn_weight per corn or tree cell. door_hold: a bot opens any closed door with the open_door hold, as a player does. seed_coin_check: bots ask the store before buying seeds. follow_cart: a pusher keeps walking to the moving cart. fake_out_humans_only: fake-outs pick the perch nearest an outdoor human (a bot sees nothing)",
+      "chores_default": true,
+      "grid_route": true,
+      "cell_m": 1.0,
+      "body_m": 0.8,
+      "corn_weight": 3.0,
+      "door_hold": true,
+      "seed_coin_check": true,
+      "follow_cart": true,
+      "fake_out_humans_only": true
+    },
+    {
       "id": "nudge",
       "source": "placeholder",
       "cite": "doc 03 section 11.6; D-021: one hop, regions within link_m are adjacent",
