@@ -58,6 +58,10 @@ const LONE_M := 15.0  ## inference: doc 03 section 4.2 "a lone player"; reuses t
 const CLUE_M := 4.0  ## doc 03 section 9: trap clues are seen within 4 m (placeholder)
 const TRAP_SPRING_M := 1.0  ## placeholder: a living player this close to an armed trap springs it
 const ARRIVE_M := 1.0
+const STUCK_S := 2.0  ## P5-56 placeholder: a lurk walk that barely moves this long drops its hop
+const RING_STEP_M := 20.0  ## P5-56 placeholder: lurk route waypoints along the inner edge of the wide corn (the ring), this far apart
+const RING_INSET_M := 4.0  ## P5-56 placeholder: and this far into it (doc 04 s7.2 puts cover 1 to 2 m in; deeper hides better)
+const RING_MIN_M := 15.0  ## P5-56 placeholder: corn at least this thick gets those waypoints (the ring is 25 m, inner corn 3 to 16 m)
 const DOOR_STEP_M := 2.0  ## P4-25 placeholder: the waypoints this far either side of a door it walks through
 const WALL_PAD_M := 0.5  ## P4-25: a line nearer a wall line than this is blocked (half the 0.3 m wall plus its 0.4 m radius)
 const CORNER_M := 1.5  ## P4-25 placeholder: it rounds a building this far out from the wall lines
@@ -154,6 +158,17 @@ var _bang_open := false  ## P5-55: a bang is running; the door opens when it end
 var _exit_open := -1  ## P5-55: the building whose door it opened on its way out, -1 for none
 var _bang_until := -INF ## P5-39: _now when the bang ends
 var _bang_next := -INF  ## P5-39: _now of the next bang sound
+var _route: Array = []  ## P5-56: the cover points still to walk to `_dest`, nearest first (Vector2 x, z)
+var _dest := Vector3.INF  ## P5-56: the lurk wander point the route ends at, INF for none
+var _linger_until := -INF  ## P5-56: _now until which lurk waits at the end of its route
+var _picked: Dictionary = {}  ## P5-56: wander point (Vector2 x, z) -> _now it was last picked
+var _corn: Array = []  ## P5-56: CornBlockers rects (x, z), read on first use
+var _search_c := Vector3.INF  ## P5-56: the last sensed position a lost chase searches round
+var _searched: Array = []  ## P5-56: the points that search has checked (Vector3)
+var _stuck_t := 0.0  ## P5-56: seconds a lurk walk has barely moved
+var _via: Array = []  ## P5-56: lurk route points (Vector2 x, z): cover points, then ring waypoints
+var _via_cost := PackedFloat32Array()  ## P5-56: Logic.hop_costs of _via
+var _via_key := ""  ## P5-56: what _via was built for
 
 # client only
 var _target_pos := Vector3.ZERO
@@ -201,12 +216,13 @@ func _ready() -> void:
 	for id in [&"lurk_speed_mps", &"stalk_speed_mps", &"chase_speed_mps"]:
 		_num[id] = float(Data.value(&"creature", id, &"speed_mps"))
 	for id in [&"lure_wait_s", &"stalk_max_s", &"chase_commit_s", &"retreat_s", &"hearing_memory_s", &"chase_lose_quiet_s", &"chase_tell_s",
-			&"door_bang_s", &"stalk_repick_s", &"stalk_rest_s"]:
+			&"door_bang_s", &"stalk_repick_s", &"stalk_rest_s", &"lurk_linger_s", &"wander_recent_s"]:
 		_num[id] = float(Data.value(&"creature", id, &"seconds"))
 	for id in [&"reach_m", &"sight_night_m", &"sight_day_m", &"sight_still_crouch_m", &"scripted_standoff_m", &"trap_lure_m", &"wander_min_hop_m",
-			&"stalk_hold_near_m", &"stalk_hold_far_m", &"retreat_min_m"]:
+			&"stalk_hold_near_m", &"stalk_hold_far_m", &"retreat_min_m", &"search_radius_m", &"trap_traffic_m"]:
 		_num[id] = float(Data.value(&"creature", id, &"metres"))
-	_num[&"corn_damp_mult"] = float(Data.value(&"creature", &"corn_damp_mult", &"mult"))
+	for id in [&"corn_damp_mult", &"lurk_open_cost_mult"]:
+		_num[id] = float(Data.value(&"creature", id, &"mult"))
 	for f in [&"weight_dead", &"weight_alive", &"weight_own", &"weight_stranger"]:
 		_num[f] = float(Data.value(&"ai_director", &"lures", f))
 	for id in [&"night_s", &"scripted_lurk_s", &"scripted_chase_after_stalk_s", &"scripted_retreat_s"]:
@@ -437,9 +453,12 @@ func _harvest_moon(delta: float) -> void:
 			p = s
 	if heard.is_empty() and p == 0:
 		_set_state(&"lurk", &"lost_track", 0)
-		if _dir.wander_region and _goal != Vector3.INF and not _dir.region_rect(_dir.wander_region).has_point(Vector2(_goal.x, _goal.z)):
+		var end := _dest if _dest != Vector3.INF else _goal  # P5-56: an act 1 corn route's hops leave the region; its end decides
+		if _dir.wander_region and end != Vector3.INF and not _dir.region_rect(_dir.wander_region).grow(REGION_M).has_point(Vector2(end.x, end.z)):
 			_goal = Vector3.INF  # acts 2 and 3: the AI Director's region (section 11.6) wins over an old lurk goal
-		_wander()
+			_route.clear()
+			_dest = Vector3.INF
+		_wander(true)  # P5-56: the finale's peak walks straight, no corn routes (they kept it off the cart)
 		return
 	_goal = _sensed_pos(p, heard) if p != 0 else heard.position
 	var near := p != 0 and _goal.distance_to(global_position) <= STALK_STANDOFF_M + ARRIVE_M
@@ -615,6 +634,8 @@ func _end_chase(how: StringName, reason: StringName) -> void:
 		_memory.clear()
 		_set_state(&"lurk", reason, 0)
 		# _goal stays at the last sensed position
+		_search_c = _goal
+		_searched.clear()
 	else:
 		_set_state(&"retreat", reason, target)
 
@@ -686,6 +707,8 @@ func _set_state(s: StringName, reason: StringName, p_target: int) -> void:
 	_hold = Vector3.INF
 	_hold_t = -INF
 	_hold_side = 1.0 if _rng.randf() < 0.5 else -1.0
+	_route.clear()  # P5-56: a lurk route ends with the lurk
+	_dest = Vector3.INF
 	if s == &"chase" and from != &"chase":
 		_chase_t = 0.0
 		_lose_t = 0.0
@@ -1105,6 +1128,18 @@ func _pick_spot(kind: StringName) -> Dictionary:
 		return {}
 	if _work.is_empty():
 		return {"node": free[_rng.randi() % free.size()], "region": "none", "work_m": null}
+	if _num[&"trap_traffic_m"] > 0.0:  # P5-56: weighted by the heard player noises near each spot (their paths)
+		var weights: Array = free.map(func(f: Node3D) -> int:
+			return _work.filter(func(w: Vector3) -> bool: return w.distance_to(f.global_position) <= _num[&"trap_traffic_m"]).size())
+		var total: int = weights.reduce(func(a: int, b: int) -> int: return a + b, 0)
+		if total > 0:
+			var roll := _rng.randi() % total
+			for i in free.size():
+				roll -= int(weights[i])
+				if roll < 0:
+					var at: Vector3 = free[i].global_position
+					var near_m: float = _work.map(func(w: Vector3) -> float: return w.distance_to(at)).min()
+					return {"node": free[i], "region": "traffic", "work_m": snappedf(near_m, 0.1)}
 	var w: Vector3 = _work[_rng.randi() % _work.size()]
 	var near := free.filter(func(n: Node3D) -> bool: return n.global_position.distance_to(w) <= REGION_M)
 	var n: Node3D = near[_rng.randi() % near.size()] if not near.is_empty() else null
@@ -1376,6 +1411,8 @@ func _move(_delta: float) -> void:
 		velocity = Vector3.ZERO
 		if state == &"lurk" and _search_until < _now:
 			_goal = Vector3.INF
+		elif state == &"lurk":
+			_search_next()
 		return
 	else:
 		d = _way_to(goal) - global_position
@@ -1389,6 +1426,16 @@ func _move(_delta: float) -> void:
 	var was := global_position
 	move_and_slide()
 	global_position.y = 0.0
+	# P5-56: no navmesh, and `_way_to` knows only buildings, so a lurk hop into a fence or a wall (the pen's) pushed on
+	# all night; after STUCK_S it drops the hop and its route (the recent pick keeps it off the same point)
+	var walked := Vector2(global_position.x - was.x, global_position.z - was.z).length()
+	_stuck_t = _stuck_t + _delta if state == &"lurk" and walked < speed * _delta * 0.2 else 0.0
+	if _stuck_t >= STUCK_S:
+		_stuck_t = 0.0
+		_goal = Vector3.INF
+		_route.clear()
+		_dest = Vector3.INF
+		Log.event(&"creature_stuck", {"position": _v(global_position)})
 	if _taint and _night_t >= 0.0 and (state == &"lurk" or state == &"stalk"):  # doc 03 section 8: leavings
 		_leave_m += Vector2(global_position.x - was.x, global_position.z - was.z).length()
 		if _leave_m >= _num[&"leavings_every_m"]:
@@ -1530,6 +1577,8 @@ func _to_corn() -> void:
 	_memory.clear()
 	_set_state(&"lurk", &"dawn", 0)  # doc 03 section 4.2: by day only lurk, lure and stalk, so a night's retreat ends
 	_goal = Vector3.INF
+	_route.clear()
+	_dest = Vector3.INF
 	Log.event(&"creature_dawn_reset", {"from": _v(from), "to": _v(global_position), "region": r})
 
 
@@ -1548,26 +1597,107 @@ func _scarecrow_in_way(dir: Vector3) -> bool:
 ## region when it set one (section 11.6; points within REGION_M of it when the region has none), else near what it
 ## heard. AI-IMPROVE-01: never a point within `wander_min_hop_m` of where it stands (it parked on the empty
 ## town_road region's centre for whole nights, re-picking the spot it stood on).
-func _wander() -> void:
+## P5-56 (Q-354, doc 01 "Behavior states" Lurk "moves through corn"): with `lurk_open_cost_mult` > 0 it picks cover
+## points only (trap spots stand in the open), a region needs two of them before it borrows from REGION_M round it,
+## and it walks there through corn: `_route` hops cover to cover, each open metre costing `lurk_open_cost_mult`
+## extra (Logic.corn_route). It sat on open yard all night, hopping cover_01, trap_04 and trap_18 in straight lines.
+## At the route's end it waits `lurk_linger_s` in the cover; it re-picks no point picked within `wander_recent_s`.
+## `direct` (Harvest Moon acts 2 and 3) keeps the old straight walk over cover points and trap spots.
+func _wander(direct := false) -> void:
 	if _goal != Vector3.INF:
 		return
+	if not _route.is_empty():
+		var hop: Vector2 = _route.pop_front()
+		_goal = Vector3(hop.x, 0.0, hop.y)
+		return
+	if _dest != Vector3.INF:
+		_dest = Vector3.INF
+		_linger_until = _now + _num[&"lurk_linger_s"]
+	if _now < _linger_until:
+		return
+	var corn: bool = not direct and _num[&"lurk_open_cost_mult"] > 0.0
 	var here := global_position
-	var pts := (get_tree().get_nodes_in_group(&"creature_cover") + get_tree().get_nodes_in_group(&"trap_spots")).filter(
-			func(n: Node3D) -> bool: return n.global_position.distance_to(here) >= _num[&"wander_min_hop_m"])
+	var pool := get_tree().get_nodes_in_group(&"creature_cover")
+	if not corn:
+		pool += get_tree().get_nodes_in_group(&"trap_spots")
+	var pts := pool.filter(func(n: Node3D) -> bool: return n.global_position.distance_to(here) >= _num[&"wander_min_hop_m"])
 	var near: Array = []
 	if _dir.wander_region:
 		var rect: Rect2 = _dir.region_rect(_dir.wander_region)
 		var flat := func(n: Node3D) -> Vector2: return Vector2(n.global_position.x, n.global_position.z)
 		near = pts.filter(func(n: Node3D) -> bool: return rect.has_point(flat.call(n)))
-		if near.is_empty():
+		if near.size() < (2 if corn else 1):
 			var grown := rect.grow(REGION_M)
 			near = pts.filter(func(n: Node3D) -> bool: return grown.has_point(flat.call(n)))
 	elif _last_heard != Vector3.INF:
 		near = pts.filter(func(n: Node3D) -> bool: return n.global_position.distance_to(_last_heard) <= REGION_M)
 	if not near.is_empty():
 		pts = near
-	if not pts.is_empty():
-		_goal = (pts[_rng.randi() % pts.size()] as Node3D).global_position
+	if _num[&"wander_recent_s"] > 0.0:
+		var fresh := pts.filter(func(n: Node3D) -> bool: return _now - float(_picked.get(_key(n.global_position), -INF)) >= _num[&"wander_recent_s"])
+		if not fresh.is_empty():
+			pts = fresh
+	if pts.is_empty():
+		return
+	var to := (pts[_rng.randi() % pts.size()] as Node3D).global_position
+	_picked[_key(to)] = _now
+	if not corn:
+		_goal = to
+		return
+	_route = Logic.corn_route(Vector2(here.x, here.z), Vector2(to.x, to.z), _corn_via(), _corn_rects(), _num[&"lurk_open_cost_mult"], _via_cost)
+	_dest = to
+	var first: Vector2 = _route.pop_front()
+	_goal = Vector3(first.x, 0.0, first.y)
+
+
+func _key(p: Vector3) -> Vector2i:
+	return Vector2i(roundi(p.x), roundi(p.z))
+
+
+## P5-56: the lurk route's points (cover points and the ring's waypoints) and their hop costs, built again when the
+## cover set or `lurk_open_cost_mult` changes.
+func _corn_via() -> Array:
+	var cover := get_tree().get_nodes_in_group(&"creature_cover")
+	var key := "%d %s" % [cover.size(), _num[&"lurk_open_cost_mult"]]
+	if key != _via_key:
+		_via_key = key
+		_via = cover.map(func(n: Node3D) -> Vector2: return Vector2(n.global_position.x, n.global_position.z)) \
+				+ Logic.corn_waypoints(_corn_rects(), RING_STEP_M, RING_INSET_M, RING_MIN_M)
+		_via_cost = Logic.hop_costs(_via, _corn_rects(), _num[&"lurk_open_cost_mult"])
+	return _via
+
+
+## P5-56: the corn the creature walks through (doc 04 corn ring and inner corn): `World/CornBlockers` boxes as
+## (x, z) rects, read once. None on the Phase 1 farm, where every route is straight.
+func _corn_rects() -> Array:
+	if _corn.is_empty():
+		var blockers := get_parent().get_node_or_null(^"World/CornBlockers")
+		for b: Node in (blockers.get_children() if blockers else []):
+			var m := b.get_node_or_null(^"Mesh") as MeshInstance3D
+			if b is Node3D and m and m.mesh is BoxMesh:
+				var s: Vector3 = (m.mesh as BoxMesh).size
+				var p: Vector3 = (b as Node3D).global_position
+				_corn.append(Rect2(p.x - s.x / 2.0, p.z - s.z / 2.0, s.x, s.z))
+	return _corn
+
+
+## P5-56 (doc 03 section 5): a lost chase reached the last sensed position. It checks the nearest unchecked cover
+## point or trap spot within `search_radius_m` of that position (where a player would hide), then stands.
+func _search_next() -> void:
+	if _num[&"search_radius_m"] <= 0.0 or _search_c == Vector3.INF:
+		return
+	var here := global_position
+	if not _searched.any(func(s: Vector3) -> bool: return s.distance_to(here) < 3.0):
+		_searched.append(here)
+	var best := Vector3.INF
+	for n: Node3D in get_tree().get_nodes_in_group(&"creature_cover") + get_tree().get_nodes_in_group(&"trap_spots"):
+		var p := n.global_position
+		if p.distance_to(_search_c) > _num[&"search_radius_m"] or _searched.any(func(s: Vector3) -> bool: return s.distance_to(p) < 3.0):
+			continue
+		if best == Vector3.INF or p.distance_to(here) < best.distance_to(here):
+			best = p
+	if best != Vector3.INF:
+		_goal = best
 
 
 ## P5-39: a random cover point at least `retreat_min_m` off and farther from the target's last sensed position than

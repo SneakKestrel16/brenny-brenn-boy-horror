@@ -228,6 +228,29 @@ placeholder player speeds (Q-016).
   wander region holds no such point (`town_road` holds none), it picks among points within 25 m of
   the region instead of parking on the region's centre. Inference: 8 m is about one marker spacing;
   playtests settle it.
+- **Lurk walks through corn (P5-56, Q-354, as built).** Doc 01 "Behavior states": Lurk "moves
+  through corn". On bot nights the creature stood on open ground 806 of 900 night seconds (test_p5_51
+  seed 1), hopping between cover_01 and trap spots in straight lines. Now, with
+  `lurk_open_cost_mult` > 0 (creature.json, placeholder 4):
+  - a wander point is a cover point only (trap spots stand in the open); a region needs two cover
+    points before it borrows those within 25 m of it;
+  - the walk is a route of hops over cover points and waypoints inside the wide outer corn (one about
+    every 20 m, 4 m in from the edge facing the farm), the cheapest by distance plus
+    `lurk_open_cost_mult` extra per open metre (`CreatureLogic.corn_route`). Corn is the
+    `World/CornBlockers` boxes, the creature walks through them (doc 04);
+  - at the route's end it stays in the cover `lurk_linger_s` (placeholder 6 s), then picks again;
+  - it does not pick a point it picked within `wander_recent_s` (placeholder 120 s) while another is
+    free.
+  In Harvest Moon acts 2 and 3 (section 14) a lurk walks straight as before, over cover points and
+  trap spots: corn routes kept it off the cart and the bots won finales they lost before. The AI
+  Director's region check there tests the route's end, within 25 m of the region, not the current
+  hop: testing the hop dropped every act 1 route at once and left it standing at cover_01. Each
+  number set to 0 restores the old walk. Inference: 4 makes one open metre cost as much as five
+  corn metres, which keeps open crossings short without long detours; playtests settle it.
+- **Stuck walk (P5-56, as built).** The route knows buildings and doors but not fences, so a hop can
+  push into the pen fence. A lurk walk that moves under a fifth of its speed for 2 s drops its goal and
+  route and picks again (`creature_stuck` logs the position). No data number: it fixes a stall, not a
+  rule.
 - **Stalk hiding spots (P5-39, as built).** A night `stalk` no longer walks the straight line at the
   sensed position and stands 10 m off in the open. Every `stalk_repick_s` (placeholder 6 s) it picks a
   spot on a ring round the target's **sensed** position: `stalk_hold_far_m` (placeholder 18 m, past
@@ -262,6 +285,12 @@ reach a lit building**.
   may run during it.
 - When a chase is lost the creature goes to the last sensed position, searches for `memory` seconds
   (section 3.1) and returns to `lurk`.
+- **Search pattern (P5-56, as built).** During that search it walks to the nearest cover point or
+  trap spot within `search_radius_m` (creature.json, placeholder 15 m) of the last sensed position
+  that it has not checked (a point counts as checked within 3 m), one after another, until `memory`
+  runs out; then it stands. Before, it stood on the last sensed position. Inference: hiding players
+  go to cover, so cover and trap spots are where a search would look; the search uses only the sensed
+  position, never a true one. 0 restores standing still.
 - **Any Corrupted player cannot lose a chase by quiet alone:** Corruption tracking keeps giving the
   creature a position (section 3.3). They must reach a lit building or wash off the Corruption. This is a
   consequence of doc 01 "The Corruption" and "Senses" (inference; settle it in a Phase 1 playtest).
@@ -476,6 +505,12 @@ any state, so a lone player who keeps the creature busy still meets planned trap
   within hearing radius; never true positions). A set picks one at random and uses free spots within
   25 m of it (`region: heard`), else the nearest free spot (`nearest`); nothing heard yet gives a
   random spot (`none`). `trap_changed set` logs `region` and `work_m`.
+  **P5-56:** with `trap_traffic_m` > 0 (creature.json, placeholder 10 m) a set instead picks among all
+  free spots, each weighted by how many of those heard noises lie within `trap_traffic_m` of it
+  (`region: traffic`, `work_m` the nearest heard noise); with no spot near any, the rule above. Spots
+  on the paths players use most get the traps. Trap placement still uses heard noises only (doc 01
+  "The AI Director": "Hunting (movement, pursuit, trap placement) uses only the creature's senses").
+  Inference: 10 m is about a crop row's reach; 0 restores the old rule.
 - **Spot rules.** Not used by another trap; deep spots bear only; not within 6 m of a lit doorway
   (generator powered); not within 8 m of
   another trap; not within 4 m of a living player (placeholder, so nobody watches it appear). No

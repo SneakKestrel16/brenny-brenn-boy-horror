@@ -133,9 +133,13 @@ func _run() -> void:
 			var nw := 0
 			for i in 400:
 				cr._goal = Vector3.INF
+				cr._route.clear()  # P5-56: the pick is the route's end, `_dest`; `_goal` is its first hop
+				cr._dest = Vector3.INF
+				cr._linger_until = -INF
 				cr._wander()
+				var g: Vector3 = cr._dest if cr._dest != Vector3.INF else cr._goal
 				for n: Node3D in get_nodes_in_group(&"creature_cover"):
-					if Vector2(n.global_position.x - cr._goal.x, n.global_position.z - cr._goal.z).length() < 0.1 and int(String(n.name).trim_prefix("cover_")) >= 23:
+					if Vector2(n.global_position.x - g.x, n.global_position.z - g.z).length() < 0.1 and int(String(n.name).trim_prefix("cover_")) >= 23:
 						nw += 1
 			picks[reg] = nw
 			new_total += nw

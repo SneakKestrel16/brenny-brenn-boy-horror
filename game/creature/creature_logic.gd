@@ -74,3 +74,128 @@ static func pick_body(ids: Array, seed_n: int, forced: String = "") -> StringNam
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_n
 	return ids[rng.randi_range(0, ids.size() - 1)]
+
+
+## P5-56 (Q-354): metres of the segment a-b (x, z) outside every rect in `corn`. Each rect clips the segment
+## (Liang-Barsky); overlapping clips merge, so corn counted twice still counts once.
+static func open_m(a: Vector2, b: Vector2, corn: Array) -> float:
+	var d := b - a
+	var length := d.length()
+	if length < 0.001:
+		return 0.0
+	var spans: Array = []
+	for r: Rect2 in corn:
+		var t0 := 0.0
+		var t1 := 1.0
+		var ok := true
+		for k in 2:
+			var p := -d[k]
+			var lo := a[k] - r.position[k]
+			var hi := r.end[k] - a[k]
+			for side in [[p, lo], [-p, hi]]:
+				if absf(side[0]) < 0.000001:
+					if side[1] < 0.0:
+						ok = false
+				else:
+					var t: float = side[1] / side[0]
+					if side[0] < 0.0:
+						t0 = maxf(t0, t)
+					else:
+						t1 = minf(t1, t)
+		if ok and t1 > t0:
+			spans.append(Vector2(t0, t1))
+	spans.sort_custom(func(u: Vector2, v: Vector2) -> bool: return u.x < v.x)
+	var covered := 0.0
+	var end := 0.0
+	for s: Vector2 in spans:
+		if s.y > end:
+			covered += s.y - maxf(s.x, end)
+			end = s.y
+	return length * (1.0 - covered)
+
+
+## P5-56: route waypoints in corn at least `min_m` thick (the ring): along the edge that faces the middle of all
+## the corn, `inset_m` in, `step_m` apart. Cover points sit only by work spots, so a ring walk had no points.
+static func corn_waypoints(corn: Array, step_m: float, inset_m: float, min_m: float) -> Array:
+	if corn.is_empty():
+		return []
+	var all: Rect2 = corn[0]
+	for r: Rect2 in corn:
+		all = all.merge(r)
+	var mid := all.get_center()
+	var out: Array = []
+	for r: Rect2 in corn:
+		if minf(r.size.x, r.size.y) < min_m:
+			continue
+		var k := 0 if r.size.x < r.size.y else 1  # the thin axis: the edge runs along the other one
+		var edge := r.position[k] + inset_m if absf(r.position[k] - mid[k]) < absf(r.end[k] - mid[k]) else r.end[k] - inset_m
+		var along := r.size[1 - k]
+		var n := maxi(1, roundi(along / step_m))
+		for i in n:
+			var p := Vector2.ZERO
+			p[k] = edge
+			p[1 - k] = r.position[1 - k] + along * (i + 0.5) / n
+			out.append(p)
+	return out
+
+
+## P5-56: hop costs between every pair of `via` points, flat (i * n + j): length plus `open_mult` times open_m.
+static func hop_costs(via: Array, corn: Array, open_mult: float) -> PackedFloat32Array:
+	var n := via.size()
+	var out := PackedFloat32Array()
+	out.resize(n * n)
+	for i in n:
+		for j in range(i + 1, n):
+			var a: Vector2 = via[i]
+			var b: Vector2 = via[j]
+			out[i * n + j] = a.distance_to(b) + open_mult * open_m(a, b, corn)
+			out[j * n + i] = out[i * n + j]
+	return out
+
+
+## P5-56 (Q-354, doc 01 "Behavior states" Lurk "moves through corn"): the hops from `from` to `to` through
+## `via` points, cheapest by length plus `open_mult` times the metres in the open (open_m). `vv` is hop_costs(via)
+## (computed here when empty). Returns the points to walk, ending with `to`. Plain O(n^2) Dijkstra.
+static func corn_route(from: Vector2, to: Vector2, via: Array, corn: Array, open_mult: float, vv := PackedFloat32Array()) -> Array:
+	var m := via.size()
+	if vv.size() != m * m:
+		vv = hop_costs(via, corn, open_mult)
+	var pts: Array = [from] + via + [to]
+	var n := pts.size()
+	var cost := func(u: int, v: int) -> float:
+		if u > 0 and u <= m and v > 0 and v <= m:
+			return vv[(u - 1) * m + v - 1]
+		var a: Vector2 = pts[u]
+		var b: Vector2 = pts[v]
+		return a.distance_to(b) + open_mult * open_m(a, b, corn)
+	var best: Array = []
+	var prev: Array = []
+	var done: Array = []
+	best.resize(n)
+	prev.resize(n)
+	done.resize(n)
+	best.fill(INF)
+	prev.fill(-1)
+	done.fill(false)
+	best[0] = 0.0
+	for _i in n:
+		var u := -1
+		for j in n:
+			if not done[j] and (u < 0 or best[j] < best[u]):
+				u = j
+		if u < 0 or best[u] == INF or u == n - 1:
+			break
+		done[u] = true
+		for v in n:
+			if not done[v]:
+				var c: float = best[u] + cost.call(u, v)
+				if c < best[v]:
+					best[v] = c
+					prev[v] = u
+	var out: Array = []
+	var at := n - 1
+	while at > 0:
+		if out.is_empty() or (pts[at] as Vector2).distance_to(out[0]) > 0.1:
+			out.push_front(pts[at])
+		at = prev[at]
+	return out

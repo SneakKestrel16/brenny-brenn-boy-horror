@@ -210,6 +210,41 @@
       "metres": 8
     },
     {
+      "id": "lurk_open_cost_mult",
+      "source": "placeholder",
+      "cite": "doc 01 Behavior states (Lurk 'moves through corn'), doc 03 section 4; P5-56 (Q-354): lurk wanders between cover points only and routes through corn, each metre in the open costing this many extra metres; 0 = off (straight hops between cover points and trap spots, as before P5-56)",
+      "kind": "mult",
+      "mult": 4
+    },
+    {
+      "id": "lurk_linger_s",
+      "source": "placeholder",
+      "cite": "doc 01 Behavior states (Lurk), doc 03 section 4; P5-56: at the end of a lurk route it waits this long in the cover point before the next one (a sound still pulls it at once); 0 = off",
+      "kind": "timer",
+      "seconds": 6
+    },
+    {
+      "id": "wander_recent_s",
+      "source": "placeholder",
+      "cite": "doc 03 section 4 (Lurk wanders between cover points); P5-56 anti-repetition: lurk does not re-pick a wander point it picked this recently while another is free; 0 = off",
+      "kind": "timer",
+      "seconds": 120
+    },
+    {
+      "id": "search_radius_m",
+      "source": "placeholder",
+      "cite": "doc 03 section 5 (a lost chase searches the last sensed position for memory seconds); P5-56: after reaching it, it checks the nearest unchecked cover points and trap spots within this radius of it; 0 = off (stands on the point)",
+      "kind": "distance",
+      "metres": 15
+    },
+    {
+      "id": "trap_traffic_m",
+      "source": "placeholder",
+      "cite": "doc 01 Behavior states (Lurk sets night traps), doc 03 section 7; P5-56: a night trap spot is drawn weighted by how many heard player noises (the work log) lie within this radius of it, so traps go on the paths players use; 0 = off (a random heard point, then a spot within 25 m of it)",
+      "kind": "distance",
+      "metres": 10
+    },
+    {
       "id": "door_bang_s",
       "source": "placeholder",
       "cite": "doc 03 section 6 (Bang time: 3 s of banging before it enters a dark building)",

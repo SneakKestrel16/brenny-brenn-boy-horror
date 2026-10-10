@@ -133,8 +133,11 @@ func _run() -> void:
 	for i in 40:
 		creature.global_position = Vector3(rect.get_center().x, 0.0, rect.get_center().y)
 		creature._goal = Vector3.INF
+		creature._route.clear()  # P5-56: the pick is the route's end, `_dest`; `_goal` is its first hop
+		creature._dest = Vector3.INF
+		creature._linger_until = -INF
 		creature._wander()
-		var g: Vector3 = creature._goal
+		var g: Vector3 = creature._dest if creature._dest != Vector3.INF else creature._goal
 		if g != Vector3.INF and g.distance_to(creature.global_position) >= hop:
 			far_ok += 1
 		if rect.grow(creature.REGION_M).has_point(Vector2(g.x, g.z)):
