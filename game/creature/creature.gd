@@ -269,8 +269,7 @@ func _ready() -> void:
 func _show_body() -> void:
 	if not is_inside_tree() or body == _art_body:
 		return
-	var id := String(body).trim_prefix("body_")
-	var path := "res://assets/models/creature_%s.glb" % ("corn_husk" if id == "husk" else id)  # body_husk -> creature_corn_husk
+	var path := body_path(body)
 	if not ResourceLoader.exists(path):
 		push_warning("Creature: no model for %s" % body)
 		return
@@ -283,6 +282,12 @@ func _show_body() -> void:
 	add_child(_art)
 	_art_body = body
 	_ghost_rim = false
+
+
+## The body's glb; Scares' jumpscare and hallucination show it too (P5-68).
+static func body_path(b: StringName) -> String:
+	var id := String(b).trim_prefix("body_")
+	return "res://assets/models/creature_%s.glb" % ("corn_husk" if id == "husk" else id)  # body_husk -> creature_corn_husk
 
 
 func _physics_process(delta: float) -> void:

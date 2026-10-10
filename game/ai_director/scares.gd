@@ -9,11 +9,12 @@ extends Node
 ## Presentation may read true positions (section 11). Not built: `the trap` (doc 03 section 13 says "not a
 ## race", but a pry only happens in a trap race, so nothing triggers it), `scarecrow_moved` (weight 0, placed
 ## by sabotage in P3-06), the teammate's hat on the wrong count (no hats yet: a plain farmer shape), the
-## jumpscare on the screens of others in view, and the creature's own body in it (a capsule flash only).
+## jumpscare on the screens of others in view. P5-68: the jumpscare and hallucinations show the season's body glb.
 
 const Logic := preload("res://game/ai_director/director_logic.gd")
 const Crops := preload("res://game/farming/crops.gd")
 const Bot := preload("res://game/bots/bot.gd")  ## P5-57: `knob`, the ai_director.json `bots` flags
+const CreatureScript := preload("res://game/creature/creature.gd")  ## P5-68: `body_path`, the body glb
 const TIMED: Array[StringName] = [&"jumpscare", &"shed", &"whisper", &"own_voice", &"wrong_count", &"hallucination"]
 const BUILDUP_S := 3.0  ## placeholder: build-up before the scare lands (doc 03 section 13 "built up")
 const TICK_S := 1.0
@@ -24,6 +25,8 @@ const IN_VIEW_DOT := 0.5  ## placeholder: "a place the player can see" read as w
 const LUNGE_BLACK_S := 1.5  ## placeholder: the disarm lunge's cut to black
 const KNOCKDOWN_S := 2.0  ## placeholder: jumpscare knockdown camera
 const APPARITION_MAX_S := 20.0  ## placeholder: a silhouette nobody looks at still goes
+const JUMP_GAP_M := 0.9  ## placeholder: the jumpscare body's front this far in front of the player, so it fills the view
+const JUMP_OVER_EYE_M := 0.3  ## placeholder: a body shorter than the eye plus this is lifted mid-leap, so its face fills the view too
 
 var _ok := false
 var _dir: Node
@@ -396,7 +399,7 @@ func _present(kind: StringName, slot: int, pos: Vector3, extra: String) -> void:
 			Soundscape.play_2d(jumpscare_id(Soundscape.creature_body))  # the file carries the body thud and the running away (CEO, P3-08)
 			if me:
 				me.knockdown_camera(KNOCKDOWN_S)
-				_apparition(me.global_position - me.global_transform.basis.z * 1.5, true, 0.4)
+				_apparition(me.global_position - me.global_transform.basis.z * JUMP_GAP_M, kind, 0.4)
 		&"disarm_lunge":
 			for i in 2:
 				Soundscape.play_3d(&"cre_corn_part", pos + Vector3(randf_range(-3.0, 3.0), 0.0, -4.0))
@@ -413,7 +416,7 @@ func _present(kind: StringName, slot: int, pos: Vector3, extra: String) -> void:
 			Net.apply_received.emit(&"lure", ["scare_%s" % kind, extra, pos, slot, &"none", false])  # the lure clip player
 		&"wrong_count", &"hallucination":
 			Soundscape.play_2d(&"cre_presence_swell")
-			_apparition(pos, kind == &"hallucination", APPARITION_MAX_S)
+			_apparition(pos, kind, APPARITION_MAX_S)
 		&"fake_out":
 			Soundscape.play_3d(&"sfx_step_corn", pos)  # the rustle; no layer change (doc 08 section 4.4 rule 4)
 			Soundscape.play_3d(&"sfx_crow_burst", pos)
@@ -545,20 +548,47 @@ func _lock(me: Node, seconds: float) -> void:
 		me.shake(was_s - seconds, was_mult)
 
 
-## A placeholder silhouette (no model yet): the creature (tall, black) or a farmer. It goes after
+## P5-68: the jumpscare and the hallucination show the season's body glb (doc 01 "What players see":
+## hallucinations are silhouettes of it), facing the camera; the jumpscare lit by a lamp of its own so it reads at
+## night, the hallucination a black silhouette. The wrong count is a farmer: a brown capsule (no farmer
+## model here yet), as is the creature when its body is not known or has no glb. It goes after
 ## `vanish_look_s` looked at, `vanish_approach_m` walked toward it, or `seconds`.
-func _apparition(pos: Vector3, creature: bool, seconds: float) -> void:
-	var mesh := CapsuleMesh.new()
-	mesh.height = 2.6 if creature else 1.8
-	mesh.radius = 0.35 if creature else 0.3
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.02, 0.02, 0.02) if creature else Color(0.35, 0.28, 0.2)
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED if creature else BaseMaterial3D.SHADING_MODE_PER_PIXEL
-	mesh.material = mat
-	var n := MeshInstance3D.new()
-	n.mesh = mesh
+func _apparition(pos: Vector3, kind: StringName, seconds: float) -> void:
+	var creature := kind != &"wrong_count"
+	var n: Node3D = _body_art(kind == &"jumpscare") if creature else null
+	var lift := 0.0
+	if n == null:
+		var mesh := CapsuleMesh.new()
+		mesh.height = 2.6 if creature else 1.8
+		mesh.radius = 0.35 if creature else 0.3
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.02, 0.02, 0.02) if creature else Color(0.35, 0.28, 0.2)
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED if creature else BaseMaterial3D.SHADING_MODE_PER_PIXEL
+		mesh.material = mat
+		n = MeshInstance3D.new()
+		(n as MeshInstance3D).mesh = mesh
+		lift = mesh.height / 2.0
+	n.name = "Apparition"
 	get_parent().add_child(n)
-	n.global_position = pos + Vector3.UP * mesh.height / 2.0
+	n.global_position = pos + Vector3.UP * lift
+	var face := get_viewport().get_camera_3d()
+	if face:
+		var to := Vector3(face.global_position.x, n.global_position.y, face.global_position.z)
+		if to.distance_to(n.global_position) > 0.01:
+			n.look_at(to, Vector3.UP)  # the body's front is -Z, as the creature's yaw
+		if kind == &"jumpscare" and lift == 0.0:
+			var front := 0.0  # how far the body reaches in front of its origin: the boar's snout is 1.5 m out
+			var top := 0.0
+			for mi: MeshInstance3D in n.find_children("*", "MeshInstance3D", true, false):
+				var box := n.global_transform.affine_inverse() * mi.global_transform * mi.get_aabb()
+				front = maxf(front, -box.position.z)
+				top = maxf(top, box.end.y)
+			n.global_position += n.global_transform.basis.z * front  # +Z is away from the camera
+			n.global_position.y += maxf(0.0, face.global_position.y + JUMP_OVER_EYE_M - n.global_position.y - top)  # a low body (the boar) leaps
+			var lamp := OmniLight3D.new()  # placeholder: the flash's own light (default energy: doc 07 s4.4 rule 3), just ahead of the camera, so night reads too
+			lamp.omni_range = 4.0
+			n.add_child(lamp)
+			lamp.global_position = face.global_position.lerp(n.global_position, 0.2)
 	var h: Dictionary = Data.record(&"ai_director", &"scare_hallucination")
 	var me := _local_player()
 	var start_d: float = me.global_position.distance_to(pos) if me else 0.0
@@ -577,6 +607,23 @@ func _apparition(pos: Vector3, creature: bool, seconds: float) -> void:
 			return
 	if is_instance_valid(n):
 		n.queue_free()
+
+
+## The season's body (`Soundscape.creature_body`, set on every peer from the creature state) or null.
+func _body_art(lit: bool) -> Node3D:
+	var path := CreatureScript.body_path(Soundscape.creature_body)
+	if Soundscape.creature_body == &"" or not ResourceLoader.exists(path):
+		return null
+	var art: Node3D = (load(path) as PackedScene).instantiate()
+	if lit:
+		CreatureLook.apply(art)
+		return art
+	var black := StandardMaterial3D.new()
+	black.albedo_color = Color(0.02, 0.02, 0.02)
+	black.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	for mi in art.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_override = black
+	return art
 
 
 func _black(seconds: float) -> void:

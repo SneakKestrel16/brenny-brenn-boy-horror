@@ -948,10 +948,13 @@ record by `opens_day` and `from_third` and applies `tainted_mult`.
   minutes) bursts a crow from the perch nearest a living outdoor player, while its record is open.
   Inference: doc 01 does not say when fake-outs fire; at random, so they tell the players nothing.
   Public, not big, day or night.
-- **Presentation.** A placeholder capsule: the creature tall and black, a farmer brown (no hats yet, so
-  no teammate's hat on the wrong count). It goes after `vanish_look_s` looked at (camera within about
-  14 degrees), after `vanish_approach_m` walked toward it, or after 20 s. The jumpscare shows a creature
-  capsule for 0.4 s with the knockdown camera.
+- **Presentation.** A hallucination is the season's body glb (the one the Creature shows, P5-68) as a
+  black silhouette (doc 01 "What players see"); the wrong count is a brown farmer capsule (no hats yet, so
+  no teammate's hat). It goes after `vanish_look_s` looked at (camera within about 14 degrees), after
+  `vanish_approach_m` walked toward it, or after 20 s. The jumpscare shows the body glb for 0.4 s with the
+  knockdown camera: facing the player, its front 0.9 m away (placeholder), lifted mid-leap when shorter
+  than the eye (the boar), lit by its own lamp so it reads at night. A capsule stands in only while
+  the body is unknown or has no glb.
 - **Network.** `Net.apply_scare(scare_id, target_slot, position, extra)`: a private scare goes to the
   target only (nothing to send for a bot), a public one to all. Every scare logs `scare` with `kind`,
   `target`, `big`, `private`, `day`, `third`, `position`; a client logs `scare_applied`.
