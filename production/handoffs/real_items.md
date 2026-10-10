@@ -191,3 +191,6 @@ was first built with a whole-file gate and came out silent for A and B; it is no
 | radio_squelch_on | C | |
 | radio_squelch_off | A | |
 | radio_low_battery | B | |
+| radio_dead | A | |
+| ui_click | A | |
+| ui_confirm | A | |
