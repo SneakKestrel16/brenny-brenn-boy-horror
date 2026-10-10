@@ -45,7 +45,7 @@ func _group(g: StringName) -> Array:
 
 
 func _counts() -> void:
-	var want := {&"trap_spots": 22, &"creature_cover": 16, &"crow_perches": 9, &"scarecrow_spots": 7,
+	var want := {&"trap_spots": 22, &"creature_cover": 22, &"crow_perches": 9, &"scarecrow_spots": 7,
 			&"animal_escape_spots": 4, &"spatial_audio_markers": 4, &"player_spawns": 6, &"plot_spots": 36,
 			&"pegboard_spots": 1, &"pegboard_slots": 5, &"recording_spots": 1, &"barn_lantern": 1, &"doors": 3,
 			&"lightrig_spots": 4, &"generator": 1, &"fuel_drum": 1, &"well": 1, &"sell_box": 1, &"store_crate": 1,

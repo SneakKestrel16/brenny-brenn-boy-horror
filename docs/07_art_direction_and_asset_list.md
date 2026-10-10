@@ -658,6 +658,11 @@ P5-26 status of the s11 rows it named: built in P5-15/P5-17 (`trap_tripwire` set
 `trap_tripwire_sprung` (260 tris, 0.33 x 3.06 x 0.81 m), `prop_scarecrow_field` (648 tris, 0.85 x 0.72 x 2.06 m),
 `prop_window_glow` (36 tris, 0.94 x 0.04 x 0.94 m, `mat_emissive_warm`). Placement notes: `production/handoffs/P5-26.md`.
 
+P5-32 (CEO STOP 6): all 17 crop files of s11.5 (turnip, pumpkin, moonflower, every stage plus wilted, rotten, taint)
+rebuilt by `tools/blender/build_p5_32.py` with folded curved leaves, lobed pumpkin leaves, ribbed fruit, flowers, layered
+moonflower petals; 46 to 656 tris (class "mid", 800), same names, node `Crop`, origins and materials. Corn unchanged.
+Handoff `production/handoffs/P5-32.md`.
+
 ### 15.3 Looked at and rejected (all CC0, Quaternius via Poly Pizza)
 
 | Poly Pizza id | Asset | Why not |

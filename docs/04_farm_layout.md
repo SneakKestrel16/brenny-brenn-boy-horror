@@ -326,6 +326,12 @@ lines from the corn" in DD Phase 1 (doc 01 "Build Plan").
 | cover_14 | (-9, -47) | Barn's north side, generator |
 | cover_15 | (30, 57) | Open ground south of field A |
 | cover_16 | (-42, 57) | Prize Pumpkin, strip 1 |
+| cover_17 | (73, -30) | Field B, north (Patch1, section 15) |
+| cover_18 | (97, -23) | Field B, gate approach (Patch2) |
+| cover_19 | (81, 22) | Shipping crate, south (Patch3) |
+| cover_20 | (59, -4) | Field B, west (Patch4) |
+| cover_21 | (101.5, 23) | Field B, south-east (Patch5) |
+| cover_22 | (69, 44) | Moonflower bed, crate (Patch6) |
 
 ### 7.3 Crows, scarecrows, pen and escape spots
 
@@ -444,7 +450,7 @@ beyond that, only through animals and crows. Nearest corn to each work spot:
 | Barn door, field A centre | 12.0 | Yes |
 | Shed door | 13.4 | Yes |
 | Animal pen gate | 17.0 | Yes |
-| Farmhouse door, field B centre, shipping crate | 20.0 | At the limit (field B's west edge is 14 m from strip 3, its nearest plot centre 15.5 m) |
+| Farmhouse door, shipping crate | 20.0 | At the limit (field B's west edge is 14 m from strip 3, its nearest plot centre 15.5 m) |
 | Farm gate | 4.0 | Yes (the lane's corn) |
 | Generator | 23.0 | No: the pen's animals and crow_06, 25 m away, react for it |
 | Well | 32.2 | No: crow_09 sits on the well |
@@ -598,7 +604,7 @@ findings are Q-017.
 unchanged) and `farm.tscn` (the full farm). `farm.tscn` adds the farmhouse, strips 1 and 3, the full ring
 (layer 5 boxes, road lane left open), field B, the moonflower bed (4 plots, `field = moonflower`), the
 shipping crate (group `store_crate`), 8 headcount plots (`Plot29` to `Plot36`, D-039: 36 `plot_spots` in all, 24 field + 8 headcount + 4 moonflower), the town stand (group `sell_box`) with a `sanctuary` marker (10 m; the group keeps its old name, D-115),
-the farm gate, the Prize Pumpkin marker, `CartRoute` (R0 to R8), all 22 trap spots, 16 cover points, 9 crow
+the farm gate, the Prize Pumpkin marker, `CartRoute` (R0 to R8), all 22 trap spots, 22 cover points (16 + 6 in the P5-31 corn, section 15), 9 crow
 perches, 7 scarecrow spots, 4 escape spots, 4 audio markers, 6 barn spawns (D-038), the pegboard with
 `pegboard_bear_slots` slot markers (5, read from `data/season.json`), and in the barn a `RecordingSpot`
 (0, -15) and `BarnLantern` (-5, -17; also in group `lightrig_spots`, radius 6, so `world_look.gd` puts the real `LightRig` there, Q-054 item 4) (placeholder positions, inference: inside the barn, away from the door).
@@ -688,3 +694,31 @@ All visual only.
 | Gate arch | (105, -5), over the farm gate | 4.9 m, "TOWN" facing west | The way out |
 | Hay stack | (38, 12), off the audio test line (z 16) | 1.6 m | Yard clutter by field A |
 | Wood pile | (-20, 29), by the shed | 0.9 m | Yard clutter by the shed |
+
+## 15. More corn (P5-31, CEO STOP 6)
+
+The CEO asked for more corn so the creature has cover and routes across the farm, most of all round
+"farm 2" (inference: field B, the far field; confirm with the CEO). `build_farm.py` list `PATCHES`
+adds six `CornBlockers` (`Patch1` to `Patch6`, layer 5, 2.4 m) to `farm.tscn` only; `farm_phase1.tscn`
+is unchanged. Each has a `creature_cover` point (cover_17 to cover_22) inside it, so Lurk wanders to
+it and Stalk and lures start from it (the creature walks through corn, no nav mesh to bake).
+
+| Patch | Rectangle | Cover | Kind | Role |
+|---|---|---|---|---|
+| Patch1 | x 68..78, z -40..-20 | cover_17 (73, -30) | island, field B | North of the cart route (6 m off R5 to R7); links the ring to field B's north side |
+| Patch2 | x 94..100, z -30..-16 | cover_18 (97, -23) | island, field B | East of field B beside the gate approach, about 6 m off the R7 to R8 leg |
+| Patch3 | x 78..84, z 14..30 | cover_19 (81, 22) | island, field B | South of the crate and its path, 9 m off the store path |
+| Patch4 | x 57..61, z -8..0 | cover_20 (59, -4) | island, field B | Between strip 3 and field B, 5 m from the nearest plot edge, 4.4 m off the A-to-B walk |
+| Patch5 | x 99..104, z 16..30 | cover_21 (101.5, 23) | island, field B | South-east of field B, clear of the east tree line (x 97) |
+| Patch6 | x 66..72, z 38..55 | cover_22 (69, 44) | strip 5 | Reaches north from the south ring toward the moonflower bed and the crate |
+
+- Rules kept (checked by `check_farm.gd`, all PASS): every marker, tree canopy, path, fence and
+  doc 04 s8.7 walk stays clear of the patches; every corn distance in section 8.4 for the pumpkin, drum, barn door,
+  shed door, pen gate, generator, well and farm gate is unchanged; the cart route's closest pass to
+  corn is still 3.7 m. Gaps between patches and old corn are 4 m or more, so players always have a way round.
+- Changed: corn within field B's centre is now 11 m (was 20 m), and within the crate 10.8 m (was 20 m).
+  Field B is no longer at the ghost 20 m limit; the ghost sees corn edges there (section 8.4).
+  Sections 5.1 and 8.3 ("6 m or more from corn") hold for every plot except Patch4's: its nearest plot edge is 5 m (`placeholder`).
+- I tried a seventh strip (x -52..-46, z -45..-25, north of the farmhouse) and dropped it: it sits on
+  the West tree line (West2, 3, 5).
+- Phase 2 scene totals: 22 cover points (`check_farm.gd` counts it).
