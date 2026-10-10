@@ -12,7 +12,7 @@ extends RefCounted
 ## Nothing here is a light or emissive, and the screen fade is slow (doc 07 section 4.3).
 
 const FADE_S := 3.0  ## placeholder: "change slowly" (doc 07 section 4.3)
-const ARM_LEN := 0.42
+const ARM_LEN := 0.47  ## tool_hands: elbow pivot to fingertip (P5-17 handoff, aabb z -0.47)
 const HANDS := preload("res://game/render/taint_hands.gdshader")
 const GROUND := preload("res://game/render/taint_ground.gdshader")
 const SCREEN := preload("res://game/render/taint_screen.gdshader")
@@ -49,26 +49,23 @@ static func show_on(pl: Node3D, on: bool) -> void:
 ## Placeholder poses read from screenshots. Local: elbows low at the screen corners, fingers forward and in.
 ## Others: thicker and further out, so the hands clear the 0.35 m body capsule and read at a distance.
 static func _arms(local: bool) -> Node3D:
-	var arms := Node3D.new()
+	# P5-22: the tool_hands model (HandL/HandR, elbow pivots at +-0.19, arms along -Z) in the stained-sleeve shader.
+	var arms := (load("res://assets/models/tool_hands.glb") as PackedScene).instantiate() as Node3D
 	arms.name = "TaintArms"
 	var mat := ShaderMaterial.new()
 	mat.shader = HANDS
 	mat.set_shader_parameter(&"arm_len", ARM_LEN)
-	for side: float in [-1.0, 1.0]:
-		var mi := MeshInstance3D.new()
-		var c := CapsuleMesh.new()
-		c.radius = 0.045 if local else 0.07
-		c.height = ARM_LEN
-		mi.mesh = c
-		mi.material_override = mat
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		if local:
-			mi.position = Vector3(0.24 * side, -0.4, -0.36)
-			mi.rotation = Vector3(deg_to_rad(-62.0), deg_to_rad(22.0 * side), 0.0)
-		else:
-			mi.position = Vector3(0.22 * side, -0.5, -0.45)
-			mi.rotation = Vector3(deg_to_rad(-80.0), deg_to_rad(8.0 * side), 0.0)
-		arms.add_child(mi)
+	mat.set_shader_parameter(&"model_axis", true)
+	for mi in arms.find_children("*", "MeshInstance3D"):
+		(mi as MeshInstance3D).material_override = mat
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if local:  # elbows low at the screen corners, fingers forward and up
+		arms.position = Vector3(0, -0.5, -0.175)
+		arms.rotation.x = deg_to_rad(28.0)
+	else:  # others see them in front of the body, scaled out to clear the 0.35 m capsule
+		arms.position = Vector3(0, -0.55, -0.25)
+		arms.rotation.x = deg_to_rad(10.0)
+		arms.scale = Vector3(1.4, 1.4, 1.0)
 	return arms
 
 
@@ -88,19 +85,15 @@ static func _smudge() -> CanvasLayer:
 
 
 ## A Taint source's look on the ground. The caller adds and places it (at ground height).
-static func mark(kind: StringName) -> MeshInstance3D:
+static func mark(kind: StringName, id := 0) -> Node3D:
+	if kind == &"dead_crow":  # P5-22: prop_dead_crow replaces the dark lump
+		var crow := (load("res://assets/models/prop_dead_crow.glb") as PackedScene).instantiate() as Node3D
+		crow.name = "Taint_%s" % kind
+		crow.rotation.y = id * 2.399  # the source id, so every peer lays the crow the same way
+		return crow
 	var mi := MeshInstance3D.new()
 	mi.name = "Taint_%s" % kind
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	if kind == &"dead_crow":
-		var b := BoxMesh.new()
-		b.size = Vector3(0.35, 0.12, 0.2)
-		mi.mesh = b
-		var m := StandardMaterial3D.new()
-		m.albedo_color = Color("0A0710")
-		m.roughness = 0.6  # feathers: duller than the oil
-		mi.material_override = m
-		return mi
 	var p := PlaneMesh.new()
 	p.size = Vector2(1.1, 1.1) if kind == &"leavings" else Vector2(0.6, 0.6)
 	mi.mesh = p

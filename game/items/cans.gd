@@ -67,12 +67,12 @@ func _make(id: int, kind: StringName, pos: Vector3) -> void:
 	node.name = "Can%d" % id
 	add_child(node)
 	node.global_position = pos
-	var mi := MeshInstance3D.new()  # placeholder box (doc 07 needs prop_watering_can.glb, prop_fuel_can.glb)
-	var b := BoxMesh.new()
-	b.size = Vector3(0.22, 0.22, 0.3) if kind == &"water" else Vector3(0.2, 0.3, 0.14)
-	mi.mesh = b
-	mi.position.y = b.size.y / 2.0
-	mi.material_override = StandardMaterial3D.new()
+	# P5-22: the P5-13/P5-15 models; a faint overlay tint keeps charged/empty readable (the model keeps its own look)
+	var tint := StandardMaterial3D.new()
+	tint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	var mi := (load("res://assets/models/%s.glb" % ("tool_watering_can" if kind == &"water" else "tool_fuel_can")) as PackedScene).instantiate()
+	for m in mi.find_children("*", "MeshInstance3D"):
+		(m as MeshInstance3D).material_overlay = tint
 	node.add_child(mi)
 	var t := CanTarget.new()
 	t.cans = self
@@ -86,7 +86,7 @@ func _make(id: int, kind: StringName, pos: Vector3) -> void:
 		if c is StaticBody3D:
 			body = c
 	farm.targets[t.id] = t
-	cans[id] = {"kind": kind, "home": pos, "pos": pos, "holder": 0, "node": node, "body": body, "mesh": mi,
+	cans[id] = {"kind": kind, "home": pos, "pos": pos, "holder": 0, "node": node, "body": body, "tint": tint,
 			"charge": int(Data.value(&"labor", &"can", &"capacity")) if kind == &"water" else 0}
 	_look(id)
 
@@ -115,12 +115,13 @@ func _look(id: int) -> void:
 	var col := Color(0.15, 0.4, 0.95) if c.charge > 0 else Color(0.5, 0.58, 0.64)
 	if c.kind == &"fuel":
 		col = Color(0.85, 0.15, 0.1) if c.charge > 0 else Color(0.4, 0.15, 0.12)
-	(c.mesh.material_override as StandardMaterial3D).albedo_color = col
+	col.a = 0.3
+	(c.tint as StandardMaterial3D).albedo_color = col
 
 
 ## Colour a held can shows in the hand (used by player.gd).
 func color_of(id: int) -> Color:
-	return (cans[id].mesh.material_override as StandardMaterial3D).albedo_color
+	return (cans[id].tint as StandardMaterial3D).albedo_color
 
 
 # --- host ---------------------------------------------------------------------------------------------

@@ -8,7 +8,11 @@ extends Node3D
 const CELL_M := 16.0  ## doc 07 s10.1
 const PER_M2 := 6.0  ## stalks per m2 (placeholder, doc 07 s10.1)
 const NEAR_M := 30.0  ## stalks inside this range, impostor box beyond (placeholder; doc says 35)
+const LOD0_M := 12.0  ## corn_stalk_lod0 inside this range, corn_stalk_lod1 out to NEAR_M (doc 07 s10.1, s11.6; P5-22)
 const HEIGHT_M := 2.4  ## doc 01 "Corn", doc 07 s10
+const LOD_OVERLAP_M := 3.0  ## lod1 starts this far inside LOD0_M so no band is empty while the LOD swaps
+const CARD_PER_M2 := 2.0  ## corn_card_lod2 under the stalks: the thin lod stalks alone let sight through (QA P5-22)
+const BAND_M := 4.0  ## corn_wall_band tile length
 
 var stalk_count := 0
 var cell_count := 0
@@ -17,12 +21,12 @@ var cell_count := 0
 func build(blockers: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 20261007  # same stalks on every peer
-	var stalk := _stalk_mesh()
+	var stalk0 := _glb_mesh("corn_stalk_lod0")
+	var stalk1 := _glb_mesh("corn_stalk_lod1")
+	var card := _glb_mesh("corn_card_lod2", "Card")
+	var band := _glb_mesh("corn_wall_band", "Band")
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://game/render/corn.gdshader")
-	var far_mat := StandardMaterial3D.new()
-	far_mat.albedo_color = Color(0.26, 0.38, 0.11)
-	far_mat.roughness = 0.95
 	for body in blockers.get_children():
 		var mi := body.get_node_or_null("Mesh") as MeshInstance3D
 		if mi == null or not mi.mesh is BoxMesh:
@@ -38,53 +42,64 @@ func build(blockers: Node) -> void:
 			var z := lo.y
 			while z < hi.y - 0.01:
 				var z2 := minf(z + CELL_M, hi.y)
-				_cell(Rect2(x, z, x2 - x, z2 - z), stalk, mat, far_mat, rng)
+				_cell(Rect2(x, z, x2 - x, z2 - z), [stalk0, stalk1, card, band], mat, rng)
 				z = z2
 			x = x2
 
 
-func _cell(r: Rect2, stalk: Mesh, mat: Material, far_mat: Material, rng: RandomNumberGenerator) -> void:
+func _cell(r: Rect2, meshes: Array, mat: Material, rng: RandomNumberGenerator) -> void:
 	var n := int(r.get_area() * PER_M2)
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = stalk
-	mm.instance_count = n
+	var xf: Array[Transform3D] = []
 	for i in n:
 		var b := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(0.9, 1.1))
 		var o := Vector3(r.position.x + rng.randf() * r.size.x, 0.0, r.position.y + rng.randf() * r.size.y)
-		mm.set_instance_transform(i, Transform3D(b, o))
-	var near := MultiMeshInstance3D.new()
-	near.multimesh = mm
-	near.material_override = mat
-	near.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF  # corn shadows are the first cut
-	near.visibility_range_end = NEAR_M
-	near.visibility_range_end_margin = 4.0
-	add_child(near)
-	var far := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(r.size.x, HEIGHT_M, r.size.y)
-	far.mesh = box
-	far.material_override = far_mat
-	far.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	far.position = Vector3(r.get_center().x, HEIGHT_M * 0.5, r.get_center().y)
-	far.visibility_range_begin = NEAR_M
-	far.visibility_range_begin_margin = 4.0
-	add_child(far)
+		xf.append(Transform3D(b, o))
+	# lod0 up close, lod1 out to NEAR_M (overlapping), cards under both for opacity
+	_multi(meshes[0], xf, mat, 0.0, LOD0_M)
+	_multi(meshes[1], xf, mat, LOD0_M - LOD_OVERLAP_M, NEAR_M)
+	var cards: Array[Transform3D] = []
+	for i in int(r.get_area() * CARD_PER_M2):
+		cards.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU), Vector3(r.position.x + rng.randf() * r.size.x, 0.0, r.position.y + rng.randf() * r.size.y)))
+	_multi(meshes[2], cards, mat, 0.0, NEAR_M)
+	# far: corn_wall_band tiles round the cell edge (doc 07 s10.1, s11.6)
+	var tiles: Array[Transform3D] = []
+	for side in 4:
+		var along_x := side < 2
+		var len := r.size.x if along_x else r.size.y
+		var cnt := maxi(1, ceili(len / BAND_M))
+		var fixed := (r.position.y + (0.25 if side == 0 else r.size.y - 0.25)) if along_x else (r.position.x + (0.25 if side == 2 else r.size.x - 0.25))
+		for k in cnt:
+			var t := r.position.x if along_x else r.position.y
+			t += (k + 0.5) * len / cnt
+			var b := Basis.IDENTITY.scaled(Vector3(len / cnt / BAND_M, 1, 1))
+			if not along_x:
+				b = Basis(Vector3.UP, PI * 0.5) * b
+			tiles.append(Transform3D(b, Vector3(t, 0.0, fixed) if along_x else Vector3(fixed, 0.0, t)))
+	_multi(meshes[3], tiles, mat, NEAR_M, 0.0)
 	stalk_count += n
 	cell_count += 1
 
 
-## Two crossed tapered blades, 4 triangles, double-sided in the shader. Origin at the ground.
-func _stalk_mesh() -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for ang in [0.0, PI * 0.5]:
-		var d := Vector3(cos(ang), 0.0, sin(ang))
-		var bl := -d * 0.3
-		var br := d * 0.3
-		var tl := -d * 0.08 + Vector3.UP * HEIGHT_M
-		var tr := d * 0.08 + Vector3.UP * HEIGHT_M
-		for v in [bl, br, tr, bl, tr, tl]:
-			st.set_normal(Vector3.UP)
-			st.add_vertex(v)
-	return st.commit()
+## One MultiMesh of `xf`, drawn between `from` and `to` metres (0 = no limit); ranges overlap, no fade.
+func _multi(mesh: Mesh, xf: Array[Transform3D], mat: Material, from: float, to: float) -> void:
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = mesh
+	mm.instance_count = xf.size()
+	for i in xf.size():
+		mm.set_instance_transform(i, xf[i])
+	var mi := MultiMeshInstance3D.new()
+	mi.multimesh = mm
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF  # corn shadows are the first cut
+	mi.visibility_range_begin = from
+	mi.visibility_range_end = to
+	add_child(mi)
+
+
+## A P5-16 corn model's mesh (doc 07 s11.6); origin at the ground, one surface. corn.gdshader replaces its material.
+func _glb_mesh(model: String, node := "Stalk") -> Mesh:
+	var inst := (load("res://assets/models/%s.glb" % model) as PackedScene).instantiate()
+	var mesh := (inst.find_child(node, true, false) as MeshInstance3D).mesh
+	inst.free()
+	return mesh

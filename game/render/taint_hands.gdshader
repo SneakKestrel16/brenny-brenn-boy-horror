@@ -6,6 +6,7 @@ shader_type spatial;
 
 uniform float taint_level : hint_range(0.0, 1.0) = 1.0;
 uniform float arm_len = 0.42;  // local Y spans -arm_len/2 (elbow) to +arm_len/2 (fingertips)
+uniform bool model_axis = false;  // P5-22 tool_hands: elbow at the origin, fingertips along local -Z (0 .. arm_len)
 uniform vec3 cloth_col : source_color = vec3(0.24, 0.29, 0.40);  // placeholder sleeve denim
 uniform vec3 oil_col : source_color = vec3(0.039, 0.027, 0.063);
 uniform vec3 sheen_col : source_color = vec3(0.227, 0.122, 0.290);
@@ -20,8 +21,9 @@ void vertex() {
 }
 
 void fragment() {
-	float t = lp.y / arm_len + 0.5;  // 0 at the elbow, 1 at the fingertips
-	float jag = hash(floor(vec2(atan(lp.x, lp.z) * 2.5, lp.y * 28.0))) - 0.5;
+	float along = model_axis ? -lp.z - arm_len * 0.5 : lp.y;
+	float t = along / arm_len + 0.5;  // 0 at the elbow, 1 at the fingertips
+	float jag = hash(floor(vec2(atan(lp.x, model_axis ? lp.y : lp.z) * 2.5, along * 28.0))) - 0.5;
 	float oil = step(1.0 - taint_level * 0.75 + jag * 0.14, t);
 	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
 	ALBEDO = mix(cloth_col, oil_col + sheen_col * fres, oil);

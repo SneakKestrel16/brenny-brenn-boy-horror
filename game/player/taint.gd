@@ -118,7 +118,7 @@ func _on_apply(what: StringName, args: Array) -> void:
 			var id: int = args[0]
 			if args[3]:
 				if not sources.has(id):
-					sources[id] = {"kind": args[1], "position": args[2], "node": _mark(args[1], args[2])}
+					sources[id] = {"kind": args[1], "position": args[2], "node": _mark(args[1], args[2], id)}
 			elif sources.has(id):
 				sources[id].node.queue_free()
 				sources.erase(id)
@@ -134,8 +134,8 @@ func _hands(peer: int, on: bool) -> void:
 
 
 ## The source's look on the ground (TaintLook, P3-08), seen by every peer.
-func _mark(kind: StringName, pos: Vector3) -> Node3D:
-	var mi := TaintLook.mark(kind)
+func _mark(kind: StringName, pos: Vector3, id: int) -> Node3D:
+	var mi: Node3D = TaintLook.mark(kind, id)
 	add_child(mi)
 	mi.global_position = pos + Vector3(0, 0.02, 0)
 	return mi

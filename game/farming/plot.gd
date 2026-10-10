@@ -14,8 +14,13 @@ var crop: StringName = &""  ## what is in the ground (empty while `state` is `em
 var locked := false  ## the upgrade row starts locked (doc 04 section 9)
 var bed := false  ## the night-crop bed (doc 04 section 5.2)
 var taint_id := 0  ## host: the Taint source a dead crop left (doc 01 Crops: moonflower)
-var _mesh: MeshInstance3D
+var _crop_node: Node3D  ## P5-22: the crop_<id>_<stage>.glb now standing in the plot
+var _crop_key := ""
+var _glow: Node3D  ## the ripe moonflower's steady 3 m light (doc 07 s5)
 var _soil: Node3D
+
+const SOIL_Y := 0.18  ## crop models' origin is the soil surface; crop_plot.glb's top (P5-16 handoff)
+const MODEL := "res://assets/models/crop_%s_%s.glb"
 
 
 func _ready() -> void:
@@ -26,9 +31,6 @@ func _ready() -> void:
 		slab.visible = false
 		_soil = (load("res://assets/models/crop_plot.glb") as PackedScene).instantiate()
 		get_parent().add_child(_soil)
-	_mesh = MeshInstance3D.new()
-	_mesh.mesh = BoxMesh.new()
-	(get_parent() as Node3D).add_child(_mesh)
 	_refresh()
 
 
@@ -189,27 +191,20 @@ func wire_state() -> StringName:
 	return StringName("%s:%s" % [state, crop]) if crop != &"" and state != &"empty" else state
 
 
-## Placeholder look until the Technical Artist's plot art: a sprout in the crop's own hue, blue when watered,
-## big when ripe, grey when wilted, black when dead.
-func _refresh() -> void:
-	if _mesh == null:
-		return
-	var m := StandardMaterial3D.new()
-	var h := 0.0
-	var hue := fposmod(float(hash(String(crop))), 360.0) / 360.0
+## Which crop model shows (P5-22, doc 07 s11.5). Growing: stage 0 dry, +1 once watered, +1 per growth day, never the
+## last (ripe) stage; ripe: the last stage (3 for turnip and pumpkin, 2 for the moonflower); wilted and dead have their own.
+func _model_key() -> String:
+	var c := String(crop)
+	var last := 3 if ResourceLoader.exists(MODEL % [c, "stage3"]) else 2
 	match state:
-		&"growing":
-			h = 0.3
-			m.albedo_color = Color(0.1, 0.3, 0.6) if watered else Color.from_hsv(hue, 0.7, 0.7)
-		&"ripe":
-			h = 0.6
-			m.albedo_color = Color.from_hsv(hue, 0.8, 0.95)
-		&"wilted":
-			h = 0.15
-			m.albedo_color = Color(0.45, 0.4, 0.3)
-		&"dead":
-			h = 0.2
-			m.albedo_color = Color(0.05, 0.03, 0.05)
+		&"growing": return "stage%d" % mini(age + (1 if watered else 0), last - 1)
+		&"ripe": return "stage%d" % last
+		&"wilted": return "wilted"
+		&"dead": return "taint" if ResourceLoader.exists(MODEL % [c, "taint"]) else "rotten"
+	return ""
+
+
+func _refresh() -> void:
 	if _soil:  # dry or wet soil: the glb's vertex colours, darkened and cooled when watered (doc 07 s11, `mat_soil_wet`)
 		for mi in _soil.find_children("*", "MeshInstance3D", true, false):
 			var src := (mi as MeshInstance3D).mesh.surface_get_material(0)
@@ -219,7 +214,35 @@ func _refresh() -> void:
 				own.albedo_color = Color(0.55, 0.58, 0.7) if watered else Color.WHITE
 				src.set_meta(key, own)
 			(mi as MeshInstance3D).set_surface_override_material(0, src.get_meta(key))
-	_mesh.visible = h > 0.0
-	(_mesh.mesh as BoxMesh).size = Vector3(0.6, maxf(h, 0.01), 0.6)
-	_mesh.position.y = h / 2.0
-	_mesh.material_override = m
+	var k := _model_key()
+	var path := MODEL % [crop, k]
+	var want := "%s/%s" % [crop, k] if k != "" and ResourceLoader.exists(path) else ""
+	if want != _crop_key:
+		_crop_key = want
+		if _crop_node:
+			_crop_node.queue_free()
+			_crop_node = null
+		if want != "":
+			_crop_node = (load(path) as PackedScene).instantiate() as Node3D
+			_crop_node.position.y = SOIL_Y
+			get_parent().add_child(_crop_node)
+	# Moonflower glow: steady, no pulse. Own power (lights.gd skips it); only the ghost system dims it.
+	var glowing := crop == &"moonflower" and want == "moonflower/stage2"
+	if glowing and _glow == null:
+		_glow = Node3D.new()
+		_glow.set_meta(&"own_power", true)
+		var rig := LightRig.new()
+		rig.color = Color("7FE6D8")
+		rig.range_m = 3.0
+		rig.energy = 0.5
+		rig.ground_pool = false
+		_glow.add_child(rig)
+		_glow.position.y = 0.4
+		rig.ready.connect(func() -> void:  # the flower is the lamp: hide the rig's gray-box bulb
+			for m in rig.get_children():
+				if m is MeshInstance3D:
+					(m as MeshInstance3D).visible = false)
+		get_parent().add_child(_glow)
+	elif not glowing and _glow:
+		_glow.queue_free()
+		_glow = null

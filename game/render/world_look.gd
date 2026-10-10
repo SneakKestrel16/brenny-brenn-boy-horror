@@ -82,7 +82,7 @@ func _paint_props(world: Node) -> void:
 		if body == null or not world.is_ancestor_of(body):
 			continue
 		var mi := body.get_node_or_null("Mesh") as MeshInstance3D
-		if mi == null:
+		if mi == null or not mi.visible:  # P5-22: the well is a model now, its box is hidden
 			continue
 		mi.material_override = _flat(spec[1])
 		var accent := MeshInstance3D.new()

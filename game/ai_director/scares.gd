@@ -355,8 +355,27 @@ func _present(kind: StringName, slot: int, pos: Vector3, extra: String) -> void:
 		&"fake_out":
 			Soundscape.play_3d(&"sfx_step_corn", pos)  # the rustle; no layer change (doc 08 section 4.4 rule 4)
 			Soundscape.play_3d(&"sfx_crow_burst", pos)
+			_crow_burst(pos)
 	if not Game.is_host() and Game.local_peer() == slot:
 		Log.event(&"scare_applied", {"kind": String(kind)})
+
+
+## P5-22: three `animal_crow` models burst from the perch and flap away (`fly` 2 flaps per second, under the D-046 limit of 3).
+## Visual only, placement from the position (same on every peer); heading and spread are fixed by the index.
+func _crow_burst(pos: Vector3) -> void:
+	var scene := load("res://assets/models/animal_crow.glb") as PackedScene
+	for i in 3:
+		var crow := scene.instantiate() as Node3D
+		var ap := crow.find_children("*", "AnimationPlayer")[0] as AnimationPlayer
+		ap.get_animation(&"fly").loop_mode = Animation.LOOP_LINEAR
+		ap.play(&"fly")
+		add_child(crow)
+		crow.global_position = pos
+		var away := Vector3.FORWARD.rotated(Vector3.UP, i * 2.1 + 0.7)
+		crow.rotation.y = atan2(-away.x, -away.z)
+		var tw := crow.create_tween().set_parallel()
+		tw.tween_property(crow, "global_position", pos + away * 14.0 + Vector3(0, 7.0 + i, 0), 3.0)
+		tw.chain().tween_callback(crow.queue_free)
 
 
 func _local_player() -> Node:

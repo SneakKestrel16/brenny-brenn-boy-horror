@@ -249,13 +249,11 @@ func _draw_flags() -> void:
 
 func _make_slot(marker: Node) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
-	var b := BoxMesh.new()
-	b.size = Vector3(0.6, 0.6, 0.12)
-	mi.mesh = b
-	mi.position = Vector3(0, 0, -0.1)  # the board faces local -Z
-	var art := TrapArt.bear()  # Q-058: a hung trap is the bear trap hanging flat on the board (a hung trap is always a bear)
+	# P5-22: the slot marker sits at the prop_pegboard hook; the board faces local -Z. A hung trap is the
+	# trap_bear_item lying flat on the board at scale 1.0 (Q-311), always a bear. No slab: the board's own outline shows an empty slot.
+	var art := (load("res://assets/models/trap_bear_item.glb") as PackedScene).instantiate() as Node3D
 	art.rotation.x = -PI / 2.0
-	art.scale = Vector3.ONE * 0.5
+	art.position.y = -0.08  # the model is 0.62 long from z -0.23: centre it on the hook
 	mi.add_child(art)
 	marker.add_child(mi)
 	return mi
@@ -269,8 +267,6 @@ func _paint() -> void:
 			full = not full  # P5-25: the imposter's lie, display only
 		var m := _slot_mesh[i] as MeshInstance3D
 		m.get_child(0).visible = full
-		m.material_override = _mat(Color(0.2, 0.17, 0.14) if full else Color(0.75, 0.7, 0.6, 0.35), not full)
-		(m.mesh as BoxMesh).size = Vector3(0.6, 0.6, 0.02)
 
 
 func _mat(c: Color, alpha: bool = false) -> StandardMaterial3D:

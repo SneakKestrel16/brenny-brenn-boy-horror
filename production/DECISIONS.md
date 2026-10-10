@@ -1265,3 +1265,10 @@ The `net.gd` messages and the doc 05 section are accepted under CONTRACTS s7 (Ga
 reviews at P5-08). `HAT_LOOK` and `TINT_LOOK` are placeholder fallback colours (doc 07 s8 gives none).
 **Why:** QA PASS (handoffs/P5-05.md "QA re-review 2"); `test_cosmetics` 2 instances, `test_imposter_sync`,
 `test_p5_24_lobby`, `test_farmer_body` and smoke pass on main.
+
+### D-181 · 2026-10-09 · Director · P5-22 merged without re-review
+P5-22 (P5-14 to P5-17 models wired: buildings, traps, pegboard, tools, crops, corn, crows, hands, road items, ragdoll)
+failed its first review on a corn LOD gap, see-through corn, box held props and a grep_rules comment. The author fixed
+all four, plus the corn far band, the dead crow yaw and the trap night glow. The CEO chose to skip the re-review to
+land the models. The P5-22 death corpse covers P5-23's corpse item.
+**Why:** CEO, 2026-10-09: "focus on connecting existing models, skip tests for now". Main: import 0 ERROR, smoke PASS.

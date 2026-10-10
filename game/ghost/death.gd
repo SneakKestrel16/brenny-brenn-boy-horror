@@ -238,16 +238,17 @@ func _apply_death(peer: int, cause: StringName, pos: Vector3) -> void:
 		return
 	if Game.players.has(peer):
 		Game.players[peer].ghost = true
-	var body := MeshInstance3D.new()  # placeholder body: a lying capsule
-	var m := CapsuleMesh.new()
-	m.radius = 0.3
-	m.height = 1.7
-	body.mesh = m
+	# P5-22: char_farmer_ragdoll in its `lie` pose, played once and held. No PhysicalBoneSimulator3D: `lie` must never
+	# autoplay with physical bones on (P5-17 note), and a static corpse needs none.
+	var body := (load("res://assets/models/char_farmer_ragdoll.glb") as PackedScene).instantiate() as Node3D
+	var ap := body.find_children("*", "AnimationPlayer")[0] as AnimationPlayer
+	ap.get_animation(&"lie").loop_mode = Animation.LOOP_NONE
+	ap.play(&"lie")
 	body.name = "body_%d" % peer
 	body.add_to_group(&"bodies")
 	get_parent().add_child(body)
-	body.global_position = pos + Vector3(0, 0.3, 0)
-	body.rotation.z = PI / 2.0
+	body.global_position = pos
+	body.rotation.y = peer * 1.3  # same on every peer
 	_dead[peer] = {"cause": cause, "position": pos, "body": body}
 	if not Game.is_host():
 		Log.event(&"death_seen", {"player": peer, "cause": String(cause)})  # QA: the client also applied it

@@ -6,6 +6,8 @@ farm) from doc 04 coordinates.
 Edit coordinates here, regenerate, commit all three files. Both scenes use the same coordinates (doc 04 s9).
 """
 import json
+import math
+import re
 from pathlib import Path
 
 H_CORN = 2.4  # CONTRACTS section 4
@@ -55,6 +57,28 @@ def node(name, typ, parent, extra="", groups=(), meta=None):
 
 def marker(parent, name, x, z, group, **meta):
     node(name, "Marker3D", parent, f"transform = {tf(x, 0, z)}\n", [group], meta)
+
+
+FULL = False
+EXT: dict[str, str] = {}  # P5-22: model name -> ext_resource id
+
+
+def art(parent, name, model, x=0.0, y=0.0, z=0.0, yaw=0.0, sx=1.0, extra=""):
+    """P5-22: a P5-14..17 model instanced under `parent` (full scene only); yaw in degrees about Y, sx scales along X."""
+    eid = EXT.setdefault(model, f"m{len(EXT)}")
+    a = math.radians(yaw)
+    c, sn = round(math.cos(a), 5), round(math.sin(a), 5)
+    nodes.append(f'[node name="{name}" parent="{parent}" instance=ExtResource("{eid}")]\n'
+                 f"transform = Transform3D({round(c * sx, 5)}, 0, {sn}, 0, 1, 0, {round(-sn * sx, 5)}, 0, {c}, {x}, {y}, {z})\n{extra}")
+    return f"{parent}/{name}"
+
+
+def hide_meshes(prefix: str) -> None:
+    """Hide every gray-box MeshInstance3D at or under `prefix` (collision bodies stay)."""
+    for i, n in enumerate(nodes):
+        m = re.match(r'\[node name="[^"]+" type="MeshInstance3D" parent="([^"]+)"', n)
+        if m and (m.group(1) == prefix or m.group(1).startswith(prefix + "/")):
+            nodes[i] = n.rstrip("\n") + "\nvisible = false\n"
 
 
 def box(parent, name, cx, cz, sx, sz, h, m, layer=L_WORLD, y0=0.0, groups=()):
@@ -109,20 +133,20 @@ def tree(name, x, z, kind):
 
 def fence(name, x0, z0, x1, z1):
     """Visual-only split-rail fence on an axis-aligned line: posts about every 3 m and two rails, 1 m tall."""
-    n = max(1, round(max(abs(x1 - x0), abs(z1 - z0)) / 3))
+    length = max(abs(x1 - x0), abs(z1 - z0))
+    n = max(1, round(length / 3))
     f = node(name, "Node3D", "Fences")
-    for i in range(n + 1):
-        vbox(f, f"Post{i}", x0 + (x1 - x0) * i / n, z0 + (z1 - z0) * i / n, 0.15, 0.15, 1.0, "fence")
-    sx, sz = max(abs(x1 - x0), 0.08), max(abs(z1 - z0), 0.08)
-    for k, y in (("RailLow", 0.4), ("RailHigh", 0.8)):
-        vbox(f, k, (x0 + x1) / 2, (z0 + z1) / 2, sx, sz, 0.08, "fence", y0=y)
+    for i in range(n):  # P5-22: n prop_fence_segment models, X scaled L / (3 n) (handoff P5-14)
+        t = (i + 0.5) / n
+        art(f, f"Seg{i}", "prop_fence_segment", x0 + (x1 - x0) * t, 0, z0 + (z1 - z0) * t,
+            90.0 if abs(z1 - z0) > abs(x1 - x0) else 0.0, length / n / 3)
 
 
 def sign(name, x, z, text):
     """Visual-only signpost: a post and a billboard label 2.6 m up, shaded so it darkens at night."""
     s = node(name, "Node3D", "Signs", f"transform = {tf(x, 0, z)}\n")
-    vbox(s, "Post", 0, 0, 0.15, 0.15, 2.3, "fence")
-    node("Label", "Label3D", s, f"transform = {tf(0, 2.6, 0)}\nbillboard = 1\nshaded = true\ndouble_sided = true\n"
+    art(s, "Post", "prop_road_sign")  # P5-22
+    node("Label", "Label3D", s, f"transform = {tf(0, 2.3, 0)}\nbillboard = 1\nshaded = true\ndouble_sided = true\n"
          f'pixel_size = 0.008\nmodulate = Color(1, 0.95, 0.8, 1)\noutline_modulate = Color(0.2, 0.12, 0.05, 1)\n'
          f'text = "{text}"\nfont_size = 96\noutline_size = 24\n')
 
@@ -200,6 +224,13 @@ def building(name, door_x, door_z, x0, x1, z0, z1, door_side, h, parent="Buildin
     box(b, "WallW", lx0, (lz0 + lz1) / 2, t, lz1 - lz0, h, m)
     box(b, "WallE", lx1, (lz0 + lz1) / 2, t, lz1 - lz0, h, m)
     node("Door", "Marker3D", b, "", ["doors"], {"building": name.lower()})
+    if FULL:  # P5-22: model and door replace the gray-box meshes, collision stays. Door leaves stand open: no door state in game
+        hide_meshes(b)
+        model = {"Barn": "barn", "Farmhouse": "farmhouse", "ToolShed": "shed"}[name]
+        art(b, "Art", f"bldg_{model}")
+        art(b, "DoorArt", f"prop_door_{model}")
+        nodes.append(f'[node name="LeafL" parent="{b}/DoorArt"]\nrotation = Vector3(0, {-math.pi / 2}, 0)\n')
+        nodes.append(f'[node name="LeafR" parent="{b}/DoorArt"]\nrotation = Vector3(0, {math.pi / 2}, 0)\n')
     # LightRig scene is the Technical Artist's (game/render); spot only, Q-026. 6 m = lit doorway radius.
     inward = -0.5 if door_side == "S" else 0.5
     node("LightRigDoor", "Marker3D", b, f"transform = {tf(0, 3, inward)}\n", ["lightrig_spots"], {"radius_m": 6.0})
@@ -230,6 +261,20 @@ def bear_slots() -> int:
     """pegboard_bear_slots from data/season.json (Game Designer's table), so the pegboard follows the data."""
     recs = json.loads((Path(__file__).parents[2] / "data" / "season.json").read_text(encoding="utf-8"))["records"]
     return int(next(r["value"] for r in recs if r["id"] == "pegboard_bear_slots"))
+
+
+def pen_fence(nm: str, sx: float, sz: float) -> None:
+    """P5-22: n = round(L / 3) prop_fence_segment per pen section, as children so a broken section hides them with the box."""
+    if not FULL:
+        return
+    hide_meshes(f"Pen/{nm}")
+    length = max(sx, sz)
+    n = round(length / 3)
+    along_z = sz > sx
+    for k in range(n):
+        off = -length / 2 + length / n * (k + 0.5)
+        art(f"Pen/{nm}", f"Seg{k}", "prop_fence_segment", 0 if along_z else off, -0.6, off if along_z else 0,
+            90.0 if along_z else 0.0, length / n / 3)
 
 
 def plots(first: int, field: str, x0: float, z0: float, cols: int, rows: int, upgrade_from: int) -> None:
@@ -264,9 +309,11 @@ REGIONS = [("yard", -65, 15, -25, 32), ("pen", -65, 15, -45, -25), ("pumpkin", -
 
 
 def generate(full: bool) -> str:
-    global MATS
+    global MATS, FULL
+    FULL = full
     subs.clear()
     nodes.clear()
+    EXT.clear()
     MATS = {
         "ground": mat("0.30, 0.34, 0.22, 1"), "corn": mat("0.35, 0.55, 0.15, 1"),
         "bldg": mat("0.45, 0.30, 0.22, 1"), "prop": mat("0.55, 0.55, 0.58, 1"),
@@ -313,9 +360,10 @@ def generate(full: bool) -> str:
     node("Pegboard", "Marker3D", "Buildings/ToolShed", f"transform = {tf(0, 1.5, 4.5)}\n", ["pegboard_spots"])
     if full:  # one slot marker per bear the board holds (season.json pegboard_bear_slots), 0.8 m apart on the back wall
         n = bear_slots()
-        for i in range(n):
+        for i in range(n):  # P5-22: slot = prop_pegboard Hook, 0.32 m apart; board back plane on the shed's inner wall (z 4.85)
             node(f"Slot{i + 1}", "Marker3D", "Buildings/ToolShed/Pegboard",
-                 f"transform = {tf((i - (n - 1) / 2) * 0.8, 0, 0)}\n", ["pegboard_slots"])
+                 f"transform = {tf((i - (n - 1) / 2) * 0.32, 0, 0.3)}\n", ["pegboard_slots"])
+        art("Buildings/ToolShed", "PegboardArt", "prop_pegboard", 0, 1.2, 4.85)
         # Barn staging (doc 01 "Recording lines", doc 04 s4): where a player records, and the lantern that blows out.
         node("RecordingSpot", "Marker3D", "Buildings/Barn", f"transform = {tf(0, 0, -15)}\n", ["recording_spots"])
         node("BarnLantern", "Marker3D", "Buildings/Barn", f"transform = {tf(-5, 1.6, -17)}\n", ["barn_lantern", "lightrig_spots"], {"radius_m": 6.0})  # world_look puts the real LightRig here (Q-054 item 4)
@@ -329,10 +377,16 @@ def generate(full: bool) -> str:
         props.append(("SellBox", 40, 20, 1.5, 1.5, 1.0, "sell_box"))
     for nm, x, z, sx, sz, h, grp in props:
         box("Props", nm, x, z, sx, sz, h, "prop", groups=[grp])
+        if full and nm == "Well":  # P5-22: prop_well replaces the box mesh, collision stays
+            hide_meshes("Props/Well")
+            art("Props/Well", "Art", "prop_well", 0, -h / 2, 0)
     if full:
         marker("Props", "FarmGate", 105, -5, "farm_gate")
         for nm, z in (("PostN", -8), ("PostS", -2)):  # 6 m gate, doc 04 s4
             box("Props", f"Gate{nm}", 105, z, 0.3, 0.3, 2.0, "fence")
+        hide_meshes("Props/GatePostN")
+        hide_meshes("Props/GatePostS")
+        art("Props/FarmGate", "Art", "prop_farm_gate", 0, 0, 0, 90.0)  # P5-22: the model spans X, the gate span is Z
         node("Sanctuary", "Marker3D", "Props", f"transform = {tf(120, 0, -5)}\n", ["sanctuary"], {"radius_m": 10.0})
         node("PrizePumpkin", "Marker3D", "Props", f"transform = {tf(-47, 0, 33)}\n", ["pumpkin_patch"], {"width_m": 4.0})
         node("MoonflowerBed", "Marker3D", "Props", f"transform = {tf(60, 0, 22)}\n", ["moonflower_bed"])
@@ -351,9 +405,13 @@ def generate(full: bool) -> str:
                                ("WestN", -30, -35.5, .2, 5), ("WestS", -30, -30.5, .2, 5),
                                ("EastN", -18, -35.5, .2, 5), ("EastS", -18, -30.5, .2, 5)):
         box("Pen", nm, cx, cz, sx, sz, 1.2, "fence", groups=["fence_sections"])
+        pen_fence(nm, sx, sz)
     for nm, cx, cz, sx, sz in (("SouthL", -27.5, -28, 5, .2), ("SouthR", -20.5, -28, 5, .2)):
         box("Pen", nm, cx, cz, sx, sz, 1.2, "fence")
+        pen_fence(nm, sx, sz)
     marker("Pen", "PenGate", -24, -28, "pen_gates")
+    if full:
+        art("Pen/PenGate", "Art", "prop_fence_gate")
 
     # AI Director regions (doc 03 s11.6): flat Area3D boxes, no collision; the director reads the shapes and links
     # regions within ai_director.json nudge.link_m. Bounds are placeholder cuts of the clearing and ring (P3-04);
@@ -406,9 +464,13 @@ def generate(full: bool) -> str:
             tree(*t)
         for s in SIGNS:
             sign(*s)
+        for i, z in enumerate((-10.5, 0.5)):  # P5-22: prop_road_lamp either side of the road lane; the glass stays unlit (no light node)
+            art("Signs", f"RoadLamp{i}", "prop_road_lamp", 112, 0, z)
         landmarks()
 
     out = ["[gd_scene format=3]\n"]
+    for model, eid in EXT.items():
+        out.append(f'[ext_resource type="PackedScene" path="res://assets/models/{model}.glb" id="{eid}"]\n')
     for k, v in subs.items():
         out.append(v.replace('id="@"', f'id="{k}"'))
     out += nodes

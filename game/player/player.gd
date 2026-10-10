@@ -34,11 +34,13 @@ var _spec := 0  ## ghost: peer being watched, 0 = free flight
 var nav_path: Array = []  ## QA waypoints for `--autochore` (HoldController fills it)
 var _cam: Camera3D
 var _held: Node3D
-var _water_can: MeshInstance3D
-var _fuel_can: MeshInstance3D
-var _shovel: MeshInstance3D  ## P2-11 placeholder props
-var _trap_prop: MeshInstance3D
+var _water_can: Node3D
+var _fuel_can: Node3D
+var _shovel: Node3D  ## P2-11 in-hand props (models since P5-22)
+var _trap_prop: Node3D
+var _can_tint := {}  ## model root -> overlay material
 var _shape: CollisionShape3D
+var _ghost_body: Node3D  ## P5-22: char_ghost, shown to ghosts instead of the farmer once dead
 var _mesh: FarmerBody  ## P5-13: the rigged farmer (FarmerBody), origin at the feet
 var _emote_s := 0.0  ## seconds left of an emote animation
 var _prev_pos := Vector3.ZERO
@@ -110,15 +112,23 @@ func _make_held() -> void:
 	_held = Node3D.new()
 	_held.position = Vector3(0.35, -0.35, -0.6)
 	_cam.add_child(_held)
-	_water_can = _prop(Vector3(0.22, 0.22, 0.3), Color(0.5, 0.58, 0.64))
+	_water_can = _prop("tool_watering_can")
 	_water_can.visible = false
-	_fuel_can = _prop(Vector3(0.2, 0.3, 0.14), Color(0.85, 0.15, 0.1))
+	_fuel_can = _prop("tool_fuel_can")
 	_fuel_can.visible = false
-	_shovel = _prop(Vector3(0.08, 0.08, 1.1), Color(0.45, 0.32, 0.18))  # long wooden handle
+	for can in [_water_can, _fuel_can]:
+		var tint := StandardMaterial3D.new()
+		tint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		for m in can.find_children("*", "MeshInstance3D"):
+			(m as MeshInstance3D).material_overlay = tint
+		_can_tint[can] = tint
+	_shovel = _prop("tool_shovel")
 	_shovel.position = Vector3(0.15, 0.05, -0.2)
+	_shovel.rotation_degrees.x = -75.0  # model stands upright (1.33 m); blade low, handle away
 	_shovel.visible = false
-	_trap_prop = _prop(Vector3(0.35, 0.08, 0.35), Color(0.2, 0.2, 0.22))  # a disarmed bear trap, dark iron
-	_trap_prop.position = Vector3(-0.35, 0.0, 0.0)
+	_trap_prop = _prop("trap_bear_item")
+	_trap_prop.position = Vector3(-0.35, -0.1, 0.0)
+	_trap_prop.scale = Vector3.ONE * 0.7
 	_trap_prop.visible = false
 	var farm := get_tree().get_first_node_in_group(&"farm")  # a late spawn still shows what the farm already knows
 	if farm and farm.carry.has(peer):
@@ -127,14 +137,10 @@ func _make_held() -> void:
 		_on_carry(&"hands", [peer, c.get("shovel", false), c.get("trap", false)])
 
 
-func _prop(size: Vector3, col: Color) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	var b := BoxMesh.new()
-	b.size = size
-	mi.mesh = b
-	var m := StandardMaterial3D.new()
-	m.albedo_color = col
-	mi.material_override = m
+## P5-22: the model, in hand. Tint overlay (cans) shows full/empty; the model keeps its own look.
+func _prop(model: String) -> Node3D:
+	var mi := (load("res://assets/models/%s.glb" % model) as PackedScene).instantiate() as Node3D
+	mi.scale = Vector3.ONE * 0.75  # held models are life size; the old boxes were smaller
 	_held.add_child(mi)
 	return mi
 
@@ -155,8 +161,8 @@ func _on_carry(what: StringName, args: Array) -> void:
 	var kind: StringName = farm.carry.get(peer, {}).get("held_kind", &"") if farm else &""
 	_fuel_can.visible = kind == &"fuel"
 	_water_can.visible = kind == &"water"
-	(_fuel_can.material_override as StandardMaterial3D).albedo_color = Color(0.85, 0.15, 0.1) if bool(args[3]) else Color(0.4, 0.15, 0.12)
-	(_water_can.material_override as StandardMaterial3D).albedo_color = Color(0.15, 0.4, 0.95) if int(args[1]) > 0 else Color(0.5, 0.58, 0.64)  # galvanized gray-blue when empty
+	(_can_tint[_fuel_can] as StandardMaterial3D).albedo_color = Color(0.85, 0.15, 0.1, 0.3) if bool(args[3]) else Color(0.4, 0.15, 0.12, 0.3)
+	(_can_tint[_water_can] as StandardMaterial3D).albedo_color = Color(0.15, 0.4, 0.95, 0.3) if int(args[1]) > 0 else Color(0.5, 0.58, 0.64, 0.3)  # gray-blue when empty
 
 
 func farm_has_carry() -> bool:
@@ -266,7 +272,9 @@ func _physics_process(delta: float) -> void:
 	else:
 		global_position = global_position.lerp(_target_pos, 1.0 - exp(-PROXY_SMOOTH * delta))
 		var ghost_view := Game.is_ghost(Game.local_peer())
-		_mesh.visible = not ghost or ghost_view  # ghosts are seen only by ghosts
+		_mesh.visible = not ghost  # ghosts are seen only by ghosts, as the ghost shell
+		if _ghost_body:
+			_ghost_body.visible = ghost and ghost_view
 		# Doc 01 "Static voices": the living hear a ghost only through static; Voice puts a ghost's emitter
 		# on the ghost static chain (P3-10), so here only the per-player volume applies.
 		var ve := get_node_or_null("VoiceEmitter") as AudioStreamPlayer3D
@@ -354,6 +362,15 @@ func _animate(delta: float) -> void:
 ## Dead (doc 05 section 14): no body, no collision. Local: fly with the camera. Others: hidden from the living.
 func become_ghost() -> void:
 	ghost = true
+	if _ghost_body == null:
+		_ghost_body = (load("res://assets/models/char_ghost.glb") as PackedScene).instantiate() as Node3D
+		for m in _ghost_body.find_children("*", "MeshInstance3D"):
+			(m as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF  # doc 07: the shell casts none
+		var ap := _ghost_body.find_children("*", "AnimationPlayer")[0] as AnimationPlayer
+		ap.get_animation(&"float").loop_mode = Animation.LOOP_LINEAR
+		ap.play(&"float")
+		_ghost_body.visible = false
+		add_child(_ghost_body)
 	pinned = false
 	_spec = 0
 	collision_mask = 0
@@ -361,6 +378,9 @@ func become_ghost() -> void:
 
 func respawn(pos: Vector3) -> void:
 	ghost = false
+	if _ghost_body:
+		_ghost_body.queue_free()
+		_ghost_body = null
 	_spec = 0
 	global_position = pos
 	_target_pos = pos

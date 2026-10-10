@@ -507,3 +507,12 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   glbs load). Owner: Technical Artist.
 - **"ObjectDB instances leaked at exit" warnings** in test_farmer_body, test_colour_slots and one client run. Inference:
   the test scripts never free their nodes; a run on main before P5-05 settles it. Owner: QA.
+
+## Found at the P5-22 review (QA, 2026-10-09)
+
+- **P5-22 re-review skipped** (CEO, D-181). P5-08 covers it: networked clue, glint and rust-pan shots with an armed
+  trap. Owner: QA.
+- **No models yet** for trap_tripwire, the field scarecrow, perched crows, clue decals (fresh dirt, bent stalks, cut
+  stalk), window glow and lit road lamps; hoe and whistle have no visual. Owner: 3D Artist / Gameplay.
+- **Doors are static open** (Q-307: no host door state). **Scarecrow facing yaw** not wired. Owner: Gameplay.
+- **Ragdoll is a static `lie` pose** (Q-322 fallback). Owner: Gameplay.
