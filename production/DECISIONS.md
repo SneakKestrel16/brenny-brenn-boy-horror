@@ -1008,3 +1008,14 @@ default, and the barn recording removed (D-146).
 **Why:** CEO, 2026-10-09: "skip the lobby option to turn off live clips and approve the design doc". This answers
 Q-244.
 **How to apply:** When P4-37 merges, mark Q-244 answered and remove the "no live clips" group option from doc 01.
+### D-151 · 2026-10-09 · CEO · 3D models: Blender plus free model libraries, edited to fit
+The 3D Artist builds models in Blender and may also start from free library models, then edits them to fit
+doc 07 (scale, poly budget, palette, materials, pivots). Default sources are CC0 only: Poly Haven, Kenney,
+Quaternius, ambientCG (textures) and CC0 items on Sketchfab/OpenGameArt. This matches the D-066 CC0 rule for sound,
+and keeps author names out of the repo. Anything under CC-BY or another license needs CEO approval under D-005
+first.
+**Why:** CEO, 2026-10-09: "have the 3d artist use blender to make models and also pull from any free libraries and
+make any changes it needs after it pulls them".
+**How to apply:** Downloads stay outside the repo (`C:\Users\Ockey\fc_dl\models\`) and are treated as untrusted.
+Only edited `.blend` sources and `.glb` exports enter the repo. Log every source (URL, asset name, license) in doc 07
+under a sources section. Exports keep the existing file names, so scenes need no rewiring.
