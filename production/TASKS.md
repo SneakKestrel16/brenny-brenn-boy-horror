@@ -1011,7 +1011,8 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-26 | 3D | Missing models: trap_tripwire, field scarecrow, perched crow, clue decals, window glow, lit road lamp, hoe, whistle | todo | P5-14 |
 | P5-27 | Gameplay | Wire the P5-26 models; host door state (Q-307) | todo | P5-26 |
 | P5-28 | Gameplay | Lobby and save fixes: `trait_report_pending` saved, Season N label, bottom buttons overlap | todo | P5-24 |
-| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-28 |
+| P5-29 | Gameplay | Playtest 2026-10-09 log fixes: client "Lambda capture freed" errors, lobby READY key-repeat toggling | todo | |
+| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-29 |
 
 ### P5-02 Phase 5 design and data
 Owner: Game Designer. Output: doc 02, doc 03, `data/`, `tools/sim/`; handoff note.
@@ -1206,3 +1207,13 @@ Acceptance:
 - The lobby shows "Season N".
 - The lobby bottom buttons (START THE SEASON, Settings, Leave to menu) do not overlap at 1280x720 and 1920x1080.
 - Two-instance run through a season end and a save load passes.
+
+### P5-29 Playtest 2026-10-09 log fixes
+Owner: Gameplay Programmer. Output: game code, handoff note.
+Acceptance:
+- One client (peer 1591783263, build cbffbbf) logged `ERROR: Lambda capture at index 0 was freed. Passed "null"
+  instead.` 48 times in day 3 (day phase, after the day 2 Dawn Report closed); the host and the other client logged
+  none. Find the lambda that outlives its captured object and fix it.
+- The same client sent `request_lobby_ready` 302 times in 70 s (about every 30 ms, so key repeat on the focused READY
+  button). Held keys must not toggle READY; one press, one toggle.
+- Logs: `logs/playtest_20261009/` (gitignored; copy from the Director's main tree).
