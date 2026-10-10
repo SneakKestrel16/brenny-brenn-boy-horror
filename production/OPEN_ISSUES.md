@@ -399,3 +399,14 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   season's reveal shows "A farmhand" for anyone not seen since. Owner: Game Designer, Gameplay Programmer.
 - **P5-04 must call `Quirks.reroll(season)`** on a new season and set `Quirks.season_n` on load. Owner: Director at
   the P5-04 merge.
+
+## Found at the P5-17 review (QA, 2026-10-09)
+
+- **Doc 07 sync for P5-17.** s11 sizes to as-built (crow 0.18 x 0.21 x 0.44, dead crow 0.28 x 0.10 x 0.38, hands
+  0.50 x 0.19 x 0.53, sign 0.42 x 2.04 x 0.14, ghost 1.83 m); s7 lacks `mat_ghost_shell` (BLEND, alpha 0.42, no
+  emission); s8 still says the dead crow is a box and the ragdoll has no animation (it has pose-only `lie`);
+  s15.2 and s15.4 should move the seven models to "Built in Blender". Owner: Technical Artist (doc 07).
+- **Wiring notes.** `tool_hands` arms run along -Z (`TaintLook` ARM_LEN climbs +Y); do not autoplay the ragdoll's
+  AnimationPlayer with physical bones on; the ghost's double-sided blend shows inner faces (set cull back if it
+  reads badly). Owner: Gameplay Programmer (model wiring task).
+- **`before/tool_hands_*` shot camera sits below the ground plane** (cosmetic, shots only). Owner: 3D Artist.

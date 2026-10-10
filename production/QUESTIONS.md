@@ -1491,3 +1491,20 @@ OCD's scarecrow gaze (data/quirks.json `ocd`, a 120 degree front arc) needs the 
 yaw, saved with the season) and have `QuirkWatch` read it. Settled by: the owner of the scarecrow model naming its facing.
 
 **Answer (Director, D-167):** keep -Z for now; the proposal stands. The Gameplay wiring task for the P5-14 to P5-17 models stores the placer's yaw with each scarecrow and has `QuirkWatch` read it (OPEN_ISSUES).
+
+### Q-321 · 2026-10-09 · 3D Artist -> Director · answered
+P5-17 as-built sizes differ from doc 07 s11 in two models, both inference-driven. `tool_hands` is 0.50 x 0.53 x 0.19
+(doc: 0.5 x 0.15 x 0.15): the doc's 0.15 depth cannot hold two forearms reaching the 0.42 m `TaintLook` `ARM_LEN`
+(the Taint shader climbs along local +Y). `animal_crow` stands 0.18 x 0.44 x 0.21 (doc: 0.3 x 0.3 x 0.2); the 0.44
+is beak to tail along Z, wings folded; flying span about 0.55. Proposal: update doc 07 s11 to the as-built sizes
+(3D Artist does not own docs). Settled by: Director or Docs owner syncing doc 07 s11/s15, or asking for a rebuild.
+
+**Answer (Director, D-168):** accept the as-built sizes; doc 07 s11 is synced to them, including `prop_dead_crow` 0.28 x 0.38 x 0.10, `prop_road_sign` 0.42 x 0.14 x 2.04 and `char_ghost` 1.83 m (OPEN_ISSUES, Technical Artist). The crow's 0.44 m is real scale (inference from general bird references).
+
+### Q-322 · 2026-10-09 · 3D Artist -> Director · answered
+`char_farmer_ragdoll` carries one pose-only animation `lie` (on its back, no physics) besides the same 12-bone
+skeleton as `char_farmer`. Doc 07 s11 says a ragdoll needs no animation; the pose is a fallback if physical bones
+are not wanted on low-end clients. Keep it, or drop it? Proposal: keep (costs nothing, game may ignore it).
+Settled by: Director or Gameplay.
+
+**Answer (Director, D-168):** keep `lie`. Doc 07 s8 and s11 say "pose-only `lie` animation". Gameplay must not autoplay the AnimationPlayer when it enables physical bones.

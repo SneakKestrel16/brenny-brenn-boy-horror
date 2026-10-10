@@ -6,17 +6,75 @@ extends SceneTree
 
 var _out := "logs/renders/p5_12/after"
 var _only: PackedStringArray = []
+var _before := false  # P5-17: draw primitive stand-ins instead of the glb
 
 
 func _initialize() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			_out = a.trim_prefix("--out=")
+		elif a == "--before":
+			_before = true
 		elif a.begins_with("--only="):
 			_only = a.trim_prefix("--only=").split(",")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://" + _out))
 	get_root().size = Vector2i(640, 480)
 	_run()
+
+
+## P5-17 "before": the primitives the game draws today for models that did not exist yet (crow and dead crow boxes
+## in game code, TaintLook forearm capsules, the player capsule for ghost and ragdoll, bare post and box for road items).
+func _mesh(m: Mesh, pos: Vector3, rot_deg := Vector3.ZERO, col := Color.WHITE, alpha := 1.0) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.mesh = m
+	mi.position = pos
+	mi.rotation_degrees = rot_deg
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(col, alpha)
+	if alpha < 1.0:
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mi.material_override = mat
+	return mi
+
+
+func _box(size: Vector3) -> BoxMesh:
+	var b := BoxMesh.new()
+	b.size = size
+	return b
+
+
+func _capsule(r: float, h: float) -> CapsuleMesh:
+	var c := CapsuleMesh.new()
+	c.radius = r
+	c.height = h
+	return c
+
+
+func _standin(name: String) -> Node3D:
+	var n := Node3D.new()
+	match name:
+		"animal_crow":
+			n.add_child(_mesh(_box(Vector3(0.15, 0.2, 0.3)), Vector3(0, 0.1, 0), Vector3.ZERO, Color(0.08, 0.08, 0.1)))
+		"prop_dead_crow":
+			n.add_child(_mesh(_box(Vector3(0.3, 0.1, 0.15)), Vector3(0, 0.05, 0), Vector3.ZERO, Color(0.08, 0.08, 0.1)))
+		"tool_hands":
+			for s in [-1.0, 1.0]:
+				n.add_child(_mesh(_capsule(0.045, 0.42), Vector3(0.24 * s, -0.4, -0.36), Vector3(-62, 22 * s, 0), Color(0.6, 0.45, 0.35)))
+		"prop_road_sign":
+			n.add_child(_mesh(_box(Vector3(0.08, 2.0, 0.08)), Vector3(0, 1.0, 0), Vector3.ZERO, Color(0.35, 0.3, 0.25)))
+			n.add_child(_mesh(_box(Vector3(0.4, 0.25, 0.03)), Vector3(0, 1.75, 0), Vector3.ZERO, Color(0.7, 0.7, 0.7)))
+		"prop_road_lamp":
+			var cyl := CylinderMesh.new()
+			cyl.top_radius = 0.06
+			cyl.bottom_radius = 0.08
+			cyl.height = 3.2
+			n.add_child(_mesh(cyl, Vector3(0, 1.6, 0), Vector3.ZERO, Color(0.2, 0.2, 0.22)))
+			n.add_child(_mesh(_box(Vector3(0.25, 0.25, 0.25)), Vector3(0, 3.35, 0), Vector3.ZERO, Color(1.0, 0.8, 0.5)))
+		"char_farmer_ragdoll":
+			n.add_child(_mesh(_capsule(0.35, 1.8), Vector3(0, 0.35, 0), Vector3(90, 0, 0), Color(0.6, 0.6, 0.6)))
+		"char_ghost":
+			n.add_child(_mesh(_capsule(0.35, 1.8), Vector3(0, 0.9, 0), Vector3.ZERO, Color(0.75, 0.85, 1.0), 0.45))
+	return n
 
 
 func _names() -> Array:
@@ -68,8 +126,11 @@ func _run() -> void:
 	cam.current = true
 	await process_frame
 	for name in _names():
-		var scene: PackedScene = load("res://assets/models/%s.glb" % name)
-		var inst: Node3D = scene.instantiate()
+		var inst: Node3D
+		if _before:
+			inst = _standin(name)
+		else:
+			inst = (load("res://assets/models/%s.glb" % name) as PackedScene).instantiate()
 		world.add_child(inst)
 		var acc := [null]
 		_aabb(inst, acc)

@@ -1155,3 +1155,10 @@ comes from `quirks.json`, and the season-end reveal includes players who left (D
    step-off), skipping the trap race. Matches doc 02 s22.2 literally; left to playtest (OPEN_ISSUES).
 3. Q-276: OCD's scarecrow arc faces -Z until scarecrows store a facing yaw.
 **Why:** QA PASS with fixes (handoffs/P5-09.md "QA review").
+
+### D-168 · 2026-10-09 · Director · P5-17 merged
+P5-17 (crow, dead crow, hands, road sign, road lamp, farmer ragdoll, ghost shell) passed QA; the fixes were handoff
+text, made in the QA review section. Q-321: as-built sizes stand and doc 07 s11 follows them. Q-322: the ragdoll keeps
+its pose-only `lie` animation. `tool_hands` arms run along Godot -Z (elbows at x +-0.19, fingertips z -0.47, up +Y),
+so `TaintLook` must climb -Z or the hands get rotated -90 deg about X when wired.
+**Why:** QA PASS with fixes (handoffs/P5-17.md "QA review").
