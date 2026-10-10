@@ -1020,6 +1020,16 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-35 | Gameplay | Player models break when Taint shows (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-36 | Gameplay | Dev console: message one player; dev menu for the common commands, typed commands kept (CEO STOP 6) | done (QA PASS) | P5-08 |
 | P5-37 | Director | Rename: Taint to Corrupted in every doc and all player-facing text; game named "Farmer's Delight" (CEO STOP 6) | todo | P5-30 to P5-36 |
+| P5-38 | Technical Artist | Optimise the game: measure doc 07 s10 budget, fix hotspots (CEO STOP 6) | in progress | P5-08 |
+| P5-39 | AI Programmer | Creature AI improvements; Q-345 fixes (CEO STOP 6) | in progress | P5-33 |
+| P5-40 | 3D | New farmer model from quality sample B (CEO STOP 6) | in progress | P5-08 |
+| P5-41 | Technical Artist | Better nuke dev-toy look (CEO STOP 6) | todo | P5-08 |
+| P5-42 | Gameplay | Big heads toy texture issue (CEO STOP 6) | todo | P5-35 |
+| P5-43 | Gameplay | Dev command: whisper scare on one player (CEO STOP 6) | todo | P5-36 |
+| P5-44 | Gameplay | Screen messages go off screen (CEO STOP 6) | todo | P5-08 |
+| P5-45 | Gameplay | More emotes (CEO STOP 6) | todo | P5-08 |
+| P5-46 | Gameplay | Mouse sensitivity setting (CEO STOP 6) | todo | P5-08 |
+| P5-47 | Level Designer | Move the well between field A and field B (CEO STOP 6) | todo | P5-08 |
 | P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | done (QA PASS) | P5-02 to P5-07, P5-09 to P5-29 |
 
 ### P5-02 Phase 5 design and data
@@ -1296,3 +1306,69 @@ Acceptance:
 - Code identifiers, data keys, save keys and log event names stay (`taint_*`): renaming them breaks saves and logs.
   Docs keep those identifiers verbatim in code spans.
 - The game is named "Farmer's Delight": `project.godot` `config/name`, main menu title, window title, README, doc 01.
+
+### More STOP 6 feedback (CEO, 2026-10-10, second batch)
+P5-38 to P5-47 come from CEO requests made while P5-33 to P5-37 ran. They run in parallel. P5-37's rename pass
+repeats its `taint` grep after they merge, because they add player-facing text.
+
+### P5-38 Optimise the game
+Owner: Technical Artist. Output: render and code edits, doc 07 s10 measured, handoff `PERF-01.md`.
+Acceptance:
+- Run the doc 07 s10.3 procedure (4 instances, day and night, four spots) before and after; fix only what is over
+  budget or a measured hotspot. No gameplay, light-rule, fog or corn-density change. Doc 07 s10.2 marked measured.
+
+### P5-39 Creature AI improvements
+Owner: AI Programmer. Output: game and data edits, doc 03 update, handoff `AI-IMPROVE-01.md`.
+Acceptance:
+- The CEO calls the creature AI "pretty bad". From bot-season logs (several seeds), count stuck, oscillating,
+  bad-path, predictable, give-up and unfair-death cases; fix the worst; before and after counts.
+- Q-345 items 1, 3 and 4 (day race at nightfall, hold_registry freed-target guard, trap_changed `by`).
+
+### P5-40 New farmer model
+Owner: 3D Artist. Output: `char_farmer.glb`, ragdoll, cosmetics refit, doc 07 update, handoff `FARMER-HQ.md`.
+Acceptance:
+- The CEO picked quality sample B (shipped face, hq2 clothes, neck, fixed hair, 3,600 tris). It replaces
+  `char_farmer` through the real build pipeline with the same bones, animations and tint slots; ragdoll,
+  cosmetics, hats, tints and the Taint stain fit the new body. Windowed screenshots in the handoff.
+
+### P5-41 Better nuke look
+Owner: Technical Artist. Output: `game/debug/` toy visuals, handoff note.
+Acceptance:
+- The nuke dev toy's mushroom cloud and glow look better: shaped, layered and coloured, rising and spreading
+  over the 14 s. Keep doc 05 s25's rules: no white flash, glow ramp limits, safe mode hides it. Windowed screenshots.
+
+### P5-42 Big heads texture
+Owner: Gameplay Programmer. Output: `game/debug/dev_toys.gd` fix, handoff note.
+Acceptance:
+- The CEO saw a texture problem on the big heads toy. Reproduce windowed, host and client, with hats, cosmetics and
+  Taint; fix it if not already fixed (P5-35 may have). Screenshots before and after.
+
+### P5-43 Whisper to one player
+Owner: Gameplay Programmer (with AI Programmer's scare code). Output: game code, doc 05 update, handoff note.
+Acceptance:
+- A dev console and dev menu command plays the whisper scare (doc 03, "The whisper") on one chosen player only.
+  Inference: the CEO's "add a whisper to a specific player" means this dev trigger, next to P5-36's text message;
+  confirm at the next STOP.
+
+### P5-44 Screen messages go off screen
+Owner: Gameplay Programmer. Output: `game/ui/` fixes, handoff note.
+Acceptance:
+- Every on-screen message (HUD notices, toasts, dev messages, intro card, prompts) wraps and stays inside the screen
+  at 1280x720 and 1920x1080, with the longest strings. Windowed screenshots.
+
+### P5-45 More emotes
+Owner: Gameplay Programmer. Output: game code, data, doc 05 update, handoff note.
+Acceptance:
+- Add more emotes to the emote wheel, readable at distance, networked like the existing ones. Animations by the 3D
+  Artist where the farmer rig needs them.
+
+### P5-46 Mouse sensitivity setting
+Owner: Gameplay Programmer. Output: settings menu edit, handoff note.
+Acceptance:
+- A mouse sensitivity slider in the settings menu drives `Settings` `mouse_sensitivity`, saves, and applies live.
+
+### P5-47 Move the well
+Owner: Level Designer. Output: `game/world/` edits, doc 04 update, handoff note.
+Acceptance:
+- The well moves between field A (x 24..36) and field B (x 66..78). Paths, crow perch crow_09, the well pump sound,
+  the Taint cure use and the doc 04 distance table follow it; check_farm passes.
