@@ -618,7 +618,7 @@ no economy number and can start now.
 | P4-38 | Gameplay, Game Designer | CEO: buyable flare shells in the store (D-147); Dawn Report says the flare gun was reloaded | done (QA PASS with follow-ups) | — |
 | P4-39 | Gameplay | P4-38 QA follow-up: after a save resumes, `step_free_scrap` (`save.gd:343`) logs `flare_reloaded`, so the next Dawn Report shows a stale reload line. Skip the log on resume or drop report events from before `save_loaded` | done (QA PASS) | P4-38 |
 | P4-40 | 3D Artist, Technical Artist | CEO: upgrade models with Blender plus free CC0 libraries, edited to fit doc 07 (D-151); keep file names | done | — |
-| P4-18 | QA | Review each P4 task; 4-instance run; headless with no new errors. Human playtest and sim `compare` economy targets waived by the CEO (D-148), moved to a later economy pass | in review | all above |
+| P4-18 | QA | Review each P4 task; 4-instance run; headless with no new errors. Human playtest and sim `compare` economy targets waived by the CEO (D-148), moved to a later economy pass | done (CEO closed STOP 5 by starting Phase 5, D-152) | all above |
 
 Every code task: works with 2+ instances over ENet, runs headless with no new errors, logs what doc 09
 s3 "DD Phase 4" reads, and leaves a handoff note. Placeholders cite doc 01, doc 02 `sim` or say
@@ -970,4 +970,90 @@ Acceptance:
 - Low quality setting still turns off grain, fog layer and local-light shadows (doc 07 s6).
 - Headless run with no new errors; day, dusk, night and Harvest Moon screenshots for the CEO
   (doc 07 s5) from `--look-shot`.
+
+---
+
+## DD Phase 5: Spliced clips, next season, cosmetics
+
+Started by the CEO 2026-10-09 (D-152), which closes STOP 5. Source: doc 01 "Build Plan > Phase 5": spliced
+clips from live speech; next season; cosmetics. Live clips came forward in D-146 and are done (P4-37).
+Doc 01 gives Phase 5 no "done when"; the Director's proposal is Q-250 (FOR CEO). **STOP 6** after P5-08.
+
+Carried in: the P4-18 gate items the CEO waived (D-148: human sessions, sim `compare` within 15 points),
+the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved).
+
+| ID | Owner | Task | Status | Depends on |
+|---|---|---|---|---|
+| P5-01 | Director | Scope review: settle what P5-04 to P5-07 depend on; done-when proposal (Q-250) | done (D-152) | — |
+| P5-02 | Game Designer | Doc 02 next season and cosmetics, doc 03 season traits; `data/` JSON; sim runs season 2 and 3 | todo | P5-01 |
+| P5-03 | Network & Voice, AI Programmer | Spliced lures from live clips, day 4 on (doc 03 s12.1 splice row, doc 06 "A lure") | todo | P5-01 |
+| P5-04 | Gameplay, AI Programmer | Next season: carry-over, savings, debt growth, one new creature trait, saved and loaded | todo | P5-02 |
+| P5-05 | Gameplay | Cosmetics: store items once the debt is paid, equip, synced, saved | todo | P5-02 |
+| P5-06 | 3D Artist, Technical Artist | Cosmetic hats and overalls models and tint slots (doc 07 s8) | todo | P5-02 |
+| P5-07 | Audio Designer | Phase 5 sounds: season-start sting, cosmetic purchase, splice join check (doc 08) | todo | P5-02, P5-03 |
+| P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors; doc 09 Phase 5 gate | todo | all above |
+
+### P5-02 Phase 5 design and data
+Owner: Game Designer. Output: doc 02, doc 03, `data/`, `tools/sim/`; handoff note.
+Acceptance:
+- Doc 02 "Next season": carry-over (upgrades, plots, spare coins at 25% as savings, doc 01), debt growth
+  per season as numbers, what resets (crops, Taint, deaths, roles re-picked or kept), how many seasons.
+- Doc 02 store rows for cosmetic hats and overalls: prices, sold only once the season's debt is paid
+  (doc 01 "Store"), kept across seasons, no gameplay effect.
+- Doc 03 "Season traits": a list of creature traits, one gained per season (doc 01 examples: better tool
+  mimicry, more pits), each with numbers a coder can build; picked by host seed and logged.
+- `data/` JSON for the above; schema tests pass.
+- `tools/sim/sim.py` runs seasons 2 and 3 with carry-over and traits; targets for later seasons set and
+  met, results in the handoff.
+- Doc 09 Phase 5 gate rows drafted in the handoff for QA.
+
+### P5-03 Spliced lures from live clips
+Owner: Network & Voice Programmer (playback, wire), AI Programmer (splice choice). Output: `game/voice/`,
+`game/creature/`, tests; handoff note.
+Acceptance:
+- From day 4, voice lures may be spliced (doc 01 "Ramp-up" table): two recorded lines of one owner, cut
+  at the word break (the clip's own silence gap, else mid-clip); at most 2 segments (doc 03 s12.1).
+- `apply_lure` carries the segment list (doc 06 "A lure"); exact clips keep working unchanged.
+- Days 1 to 3 stay exact. `lure_played` logs `exact: false` and the segment list for splices.
+- The Dawn Report replays a splice the same way it played.
+- Off players and voice settings rules unchanged (doc 01 "Voice settings").
+- 2-instance ENet test: a day-4 spliced lure plays on the target only; headless, no new errors.
+
+### P5-04 Next season
+Owner: Gameplay Programmer (flow, save), AI Programmer (trait). Output: `game/`, tests; handoff note.
+Acceptance:
+- After a won season end (doc 05 s15), the host can start the next season; a lost season cannot carry.
+- Carry-over per P5-02 doc 02: upgrades, plots, savings at 25% of spare coins; debt grows per the table.
+- The creature gains the season's trait (P5-02 doc 03), logged; a new body is picked per season (P4-13).
+- Season number shown in the HUD and Dawn Report; saved at dawn and loaded (P4-10 save).
+- Joining and leaving mid-season still scale by headcount.
+- 2-instance ENet season 2 start with `--time-scale`; full suite and smoke headless, no new errors.
+
+### P5-05 Cosmetics
+Owner: Gameplay Programmer. Output: `game/`, tests; handoff note.
+Acceptance:
+- Hats and overalls sold at the shipping crate only after the debt is paid (P5-02 doc 02).
+- Equip in the lobby or pause menu; every peer sees it; the role hat (D-144) rules per doc 07 s8.
+- Owned cosmetics persist in the save across seasons; no gameplay effect.
+- 2-instance ENet test; headless, no new errors.
+
+### P5-06 Cosmetic models
+Owner: 3D Artist, Technical Artist. Output: `assets/models/`, `tools/blender/`; handoff note.
+Acceptance:
+- Every P5-02 cosmetic as a low-poly .glb per doc 07 s8 and s11 rules (D-151 sources); fits the farmer
+  head and body; overalls as tint or mesh per doc 07.
+- Screenshots on the farmer in day and night light.
+
+### P5-07 Phase 5 sounds
+Owner: Audio Designer. Output: `assets/audio/`, `game/audio/`, doc 08; handoff note.
+Acceptance:
+- Doc 08 rows and files for Phase 5 cues (CC0 or FilmCow per D-149); listen list for the CEO.
+- Splice joins checked by ear in a recorded day-4 lure; report the glitch (doc 06 inference) as heard.
+
+### P5-08 Phase 5 review
+Owner: QA. Output: `tools/qa/playtest/checklist_p5.md`, doc 09 Phase 5 gate; handoff note.
+Acceptance:
+- Reviews each P5 task against its block.
+- 4-instance run over ENet across a season end into season 2; headless with no new errors.
+- Doc 09 Phase 5 gate per the CEO's Q-250 answer.
 

@@ -1019,3 +1019,15 @@ make any changes it needs after it pulls them".
 **How to apply:** Downloads stay outside the repo (`C:\Users\Ockey\fc_dl\models\`) and are treated as untrusted.
 Only edited `.blend` sources and `.glb` exports enter the repo. Log every source (URL, asset name, license) in doc 07
 under a sources section. Exports keep the existing file names, so scenes need no rewiring.
+
+### D-152 · 2026-10-09 · CEO · DD Phase 5 started; STOP 5 closed
+The CEO started DD Phase 5 ("start phase 5"). This closes STOP 5 without the human sessions, as D-057 did
+for STOP 3; the gate items D-148 waived stay carried (human sessions, sim `compare` within 15 points), as do
+the P4-17 CEO listen, Q-150 and Q-122. P4-18 is done. The Director wrote rows P5-01 to P5-08 in
+`production/TASKS.md` from doc 01 "Build Plan > Phase 5": spliced clips from live speech (P5-03), next season
+(P5-02, P5-04), cosmetics (P5-02, P5-05, P5-06), sounds (P5-07), QA review (P5-08). Live clips are already
+done (D-146, P4-37). Splicing is ready now: doc 03 s12.1 has the cut rule and doc 06 "A lure" the segment
+list. Next season and cosmetics wait for P5-02, since doc 02 leaves both out of scope. Doc 01 gives Phase 5
+no "done when"; the Director's proposal is Q-250 for the CEO. STOP 6 follows P5-08.
+**Why:** CEO request; doc 01 "Build Plan > Phase 5" is the source.
+
