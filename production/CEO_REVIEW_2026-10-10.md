@@ -34,7 +34,7 @@ without a revert.
 | P5-53 | 9aa255b | Horror role: darker world and private scares for that player only (D-8, D-9, D-10) | `git revert 9aa255b` (test_roles count also covers P5-52; fix by hand if reverting only one) |
 | P5-50 | 80a94c9 | Warm interior fill light in barn, farmhouse and tool shed; also fixes a P5-53 compile break in test_light_rig | `git revert 80a94c9` (reverting also brings back the test_light_rig break; revert 9aa255b too) |
 | P5-55 | 4c229d3 | Doors: creature opens a shut door instead of walking through; open door leaves are solid; nothing usable through walls; bots use the barn doorway | `git revert 4c229d3` |
-| P5-51 | (this commit, see `git log --grep P5-51`) | More corn inside the farm (weave blocks and nine new cover points) so the creature can move through it, not only round the edges | `git revert <P5-51 commit>` |
+| P5-51 | eaa2284 | More corn inside the farm (weave blocks and nine new cover points) so the creature can move through it, not only round the edges | `git revert eaa2284` |
 
 ## 3. Tests run and what we did
 
