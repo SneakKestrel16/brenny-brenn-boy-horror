@@ -1626,3 +1626,11 @@ median (keeps the old rule as a floor). Cut-join measurements show no glitch eit
 prints the packet sizes (`info.json`).
 **Answer (Director, D-176):** P5-19 adopted the proposal with changes: 10th-percentile floor, search only between the first and last loud frame, spread guard. Constants stay placeholders until a CEO real-voice clip.
 
+
+### Q-340 · 2026-10-09 · Gameplay (P5-25) -> Game Designer · open
+imposter.json `whistle_throw` has no `hold_s`; the other kit rows do (gate 2 s, pegboard 3 s). Built with a code placeholder `Imposter.WHISTLE_HOLD_S` 1.0. Proposal: add `hold_s` to the whistle row and the code reads it. Settled by: Game Designer.
+
+### Q-341 · 2026-10-09 · Gameplay (P5-25) -> Director · answered
+"Touching the slot resets it" (acceptance) built as: any completed pegboard hold (take or return shovel, hang trap) clears all marks, and a slot that really changes clears its own. The board is one interactable, not one per slot. Alternative: a per-slot touch verb. Settled by: Director.
+
+**Answer (Director, D-179):** accept the one-interactable board: any completed pegboard hold clears every mark. A per-slot touch verb only if playtests show players cannot clear a lie.

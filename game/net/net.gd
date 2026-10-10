@@ -825,6 +825,12 @@ func apply_pegboard_changed(filled: Array) -> void:
 	apply_received.emit(&"pegboard_changed", [filled])
 
 
+## Host to all (P5-25): the pegboard display lie, one bool per slot. No peer id: nothing says who marked it.
+@rpc("authority", "call_remote", "reliable")
+func apply_pegboard_marks(marks: Array) -> void:
+	apply_received.emit(&"pegboard_marks", [marks])
+
+
 ## Host to all: whether `peer` has the shovel and a disarmed bear trap in hand (doc 05 section 9).
 @rpc("authority", "call_remote", "reliable")
 func apply_hands(peer: int, shovel: bool, trap: bool) -> void:
@@ -866,6 +872,12 @@ func apply_imposter_toggle(on: bool) -> void:
 @rpc("authority", "call_remote", "reliable")
 func apply_imposter_secret() -> void:
 	Imposter.me = true
+
+
+## P5-25: the imposter's client began holding kit piece `kind`. The host times it; dropped unless the sender is the imposter.
+@rpc("any_peer", "call_remote", "reliable")
+func request_imposter_hold(kind: StringName) -> void:
+	Imposter.begin(_sender(), kind)
 
 
 ## P5-11: the imposter's kit action. The host drops it unless `_sender()` is the imposter, and never replies.

@@ -33,6 +33,8 @@ var _target_peer := 0
 var _target_uid := ""
 var _actions := 0
 var _line := ""
+var _marked := false  ## host: pegboard_mark done; client: saw exactly one display mark arrive
+var _saw_mark := false
 var _fails: Array[String] = []
 
 
@@ -100,10 +102,35 @@ func _host(game: Node, main: Node) -> void:
 		I.act(1, &"whistle_throw", Vector3(5, 0, 5))  # the host is not the imposter: dropped
 		if _actions != 0:
 			_fails.append("a non-imposter sender was obeyed")
+		I.act(_target_peer, &"whistle_throw", Vector3(500, 0, 500))  # P5-25: no hold begun, dropped
+		if _actions != 0:
+			_fails.append("an act without a begun hold was obeyed")
+		I.begin(1, &"whistle_throw")  # not the imposter: no begin recorded
+		I.begin(_target_peer, &"whistle_throw")
+		I.act(_target_peer, &"whistle_throw", Vector3(500, 0, 500))  # the hold has not run its time: dropped
+		if _actions != 0:
+			_fails.append("an act before the hold time was obeyed")
+		I.begin(_target_peer, &"whistle_throw")
+		I._began_ms[&"whistle_throw"] -= 2000  # the hold has run (host-timed)
 		I.act(_target_peer, &"whistle_throw", Vector3(500, 0, 500))
+		I.begin(_target_peer, &"whistle_throw")
+		I._began_ms[&"whistle_throw"] -= 2000
 		I.act(_target_peer, &"whistle_throw", Vector3(5, 0, 5))  # inside the 60 s cooldown: dropped
 		if _actions != 1:
-			_fails.append("whistle_throw count %d, wanted 1 (sender + cooldown rules)" % _actions)
+			_fails.append("whistle_throw count %d, wanted 1 (sender + cooldown + hold rules)" % _actions)
+		var sweep := get_first_node_in_group(&"trap_sweep")
+		var slot := get_first_node_in_group(&"pegboard_slots") as Node3D
+		if sweep == null or slot == null:
+			_fails.append("no pegboard in the match scene")
+		else:
+			var truth: Array = sweep.filled.duplicate()
+			game.players[_target_peer].pos = slot.global_position + Vector3(0, 0, 1.0)
+			I.begin(_target_peer, &"pegboard_mark")
+			I._began_ms[&"pegboard_mark"] -= 4000
+			I.act(_target_peer, &"pegboard_mark", slot.global_position)
+			if _actions != 2 or sweep.pegboard_mark.count(true) != 1 or sweep.filled != truth:
+				_fails.append("pegboard_mark: actions %d marks %s, filled changed %s" % [_actions, sweep.pegboard_mark, sweep.filled != truth])
+			_marked = true
 		var debt := get_first_node_in_group(&"debt")
 		if debt:
 			debt.lost = true  # a missed final payment is the only win
@@ -117,6 +144,11 @@ func _host(game: Node, main: Node) -> void:
 		_stage = 4
 		_in_match = 0.0
 	if _stage == 4 and _in_match > 2.0:
+		var sw := get_first_node_in_group(&"trap_sweep")
+		if sw != null and _marked:  # touching the board resets the lie
+			sw.clear_marks()
+			if sw.pegboard_mark.has(true):
+				_fails.append("clear_marks left a mark")
 		_end(_fails.is_empty(), "; ".join(_fails) if not _fails.is_empty() else "line: " + _line)
 
 
@@ -132,9 +164,12 @@ func _client(main: Node) -> void:
 		if I.me != _designated:
 			_end(false, "me changed to %s" % I.me)
 			return
+		var sw := get_first_node_in_group(&"trap_sweep")
+		if sw != null and sw.pegboard_mark.count(true) == 1:
+			_saw_mark = true  # the display lie reached this client (and says nothing of who)
 		var rep := _find_label(_dawn(main), "IMPOSTER WAS")
 		if rep != "":
-			_end(true, "me %s, report '%s'" % [I.me, rep])
+			_end(_saw_mark, "me %s, saw mark %s, report '%s'" % [I.me, _saw_mark, rep])
 
 
 func _dawn(main: Node) -> Node:

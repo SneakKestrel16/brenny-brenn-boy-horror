@@ -405,6 +405,18 @@ client rolls back its prediction). Doc 05 section 7 (hold framework) uses only t
 | `apply_dawn_report(report)` | Lure references, not audio |
 | `apply_lights`, `apply_plot_changed`, ... | The results listed above |
 
+### Imposter mode (channel 0; P5-11, P5-25, D-179)
+
+Doc 05 section 27. The host never answers a refused request, so a probe learns nothing.
+
+| Message | Direction | Validated by | Notes |
+|---|---|---|---|
+| `apply_imposter_toggle(on)` | host → all, or one peer at admit | authority only | The public lobby toggle. Also sent first on every re-pick; the receiver sets `Imposter.me = false`, then the secret follows to its owner |
+| `apply_imposter_secret()` | host → **the imposter's peer only** | authority only | No arguments. Never broadcast, never a "no" to anyone else; sets `Imposter.me` |
+| `request_imposter_hold(kind)` | client → host | host: sender is the imposter, `kind` is a kit piece | Hold started (`whistle_throw`, `gate_prop`, `pegboard_mark`). The host stores the time. No reply |
+| `request_imposter_act(kind, at)` | client → host | host: sender is the imposter, alive, a hold begun at least 90% of `hold_s` ago (under 30 s), caps and cooldown from `imposter.json` | The hold finished. A refusal is dropped silently |
+| `apply_pegboard_marks(marks)` | host → all | authority only | One bool per pegboard slot: the display lie. Carries no peer id; a late joiner gets it with `farm_state` |
+
 ### Voice (sections 8 to 12)
 
 | Message | Channel | Direction | Validated by |

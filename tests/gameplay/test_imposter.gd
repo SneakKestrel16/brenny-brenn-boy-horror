@@ -35,6 +35,9 @@ func _run() -> void:
 	_check(I.line("", false) == "There was no imposter.", "no imposter line")
 	_check(I.line("Ann", true).contains("IMPOSTER WAS Ann") and I.line("Ann", true).contains("imposter won"), "win line")
 	_check(I.line("Ann", false).contains("imposter lost"), "loss line")
+	_check(I.KINDS.has(&"pegboard_mark") and I.KINDS.has(&"whistle_throw") and I.KINDS.has(&"gate_prop"), "kit kinds (P5-25)")
+	_check(is_equal_approx(I.hold_s(&"pegboard_mark"), 3.0) and is_equal_approx(I.hold_s(&"gate_prop"), 2.0), "kit hold seconds from imposter.json")
+	_check(I.hold_s(&"whistle_throw") > 0.0, "the whistle has a hold time")
 	_check(I.won() == false, "no imposter, no win")
 	I.uid = "x"  # a host-only value set directly: with no Debt in the tree the imposter has not won
 	_check(I.won() == false, "no Debt node, no win")

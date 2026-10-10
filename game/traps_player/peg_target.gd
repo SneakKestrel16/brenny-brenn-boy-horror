@@ -27,6 +27,7 @@ func can_start(verb: StringName, st: Dictionary) -> StringName:
 
 
 func complete(verb: StringName, peer: int, st: Dictionary) -> void:
+	sweep.clear_marks()  # P5-25: touching the board shows the truth
 	match verb:
 		&"hang_trap": sweep.hang(peer)
 		&"take_shovel": sweep.farm.set_hands(peer, true, bool(st.get("trap", false)))

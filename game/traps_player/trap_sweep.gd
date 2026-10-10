@@ -15,6 +15,7 @@ const START_FILLED := true  ## doc 02 section 12: the starting pegboard holds it
 var farm: Node
 var flags: Array = []  ## every peer: {pos: Vector3, by: peer} per flag
 var filled: Array = []  ## every peer: bool per slot, slots sorted by marker name
+var pegboard_mark: Array = []  ## every peer: P5-25 display lie, bool per slot (true = the outline shows the opposite of `filled`). No game rule reads it; the host's `filled` stays the truth. Carries no peer id.
 var _flag_root: Node3D
 var _slots: Array = []
 var _slot_mesh: Array = []
@@ -31,6 +32,7 @@ func _ready() -> void:
 	var full := START_FILLED and not OS.get_cmdline_user_args().has("--pegboard-empty")
 	for s in _slots:
 		filled.append(full)
+		pegboard_mark.append(false)
 		_slot_mesh.append(_make_slot(s))
 	_paint()
 	var board := get_tree().get_first_node_in_group(&"pegboard_spots")
@@ -48,7 +50,8 @@ func _ready() -> void:
 		Net.request_received.connect(func(what: StringName, peer: int, _a: Array) -> void:
 			if what == &"farm_state":  # a late joiner sees the flags and the pegboard
 				Net.to_peers(&"apply_flags", [flags], [peer])
-				Net.to_peers(&"apply_pegboard_changed", [filled], [peer]))
+				Net.to_peers(&"apply_pegboard_changed", [filled], [peer])
+				Net.to_peers(&"apply_pegboard_marks", [pegboard_mark], [peer]))
 
 
 # --- host ----------------------------------------------------------------------------------------
@@ -123,6 +126,7 @@ func hang(peer: int) -> void:
 	if i < 0:
 		return
 	filled[i] = true
+	pegboard_mark[i] = false
 	var st: Dictionary = farm.pstate(peer)
 	farm.set_hands(peer, bool(st.get("shovel", false)), false)
 	Log.event(&"pegboard_changed", {"change": "hung", "slot": i, "by": peer, "filled": filled.count(true)})
@@ -135,6 +139,7 @@ func take_trap() -> bool:
 	if i < 0:
 		return false
 	filled[i] = false
+	pegboard_mark[i] = false
 	Log.event(&"pegboard_changed", {"change": "taken", "slot": i, "by": 0, "filled": filled.count(true)})
 	_send_peg()
 	return true
@@ -158,6 +163,37 @@ func _send_flags() -> void:
 func _send_peg() -> void:
 	Net.to_peers(&"apply_pegboard_changed", [filled])
 	Net.apply_received.emit(&"pegboard_changed", [filled])
+	_send_marks()  # a changed slot lost its mark
+
+
+func _send_marks() -> void:
+	Net.to_peers(&"apply_pegboard_marks", [pegboard_mark])
+	Net.apply_received.emit(&"pegboard_marks", [pegboard_mark])
+
+
+## P5-25, host: the imposter flips what the outline nearest `at` shows (only slots within `reach` m of `here`).
+## False if none is in reach or all those are marked. The broadcast names nobody.
+func mark_slot(at: Vector3, here: Vector3, reach: float) -> bool:
+	var best := -1
+	var bd := INF
+	for i in _slots.size():
+		var g: Vector3 = (_slots[i] as Node3D).global_position
+		var d := _flat(g, at)
+		if _flat(g, here) <= reach and d < bd and not pegboard_mark[i]:
+			bd = d
+			best = i
+	if best < 0:
+		return false
+	pegboard_mark[best] = true
+	_send_marks()
+	return true
+
+
+## P5-25, host: touching the board shows the truth again (any pegboard hold completing, `peg_target.gd`).
+func clear_marks() -> void:
+	if pegboard_mark.has(true):
+		pegboard_mark.fill(false)
+		_send_marks()
 
 
 # --- every peer ----------------------------------------------------------------------------------
@@ -171,6 +207,10 @@ func _on_apply(what: StringName, args: Array) -> void:
 		&"pegboard_changed":
 			filled = args[0].duplicate()
 			Log.event(&"apply_pegboard_changed", {"filled": filled.count(true), "slots": filled.size()})
+			_paint()
+		&"pegboard_marks":
+			pegboard_mark = args[0].duplicate()
+			Log.event(&"apply_pegboard_marks", {"marked": pegboard_mark.count(true)})  # no peer id
 			_paint()
 
 
@@ -225,6 +265,8 @@ func _make_slot(marker: Node) -> MeshInstance3D:
 func _paint() -> void:
 	for i in _slot_mesh.size():
 		var full: bool = filled[i] if i < filled.size() else false
+		if i < pegboard_mark.size() and pegboard_mark[i]:
+			full = not full  # P5-25: the imposter's lie, display only
 		var m := _slot_mesh[i] as MeshInstance3D
 		m.get_child(0).visible = full
 		m.material_override = _mat(Color(0.2, 0.17, 0.14) if full else Color(0.75, 0.7, 0.6, 0.35), not full)

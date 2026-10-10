@@ -133,6 +133,7 @@ func show_card(res: Dictionary) -> void:
 	_box.add_child(HSeparator.new())
 	if String(res.get("imposter_line", "")) != "":  # P5-11: the secret is told at season end
 		_label(res.imposter_line, 16, RED_INK, HORIZONTAL_ALIGNMENT_CENTER)
+		Soundscape.play_2d(&"ui_imposter_reveal")  # P5-25 (P5-07 cue)
 	for a: Dictionary in res.awards:
 		var l := _label(a.line, 18, INK, HORIZONTAL_ALIGNMENT_LEFT)
 		l.modulate.a = 0.0

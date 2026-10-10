@@ -491,3 +491,12 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 - **No "Season N" label in the lobby.** Owner: Gameplay (UI).
 - **Lobby bottom buttons overlap**: START THE SEASON covers Settings and Leave to menu (older than P5-24). Owner:
   Gameplay (UI).
+
+## Found at the P5-25 review (QA, 2026-10-09)
+
+- **`grep_rules.py` flicker rule fails on comments** in `game/player/quirk_watch.gd:5` and `game/player/quirks.gd:7`
+  (commit 037d8fb). Reword the comments or teach the rule to skip comments. Owner: Gameplay or QA.
+- **Whistle hold placeholder** `Imposter.WHISTLE_HOLD_S` 1.0 until `imposter.json` gets `hold_s` (Q-340). Owner:
+  Game Designer.
+- **Host times only begin to act**: a modded imposter client can begin, walk off and act within 30 s. Accepted by
+  D-179 (the client owns its input). Owner: none.

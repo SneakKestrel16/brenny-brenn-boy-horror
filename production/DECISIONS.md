@@ -1247,3 +1247,12 @@ P5-24 (next season goes through the lobby: roles picked again, quirks re-rolled,
 season-start save at day 1) passed QA on the first review, including a 4-instance season 1 to season 2 run and a load
 of the season-start save. The two doc 05 wording fixes QA asked for were made by the Director at merge.
 **Why:** QA PASS (handoffs/P5-24.md "QA review"); `test_p5_24_lobby` 2 instances and smoke pass on main.
+
+### D-179 · 2026-10-09 · Director · P5-25 merged; imposter messages approved
+P5-25 (imposter `pegboard_mark` lie and hold bars for the kit) passed QA on the re-review. The first review asked for
+the hold bar label to sit on the bar and for the new network messages to be documented. Approved under CONTRACTS s7
+and now in doc 06 s7 "Imposter mode": `request_imposter_hold`, `apply_pegboard_marks` (P5-25) and P5-11's
+`request_imposter_act`, `apply_imposter_secret`, `apply_imposter_toggle`. Q-341 answered: the board stays one
+interactable; any completed pegboard hold clears every mark. Known limit accepted: the host times only begin to act.
+**Why:** QA PASS (handoffs/P5-25.md "QA re-review"); `test_imposter`, `test_imposter_sync` 2 instances,
+`test_p5_24_lobby` and smoke pass on main.

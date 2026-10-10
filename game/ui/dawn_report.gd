@@ -182,6 +182,7 @@ func _show(report: Dictionary) -> void:
 		_label("THE SEASON IS OVER", 20, RED_INK, HORIZONTAL_ALIGNMENT_CENTER)
 		if String(report.get("imposter_line", "")) != "":
 			_label(report.imposter_line, 16, RED_INK, HORIZONTAL_ALIGNMENT_CENTER)
+			Soundscape.play_2d(&"ui_imposter_reveal")  # P5-25 (P5-07 cue), every peer, only when a reveal shows
 		if not Game.is_host():
 			Clock.end_season()  # a client learns it here (apply_clock has no season flag); the host's clock ends it after DAWN_S
 	_label("Click to read on", 12, Color(INK, 0.5), HORIZONTAL_ALIGNMENT_CENTER)

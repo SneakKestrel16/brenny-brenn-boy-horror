@@ -11,7 +11,10 @@ extends RefCounted
 ## and not a Harvest Moon wipe. Needs `min_players` humans (D-161): the lobby box is disabled below that and
 ## `pick` ignores the toggle below it. The imposter never kills and keeps role and perks (imposter.json).
 
-const KINDS: Array[StringName] = [&"whistle_throw", &"gate_prop"]  ## kit pieces built (pegboard_mark, door_prop cut: Q-303)
+const KINDS: Array[StringName] = [&"whistle_throw", &"gate_prop", &"pegboard_mark"]  ## kit pieces built (door_prop cut: Q-303; false_flag is the normal flag hold)
+const WHISTLE_HOLD_S := 1.0  ## placeholder: imposter.json whistle_throw has no hold_s (Q-340)
+const HOLD_SLACK := 0.9  ## the host accepts an act after this share of the hold (network jitter)
+const HOLD_STALE_MS := 30000  ## a begun hold older than this is forgotten
 
 static var enabled := false  ## every peer: the lobby toggle
 static var me := false  ## the imposter's own client only: "I am the imposter"
@@ -21,6 +24,7 @@ static var picked := false  ## HOST ONLY: a roll happened this season
 static var forced := ""  ## HOST ONLY, dev setting (D-044): "" none, "none" no imposter, else a profile uid
 static var _used: Dictionary = {}  ## HOST ONLY: "kind|day|night" -> count
 static var _last_ms: Dictionary = {}  ## HOST ONLY: kind -> msec of last use
+static var _began_ms: Dictionary = {}  ## HOST ONLY: kind -> msec the imposter's client began the hold (P5-25)
 
 
 static func rule() -> Dictionary:
@@ -52,6 +56,7 @@ static func reset() -> void:
 	forced = ""
 	_used.clear()
 	_last_ms.clear()
+	_began_ms.clear()
 
 
 # --- lobby toggle --------------------------------------------------------------------------------
@@ -150,10 +155,27 @@ static func reveal_line() -> String:
 
 # --- kit (host validates, imposter's client only asks) ---------------------------------------------
 
+## Hold seconds for kit piece `kind` (imposter.json `hold_s`; the whistle has none, so a placeholder).
+static func hold_s(kind: StringName) -> float:
+	return float(Data.record(&"imposter", kind).get("hold_s", WHISTLE_HOLD_S))
+
+
+## Host: the imposter's client started holding `kind` (P5-25). The act must follow after the hold time. Silent.
+static func begin(sender: int, kind: StringName) -> void:
+	if uid != "" and sender == peer() and kind in KINDS:
+		_began_ms[kind] = Time.get_ticks_msec()
+
+
 ## Host: the imposter asks for kit piece `kind` at `at` (world position; ignored by gate_prop). Anyone else, and
-## every refusal, is dropped without an answer, so a probe learns nothing.
+## every refusal, is dropped without an answer, so a probe learns nothing. The act must follow a `begin` by the
+## hold time (host-timed, like every hold); it consumes the begin.
 static func act(sender: int, kind: StringName, at: Vector3) -> void:
 	if uid == "" or sender != peer() or Game.is_ghost(sender) or not kind in KINDS or not Game.players[sender].has("pos"):
+		return
+	var began: int = int(_began_ms.get(kind, -HOLD_STALE_MS * 2))
+	_began_ms.erase(kind)
+	var held_ms := Time.get_ticks_msec() - began
+	if held_ms > HOLD_STALE_MS or float(held_ms) < hold_s(kind) * 1000.0 * HOLD_SLACK:
 		return
 	var rec := Data.record(&"imposter", kind)
 	var night: bool = Clock.phase in [&"night", &"harvest_moon"]
@@ -194,6 +216,10 @@ static func act(sender: int, kind: StringName, at: Vector3) -> void:
 					best = s[0]
 			if best < 0 or animals.break_fence(best) == 0:
 				return
+		&"pegboard_mark":
+			var sweep := tree.get_first_node_in_group(&"trap_sweep")
+			if sweep == null or not sweep.mark_slot(at, here, 3.0):  # 3.0: the board's own range_m (trap_sweep.gd)
+				return
 	_used[key] = int(_used.get(key, 0)) + 1
 	_last_ms[kind] = now
 	Log.event(&"imposter_action", {"kind": String(kind), "position": [snappedf(here.x, 0.1), snappedf(here.z, 0.1)]})  # host log only
@@ -203,7 +229,8 @@ static func act(sender: int, kind: StringName, at: Vector3) -> void:
 
 ## Host, `DevGate.unlocked()` already checked by the caller: `imposter <peer id | name | me | none | off>` forces
 ## the season's pick (even below the minimum, Q-304). In a running match the pick happens now and only that
-## peer is told; nothing is broadcast, so the other players see nothing different. Returns the console reply
+## peer is told the secret; `pick` broadcasts only the public toggle first (it clears the old imposter's `me`),
+## so the other players see nothing different. Returns the console reply
 ## (host's own screen only).
 static func dev_force(arg: String) -> String:
 	if arg == "":

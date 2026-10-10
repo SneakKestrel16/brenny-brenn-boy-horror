@@ -1007,7 +1007,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | P5-22 | Gameplay | Wire the P5-14 to P5-17 models: buildings, traps, pegboard, tools, crops, corn, crows, hands, road items, ragdoll, ghost shell | in progress | P5-13 |
 | P5-23 | Gameplay | Wire the primitives left by P5-13 (Q-283): death corpse, Taint look, hats, Taint sleeves, `interact` animation, cart lantern glass | todo | P5-13 |
 | P5-24 | Gameplay | Next season through the lobby: roles re-picked, quirk reroll, `Imposter.pick`, season-start save (P5-04 follow-up) | done (QA PASS, D-178) | P5-04, P5-11 |
-| P5-25 | Gameplay | Imposter `pegboard_mark` and interaction holds for the kit (Q-303) | in progress | P5-11 |
+| P5-25 | Gameplay | Imposter `pegboard_mark` and interaction holds for the kit (Q-303) | done (QA PASS, D-179) | P5-11 |
 | P5-08 | QA | Review each P5 task; 4-instance run; headless with no new errors | todo | P5-02 to P5-07, P5-09 to P5-25 |
 
 ### P5-02 Phase 5 design and data
