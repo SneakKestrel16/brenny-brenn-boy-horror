@@ -1,0 +1,58 @@
+{
+  "table": "next_season",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "campaign",
+      "source": "placeholder",
+      "cite": "doc 01 Next season gives no season count; doc 02 section 21.1 sets 3 (Q-251). After a won season 3 the farm is paid off and the campaign is over; a team may still start a fresh season 1",
+      "seasons_max": 3,
+      "first_trait_season": 2,
+      "traits_per_season": 1,
+      "lost_season_carries": false,
+      "after_last": "farm_paid_off"
+    },
+    {
+      "id": "carry",
+      "source": "doc01",
+      "cite": "doc 01 Next season: upgrades and plots, plus spare coins at 25% as savings; doc 02 section 21.2. Rounding down, the cap and the plot clamp are placeholders",
+      "sources": {"savings_rounding": "placeholder", "plots_clamp": "placeholder", "savings_cap_coins": "placeholder"},
+      "upgrades": true,
+      "plots": true,
+      "savings_pct": 25,
+      "savings_rounding": "floor",
+      "savings_cap_coins": 60,
+      "plots_clamp": "field_plots_max_by_players",
+      "foreclosure_losses_stay": true
+    },
+    {
+      "id": "reset",
+      "source": "placeholder",
+      "cite": "doc 02 section 21.3; doc 01 Next season lists only what carries, so the rest resets (inference, Q-251)",
+      "resets": ["crops", "prize_pumpkin", "taint", "shaken", "deaths", "medical_bill", "deferred_bills", "traps", "pegboard_stock", "generator_fuel", "flags", "day", "foreclosure_state", "payments_made"],
+      "roles": "kept_repick",
+      "bodies": "new_body_picked",
+      "creature_traits": "kept"
+    },
+    {
+      "id": "season_2",
+      "source": "sim",
+      "cite": "doc 02 section 21.4: debt growth, tuned in tools/sim (campaign mode)",
+      "season": 2,
+      "debt_total_4p": 1595,
+      "debt_total_4p_by_players": {"2": 1335, "3": 1465, "4": 1595, "5": 1570, "6": 1560},
+      "first_payment_4p": 255,
+      "targets": {"first_clear_pct": [80, 90], "final_clear_pct": [50, 65], "spread_pts": 10}
+    },
+    {
+      "id": "season_3",
+      "source": "sim",
+      "cite": "doc 02 section 21.4: debt growth, tuned in tools/sim (campaign mode)",
+      "season": 3,
+      "debt_total_4p": 1600,
+      "debt_total_4p_by_players": {"2": 1355, "3": 1510, "4": 1600, "5": 1575, "6": 1565},
+      "first_payment_4p": 255,
+      "targets": {"first_clear_pct": [80, 90], "final_clear_pct": [40, 60], "spread_pts": 10}
+    }
+  ]
+}

@@ -29,7 +29,9 @@ flagged in [Questions raised](#questions-raised), not resolved here.
 18. [Season simulator design](#18-season-simulator-design)
 19. [Gotchas](#19-gotchas)
 20. [Questions raised](#questions-raised)
-21. [Appendix A: proposed JSON schemas (CONTRACTS section 6)](#appendix-a-proposed-json-schemas-contracts-section-6)
+21. [Next season and cosmetics](#21-next-season-and-cosmetics)
+22. [Quirks and Imposter mode](#22-quirks-and-imposter-mode)
+23. [Appendix A: proposed JSON schemas (CONTRACTS section 6)](#appendix-a-proposed-json-schemas-contracts-section-6)
 
 ---
 
@@ -38,7 +40,7 @@ flagged in [Questions raised](#questions-raised), not resolved here.
 Covers doc 01 "Core Loop" (timings and the dawn order), "Night Traps" (counts, clearing, the tool
 shed), "Nights" (generator), "The Taint" and "Shaken", "Death and Respawning > Medical bill",
 "Daytime Threats" (the trample rule), "Crops", "The Prize Pumpkin", "Season and Numbers" (all of
-it except Next season, which is DD Phase 5), "Store", "Roles" and "Difficulty and group settings".
+it; Next season is DD Phase 5, section 21), "Store", "Roles" and "Difficulty and group settings".
 
 Not covered here, and owned elsewhere: what the creature senses, how it picks trap spots, the trap
 race distance, the disturbance pool and the AI Director (doc 03, PP-06); where things are on the
@@ -490,7 +492,7 @@ stand and at the dawn cash-in (D-017). `sim` prices are the simulator's starting
   weight (one repair against one shot), and under a third of the gun's 50, so a team that owns the gun can afford a
   spare shot most nights without it replacing seeds. The sim does not model the flare gun or shells, so this price
   was not run; the economy pass (D-148, deferred until the game is fully playable) sets it.
-- Cosmetics are DD Phase 5 and out of scope.
+- Cosmetics (DD Phase 5): hats and overalls, sold only once the season's debt is paid; prices in section 21.5.
 - **Animals (P4-03, Q-032):** see section 10.1 below the list.
 - **Walkies:** doc 01 calls them "craftable" (`01 How players fight back`) and lists them in the
   store. They are bought; no crafting system exists (D-017).
@@ -986,6 +988,13 @@ the P4-21 bot seasons after D-089), 2p needs 10% to clear the first payment (85.
 taper, and no bonus fixes Large needed (Medium drop 12 to 22 points; the bonus raises crop money and leaves
 the payout alone). Which world the sim should assume is Q-211.
 
+### 18.7 DD Phase 5 modes
+
+`sim.py --seasons N` runs the campaign (section 21.6); `--scenario baseline,imposter` runs the imposter labor
+model (22.5). Both read the same `data/` files as the game; their targets and results are in those sections,
+and `test_sim.py` has checks for the carry clamp, the savings rule, the debt growth, the hoarding cost and the
+quirk and imposter limits.
+
 ## 19. Gotchas
 
 - **The debt rounds to nearest; everything else scaled rounds up.** Rounding the debt up gives
@@ -1010,6 +1019,12 @@ the payout alone). Which world the sim should assume is Q-211.
 - **The final clear is knife-edge in the debt:** 1% of debt is about 6 points of final clear.
 - **Each multiplier lives in one file** (taint pry in `taint.json`, role perks in `roles.json`);
   a copy in `labor.json` would drift.
+- **Later-season debt is per headcount, not one number** (21.4): carried plots help 4p to 6p and not 2p or 3p.
+- **Season 3's debt barely exceeds season 2's at 4p to 6p** because plots are at the ceiling; do not "fix" it
+  upward without rerunning the campaign sim, the final clear moves about 0.5 points per coin.
+- **A cosmetic price is team coins spent before savings:** a 70-coin hat can erase the carried savings.
+- **A quirk or imposter number that helps the creature or hides it is out of scope:** every row in section 22
+  must keep the 22 limits (no clear view of the creature, no harm to it, no fake honest signal).
 
 ## Questions raised
 
@@ -1021,6 +1036,249 @@ the payout alone). Which world the sim should assume is Q-211.
 - **Reply on Q-014 item 2** (to the Level Designer): walk speed, refill point and plots per can
   for doc 04, and section 2.4's check of doc 04's walks.
 - **Q-016** (to the Gameplay Programmer): movement speeds and sprint numbers.
+- **Q-251 to Q-255** (P5-02, DD Phase 5): season count and resets (FOR CEO); imposter and quirk rules; later-season
+  targets and debt growth; savings cap and what the sim leaves out; implementation of traits and quirks.
+
+---
+
+## 21. Next season and cosmetics
+
+DD Phase 5 (P5-02, 2026-10-09). Doc 01 "Next season" gives the carry-over in one sentence, no season
+count and no debt growth. Everything below that doc 01 does not say is `placeholder` or `sim` and
+listed in Q-251 to Q-254. Data: `data/next_season.json`, `data/cosmetics.json`; the creature side is
+[doc 03 section 22](03_creature_ai_director_and_scares.md#22-season-traits-dd-phase-5).
+
+### 21.1 How many seasons
+
+| Rule | Value | Source |
+|---|---|---|
+| Seasons in a campaign | 3 | `placeholder` (Q-251). Doc 01 says "next season" and nothing about an end; three keeps each trait visible and the sim shows only about 14% of teams win all three |
+| After season 3 is won | the farm is paid off; the campaign ends; a team may start a new season 1 | `placeholder` |
+| A lost season (final payment missed) | ends the campaign; nothing carries | `placeholder` (Q-251; doc 01 says "Next season" follows a win) |
+| A first payment missed | not a loss (doc 01 Foreclosure); the season goes on and its carry rules are unchanged | `01 Foreclosure` |
+| Traits | none in season 1, one gained at the start of season 2, one at season 3 | `01 Next season`, doc 03 22 |
+
+### 21.2 What carries
+
+| Carries | Rule | Source |
+|---|---|---|
+| Upgrades | every bought upgrade (section 10: everything except seeds, scrap and shells) | `01 Next season` |
+| Plots | owned field plots, clamped to `field_plots_max_by_players` for the next season's headcount (a smaller team cannot work more plots than its ceiling) | `01 Next season`; the clamp is `placeholder` |
+| Savings | 25% of the spare coins after the final payment (and any cosmetics bought, 21.5), rounded down, at most 60 coins | `01 Next season` (25%); rounding down and the 60 cap are `placeholder` (Q-254) |
+| What Foreclosure took | stays gone: a season that lost an upgrade or two plots to a missed first payment carries without them | inference; `placeholder` |
+| Cosmetics | owned hats and overalls stay with the player (21.5) | `01 Store` |
+
+Why the cap: the sim's median winner (seasons 2 and 3) ends with 27 to 44 spare coins, and the top quartile with 47 to 94;
+an uncapped quarter of a good season's spare would buy a free first payment's worth of seeds on day 1.
+The cap only touches that top tail (inference; Q-254).
+
+### 21.3 What resets
+
+Crops and the Prize Pumpkin, Taint and Shaken, deaths and the medical bill (and deferred bills), traps,
+pegboard stock, generator fuel, flags, the day counter, payments made and the Foreclosure state. Starting
+coins are the normal `start_coins` plus savings. Source: `placeholder`, because doc 01 lists only what
+carries (Q-251).
+
+- **Roles:** kept in the lobby but re-pickable before the season starts (the same screen as season 1).
+- **Bodies:** a new body is picked by the host seed, as every season (doc 03 2).
+- **Quirks and the Imposter:** re-rolled each season (section 22).
+- **Creature traits:** kept and stacked (doc 03 22).
+- **Headcount:** the season's debt scales by the headcount at each dawn exactly as season 1 (section 4,
+  section 7.2); someone joining or leaving between seasons changes the starting plots only through the
+  clamp in 21.2.
+
+### 21.4 Debt growth
+
+Doc 01 gives no growth number ("the debt grows"). The sim sets it: the season 2 and 3 debts are chosen so
+the later-season targets in 21.6 hold at every headcount. The debt is stored as a 4-player total plus a
+per-headcount base, because carried plots help 4p to 6p and barely help 2p and 3p, so a flat growth pushes
+2p and 3p out of the target band (a flat 1,500 and 1,700 failed by 20 to 30 points at 2p; log row P5-02-1).
+
+| Season | 4p total | By headcount 2p / 3p / 4p / 5p / 6p | First payment (4p) | Source |
+|---|---|---|---|---|
+| 1 | 1,300 (section 7.1) | section 7.2 | 255 | doc 01 |
+| 2 | 1,595 | 1,335 / 1,465 / 1,595 / 1,570 / 1,560 | 255 | `sim` |
+| 3 | 1,600 | 1,355 / 1,510 / 1,600 / 1,575 / 1,565 | 255 | `sim` |
+
+- **Use.** The formula of section 7.2 is unchanged, but its 4p base is the season's `debt_total_4p_by_players`
+  entry for the headcount (the way the short season already does, section 16). The first payment of seasons 2
+  and 3 is season 1's first payment (255 at 4p) scaled the same way, so growth lands on the final payment.
+  The medical bill (section 8) does not grow.
+- **Season 3 over season 2 grows little at 4p to 6p** (5 to 15 coins) because plots are already at the ceiling
+  and the final clear is cliff-steep there (about 0.3 to 0.7 points of final clear per coin of debt). Season 3
+  is harder mostly through the extra trait and the smaller reached-with-savings pool; the sim's season 3
+  final-clear band (40 to 60%) is lower than season 2's (50 to 65%) by design (Q-253).
+- **Rounding:** the debt rounds to nearest, as section 7.2.
+
+### 21.5 Cosmetics: hats and overalls
+
+`01 Store`: "Cosmetic hats, overalls | sim | Phase 5, bought once the debt is paid". No gameplay effect.
+
+| Rule | Value | Source |
+|---|---|---|
+| When it is sold | only once the season's debt is paid: from the dawn the last payment clears (dawn 8, or the dawn an early full payment settles the debt) until the season-end screen closes | `01 Store` |
+| Paid from | team coins, after the final payment, before the savings are worked out (21.2) | `placeholder` |
+| Owned by | the roster id of the player it is bought for; kept on rejoin, across seasons and in the save | `01 Store` (kept across seasons) |
+| Effect | none: no speed, light, noise, slot or price. A cosmetic hat replaces the player's role hat in the model while worn; the role is still shown by the role card and the walkie label (Q-255) | `01 Store`; the hat rule is `placeholder` |
+| Overalls | recolour the player's tint slot (doc 07 section 8) | `placeholder` |
+| Price scaling | none: prices do not scale with the headcount | `sim` |
+
+Prices, `sim`: the winners' spare coins at the final dawn (21.6) have a lower quartile of 11 to 26, a median of
+27 to 44 (seasons 2 and 3; season 1 is not counted) and an upper quartile of 47 to 94. Cheap items sit under the lower quartile so a typical win buys
+one or two; the dearest sits just above the median so it takes a thrifty team or a spare-rich large team.
+
+| Item | Kind | Price |
+|---|---|---|
+| Flat cap | hat | 15 |
+| Bucket hat | hat | 20 |
+| Tin pot | hat | 25 |
+| Party cone | hat | 35 |
+| Turnip crown | hat | 45 |
+| Top hat | hat | 70 |
+| Denim overalls | overalls | 15 |
+| Patched overalls | overalls | 20 |
+| Striped overalls | overalls | 30 |
+| Plaid overalls | overalls | 40 |
+| Gold overalls | overalls | 60 |
+
+### 21.6 The campaign simulator
+
+`tools/sim/sim.py --seasons N` chains seasons with the carry-over of 21.2 and one random trait per season
+from season 2 (doc 03 22.1). Only the median policy runs. A season is entered only by teams that won the one
+before (rates below are of the teams that reached it). The run reads `next_season.json` for each season's
+debt and targets, and the trait `ramp_up` overrides change the pit and disturbance counts. It does not model
+non-plot upgrades (lantern, walkies, scarecrows), chase or detection traits, quirks or cosmetics: the same
+`placeholder` caveat as section 18.5. Command: `uv run --no-project python -I tools/sim/sim.py --seasons 3 --runs 10000 --seed 1`.
+
+**Targets for later seasons** (`next_season.json`; `sim`, Q-253): first payment cleared in 80 to 90% of the
+teams reaching it, at most 10 points of spread across headcounts; final cleared in 50 to 65% in season 2 and
+40 to 60% in season 3. Season 3's floor is 40, not 45: the cliff-steep final clear (21.4) left no debt that
+holds 45% at 4p and 5p without losing 2p and 3p.
+
+**Results** (10,000 runs per headcount, seed 1, all pass):
+
+| Season | Measure | 2p | 3p | 4p | 5p | 6p | Spread |
+|---|---|---|---|---|---|---|---|
+| 1 | first clear % | 87.1 | 85.3 | 85.6 | 84.0 | 83.8 | 3.3 |
+| 1 | final clear % | 63.1 | 57.9 | 63.0 | 63.4 | 60.6 | 5.5 |
+| 2 | teams reaching % | 63.1 | 57.9 | 63.0 | 63.4 | 60.6 | |
+| 2 | first clear % | 89.7 | 87.8 | 88.5 | 87.7 | 87.0 | 2.7 |
+| 2 | final clear % | 57.1 | 54.5 | 55.2 | 57.8 | 59.3 | 4.8 |
+| 3 | teams reaching % | 36.0 | 31.6 | 34.7 | 36.6 | 35.9 | |
+| 3 | first clear % | 89.9 | 89.1 | 85.7 | 86.7 | 85.3 | 4.6 |
+| 3 | final clear % | 46.0 | 44.0 | 40.8 | 40.1 | 41.2 | 5.9 |
+| all 3 | campaign win % | 16.6 | 13.9 | 14.2 | 14.7 | 14.8 | |
+
+(Season 1 here is a campaign run, seed 1 with the chained stream; the standalone section 18.3 run is
+84 to 87.5% and 58.8 to 63.4%.) Median plots owned entering season 2: 16, 22, 24, 26, 28 (2p to 6p). Median
+spare coins of winners at the final dawn: season 2, 33 to 44; season 3, 27 to 33.
+
+**Per-trait check** (doc 03 22.4). Final clear by trait at 4p, season 2 / season 3: `more_pits` 53.0 / 37.0,
+`extra_hands` 51.4 / 35.2 against the 55.2 / 40.8 average; the traits the sim does not model vary
+39 to 61 and 35 to 47 by sampling noise (about 350 teams per cell), not by effect. The two modelled traits cost
+4 to 6 points.
+
+### 21.7 Log
+
+| Row | Change | Result |
+|---|---|---|
+| P5-02-1 | Flat debt growth: season 2 at 1,500, season 3 at 1,700 (4p totals), same at every headcount | Failed: 2p and 3p final clear 20 to 30 points off the 4p value. Fix: per-headcount bases |
+| P5-02-2 | Per-headcount bases (21.4); season 3 final target lowered from 45% to 40% | All pass, results above |
+
+---
+
+## 22. Quirks and Imposter mode
+
+DD Phase 5 (D-153). Doc 01 "Quirks" lists ten quirks with real disorder names (D-052); its numbers are
+placeholders. Doc 01 "Imposter mode" lists the kit (false flags, whistles, pegboard marks, open doors and
+gates; never kills; wins on foreclosure; 50% chance, placeholder). Both are optional group options; the
+Host's lobby switches default to off (Q-252). Data: `data/quirks.json`, `data/imposter.json`.
+
+**Two limits hold for every row below.** A quirk or an imposter never lets anyone see the creature clearly,
+never hurts the creature, and never fakes an honest signal. Honest signals are the walkie, the flicker, the
+ghost voice, the lantern dim, the Dawn Report text and the Medium's perk (`imposter.json` `still_honest`).
+
+### 22.1 Imposter rule
+
+| Rule | Value | Source |
+|---|---|---|
+| Chance a season has one | 50% | `01 Imposter mode` (placeholder in doc 01) |
+| Imposters at most | 1 | `01 Imposter mode` |
+| Minimum players | 4 | `sim`; inference (the model's imposter loss is 204 s a day, about 0.38 of one player's 540 s day, about 13% of 3p labor; the 3p final clear still falls from 58.9% to 27.0% because the final clear is a steep cliff, 22.5); Q-252 |
+| Keeps a real role | yes | `01 Imposter mode` |
+| Kills | never; no harm, no extra deaths | `01 Imposter mode` |
+| Wins when | the final payment is missed (the season is lost) | inference (Q-252): doc 01 says "foreclosure"; a missed first payment is only a Notice, so the win waits for the season loss |
+| Picked | by host seed and season; re-rolled each season | `placeholder` |
+| Revealed | in the season-end Dawn Report | `01 Imposter mode` (reveals) |
+| Counts as a player | yes: headcount, debt and scaling treat them as a player | `placeholder` |
+
+Log events: `imposter_picked` (season, roster id), `imposter_action` (kind, position). Nothing is told to
+the team beforehand, not even whether there is one (`placeholder`).
+
+### 22.2 Quirks: assignment and rows
+
+Each player starts the season with one random quirk, drawn without replacement within a team from the ten
+(so with 6 players no two share one), seeded by host seed, season and roster id, re-rolled every season,
+kept on rejoin by roster id. The player sees their own quirk on the HUD; the others learn by watching. A
+ghost has none. The Dawn Report may reveal them at season end (`quirk_assigned` is logged either way;
+reveal is a proposal, Q-252). A quirk changes the body only: it never changes prices, payments or debt.
+
+Every row is host-applied except movement (each client owns its own movement, CONTRACTS section 5). Bases
+are in the cited tables.
+
+| Quirk | Effect (new value) | Base | Source |
+|---|---|---|---|
+| Anxiety disorder | Shaken lasts twice as long (120 s); sprint refills in 5 s | 60 s; 10 s (`taint.json`, `labor.json`) | `01 Quirks` (twice); refill x0.5 `placeholder` |
+| Nyctophobia | own lantern radius x0.5 (4.5 m; 6.75 m with Brighter lantern); the creature still spots a lit lantern at 40 m | 9 m, 13 m (doc 07) | `01 Quirks` |
+| ADHD | own voice radius x1.5 (90 m at a full byte), so lures favour them (doc 03 12.1 picks the loudest) | 60 m (`creature.json`) | `01 Quirks` (50%) |
+| Paranoia | alone hears a phantom footstep behind them, every 150 to 300 s, at most 3 per day, 3 m behind, 4 steps; never reaches the creature, never a flicker, whistle, radio or ghost cue | none | `01 Quirks`; numbers `placeholder` |
+| Schizophrenia | their private hallucinations open on day 1; same weights and the same one big scare a day | day 5 (`ai_director.json`) | `01 Quirks` |
+| Dyspraxia | a jumpscare drops everything they carry, not only the held item | held item | `01 Quirks` |
+| Hoarding disorder | carry 5; walk and crouch x0.9 (2.7 and 1.08 m/s); sprint unchanged (5.0) | carry 4; 3.0, 1.2 | `01 Quirks`; numbers `placeholder` |
+| Narcolepsy | gets a body 6 s after the last other player at dawn; counts for headcount; daylight, never dangerous | 0 s | `01 Quirks`; 6 s `placeholder` |
+| Grandiose delusions | a bear trap snaps 0.6 s after the step, so they can step out (1 m); the step noise sounds at once | immediate | `01 Quirks`; numbers `placeholder` |
+| OCD | within 6 m of a scarecrow, inside its front 120 degree arc, for 2 s: Shaken for 60 s; per scarecrow per player cooldown 120 s; never Taint | none | `01 Quirks`; numbers `placeholder` |
+
+New fields the game needs (Q-255): `light_radius_mult` per player, `voice_radius_mult` per player,
+`shaken_duration_mult`, `sprint_refill_mult`, `walk_speed_mult`, `carry_extra_slots`, `dawn_body_delay_s`,
+`bear_snap_delay_s`, the phantom-step timer, the per-player hallucination day, the scarecrow gaze check.
+
+### 22.3 Hoarding disorder: what it costs
+
+The plots-per-player derivation (section 2.3) with carry 5 and walk 2.7 gives P = 10.04 against 10.34 at
+baseline (2.9% fewer plots worked); walk alone would be 9.51 (8% fewer), so the extra slot pays for about
+two thirds of the slowdown. `test_sim.py` asserts the loss stays between 1% and 6% (`sim`, section 2.3 data
+read from `labor.json`). A mild trade, as doc 01 intends; crouching 10% slower also slows a sneak, which is
+the real cost the sim does not price (inference; a playtest settles it).
+
+### 22.4 Imposter kit
+
+Every action uses the imposter's own interaction hold (doc 05). No action creates a new item, a new slot or
+a new trap, and none touches the money. `team_cost_s` is the team's wasted labor per lie in seconds
+(`placeholder`; used by 22.5).
+
+| Action | Rule | Numbers | Source |
+|---|---|---|---|
+| False flag | uses one of the imposter's own three flags (`labor.json` `place_flag`): over a checked trap (looks like a trap was marked and found) or where no trap is (looks like a trap marked); identical to a true flag; anyone can pull one up; the Dawn Report lists who placed each | no extra slots; 30 s of team time | `01 Imposter mode`; numbers `placeholder` |
+| False whistle | throws a normal whistle sound at a point up to 25 m away; the creature hears it as a whistle (50 m radius); 60 s cooldown, 2 per night and 2 per day | 25 m; 60 s; 2; 40 s | `01 Imposter mode`; numbers `placeholder` |
+| False pegboard mark | flips what one outline shows in the shed (a hung trap drawn empty, or an empty outline drawn full); hold 3 s; 1 per day and 1 per night; the traps and the host's true board do not change; touching the outline resets it | 3 s; 1; 60 s | `01 Imposter mode`; numbers `placeholder` |
+| Door left open | hold 2 s to prop a building door open (closing takes 1 s); an open door skips the 3 s bang of doc 03 6; at most 2 open at once; door noise (20 m) as normal | 2 s; 1 s; 2; 20 s | `01 Imposter mode`; numbers `placeholder` |
+| Gate left open | the pen gate only: frees the animals as a fence break (section 10.1; a round_up chore fixes it); hold 2 s; 1 per day. The farm exit gate is never touched, because the Harvest Moon cart is not the imposter's to block | 2 s; 1; 90 s | `01 Imposter mode`; numbers `placeholder` |
+
+### 22.5 Imposter in the simulator
+
+The imposter is modelled as lost labor only: the imposter does `work_share_pct` (80%) of a player's labor and
+tells `lies_per_day` (2) lies a day costing the average `team_cost_s` each. It applies at 4p and above (the
+minimum). It does not model counterplay (the team pulling flags, closing doors), deaths from false traps, or
+the creature acting on a thrown whistle, so real harm is higher or lower than shown: a playtest settles it
+(inference).
+
+Results (5,000 runs per headcount, seed 1, `--scenario baseline,imposter`): final clear baseline to imposter
+aboard, 3p 58.9 to 58.9 (no imposter below 4p, so unchanged; with an imposter at 3p it fell to 27.0, which is
+why 4 is the floor), 4p 62.3 to 56.8, 5p 62.0 to 60.6, 6p 60.8 to 60.6. The floor `sim` sets is a final clear
+of at least 50% at 4p to 6p with an imposter: passes (min 56.8). First clear is unchanged (the imposter's
+cost lands on the labor of the whole season, shown by the final). The model makes the imposter nearly free at
+5p and 6p (the plot cap leaves slack labor), and season 3 sits at the 40% floor at 5p and 6p across seeds.
 
 ---
 

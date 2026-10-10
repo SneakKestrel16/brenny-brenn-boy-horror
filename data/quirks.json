@@ -1,0 +1,98 @@
+{
+  "table": "quirks",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "assign",
+      "source": "placeholder",
+      "cite": "doc 01 Quirks (opt-in group option; every player starts the season with one random quirk; each player sees their own; others learn by watching; D-052 real disorder names); doc 02 section 22.2",
+      "sources": {"per_player": "doc01", "self_only_hud": "doc01"},
+      "per_player": 1,
+      "draw": "without_replacement_in_team",
+      "seeded_by": "host_seed_season_roster_id",
+      "redrawn_each_season": true,
+      "kept_on_rejoin": true,
+      "ghosts_have_none": true,
+      "self_only_hud": true,
+      "revealed_in": "dawn_report_season_end",
+      "log_event": "quirk_assigned",
+      "forbidden": ["see_creature_clearly", "harm_creature", "fake_honest_signal", "change_debt_or_prices"]
+    },
+    {
+      "id": "anxiety_disorder",
+      "source": "doc01",
+      "cite": "doc 01 Quirks: Shaken lasts twice as long, sprint refills faster. Bases: taint.json shaken.duration_s 60, labor.json sprint.refill_s 10. Refill x0.5 is a placeholder (sprint max_s stays 6, so a sprint is not longer, only available again sooner)",
+      "name": "Anxiety disorder",
+      "sources": {"effects": "placeholder"},
+      "effects": {"shaken_duration_mult": 2, "sprint_refill_mult": 0.5}
+    },
+    {
+      "id": "nyctophobia",
+      "source": "doc01",
+      "cite": "doc 01 Quirks: their lantern lights half as far. Base: lantern 9 m (doc 07 s4.4), Brighter lantern x1.5; the two multiply (4.5 m, 6.75 m). The creature still spots the lantern at creature.json sight_light_m (a handicap never hides the player)",
+      "name": "Nyctophobia",
+      "effects": {"light_radius_mult": 0.5}
+    },
+    {
+      "id": "adhd",
+      "source": "doc01",
+      "cite": "doc 01 Quirks: their voice carries 50% further, so lures favour them. Base: creature.json noise_voice radius_m 60, so 90 m at a full byte. No extra lure weight: the lure picker already favours whoever is loudest (doc 03 12.1)",
+      "name": "ADHD",
+      "effects": {"voice_radius_mult": 1.5}
+    },
+    {
+      "id": "paranoia",
+      "source": "doc01",
+      "cite": "doc 01 Quirks: now and then they alone hear a footstep behind them that isn't there. Numbers placeholder. The sound is local to that player: it is never emitted to the creature, never a ghost voice, never the flicker or a radio, and moves no tension",
+      "name": "Paranoia",
+      "sources": {"effects": "placeholder"},
+      "effects": {"phantom_step_every_s_min": 150, "phantom_step_every_s_max": 300, "phantom_step_max_per_day": 3, "phantom_step_behind_m": 3, "phantom_step_steps": 4, "phantom_step_night_too": true}
+    },
+    {
+      "id": "schizophrenia",
+      "source": "doc01",
+      "cite": "doc 01 Quirks: private hallucinations start on day 1 instead of day 5. Base: ai_director.json scare_hallucination opens_day 5. Same scare, same weight and big-scare budget for that player (scare_rules.big_per_player_per_day 1): it only opens early for them",
+      "name": "Schizophrenia",
+      "effects": {"hallucination_opens_day": 1}
+    },
+    {
+      "id": "dyspraxia",
+      "source": "doc01",
+      "cite": "doc 01 Quirks: a jumpscare drops everything they carry, not just the held item. Base: ai_director.json scare_jumpscare drops the held item; labor.json carry capacity 4",
+      "name": "Dyspraxia",
+      "effects": {"jumpscare_drops": "all_carried"}
+    },
+    {
+      "id": "hoarding_disorder",
+      "source": "doc01",
+      "cite": "doc 01 Quirks: one extra carry slot, 10% slower walk. Bases: labor.json carry 4, walk 3.0 m/s, crouch 1.2 m/s. Walk and crouch slow; sprint (5.0 m/s) does not, so a chase is no harder. Sim: plot capacity falls 2.9% (tools/sim, doc 02 section 22.3)",
+      "name": "Hoarding disorder",
+      "sources": {"effects": "placeholder"},
+      "effects": {"carry_extra_slots": 1, "walk_speed_mult": 0.9, "crouch_speed_mult": 0.9}
+    },
+    {
+      "id": "narcolepsy",
+      "source": "doc01",
+      "cite": "doc 01 Quirks: last to get a body at dawn, a few seconds after everyone else. 6 s is a placeholder for 'a few'. They still count for headcount at that dawn (doc 02 section 4: a body at dawn). Dawn is daylight, so the wait is never dangerous",
+      "name": "Narcolepsy",
+      "sources": {"effects": "placeholder"},
+      "effects": {"dawn_body_delay_s": 6, "last_to_wake": true}
+    },
+    {
+      "id": "grandiose_delusions",
+      "source": "doc01",
+      "cite": "doc 01 Quirks: bear traps take a little longer to snap on them. Base: traps.json bear_trap snaps at once. 0.6 s lets them step off; the click still sounds at the step (creature hears it as before), so the dodge saves the leg and never the noise",
+      "name": "Grandiose delusions",
+      "sources": {"effects": "placeholder"},
+      "effects": {"bear_snap_delay_s": 0.6, "step_off_m": 1.0, "trap_noise_at_step": true}
+    },
+    {
+      "id": "ocd",
+      "source": "doc01",
+      "cite": "doc 01 Quirks: walking under the scarecrow's gaze makes them Shaken. Numbers placeholder. Shaken is the taint.json record (60 s, restarts on a new cause), never Taint. A scarecrow's gaze is its front arc",
+      "name": "OCD",
+      "sources": {"effects": "placeholder"},
+      "effects": {"scarecrow_gaze_m": 6, "scarecrow_gaze_arc_deg": 120, "scarecrow_gaze_dwell_s": 2, "scarecrow_gaze_cooldown_s": 120}
+    }
+  ]
+}

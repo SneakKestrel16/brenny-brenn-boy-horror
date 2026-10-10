@@ -985,7 +985,7 @@ the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved
 | ID | Owner | Task | Status | Depends on |
 |---|---|---|---|---|
 | P5-01 | Director | Scope review: settle what P5-04 to P5-07 depend on; done-when proposal (Q-250) | done (D-152) | — |
-| P5-02 | Game Designer | Doc 02 next season and cosmetics, doc 03 season traits; `data/` JSON; sim runs season 2 and 3 | todo | P5-01 |
+| P5-02 | Game Designer | Doc 02 next season and cosmetics, doc 03 season traits; `data/` JSON; sim runs season 2 and 3 | done (QA PASS, D-158) | P5-01 |
 | P5-03 | Network & Voice, AI Programmer | Spliced lures from live clips, day 4 on (doc 03 s12.1 splice row, doc 06 "A lure") | done (QA PASS, D-156) | P5-01 |
 | P5-04 | Gameplay, AI Programmer | Next season: carry-over, savings, debt growth, one new creature trait, saved and loaded | todo | P5-02 |
 | P5-05 | Gameplay | Cosmetics: store items once the debt is paid, equip, synced, saved | todo | P5-02 |

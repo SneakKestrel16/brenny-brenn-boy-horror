@@ -1,0 +1,33 @@
+{
+  "table": "cosmetics",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "rule",
+      "source": "sim",
+      "cite": "doc 01 Store (Cosmetic hats, overalls | sim | Phase 5, bought once the debt is paid); doc 02 section 21.5. Prices are inference from the winners' spare coins at the final dawn (sim: median 27-44 coins in seasons 2 and 3, section 21.6)",
+      "sources": {"sold_when": "doc01", "gameplay_effect": "doc01", "persists": "placeholder"},
+      "kind": "rule",
+      "sold_when": "season_debt_paid",
+      "paid_from": "team_coins_before_savings",
+      "owned_by": "roster_id",
+      "persists_across_seasons": true,
+      "persists_in_save": true,
+      "gameplay_effect": false,
+      "price_scaled_by_headcount": false,
+      "hat_replaces_role_hat": true,
+      "overalls_use_tint_slot": true
+    },
+    {"id": "flat_cap", "source": "sim", "cite": "doc 02 section 21.5; cheap tier, under the 25th percentile of winners' spare", "kind": "hat", "name": "Flat cap", "price": 15},
+    {"id": "bucket_hat", "source": "sim", "cite": "doc 02 section 21.5; cheap tier", "kind": "hat", "name": "Bucket hat", "price": 20},
+    {"id": "tin_pot", "source": "sim", "cite": "doc 02 section 21.5; cheap tier", "kind": "hat", "name": "Tin pot", "price": 25},
+    {"id": "party_cone", "source": "sim", "cite": "doc 02 section 21.5; mid tier", "kind": "hat", "name": "Party cone", "price": 35},
+    {"id": "turnip_crown", "source": "sim", "cite": "doc 02 section 21.5; mid tier", "kind": "hat", "name": "Turnip crown", "price": 45},
+    {"id": "top_hat", "source": "sim", "cite": "doc 02 section 21.5; top tier, above the median spare so a team buys it only after a thrifty win", "kind": "hat", "name": "Top hat", "price": 70},
+    {"id": "overalls_denim", "source": "sim", "cite": "doc 02 section 21.5; overalls recolour the player's tint slot (doc 07 section 8); cheap tier", "kind": "overalls", "name": "Denim overalls", "price": 15},
+    {"id": "overalls_patched", "source": "sim", "cite": "doc 02 section 21.5; cheap tier", "kind": "overalls", "name": "Patched overalls", "price": 20},
+    {"id": "overalls_striped", "source": "sim", "cite": "doc 02 section 21.5; mid tier", "kind": "overalls", "name": "Striped overalls", "price": 30},
+    {"id": "overalls_plaid", "source": "sim", "cite": "doc 02 section 21.5; mid tier", "kind": "overalls", "name": "Plaid overalls", "price": 40},
+    {"id": "overalls_gold", "source": "sim", "cite": "doc 02 section 21.5; top tier", "kind": "overalls", "name": "Gold overalls", "price": 60}
+  ]
+}

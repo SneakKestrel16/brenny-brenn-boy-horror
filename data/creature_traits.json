@@ -1,0 +1,110 @@
+{
+  "table": "creature_traits",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "tool_mimicry",
+      "source": "doc01",
+      "cite": "doc 01 Next season (better tool mimicry); doc 03 section 22. Numbers placeholder",
+      "name": "Tool mimicry",
+      "report_line": "The thing in the corn learned the sound of your hoe.",
+      "overrides": [
+        {"table": "ai_director", "id": "lures", "field": "sound_no_tell_pct", "op": "set", "value": 80, "base": 33, "new": true},
+        {"table": "ai_director", "id": "lures", "field": "day_gap_s", "op": "set", "value": 70, "base": 90}
+      ]
+    },
+    {
+      "id": "more_pits",
+      "source": "doc01",
+      "cite": "doc 01 Next season (more pits); doc 03 section 22. Pits need no stolen supply (doc 03 9.1)",
+      "name": "More pits",
+      "report_line": "Someone has been digging all night.",
+      "overrides": [
+        {"table": "ramp_up", "days": [2, 6], "field": "pit_4p", "op": "add", "value": 1}
+      ]
+    },
+    {
+      "id": "keen_ears",
+      "source": "placeholder",
+      "cite": "doc 03 section 22: every creature noise radius x1.25 (not the voice formula)",
+      "name": "Keen ears",
+      "report_line": "It hears you from further off now.",
+      "overrides": [
+        {"table": "creature", "where_kind": "noise", "field": "radius_m", "op": "mul", "value": 1.25}
+      ]
+    },
+    {
+      "id": "fast_legs",
+      "source": "placeholder",
+      "cite": "doc 03 section 22: chase speed 5.5 to 6.0 m/s; sprint stays 5.0, so a sprinter now loses 1.0 m/s. The trap race speed is unchanged",
+      "name": "Fast legs",
+      "report_line": "The tracks in the dirt are further apart.",
+      "overrides": [
+        {"table": "creature", "id": "chase_speed_mps", "field": "speed_mps", "op": "add", "value": 0.5},
+        {"table": "creature", "id": "chase_speed_tainted_mps", "field": "speed_mps", "op": "add", "value": 0.5}
+      ]
+    },
+    {
+      "id": "long_eyes",
+      "source": "placeholder",
+      "cite": "doc 03 section 22: sight +5 m by day and at night",
+      "name": "Long eyes",
+      "report_line": "It watched from the far fence this time.",
+      "overrides": [
+        {"table": "creature", "id": "sight_day_m", "field": "metres", "op": "add", "value": 5},
+        {"table": "creature", "id": "sight_night_m", "field": "metres", "op": "add", "value": 5}
+      ]
+    },
+    {
+      "id": "lock_breaker",
+      "source": "placeholder",
+      "cite": "doc 03 section 22: the shed lock breaks from day 3 (store.json shed_lock, was day 5)",
+      "name": "Lock breaker",
+      "report_line": "The pegboard lock was bitten clean through.",
+      "overrides": [
+        {"table": "store", "id": "shed_lock", "field": "effect.broken_from_day", "op": "set", "value": 3, "base": 5}
+      ]
+    },
+    {
+      "id": "thick_hide",
+      "source": "placeholder",
+      "cite": "doc 03 section 22: a flare scares it off for 20 s, not 30 (creature.json retreat_after_flare_s)",
+      "name": "Thick hide",
+      "report_line": "The flare scorched it, and it did not mind.",
+      "overrides": [
+        {"table": "creature", "id": "retreat_after_flare_s", "field": "seconds", "op": "set", "value": 20, "base": 30}
+      ]
+    },
+    {
+      "id": "extra_hands",
+      "source": "placeholder",
+      "cite": "doc 03 section 22: one more disturbance a day on days 4 to 6 (scaled by headcount like the ramp-up)",
+      "name": "Extra hands",
+      "report_line": "More things moved in the night than one thing could move.",
+      "overrides": [
+        {"table": "ramp_up", "days": [4, 6], "field": "disturbances_4p", "op": "add", "value": 1}
+      ]
+    },
+    {
+      "id": "taint_nose",
+      "source": "placeholder",
+      "cite": "doc 03 section 22: Taint tracking radius 60 to 80 m, trail 20 to 30 s",
+      "name": "Taint nose",
+      "report_line": "It follows the black stains like a road.",
+      "overrides": [
+        {"table": "creature", "id": "taint_tracking_radius_m", "field": "metres", "op": "set", "value": 80, "base": 60},
+        {"table": "creature", "id": "taint_trail_s", "field": "seconds", "op": "set", "value": 30, "base": 20}
+      ]
+    },
+    {
+      "id": "splice_master",
+      "source": "placeholder",
+      "cite": "doc 03 section 22; doc 03 12.1 (a lure reuses at most 2 segments); needs P5-03's segment list to take 3",
+      "name": "Splice master",
+      "report_line": "It says your words in a new order.",
+      "overrides": [
+        {"table": "ai_director", "id": "lures", "field": "splice_max_segments", "op": "set", "value": 3, "base": 2, "new": true}
+      ]
+    }
+  ]
+}

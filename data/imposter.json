@@ -1,0 +1,90 @@
+{
+  "table": "imposter",
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "rule",
+      "source": "placeholder",
+      "cite": "doc 01 Imposter mode (50% chance, one imposter, keeps a real role, wins on foreclosure, lies and never kills, Dawn Report reveals); doc 02 section 22.1. min_players 4 (sim: the imposter loss is about 13% of 3p labor, but the steep final-clear cliff drops the 3p final clear from 58.9% to 27%) is inference (Q-252 item 1, FOR CEO); wins_when is D-155 (CEO, Q-252 item 2)",
+      "sources": {"chance_pct": "doc01", "max_imposters": "doc01", "keeps_role": "doc01", "kills": "doc01"},
+      "chance_pct": 50,
+      "max_imposters": 1,
+      "min_players": 4,
+      "keeps_role": true,
+      "kills": false,
+      "wins_when": "final_payment_missed",
+      "picked_by": "host_seed",
+      "rerolled_each_season": true,
+      "revealed_in": "dawn_report_season_end",
+      "counts_for_headcount": true,
+      "still_honest": ["walkie", "flicker", "ghost_voice", "lantern_dim", "dawn_report", "medium_perk"]
+    },
+    {
+      "id": "false_flag",
+      "source": "placeholder",
+      "cite": "doc 01 Imposter mode (false flags); doc 01 Night Traps (flags: three per player, any player can pull one up). No new slots: the lie uses the imposter's own three",
+      "kind": "flag",
+      "modes": ["checked_over_trap", "trap_where_none"],
+      "extra_slots": 0,
+      "looks_identical": true,
+      "pulled_up_by_anyone": true,
+      "revealed_at_dawn_report": true,
+      "team_cost_s": 30
+    },
+    {
+      "id": "whistle_throw",
+      "source": "placeholder",
+      "cite": "doc 01 Imposter mode (false whistle); doc 01 Whistle (one button, short cooldown, 3D audio, creature hears it). The throw sounds the normal whistle at a point up to range_m from the imposter; the creature hears it as noise_whistle (creature.json, 50 m)",
+      "kind": "whistle",
+      "range_m": 25,
+      "cooldown_s": 60,
+      "max_per_night": 2,
+      "max_per_day": 2,
+      "creature_hears": true,
+      "team_cost_s": 40
+    },
+    {
+      "id": "pegboard_mark",
+      "source": "placeholder",
+      "cite": "doc 01 Imposter mode (false pegboard marks); doc 01 The tool shed (every empty outline is a trap somewhere). The imposter flips what one outline shows (hanging trap drawn empty, or empty outline drawn full); the traps themselves never move, and the host keeps the true board",
+      "kind": "pegboard",
+      "hold_s": 3,
+      "max_per_day": 1,
+      "max_per_night": 1,
+      "visible_to_players_in_shed": true,
+      "reset_by": "touch_outline",
+      "team_cost_s": 60
+    },
+    {
+      "id": "door_prop",
+      "source": "placeholder",
+      "cite": "doc 01 Imposter mode (leave doors open); doc 03 section 6 (a dark building's door is banged on for 3 s first). An open door skips the bang for that building until someone closes it",
+      "kind": "door",
+      "hold_s": 2,
+      "close_hold_s": 1,
+      "max_open_at_once": 2,
+      "skips_bang": true,
+      "noise_kind": "door",
+      "team_cost_s": 20
+    },
+    {
+      "id": "gate_prop",
+      "source": "placeholder",
+      "cite": "doc 01 Imposter mode (leave gates open); doc 02 section 10.1 (a broken fence frees the animals; round_up chore). The pen gate left open frees animals the same way. The farm exit gate is never touched: the Harvest Moon cart is not the imposter's to block",
+      "kind": "gate",
+      "gate": "pen",
+      "hold_s": 2,
+      "max_per_day": 1,
+      "frees_animals": true,
+      "fix": "round_up",
+      "team_cost_s": 90
+    },
+    {
+      "id": "sim",
+      "source": "sim",
+      "cite": "doc 02 section 22.5: the imposter is modelled in tools/sim as a labor cost; work_share_pct and lies_per_day are tuned there",
+      "work_share_pct": 80,
+      "lies_per_day": 2
+    }
+  ]
+}

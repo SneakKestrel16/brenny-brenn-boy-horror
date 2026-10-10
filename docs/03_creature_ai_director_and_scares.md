@@ -28,6 +28,7 @@ Builds on [doc 02](02_systems_and_economy.md) (numbers), [doc 04](04_farm_layout
 19. Data files this doc adds
 20. Gotchas
 21. Questions raised
+22. Season traits (DD Phase 5)
 
 ## 1. Scope and conventions
 
@@ -687,7 +688,7 @@ Doc 01 "Voice mimicry". Playback is doc 06's `apply_lure`; **choosing** is here.
 | Dead-voice twist | night lures in a dead player's voice are world sounds, with the ghost's static; static plus flicker = real | doc 01 "Ghosts" |
 | Dead voices | used more often than live voices | doc 01 "Voice mimicry" |
 | Exactness | exact clips through day 3; spliced clips from day 4 | doc 01 "Ramp-up" |
-| Splice | joins two live clips of one owner, cut at the word break (the clip's own silence gap, or the middle of the clip if none); a lure reuses at most 2 segments: the head of the chosen clip up to its break, then the tail of another clip of the same owner from its break | doc 01 "Ramp-up" (splicing), "Build Plan > Phase 5" (spliced clips from live speech, P5-03); the cut rule is a placeholder (section 12.4) |
+| Splice | joins two live clips of one owner, cut at the word break (the clip's own silence gap, or the middle of the clip if none); a lure reuses at most 2 segments: the head of the chosen clip up to its break, then the tail of another clip of the same owner from its break | doc 01 "Ramp-up" (splicing), "Build Plan > Phase 5" (spliced clips from live speech, P5-03); the cut rule is a placeholder (section 12.4); the `splice_master` trait (section 22) lifts the cap to 3 |
 | Position | the source is the point the creature wants the target to go **to**: in a trap spot (day) or toward a cover point (night) | doc 01 "Voice mimicry" (inference) |
 | The 15 m rule | day lures need a source position 15 m or more from every teammate of the target. Pairs in one field are always within 15 m (doc 04 sec 8.3), so field lures come from the corn edge on the far side; the yard's generator and well are 23 m and 32 m from corn, so yard lures come from yard corn edges | doc 04 sec 8.3 |
 
@@ -1073,6 +1074,7 @@ Field suffixes are `_s`, `_m`, `_mps`, `_pct`, `_mult`.
 | `ai_director.json` | tension meter (11.1), profiles (11.2), day arc (11.3), scare rules (11.4), trap race (`start_distance_m`, `deep_start_distance_m`, `bend_m`, `min_spare_s`) |
 | `voice_lines.json` | the lines, stranger lines and sound lures (16) |
 | `dawn_report_templates.json` | templates (17) |
+| `creature_traits.json` | season traits (22): `id`, `report_line`, `overrides` |
 
 The simulator reads `sabotage.json` for scheduled sabotage and `ai_director.json` for the trap-race
 distances (doc 02 hold question).
@@ -1093,3 +1095,64 @@ distances (doc 02 hold question).
 See Q-018 in `production/QUESTIONS.md`: AI Programmer buildability review (sensing tick, region
 graph, corn pathing, Noise API); placeholder speeds depend on Q-016; the Tainted-quiet reading
 (section 5); "bodies" read as the dead player's body (section 15); the splice cut rule.
+
+## 22. Season traits (DD Phase 5)
+
+Doc 01 "Next season": the creature gains one trait per season (better tool mimicry, more pits). The
+trait list is `data/creature_traits.json`; the season count and the carry-over are
+[doc 02 section 21](02_systems_and_economy.md#21-next-season-and-cosmetics). Every number here is
+`placeholder` except the two doc 01 names (tool mimicry, more pits); a playtest of season 2 and 3
+tunes them, and the sim (doc 02 21.6) checks that the team can still win.
+
+### 22.1 The rule
+
+- **When.** At the start of season 2 and season 3 (never season 1). A lost season does not carry
+  (doc 02 21.1), so a new campaign starts again with no traits.
+- **Pick.** The host draws uniformly among the traits not yet gained, seeded by the save seed and the
+  season number (`Random(hash(seed, season))`), so the pick is repeatable. Clients never pick.
+- **Log.** `trait_gained` with `season`, `trait` and `seed` (doc 05 log events; the QA gate checks it).
+- **Stacking.** Traits stack and are kept until the campaign ends. No two traits `set` the same
+  field; where two would `add` to one field the sum applies.
+- **Dawn Report.** The first Dawn Report of the season prints the trait's `report_line` once, under
+  the season header, in the style of a disturbance clue. It hints at the effect and never names it.
+- **Wire.** The host applies overrides when it loads the season's data. Clients get the trait list in
+  the season-start message (doc 06) only so the Dawn Report can print it; no client rule depends on it.
+
+### 22.2 The traits
+
+Ten traits, seven more than a 3-season campaign draws, so teams see different pairs.
+`overrides` is an array the data loader applies on top of the base record. Fields: `table`, `id`
+(the record) or `days` (a `ramp_up` day range, both ends included), `field`, `op` (`set`, `add`,
+`mul`), `value`, and `base` (the value it replaces, for the reader). `where_kind` selects every
+`creature` record whose `kind` is that value (here `noise`). `new: true` marks a field that does not
+exist yet; the AI Programmer adds it (Q-255).
+
+| Trait | Effect | Base to new | Source |
+|---|---|---|---|
+| `tool_mimicry` | Sound lures carry no tell more often; day lures come more often | `sound_no_tell_pct` new field, 80 (voice lures keep their third); `day_gap_s` 90 to 70 | doc 01 "Next season" (name); numbers placeholder |
+| `more_pits` | One more pit on days 2 to 6 | `pit_4p` +1 on `ramp_up` `day_2` to `day_6` (headcount scaling applies as for the ramp-up). Pits need no stolen supply (9.1) | doc 01 "Next season" (name); number placeholder |
+| `keen_ears` | Every creature noise radius x1.25. The voice formula (3.1) is unchanged; the radius it multiplies grows | `radius_m` x1.25 on every `noise` record | placeholder |
+| `fast_legs` | Chase speed +0.5 m/s | 5.5 to 6.0 (Tainted chase speed +0.5 too). Player sprint stays 5.0, so a sprinter loses ground at 1.0 m/s. The trap race (7) speed is unchanged (Director decision, P5-02 QA); the sim does not model the chase change | placeholder |
+| `long_eyes` | Sees farther | `sight_day_m` +5, `sight_night_m` +5. The 40 m lit-lantern spot (3.2) is unchanged | placeholder |
+| `lock_breaker` | The shed lock breaks sooner | `shed_lock` `broken_from_day` 5 to 3 | placeholder |
+| `thick_hide` | A flare scares it off for less time | `retreat_after_flare_s` 30 to 20 | placeholder |
+| `extra_hands` | One more disturbance a day on days 4 to 6 | `disturbances_4p` +1 on `day_4` to `day_6` | placeholder |
+| `taint_nose` | Tracks Taint from farther and for longer | tracking radius 60 to 80 m; trail 20 to 30 s | placeholder |
+| `splice_master` | Splices three segments, not two | `splice_max_segments` new field, 2 to 3 (needs P5-03's segment list) | placeholder; 12.1 |
+
+### 22.3 What a trait never does
+
+- No trait lets the creature hear a quiet, crouching player outside its radii, or see through the
+  light rules (6). Radii grow; the rules do not change.
+- No trait adds a scare, a body or a way to die. Deaths still follow the trap race (7).
+- Traits change nothing the AI Director budgets: the scare budget (11.4) and the one-big-scare-a-day
+  rule (13) are untouched, so a trait cannot stack frights on a player.
+- Honest signals stay honest: no trait fakes the flicker, the radio or the lantern dim.
+
+### 22.4 Checks
+
+- `tools/sim/test_sim.py` loads the trait table and requires every trait to have overrides and a
+  report line (doc 02 21.6). Whether each override target exists is for the data loader (P5-04).
+- Campaign sim: only `more_pits` and `extra_hands` (ramp-up counts) move its numbers; the other
+  eight change chase, detection, lures or items, which the sim does not model (inference; a bot
+  season would settle it). Doc 02 21.6 reports the per-trait final clear.

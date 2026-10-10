@@ -518,9 +518,14 @@ Trap counts and the disturbance budget scale to 80% at 3 players and 60% at 2, r
 
 ### Next season
 
+- **A campaign is 3 seasons.** Winning season 3 pays the farm off (D-155).
 - **Carry over:** upgrades and plots, plus spare coins at 25% as savings.
 - **The debt grows.**
 - **The creature gains one new trait,** such as better tool mimicry or more pits.
+- **A new season resets** crops, the Prize Pumpkin, Taint, deaths, the medical bill, traps, pegboard stock,
+  fuel, flags, the day count and payments. Roles can be picked again and a new body is picked.
+- **A lost season** (final payment missed) ends the campaign and carries nothing. A missed first payment is
+  not a loss. Numbers: doc 02 section 21.
 
 ### Store
 
@@ -577,7 +582,8 @@ A lobby toggle, off by default, for groups who want betrayal on top of the creat
 - **The imposter keeps a real role.** Everyone picks roles in the lobby first; the host's game then
   secretly picks the imposter at match start. The imposter's role and perks work as normal, so the
   role list gives nothing away.
-- **The imposter wins if the farm forecloses.** Everyone else wins as normal.
+- **The imposter wins only if the final payment is missed** (D-155). The first-payment Foreclosure
+  Notice and a Harvest Moon wipe are not imposter wins. Everyone else wins as normal.
 - **The imposter lies, never kills.** They can raise false signals (flags, whistle, pegboard marks)
   and leave gates or doors open. Deaths still come from the creature. Exact kit is set by the Game
   Designer.

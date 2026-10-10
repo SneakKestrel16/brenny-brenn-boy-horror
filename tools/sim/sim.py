@@ -78,6 +78,23 @@ class Model:
         self.total_4p = debt["total_4p"]
         self.debt_base = scn.get("debt_total_4p", self.total_4p)
         self.first_base = debt["first_payment_4p"]
+        # DD Phase 5 (doc 02 section 21): seasons 2 and 3 read their debt from next_season.json, traits from creature_traits.json
+        self.season = scn.get("season", 1)
+        self.traits = data.get("creature_traits", {})
+        self.next = data.get("next_season", {})
+        if self.season > 1:
+            ns = self.next[f"season_{self.season}"]
+            self.total_4p, self.first_base = ns["debt_total_4p"], ns["first_payment_4p"]
+            self.debt_base = scn.get("debt_total_4p", self.total_4p)
+            scn.setdefault("debt_total_4p_by_players", ns.get("debt_total_4p_by_players", {}))
+        # DD Phase 5 (doc 02 section 22.5): one imposter costs the team labor, the imposter's own share plus the cost of each lie it tells
+        imp = data.get("imposter", {})
+        self.imp_loss_s, self.imp_min = 0.0, 0
+        if scn.get("imposter") and imp:
+            kit = [r for r in imp.values() if "team_cost_s" in r]
+            self.imp_min = imp["rule"]["min_players"]
+            self.imp_loss_s = ((100 - imp["sim"]["work_share_pct"]) * self.S["day_s"] / 100
+                               + imp["sim"]["lies_per_day"] * sum(r["team_cost_s"] for r in kit) / len(kit))
         self.unlock_rule = scn.get("unlock_rule") or self.crops["pumpkin"]["unlock_rule"]
         self.bill = data["medical_bill"]["bill"]
         self.pumpkin = data["pumpkin"]
@@ -130,10 +147,16 @@ class Model:
             )
         return t, self.S["day_s"] / t
 
-    def ramp_counts(self, day: int, hc: int) -> tuple[int, int, int, int]:
-        """(disturbances, bear, pit, bells) for a day, scaled for the headcount (doc 02 section 11)."""
+    def ramp_counts(self, day: int, hc: int, traits: tuple = ()) -> tuple[int, int, int, int]:
+        """(disturbances, bear, pit, bells) for a day, scaled for the headcount (doc 02 section 11).
+        A season trait's ramp_up `add` overrides raise the 4p base before scaling (doc 03 section 22)."""
         r, p = self.ramp[f"day_{day}"], self.pct[hc]
-        return tuple(scaled(r[k] or 0, p) for k in ("disturbances_4p", "bear_4p", "pit_4p", "bells_4p"))
+        add = dict.fromkeys(("disturbances_4p", "bear_4p", "pit_4p", "bells_4p"), 0)
+        for t in traits:
+            for o in self.traits[t]["overrides"]:
+                if o["table"] == "ramp_up" and o["days"][0] <= day <= o["days"][1]:
+                    add[o["field"]] += o["value"]
+        return tuple(scaled((r[k] or 0) + add[k], p) for k in ("disturbances_4p", "bear_4p", "pit_4p", "bells_4p"))
 
     def medical(self, hc: int, deaths: int) -> int:
         b, p = self.bill, self.pay[hc]
@@ -149,8 +172,10 @@ class Model:
         base = self.scn.get("debt_total_4p_by_players", {}).get(str(hc), self.debt_base)
         return rhu(base * s, self.days * 100)
 
-    def first_of(self, total: int) -> int:
-        return rhu(self.first_base * total, self.total_4p)
+    def first_of(self, total: int, hc: int = 0) -> int:
+        # season 2 and 3 (doc 02 section 21.4): the denominator is the headcount's own base, so the first payment keeps its 4p-scale share
+        den = self.scn.get("debt_total_4p_by_players", {}).get(str(hc), self.total_4p) if self.season > 1 else self.total_4p
+        return rhu(self.first_base * total, den)
 
     def turnip_value(self, d: int) -> int:
         """What a plot bought on day d returns planting turnips only (no pumpkin cash or labor assumed); the buy test uses this."""
@@ -181,13 +206,17 @@ class Model:
         return self._vt[key]
 
 
-def simulate(M: Model, players: int, rng: random.Random) -> dict:
+def simulate(M: Model, players: int, rng: random.Random, carry: dict | None = None, traits: tuple = ()) -> dict:
+    """One season. `carry` ({"owned", "savings"}) and `traits` are the Phase 5 inputs (doc 02 section 21)."""
     S, pol = M.S, M.pol
     jitter = pol["jitter_pct"] / 100
     jit = (lambda: 1 + rng.uniform(-jitter, jitter)) if jitter else (lambda: 1.0)
     hc = players
-    coins = S["start_coins"]
+    coins = S["start_coins"] + (carry["savings"] if carry else 0)
     owned = M.start_plots[hc]
+    if carry:  # plots carry, clamped to the headcount ceiling (doc 02 section 21.2)
+        owned = min(max(owned, carry["owned"]), M.max_plots[hc])
+    owned_start = owned
     ground: list[list] = []
     pcts: list[int] = []
     paid = penalty = deferred = 0
@@ -240,7 +269,7 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
             # 4. payment
             total = M.debt(pcts, M.pay[hc], hc)
             if d == M.first_dawn:
-                first_due = M.first_of(total)
+                first_due = M.first_of(total, hc)
                 r["bank_pre4"] = coins
                 r["margin4"] = coins - first_due
                 if coins >= first_due:
@@ -288,7 +317,7 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
         if pol["labor"]:
             walks = M.layout["trap_walk_m"]
             if d > 1:
-                _, bear, pit, bells = M.ramp_counts(d - 1, hc)
+                _, bear, pit, bells = M.ramp_counts(d - 1, hc, traits)
                 tp = (M.diff["trap_pct"])
                 for verb, cnt, en in (("bear_trap", bear, True), ("pit", pit, True), ("tripwire_bells", bells, M.bells_on)):
                     if en and M.traps[verb].get("enabled", True):
@@ -296,7 +325,7 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
                         hold = M.L[M.traps[verb]["clear_verb"]]["hold_s"]
                         chore_s += sum(hold + 2 * rng.choice(walks) / M.walk_v for _ in range(cnt))
         if pol["sabotage"]:
-            nd = M.ramp_counts(d, hc)[0]
+            nd = M.ramp_counts(d, hc, traits)[0]
             pool = [s for s in M.pool if s["opens_day"] <= d]
             for _ in range(nd):
                 s = rng.choice(pool)
@@ -316,6 +345,8 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
         if pol["labor"]:
             j = jit()
             fixed = chore_s * j
+            if M.imp_loss_s and hc >= M.imp_min:
+                fixed += M.imp_loss_s * j
             fixed += moon_n * (M.L["plant"]["hold_s"] + M.L["water"]["hold_s"] + (M.L["fill_can"]["hold_s"] + 2 * M.layout["moonflower_bed"]["d_well_m"] / M.walk_v) / M.can) * j
             fixed += (M.L["water_prize_pumpkin"]["hold_s"] + (M.L["fill_can"]["hold_s"] + 2 * M.layout["prize_pumpkin"]["d_well_m"] / M.walk_v) / M.can) * j
             cap = min(cap, int(max(0.0, hc * S["day_s"] - fixed) / (M.t_plot[0] * j)))
@@ -346,6 +377,9 @@ def simulate(M: Model, players: int, rng: random.Random) -> dict:
         foreclosed=foreclosed,
         banks=banks,
         deaths=sorted(dead_nights),
+        owned_start=owned_start,
+        owned_end=owned,
+        spare=max(0, r["margin8"]) if r["margin8"] is not None else 0,
     )
     return r
 
@@ -382,6 +416,68 @@ def run_scenario(data, layout, pol, scn, counts, runs, seed):
     return out, rows
 
 
+def run_campaign(data, layout, pol, counts, runs, seed, seasons):
+    """DD Phase 5 (doc 02 section 21.6): chain seasons 1..`seasons`. Only a won season carries; each later season
+    gains one random trait (host seed), starts with the carried plots and 25% of the spare coins as savings.
+    Rates are of the teams that reached the season. Returns {players: [per-season dict]}."""
+    carry_rule = data["next_season"]["carry"]
+    models = [Model(data, layout, pol, {"name": f"season_{s}", "season": s}) for s in range(1, seasons + 1)]
+    pool = sorted(data["creature_traits"])
+    out = {}
+    for p in counts:
+        rows = [[] for _ in models]
+        for i in range(runs):
+            carry, picked = None, []
+            trng = random.Random(f"{seed}:{p}:{i}:trait")
+            for s, M in enumerate(models):
+                if s:
+                    picked.append(trng.choice([t for t in pool if t not in picked]))
+                rng = random.Random(f"{seed}:{p}:{i}" + (f":{s}" if s else ""))
+                r = simulate(M, p, rng, carry, tuple(picked))
+                rows[s].append((r, tuple(picked)))
+                if not r["final_clear"]:
+                    break
+                carry = {"owned": r["owned_end"], "savings": min(carry_rule["savings_cap_coins"], r["spare"] * carry_rule["savings_pct"] // 100)}
+        out[p] = []
+        for s, rs in enumerate(rows):
+            n = len(rs)
+            pct = lambda f: round(100 * sum(1 for r, _ in rs if f(r)) / n, 1)
+            wins = [r for r, _ in rs if r["final_clear"]]
+            out[p].append({
+                "season": s + 1,
+                "reached_pct": round(100 * n / runs, 1),
+                "first_clear_pct": pct(lambda r: r["first_clear"]),
+                "final_clear_pct": pct(lambda r: r["final_clear"]),
+                "foreclosure_pct": pct(lambda r: r["foreclosed"]),
+                "owned_start_median": statistics.median(r["owned_start"] for r, _ in rs),
+                "spare_median": statistics.median(r["spare"] for r in wins) if wins else None,
+                "spare_quartiles": quart([r["spare"] for r in wins]) if len(wins) > 1 else None,
+                "campaign_win_pct": round(100 * len(wins) / runs, 1),
+                "by_trait_final_clear_pct": {t: round(100 * sum(1 for r, tr in rs if t in tr and r["final_clear"]) / c, 1)
+                                             for t in pool if (c := sum(1 for _, tr in rs if t in tr))} if s else {},
+            })
+    return out
+
+
+def evaluate_campaign(camp: dict, data: dict) -> list:
+    """The later-season targets in next_season.json (doc 02 section 21.6). Returns (name, value, ok)."""
+    t = []
+    for s in sorted(k for k in data["next_season"] if k.startswith("season_")):
+        n = int(s.split("_")[1])
+        tg = data["next_season"][s]["targets"]
+        for key in ("first_clear_pct", "final_clear_pct"):
+            lo, hi = tg[key]
+            vs = []
+            for p, rows in camp.items():
+                if len(rows) >= n:
+                    v = rows[n - 1][key]
+                    vs.append(v)
+                    t.append((f"season {n} {key.split('_')[0]} clear {p}p in {lo}-{hi}%", v, lo <= v <= hi))
+            if vs:
+                t.append((f"season {n} spread {key.split('_')[0]} clear <= {tg['spread_pts']} points", round(max(vs) - min(vs), 1), max(vs) - min(vs) <= tg["spread_pts"]))
+    return t
+
+
 def M_ok(data, p, change):
     hc = data["player_scaling"]["headcount"]
     return hc["min_players"] <= p + change["delta"] <= hc["max_players"]
@@ -407,6 +503,12 @@ def evaluate(summary: dict, counts: list) -> list:
         for p in counts:
             drop = round(base[p]["final_clear_pct"] - med[p]["final_clear_pct"], 1)
             t.append((f"Large needed {p}p: Medium drops final clear >= 30 points", drop, drop >= 30))
+    imp = summary["scenarios"].get("imposter")
+    if imp:  # doc 02 section 22.5: with an imposter aboard the team still clears the final in at least 50% of runs (labor cost only)
+        for p in counts:
+            if p >= 4:
+                v = imp[p]["final_clear_pct"]
+                t.append((f"imposter aboard: final clear {p}p >= 50%", v, v >= 50))
     return t
 
 
@@ -428,10 +530,26 @@ def main(argv=None) -> int:
     ap.add_argument("--policy", default="median")
     ap.add_argument("--scenario", default=None, help="comma list of names/files, or 'all'")
     ap.add_argument("--out", default=str(HERE / "out"))
+    ap.add_argument("--seasons", type=int, default=1, help="2 or 3: run the DD Phase 5 campaign instead of the scenarios (doc 02 section 21.6)")
     a = ap.parse_args(argv)
     counts = [int(x) for x in a.players.split(",")]
     data, layout = load_data(), load_json(HERE / "layout.json")
     pol = load_json(HERE / "policies" / f"{a.policy}.json")
+    if a.seasons > 1:
+        camp = run_campaign(data, layout, pol, counts, a.runs, a.seed, a.seasons)
+        targets = evaluate_campaign(camp, data)
+        out = Path(a.out) / str(a.seed)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "campaign.json").write_bytes((json.dumps({"seed": a.seed, "runs": a.runs, "policy": a.policy, "campaign": camp,
+                                                         "targets": [{"name": n, "value": v, "pass": ok} for n, v, ok in targets]}, indent=2) + "\n").encode())
+        for p, rows in camp.items():
+            for r in rows:
+                print(f"{p}p season {r['season']} reached {r['reached_pct']}% first {r['first_clear_pct']}% final {r['final_clear_pct']}% "
+                      f"foreclosure {r['foreclosure_pct']}% plots {r['owned_start_median']} spare {r['spare_quartiles']}")
+            print(f"{p}p campaign win {rows[-1]['campaign_win_pct']}%")
+        for n, v, ok in targets:
+            print(f"{'PASS' if ok else 'FAIL'}  {n}: {v}")
+        return 1 if any(not ok for _, _, ok in targets) else 0
     summary = {"seed": a.seed, "runs": a.runs, "policy": a.policy, "scenarios": {}}
     rows = []
     for scn in resolve_scenarios(a.scenario):

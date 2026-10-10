@@ -1,0 +1,5 @@
+{
+  "name": "imposter",
+  "cite": "doc 02 section 22.5: one imposter on the team (data/imposter.json sim record). Report plus the s22.5 floor, no s18.3 target. 2p and 3p have no imposter (min_players 4), so they equal baseline",
+  "imposter": true
+}

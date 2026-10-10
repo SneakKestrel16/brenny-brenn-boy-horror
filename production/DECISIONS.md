@@ -1086,3 +1086,16 @@ P5-10 passed QA and is merged. Rulings on its handoff and review notes:
    (QA accepted them), `game/net/net.gd` and `game/voice/squeaky.gd` (Network & Voice, co-owner on the row).
 **Why:** QA PASS (handoffs/P5-10.md "QA review").
 
+### D-158 · 2026-10-09 · Director · P5-02 merged; later-season targets accepted
+P5-02 (Phase 5 design and data) passed QA on its second pass and is merged: doc 02 s21 and s22, doc 03 s22,
+`data/` next_season, creature_traits, cosmetics, quirks and imposter, and the 3-season sim. Doc 01 "Next season"
+and "Imposter mode" now carry D-155. Rulings:
+1. Q-253: later-season targets accepted as placeholders (first payment 80 to 90%; final 50 to 65% in season 2
+   and 40 to 60% in season 3; at most 10 points of spread). Season 3 at 5p and 6p sits on the 40% floor.
+2. Q-252 item 3: Imposter mode and Quirks default to off in the lobby, as doc 01 says.
+3. `fast_legs` leaves the trap-race speed unchanged (the Director's call during the QA fix).
+4. The doc 03 s12.1 Splice row keeps P5-03's wording and adds the `splice_master` cap of 3.
+Still FOR CEO: Q-252 items 1 (imposter minimum 4 players) and 4 (quirks revealed at season end), Q-254 (savings
+capped at 60 coins). Q-255 goes to the P5-04, P5-05 and P5-06 owners; `game/core/data.gd` TABLES gains the five
+tables there.
+**Why:** QA PASS (handoffs/P5-02.md "QA review"); CEO answers in D-155.

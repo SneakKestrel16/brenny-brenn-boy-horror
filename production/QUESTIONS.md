@@ -1398,6 +1398,51 @@ P5-08 gate rows.
 **Answer (CEO, 2026-10-09):** "done when is when i say its done". Phase 5 has no measured gate; the CEO
 declares it done. Doc 01 "Build Plan > Phase 5" records this.
 
+### Q-251 · 2026-10-09 · Game Designer -> CEO (via Director) · FOR CEO · answered
+Next season, doc 02 section 21. Doc 01 "Next season" gives no season count and no list of what resets. Proposal:
+a campaign is 3 seasons; a won season 3 pays the farm off; a lost season (final payment missed) ends the campaign
+and carries nothing; a missed first payment is not a loss. Resets: crops, Prize Pumpkin, Taint, deaths, medical
+bill, traps, pegboard stock, fuel, flags, day count, payments. Roles are re-pickable; a new body is picked.
+Foreclosure losses stay gone. One creature trait a season from season 2 (doc 03 section 22). Settled by: CEO
+approval or edit, then a doc 01 edit.
+
+**Answer (CEO, 2026-10-09):** "yes" (D-155). Doc 01 "Next season" carries the wording.
+
+### Q-252 · 2026-10-09 · Game Designer -> Director (CEO for items 1, 2 and 4) · FOR CEO (Director -> CEO) · open
+Imposter mode and Quirks, doc 02 section 22 (D-153). (1) FOR CEO (changes doc 01): imposter minimum 4 players. The model's imposter loss is 204 s a day, about 0.38 of one
+player's 540 s day (about 13% of 3p labor); the sim's 3p final clear still falls from 58.9% to 27.0% because the
+final clear is a steep cliff. (2) The imposter wins when the final payment is
+missed. Doc 01 says "foreclosure"; the first-payment Foreclosure Notice is not a season loss. FOR CEO: does a
+Notice count as an imposter win? (3) Both options default to off in the lobby (inference). (4) FOR CEO (changes doc 01): quirks are revealed
+in the season-end Dawn Report; doc 01 says only that others learn by watching (proposal). Settled by: Director
+and CEO answers, then doc 01 wording.
+
+**Answer (item 2, CEO, 2026-10-09):** "yes" (D-155): only a missed final payment is an imposter win; a Notice is not. Doc 01 "Imposter mode" carries it. **Item 3 (Director):** both options default to off, as doc 01 says of each toggle (D-158). Items 1 and 4 stay open for the CEO.
+
+### Q-253 · 2026-10-09 · Game Designer -> Director · answered
+Later-season targets and debt growth, doc 02 section 21.4 and 21.6. Targets: first payment 80 to 90% for teams
+reaching the season; final 50 to 65% in season 2 and 40 to 60% in season 3 (45% did not hold at all headcounts);
+at most 10 points of spread. Debt (4p): season 2 1,595, season 3 1,600, per-headcount bases in
+`data/next_season.json`. Season 3 is barely harder in debt because plots are capped, so its difficulty comes
+from the traits. Settled by: the Director accepting the targets, or a live season 2 playtest.
+
+**Answer (Director, 2026-10-09):** targets accepted as placeholders (D-158). Season 3 sits on the 40% floor at 5p and 6p, so recheck after any debt or labor change; a live season 2 playtest settles them.
+
+### Q-254 · 2026-10-09 · Game Designer -> Director · FOR CEO (Director -> CEO, the cap changes doc 01) · open
+Savings, doc 02 section 21.2: 25% of spare coins (doc 01), rounded down, capped at 60 coins. The rounding and the
+cap are placeholders. The sim does not model non-plot upgrades (lantern, walkies, scarecrows) or cosmetic
+spending, so it understates season 2 strength and overstates it where cosmetics eat the savings. Settled by:
+a bot or live season 2 log through `compare.py`.
+
+### Q-255 · 2026-10-09 · Game Designer -> AI Programmer, Gameplay Programmer, Artist (P5-06) · open
+Implementation of traits and quirks. (1) Creature traits are `overrides` arrays in `data/creature_traits.json`
+(doc 03 22.2): `set`, `add`, `mul` on a record field, a `ramp_up` day range, or `where_kind`; two fields do not
+exist yet (`sound_no_tell_pct`, `splice_max_segments`; `day_gap_s` on lures already exists, 90). Does the AI Director code
+read them where the sim assumes? (2) Quirk fields are per-player (doc 02 22.2 last paragraph). Walk and crouch speed are
+client-applied; Hoarding `carry_extra_slots` is host-validated (pick-up is host-owned, CONTRACTS s5). (3) A cosmetic hat replaces the role hat in the model (doc 02 21.5): the
+role stays visible through the role card; Artist and Gameplay to confirm. (4) `data.gd` TABLES needs
+`next_season`, `creature_traits`, `cosmetics`, `quirks`, `imposter`. Settled by: the P5-04, P5-05, P5-06 handoffs.
+
 ### Q-261 · 2026-10-09 · Gameplay Programmer -> CEO · FOR CEO · open
 P5-10 (dev toys) and P5-11 (imposter mode) open only on your PC. The gate compares a SHA-256 of your machine id
 with a list in `game/core/dev_gate.gd` (`DevGate.HASHES`), which is empty until you answer. Please run this once,

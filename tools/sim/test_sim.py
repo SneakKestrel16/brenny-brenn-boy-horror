@@ -118,6 +118,73 @@ class Tests(unittest.TestCase):
         self.assertEqual(a, b)
 
 
+class TestPhase5(unittest.TestCase):
+    """DD Phase 5 (doc 02 sections 21, 22): campaign carry-over, season debts, quirks, imposter."""
+
+    def test_season_debts(self):  # 4p entry equals the scalar; debt grows each season at every headcount
+        ns = DATA["next_season"]
+        for s in ("season_2", "season_3"):
+            self.assertEqual(ns[s]["debt_total_4p_by_players"]["4"], ns[s]["debt_total_4p"])
+        for p in "23456":
+            self.assertLess(ns["season_2"]["debt_total_4p_by_players"][p], ns["season_3"]["debt_total_4p_by_players"][p])
+
+    def test_carry_clamp_and_savings(self):
+        m = sim.Model(DATA, LAYOUT, MEDIAN, {"name": "s2", "season": 2})
+        a = sim.simulate(m, 2, random.Random(1), {"owned": 99, "savings": 30})
+        self.assertEqual(a["owned_start"], m.max_plots[2])
+        b = sim.simulate(m, 2, random.Random(1), {"owned": 0, "savings": 0})
+        self.assertLessEqual(b["owned_start"], a["owned_start"])
+        rule = DATA["next_season"]["carry"]
+        self.assertEqual((rule["savings_pct"], rule["savings_cap_coins"], rule["savings_rounding"]), (25, 60, "floor"))
+
+    def test_campaign_runs(self):
+        camp = sim.run_campaign(DATA, LAYOUT, MEDIAN, [4], 40, 1, 3)
+        self.assertEqual([r["season"] for r in camp[4]], [1, 2, 3])
+        self.assertLessEqual(camp[4][2]["reached_pct"], camp[4][1]["reached_pct"])
+
+    def test_trait_pool(self):  # one trait per season, every trait has overrides and a report line
+        tr = DATA["creature_traits"]
+        self.assertGreaterEqual(len(tr), DATA["next_season"]["campaign"]["seasons_max"] - 1)
+        for rec in tr.values():
+            self.assertTrue(rec["overrides"] and rec["report_line"])
+
+    def test_quirks(self):  # D-153: ten quirks, never a forbidden effect
+        q = DATA["quirks"]
+        names = {"anxiety_disorder", "nyctophobia", "adhd", "paranoia", "schizophrenia", "dyspraxia",
+                 "hoarding_disorder", "narcolepsy", "grandiose_delusions", "ocd"}
+        self.assertEqual(set(q) - {"assign"}, names)
+        self.assertEqual(q["nyctophobia"]["effects"]["light_radius_mult"], 0.5)
+        self.assertIn("harm_creature", q["assign"]["forbidden"])
+
+    def test_hoarding_cost(self):  # doc 02 22.3: +1 carry, walk x0.9 loses 1-6% of plot capacity
+        base = model()
+        e = DATA["quirks"]["hoarding_disorder"]["effects"]
+        d = dict(DATA)
+        d["labor"] = {k: dict(v) for k, v in DATA["labor"].items()}
+        d["labor"]["walk"]["speed_mps"] *= e["walk_speed_mult"]
+        d["labor"]["carry"]["capacity"] += e["carry_extra_slots"]
+        slow = sim.Model(d, LAYOUT, MEDIAN, BASE)
+        loss = 100 * (base.P - slow.P) / base.P
+        self.assertTrue(1 <= loss <= 6, loss)
+
+    def test_imposter(self):  # D-153: never kills, honest signals stay, no imposter below min_players
+        r = DATA["imposter"]["rule"]
+        self.assertFalse(r["kills"])
+        self.assertIn("walkie", r["still_honest"])
+        m = sim.Model(DATA, LAYOUT, MEDIAN, {"name": "imposter", "imposter": True})
+        self.assertGreater(m.imp_loss_s, 0)
+        self.assertEqual(m.imp_min, r["min_players"])
+
+    def test_cosmetics(self):
+        c = DATA["cosmetics"]
+        self.assertFalse(c["rule"]["gameplay_effect"])
+        self.assertEqual(c["rule"]["sold_when"], "season_debt_paid")
+        for k, v in c.items():
+            if k != "rule":
+                self.assertGreater(v["price"], 0)
+                self.assertIn(v["kind"], ("hat", "overalls"))
+
+
 class TestCompare(unittest.TestCase):
     def test_self_test(self):
         import compare
