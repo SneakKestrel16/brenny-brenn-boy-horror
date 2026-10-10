@@ -383,12 +383,24 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 	return "? unknown command '%s' (help)" % cmd
 
 
-## Peer id from args[i], or the local peer when absent. 0 when not a player in the session.
+## Peer id from args[i], or the local peer when absent. 0 when not a player in the session. A name (case-insensitive,
+## a unique start is enough) works too.
 func _peer_arg(a: PackedStringArray, i: int) -> int:
-	var p := Game.local_peer() if a.size() <= i else (a[i].to_int() if a[i].is_valid_int() else 0)
+	var p := Game.local_peer() if a.size() <= i else (a[i].to_int() if a[i].is_valid_int() else _peer_by_name(a[i]))
 	if not Game.players.has(p) and p >= 1 and p <= Game.players.size():
 		p = Game.players.keys()[p - 1]  # joiners get random peer ids: a small number means the nth player (1 = host)
 	return p if Game.players.has(p) else 0
+
+
+func _peer_by_name(s: String) -> int:
+	var hits: Array[int] = []
+	for p: int in Game.players:
+		var n := str(Net.profiles.get(p, {}).get("name", "")).to_lower()
+		if n == s.to_lower():
+			return p
+		if n.begins_with(s.to_lower()):
+			hits.append(p)
+	return hits[0] if hits.size() == 1 else 0
 
 
 func _status() -> String:
