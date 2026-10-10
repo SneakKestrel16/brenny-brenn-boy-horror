@@ -510,8 +510,7 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 
 ## Found at the P5-22 review (QA, 2026-10-09)
 
-- **P5-22 re-review skipped** (CEO, D-181). P5-08 covers it: networked clue, glint and rust-pan shots with an armed
-  trap. Owner: QA.
+- ~~**P5-22 re-review skipped**~~ Re-review PASS 2026-10-09 (handoff P5-22).
 - ~~**No models yet**~~ Most existed; P5-26 (D-182) built the rest. Wiring them is P5-27. Owner: Gameplay.
 - **Doors are static open** (Q-307: no host door state). **Scarecrow facing yaw** not wired. Owner: Gameplay.
 - **Ragdoll is a static `lie` pose** (Q-322 fallback). Owner: Gameplay.
@@ -520,3 +519,13 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 
 - **Doc 07 s11 sizes** for `trap_tripwire_sprung`, `prop_scarecrow_field` and `prop_window_glow` are not synced to the
   as-built sizes in `production/handoffs/P5-26.md`. Owner: Technical Artist.
+
+## Found at the P5-22 re-review (QA, 2026-10-09)
+
+- **Stale comments**: `game/player/player.gd:109` "Placeholder in-hand props (no art yet)", `game/render/taint_look.gd:7`
+  "there is no hands model yet", `taint_look.gd:9` dead crow "a dark lump (placeholder". Owner: Gameplay.
+- **Held shovel points ahead like a lance** (`player.gd:127`, rot x -75); from the front it sits above head height.
+  Owner: Gameplay.
+- **Corn reads as flat cards up close**, the far band as a striped hedge. It still blocks sight. Art pass is the
+  Technical Artist's call. Owner: Technical Artist.
+- **`--clue-shot` overwrites** when two traps arm in the same frame; arm traps seconds apart. Owner: QA.
