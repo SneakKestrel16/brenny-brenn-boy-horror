@@ -9,7 +9,7 @@ extends Node
 ## this node makes fake chills too, so a chill is never proof.
 ## What it does (numbers: data/roles.json `horror` perks, all placeholder):
 ##   darker world   `ambient_mult`, `fog_mult`, `lamp_mult` below, read by WorldLook and LightRig. Dimming only:
-##                  only ghosts may make lights blink (CONTRACTS, doc 07 s4.3), so the `flicker` key stays false (QUESTIONS).
+##                  only ghosts may make lights blink (CONTRACTS, doc 07 s4.3), so that roles.json key stays false (QUESTIONS).
 ##   silhouette     an extra distant hallucination (Scares._apparition), from `hallucination_from_day`.
 ##   whisper        a fake whisper or a teammate's real clip from a far corn spot (the teammate is not there).
 ##   name_whisper   a clip of the player's OWN recorded voice from the corn; only if their voice setting
@@ -110,6 +110,7 @@ func _process(delta: float) -> void:
 	ambient_mult = d[0]
 	fog_mult = d[1]
 	lamp_mult = d[2]
+	LightRig.lamp_mult = lamp_mult  # pushed, so LightRig compiles without the Game autoload (test_light_rig)
 	if not on:
 		_clear()
 		return

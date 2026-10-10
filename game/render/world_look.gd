@@ -8,29 +8,32 @@ extends Node
 
 # Keys per phase, placeholders from doc 07 section 3. sun_e is the directional light energy. sat and con are
 # the colour grade (doc 07 s6 step 2: day warm and saturated, night desaturated), an Environment adjustment.
-const NOON := {"sun_col": Color("FFE2B0"), "sun_e": 1.2, "elev": 55.0, "amb_col": Color("FFF1D8"), "amb_e": 0.8,
-		"fog_col": Color("D8E2E8"), "fog_d": 0.0008, "sky_top": Color("5F9AD8"), "sky_hor": Color("D8E2E8"),
-		"vig": 0.15, "grain": 0.02, "sat": 1.15, "con": 1.05, "moon": 0.0}
-const DAY_END := {"sun_col": Color("FFD090"), "sun_e": 1.2, "elev": 20.0, "amb_col": Color("FFE6C8"), "amb_e": 0.8,
-		"fog_col": Color("D8E2E8"), "fog_d": 0.0008, "sky_top": Color("5F9AD8"), "sky_hor": Color("E8D8C0"),
-		"vig": 0.15, "grain": 0.02, "sat": 1.1, "con": 1.05, "moon": 0.0}
-const SUNSET := {"sun_col": Color("FF6A30"), "sun_e": 0.35, "elev": 5.0, "amb_col": Color("A07CA0"), "amb_e": 0.45,
-		"fog_col": Color("6A4A5A"), "fog_d": 0.004, "sky_top": Color("3A3A6A"), "sky_hor": Color("C8683F"),
-		"vig": 0.25, "grain": 0.04, "sat": 1.0, "con": 1.0, "moon": 0.0}
-const NIGHT := {"sun_col": Color("8FA8D8"), "sun_e": 0.12, "elev": 35.0, "amb_col": Color("7088D0"), "amb_e": 0.25,
-		"fog_col": Color("0D1220"), "fog_d": 0.012, "sky_top": Color("0A0F20"), "sky_hor": Color("222C48"),
-		"vig": 0.4, "grain": 0.06, "sat": 0.7, "con": 1.0, "moon": 0.0}
-const HARVEST := {"sun_col": Color("FFD8B0"), "sun_e": 0.2, "elev": 12.0, "amb_col": Color("4A4C80"), "amb_e": 0.3,
-		"fog_col": Color("1A1C2C"), "fog_d": 0.010, "sky_top": Color("0E1226"), "sky_hor": Color("3A3050"),
-		"vig": 0.4, "grain": 0.06, "sat": 0.8, "con": 1.0, "moon": 1.0}
-const DAWN_MID := {"sun_col": Color("FFA860"), "sun_e": 0.5, "elev": 8.0, "amb_col": Color("B09090"), "amb_e": 0.5,
-		"fog_col": Color("8A6A6A"), "fog_d": 0.004, "sky_top": Color("4A5A8A"), "sky_hor": Color("E89A60"),
-		"vig": 0.25, "grain": 0.04, "sat": 0.95, "con": 1.0, "moon": 0.0}
+## P5-50: `pool` is how visible the painted light pools are (0 by day, 1 at night); `moon` 0..1 is the disc's
+## visibility and colour mix, `moon_s` its size scale and `moon_c` its colour. All numbers are placeholders
+## (doc 07 s3), tuned against screenshots in production/handoffs/P5-50.md.
+const NOON := {"sun_col": Color("FFE8C0"), "sun_e": 1.5, "elev": 52.0, "amb_col": Color("D4E4F8"), "amb_e": 0.6,
+		"fog_col": Color("C4DAEC"), "fog_d": 0.0012, "sky_top": Color("3F7FD0"), "sky_hor": Color("C4DAEC"),
+		"vig": 0.15, "grain": 0.02, "sat": 1.2, "con": 1.1, "moon": 0.0, "moon_s": 0.3, "moon_c": Color("D8E4FF"), "pool": 0.0}
+const DAY_END := {"sun_col": Color("FFB468"), "sun_e": 1.4, "elev": 16.0, "amb_col": Color("F0D4C0"), "amb_e": 0.55,
+		"fog_col": Color("ECCFA8"), "fog_d": 0.0016, "sky_top": Color("4A7CC0"), "sky_hor": Color("F0C48C"),
+		"vig": 0.18, "grain": 0.02, "sat": 1.15, "con": 1.1, "moon": 0.0, "moon_s": 0.3, "moon_c": Color("D8E4FF"), "pool": 0.0}
+const SUNSET := {"sun_col": Color("FF6428"), "sun_e": 0.45, "elev": 4.0, "amb_col": Color("9A78B4"), "amb_e": 0.42,
+		"fog_col": Color("8A5468"), "fog_d": 0.004, "sky_top": Color("2C3270"), "sky_hor": Color("F07A44"),
+		"vig": 0.25, "grain": 0.04, "sat": 1.1, "con": 1.05, "moon": 0.0, "moon_s": 0.3, "moon_c": Color("D8E4FF"), "pool": 0.7}
+const NIGHT := {"sun_col": Color("A4BCF0"), "sun_e": 0.2, "elev": 32.0, "amb_col": Color("6078C4"), "amb_e": 0.25,
+		"fog_col": Color("141C34"), "fog_d": 0.013, "sky_top": Color("0A1230"), "sky_hor": Color("34456E"),
+		"vig": 0.4, "grain": 0.06, "sat": 0.75, "con": 1.05, "moon": 0.9, "moon_s": 0.3, "moon_c": Color("D8E4FF"), "pool": 1.0}
+const HARVEST := {"sun_col": Color("FFD8B0"), "sun_e": 0.28, "elev": 12.0, "amb_col": Color("4A4C80"), "amb_e": 0.3,
+		"fog_col": Color("1E1C30"), "fog_d": 0.010, "sky_top": Color("0E1226"), "sky_hor": Color("4A3454"),
+		"vig": 0.4, "grain": 0.06, "sat": 0.85, "con": 1.05, "moon": 1.0, "moon_s": 1.0, "moon_c": Color("FFE2C0"), "pool": 1.0}
+const DAWN_MID := {"sun_col": Color("FFA458"), "sun_e": 0.6, "elev": 8.0, "amb_col": Color("B8A0B0"), "amb_e": 0.5,
+		"fog_col": Color("A07C7C"), "fog_d": 0.004, "sky_top": Color("4A5E94"), "sky_hor": Color("F0A064"),
+		"vig": 0.25, "grain": 0.04, "sat": 1.0, "con": 1.05, "moon": 0.0, "moon_s": 0.3, "moon_c": Color("D8E4FF"), "pool": 0.3}
+const INTERIOR_FILL_M := {"Barn": 14.0, "Farmhouse": 11.0, "ToolShed": 6.0}  ## P5-50: placeholder room fill ranges, about each building's depth (doc 04 s4 footprints)
 const SUN_AZIMUTH := -30.0
 const HARVEST_EASE_S := 15.0  ## placeholder: night to Harvest Moon look, on the shared clock
 const MOON_M := 300.0  ## QA P4-20: moon disc distance from the camera, beyond the farm, inside the far plane
 const MOON_R := 16.0  ## placeholder: disc radius at MOON_M (about 6 degrees across, "low and large", doc 07 s3)
-const MOON_COL := Color("FFE2C0")  ## placeholder: "full orange-white moon" (doc 07 s3 harvest_moon row)
 
 var corn: CornField
 var _env: Environment
@@ -122,6 +125,8 @@ func _build_environment() -> void:
 	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	_env.fog_enabled = true
 	_env.fog_height = 3.0
+	_env.fog_sky_affect = 0.35  # P5-50: let the sky gradient show; fog hazes the land, not the whole sky
+	_env.fog_aerial_perspective = 0.4  # P5-50: distance fades toward the sky colour (doc 07 s6)
 	_env.glow_enabled = true  # subtle and constant, doc 07 s6; never changed at runtime
 	_env.glow_hdr_threshold = 1.2
 	_env.glow_intensity = 0.25
@@ -142,7 +147,7 @@ func _build_environment() -> void:
 	_moon.mesh = SphereMesh.new()
 	_moon.material_override = moon_mat
 	_moon.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_moon.scale = Vector3.ONE * MOON_R * 2.0  # SphereMesh is 1 m across
+	_moon.scale = Vector3.ONE * MOON_R * 2.0  # SphereMesh is 1 m across; _apply scales it per phase
 	add_child(_moon)
 	var layer := CanvasLayer.new()
 	layer.layer = -2  # QA P4-20: every UI CanvasLayer is at the default 1 (hud.gd, menus); negative layers still draw over the 3D world, so grain and vignette sit under all UI and under Taint (-1): doc 07 s6 order, HUD ungraded
@@ -162,6 +167,8 @@ func _place_rigs(world: Node) -> void:
 			continue
 		var rig := LightRig.new()
 		rig.range_m = float(spot.get_meta(&"radius_m", 6.0))
+		if spot.name == &"LightRigDoor":  # the BarnLantern marker also sits under Barn; one fill per room
+			rig.fill_range_m = float(INTERIOR_FILL_M.get(String(spot.get_parent().name), 0.0))
 		spot.add_child(rig)  # the marker is 3 m up (P1-03); the rig inherits its transform
 
 
@@ -249,6 +256,7 @@ func _apply(s: Dictionary) -> void:
 	_sky.sky_horizon_color = s.sky_hor
 	_sky.ground_horizon_color = s.sky_hor
 	_sky.ground_bottom_color = s.fog_col
+	LightRig.pool_vis = s.pool
 	_post.set_shader_parameter(&"vignette", s.vig)
 	_post.set_shader_parameter(&"grain", 0.0 if low else s.grain)
 	_env.adjustment_enabled = true
@@ -258,7 +266,8 @@ func _apply(s: Dictionary) -> void:
 	_moon.visible = s.moon > 0.01 and cam != null
 	if _moon.visible:  # opposite the light direction, so the disc sits where the moonlight comes from
 		_moon.global_position = cam.global_position + _sun.global_basis.z * MOON_M
-		(_moon.material_override as StandardMaterial3D).albedo_color = s.sky_hor.lerp(MOON_COL, s.moon)
+		_moon.scale = Vector3.ONE * MOON_R * 2.0 * s.moon_s
+		(_moon.material_override as StandardMaterial3D).albedo_color = s.sky_hor.lerp(s.moon_c, s.moon)
 
 
 func _cam_arg() -> bool:

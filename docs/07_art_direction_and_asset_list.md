@@ -100,6 +100,32 @@ phase's progress (a function of time, not of random numbers, so every peer looks
 | `dawn` | rises amber from the horizon over the Dawn Report load | rises to day values | burns off | Relief. Matches the Dawn Report card. |
 | `harvest_moon` | as `night` but moon energy 0.2, full orange-white moon low and large, no timer | 0.3 | as `night` but slightly lighter | Same dark, but the sky says "the last night" (doc 01 "Harvest Moon"). |
 
+**As built, P5-50 (all `placeholder`, tuned by eye on screenshots in `production/handoffs/P5-50/`; the
+table above stays the design target).** Survey found: day flat and washed (white sky, ambient 0.8 filling every
+shadow); dusk one flat mauve (fog covered the whole sky); night a flat navy void with no sky gradient; light
+pools were hard-edged flat discs, and visible by day. Changes in `world_look.gd` and `light_rig.gd`:
+
+- Day: sun 1.5 (was 1.2), cool sky ambient 0.6 (was warm 0.8) so shade is bluer than sun; sky top `#3F7FD0`,
+  saturation 1.2, contrast 1.1. Golden hour at day end: sun `#FFB468` at 16 degrees, sky horizon `#F0C48C`.
+- Dusk: sky horizon `#F07A44`, top `#2C3270`; fog no longer swallows the sky (`fog_sky_affect` 0.35, aerial
+  perspective 0.4), so the horizon glows.
+- Night: moon energy 0.2 (was 0.12), sky horizon `#34456E` lighter than the corn (s5 silhouette rule), fog
+  `#141C34` density 0.013, a small pale moon disc (0.3 of the Harvest Moon size, not a light). Ambient floor
+  stays 0.25 (s5). Harvest Moon sun 0.28, sky horizon `#4A3454`.
+- Light rigs: the ground pool is a radial-gradient plane (edge still at `range_m`), faded by phase (0 by day,
+  0.7 at sunset, 1 at night), alpha 0.3. Each rig adds a faint spill `OmniLight3D` (1.6 x range, 0.3 x energy,
+  no shadow) and a softer attenuation on the main light, so the pool edge is not a wall of black. The spill is
+  inside the same rig: the generator dims it, a dead generator turns it off, and a ghost flicker flickers it.
+  The 6 m doorway rule (doc 03 s9) reads only the marker radius, never the spill. No light energy is assigned
+  outside `game/render/`.
+- Interior fill (P5-50, QA fix): the door `LightRig` of the Barn, Farmhouse and ToolShed also owns a third
+  omni (`#FFD8A0`, energy 1.1 times the rig energy, range 14 / 11 / 6 m, `WorldLook.INTERIOR_FILL_M`, about each
+  building depth, placeholder). It is the same rig, so generator dim and off and the ghost flicker drive it; no
+  new marker, no new flicker code. Before/after at dusk and night: `production/handoffs/P5-50/before_in_*` and
+  `after_in_*`; the rooms read warm and stay well under the bloom threshold. Inference: the ranges are eyeballed
+  from shots; settle by a CEO look inside the three buildings at night. Road-lamp glass and window glow cards only
+  exist in the live game (`world_props.gd`), so the survey shots from `farm_view` do not show them.
+
 Each value is `placeholder`; the timings are doc 02 s3. The sun colour curve is a `Gradient` resource,
 so tuning needs no code. Day-to-dusk to night is continuous inside one `Environment` (no pop), and
 the sun's elevation at the time the lights switch on is the one number that matters: lit buildings

@@ -10,8 +10,19 @@ const OVERRIDE_TOKEN := &"ghost"  ## placeholder guard: the caller must pass thi
 const DIM_FLOOR := 0.35  ## doc 07 s4.2: lights never fall below 35% until the generator is dead
 const DIM_WARM := Color("FF8A2A")  ## colour a nearly empty generator drifts toward
 
+const SPILL_RANGE := 1.6  ## P5-50: soft outer spill light, times range_m (placeholder)
+const FILL_ENERGY := 1.1  ## P5-50: interior fill energy, times the main energy (placeholder)
+const INTERIOR_COL := Color("FFD8A0")
+const SPILL_ENERGY := 0.3  ## P5-50: spill energy, times the main energy (placeholder)
+
+## P5-50: 0..1 visibility of every painted ground pool; WorldLook sets it from the clock phase (0 by day).
+## Visual only, not a light value, and the same on every peer.
+static var pool_vis := 1.0
+static var _pool_tex: GradientTexture2D
+
 @export var color := Color("FFB45A")  ## doc 07 s3 porch light
 @export var range_m := 6.0  ## doc 07 s3: 6 m doorway radius (Q-026)
+@export var fill_range_m := 0.0  ## P5-50: > 0 adds a dim warm interior fill of this range (set by WorldLook per building)
 @export var energy := 1.2
 @export var ground_pool := true  ## painted warm pool on the ground matching range_m (doc 07 s3)
 
@@ -22,6 +33,9 @@ var _level := 1.0  ## slewed 0..1 actually shown
 var _override := -1.0  ## < 0: no override
 var _override_tint := Color.WHITE
 var _light: OmniLight3D
+var _spill: OmniLight3D
+static var lamp_mult := 1.0  # P5-53: Horror role dimming, set by HorrorScares; 1.0 for everyone else
+var _fill: OmniLight3D  # P5-50: interior fill, only when fill_range_m > 0
 var _lamp_mat: StandardMaterial3D
 var _pool_mat: StandardMaterial3D
 var _smoke: CPUParticles3D
@@ -32,7 +46,20 @@ func _ready() -> void:
 	_light = OmniLight3D.new()
 	_light.omni_range = range_m
 	_light.shadow_enabled = false  # only the held lantern casts a shadow (doc 07 s3)
+	_light.omni_attenuation = 1.5  # P5-50: a brighter core and a softer fall-off than the linear default
 	add_child(_light)
+	_spill = OmniLight3D.new()  # P5-50: wide, faint, so the edge of the pool is not a wall of dark
+	_spill.omni_range = range_m * SPILL_RANGE
+	_spill.omni_attenuation = 2.0
+	_spill.shadow_enabled = false
+	add_child(_spill)
+	if fill_range_m > 0.0:  # P5-50: the room's own warm bulb light (doc 07 s3 interior bulb `#FFD8A0`, 1.0)
+		_fill = OmniLight3D.new()
+		_fill.omni_range = fill_range_m
+		_fill.omni_attenuation = 1.0
+		_fill.light_color = INTERIOR_COL
+		_fill.shadow_enabled = false
+		add_child(_fill)
 	_lamp_mat = StandardMaterial3D.new()
 	_lamp_mat.emission_enabled = true
 	_lamp_mat.albedo_color = Color(0.1, 0.1, 0.1)
@@ -49,11 +76,20 @@ func _ready() -> void:
 		_pool_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		_pool_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 		var pool := MeshInstance3D.new()
-		var disc := CylinderMesh.new()
-		disc.top_radius = range_m
-		disc.bottom_radius = range_m
-		disc.height = 0.02
-		disc.rings = 0
+		if _pool_tex == null:  # P5-50: radial falloff with a still readable edge, not a hard disc
+			var g := Gradient.new()
+			g.offsets = PackedFloat32Array([0.0, 0.6, 0.9, 1.0])
+			g.colors = PackedColorArray([Color(1, 1, 1, 0.9), Color(1, 1, 1, 0.7), Color(1, 1, 1, 0.3), Color(1, 1, 1, 0.0)])
+			_pool_tex = GradientTexture2D.new()
+			_pool_tex.gradient = g
+			_pool_tex.fill = GradientTexture2D.FILL_RADIAL
+			_pool_tex.fill_from = Vector2(0.5, 0.5)
+			_pool_tex.fill_to = Vector2(1.0, 0.5)
+			_pool_tex.width = 128
+			_pool_tex.height = 128
+		_pool_mat.albedo_texture = _pool_tex
+		var disc := PlaneMesh.new()
+		disc.size = Vector2.ONE * range_m * 2.0
 		pool.mesh = disc
 		pool.material_override = _pool_mat
 		pool.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -129,9 +165,16 @@ func _apply() -> void:
 	if _override >= 0.0:
 		c = _override_tint
 	_light.light_color = c
-	_light.light_energy = energy * lvl * HorrorScares.lamp_mult  # P5-53: steady local dimming for the Horror role; never animated
+	_light.light_energy = energy * lvl * lamp_mult  # P5-53: steady local dimming for the Horror role; never animated
 	_light.visible = lvl > 0.001
+	_spill.light_color = c
+	_spill.light_energy = energy * SPILL_ENERGY * lvl
+	_spill.visible = lvl > 0.001
+	if _fill:
+		_fill.light_color = INTERIOR_COL if _override < 0.0 else c
+		_fill.light_energy = energy * FILL_ENERGY * lvl * lamp_mult
+		_fill.visible = lvl > 0.001
 	_lamp_mat.emission = c
 	_lamp_mat.emission_energy_multiplier = 3.0 * lvl
 	if _pool_mat:
-		_pool_mat.albedo_color = Color(c.r, c.g, c.b, 0.22 * lvl)
+		_pool_mat.albedo_color = Color(c.r, c.g, c.b, 0.3 * lvl * pool_vis)
