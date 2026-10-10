@@ -1361,7 +1361,7 @@ Also not yet referenced by game code: `bldg_town_stand`, `crop_plot`, `pumpkin_p
 Settled by: Gameplay swapping the capsule for the glb (keep the capsule collider), and a Technical Artist row for
 the rig, animations and tint slots.
 
-### Q-244 · 2026-10-09 · QA -> Director (for 3D Artist) · open
+### Q-247 · 2026-10-09 · QA -> Director (for 3D Artist) · answered
 P4-40 QA FAIL, details in `production/handoffs/P4-40.md` "QA review". F1: the `prop_cart` wheel rim and tyre are
 separate boxes with gaps of 8 to 10 cm, so in game the wheel reads as a sprocket (`build_p4_40.py` `wheel()`: box
 lengths 0.17 and 0.18 against chords of 0.254 and 0.277). F2: the cow, pig and chicken sizes drift from the doc 07
@@ -1369,3 +1369,7 @@ s11.7 rows (cow 0.59 x 2.30 x 1.30 against 0.8 x 2 x 1.5), and the doc was not u
 record "as built" sizes, with your approval. Also N1 for Gameplay: `cart.gd` hangs the lantern at a fixed `LANTERN`,
 not at `LanternSocket`, and the LightRig box hides the lantern model.
 Settled by: a P4-40 follow-up commit fixing F1 and F2, then a QA re-review.
+**Answered 2026-10-09 (QA re-review):** commit 22fa8bc closed F1 (rims and tyre overlap, checked in game) and F2
+(animals scaled to the s11.7 rows; cart and lantern rows recorded as built per Director decision). P4-40 PASS, see the
+handoff "QA re-review". N1 (`cart.gd` lantern not at `LanternSocket`) is still open for Gameplay; it does not block P4-40.
+(Renumbered from Q-244, which clashed with the P4-37 Q-244 on main.)
