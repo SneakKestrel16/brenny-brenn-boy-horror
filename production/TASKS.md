@@ -977,7 +977,7 @@ Acceptance:
 
 Started by the CEO 2026-10-09 (D-152), which closes STOP 5. Source: doc 01 "Build Plan > Phase 5": spliced
 clips from live speech; next season; cosmetics. Live clips came forward in D-146 and are done (P4-37).
-Doc 01 gives Phase 5 no "done when"; the Director's proposal is Q-250 (FOR CEO). **STOP 6** after P5-08.
+Done when the CEO says it is done (Q-250). **STOP 6** after P5-08.
 
 Carried in: the P4-18 gate items the CEO waived (D-148: human sessions, sim `compare` within 15 points),
 the P4-17 CEO listen, Q-150 (capsule creature), Q-122 (AI Director state unsaved).
@@ -1055,5 +1055,5 @@ Owner: QA. Output: `tools/qa/playtest/checklist_p5.md`, doc 09 Phase 5 gate; han
 Acceptance:
 - Reviews each P5 task against its block.
 - 4-instance run over ENet across a season end into season 2; headless with no new errors.
-- Doc 09 Phase 5 gate per the CEO's Q-250 answer.
+- No measured gate: Phase 5 is done when the CEO says so (Q-250). QA lists what to try at STOP 6.
 

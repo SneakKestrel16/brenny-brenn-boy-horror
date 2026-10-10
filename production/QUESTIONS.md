@@ -1388,10 +1388,12 @@ already does; or import the loop files with `compress/mode=0`. Settled by: the f
 4.0 s chase loop reaching 3.9 s before it wraps.
 **Answer (Director, 2026-10-09):** fixed as proposed at all three sites (`soundscape.gd` `_stream`, `voice_chain.gd:107`, `walkie.gd:234`): `loop_end = int(round(s.get_length() * s.mix_rate))`. Measured after a re-import: gaunt chase loop_end 192000 frames (file 192000; was 38860), flare hiss 96064, cart squeak 144064, radio static and crackle 192064, all equal to the wav frame counts. Smoke and grep_rules pass.
 
-### Q-250 · 2026-10-09 · Director -> CEO · FOR CEO · open
+### Q-250 · 2026-10-09 · Director -> CEO · FOR CEO · answered
 Doc 01 "Build Plan > Phase 5" has no "done when". Proposal, to add to doc 01: **Done when:** a spliced lure
 fools someone who heard the real lines; a team that won plays a second season and calls the carry-over worth
 it; someone buys a cosmetic. Log measures: spliced `lure_result` walk-toward rate at or above the exact-clip
 rate; at least one season-2 start in the logs. Settled by: CEO approval or edit, then a doc 01 edit and the
 P5-08 gate rows.
 
+**Answer (CEO, 2026-10-09):** "done when is when i say its done". Phase 5 has no measured gate; the CEO
+declares it done. Doc 01 "Build Plan > Phase 5" records this.

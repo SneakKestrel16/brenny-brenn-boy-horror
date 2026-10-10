@@ -771,6 +771,7 @@ Only move on when the current phase is fun. Each "done when" is checked in at le
 - spliced clips from live speech;
 - next season;
 - cosmetics.
+- **Done when:** the CEO says it is done.
 
 Live clips moved forward from Phase 5 and replaced the barn recording (D-146).
 
