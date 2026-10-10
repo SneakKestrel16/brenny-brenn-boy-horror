@@ -1293,3 +1293,12 @@ QA's first review failed it: placed scarecrows all faced yaw 0, so the OCD gaze 
 `scarecrow_yaws`, saves write `[x, y, z, yaw]` (old 3-value saves load yaw 0), and `quirk_watch` `in_gaze` takes the
 yaw. Small edits landed in `soundscape.gd` (Audio) and `taint_look.gd` (Technical Artist).
 **Why:** the CEO asked for scarecrow facing; QA re-review saw both clients render the host's yaws and saves keep them.
+
+### D-185 · 2026-10-10 · Director · Playtest log fixes: clip timer bind, READY rate limit
+P5-29 fixes the two bugs in the 2026-10-09 playtest logs. `clips.gd` `play_packets` binds `_drop_id` to the instance
+id instead of capturing a lambda (48 "Lambda capture freed" errors). The lobby READY button ignores presses within
+400 ms; the host drops repeat requests under 250 ms and no-change requests, but still answers a dropped request with
+the ready list, so a late joiner's opening `false` gets everyone's marks. The `clips.gd` edit crosses into Network &
+Voice's path (CONTRACTS s2); the Director approved it.
+**Why:** QA proved key repeat cannot fire `pressed` on a focused Button, so the 302-request burst has an unknown
+cause; a rate limit caps any such stream at one toggle per 400 ms. QA re-review passed the late-joiner run.

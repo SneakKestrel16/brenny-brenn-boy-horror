@@ -510,17 +510,24 @@ func _refresh() -> void:
 		_go.disabled = false
 
 
+var _ready_msec := -1000
+
+
 ## Host: start the season (clips may still hold it, doc 06 s12). Client: toggle ready.
 func _on_go() -> void:
 	if Game.is_host():
 		if Game.all_ready():
 			Game.start_match()
 	else:
+		var now := Time.get_ticks_msec()  # P5-29: key repeat on the focused button fires `pressed` every ~30 ms
+		if now - _ready_msec < 400:
+			return
+		_ready_msec = now
 		Net.to_host(&"request_lobby_ready", [not Game.lobby_ready.has(Game.local_peer())])
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if Game.is_host() and event.is_action_pressed(&"ui_accept"):
+	if Game.is_host() and event.is_action_pressed(&"ui_accept") and not event.is_echo():
 		_on_go()
 
 

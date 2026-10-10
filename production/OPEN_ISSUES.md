@@ -543,3 +543,11 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   `taint_look.gd` `_arms`. Owner: Technical Artist.
 - **P5-23 touched files outside Gameplay**: `game/audio/soundscape.gd` (Audio) and `game/render/taint_look.gd`
   (Technical Artist, stale comment). Owners: review on next pass.
+
+## Found at the P5-29 review (QA, 2026-10-10)
+
+- **Cause of the 30 ms READY request burst unknown** (302 toggles in 70 s, playtest 2026-10-09). Not key repeat. Next
+  playtest: log the input event behind the lobby READY handler (event type, echo, device). Owner: Gameplay (UI).
+- **Pause-menu clip Play has no log event**, so the trigger of the "Lambda capture freed" errors is inferred only.
+  Owner: Network & Voice.
+- **A double tap on READY 300 ms apart loses the second tap** (400 ms client limit). Accepted. Owner: Gameplay (UI).

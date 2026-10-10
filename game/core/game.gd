@@ -368,9 +368,19 @@ func apply_group_settings(p_difficulty: StringName, p_streamer_safe: bool) -> vo
 
 ## Host, lobby only (P4-23): `peer` marks itself ready or not; everyone gets the ready list. A client sends
 ## `false` when its lobby opens, which also brings it the current list.
+const READY_GAP_MS := 250
+var _ready_msec := {}
+
+
 func on_lobby_ready_request(peer: int, on: bool) -> void:
 	if not is_host() or not in_lobby or not players.has(peer):
 		return
+	var now := Time.get_ticks_msec()  # P5-29: a held key on the READY button sent ~30 ms toggles
+	if now - int(_ready_msec.get(peer, -1000)) < READY_GAP_MS or bool(on) == lobby_ready.has(peer):
+		if peer != 1:  # a joiner's opening `false` still gets the list; `apply_lobby_ready` is call_remote
+			Net.to_peers(&"apply_lobby_ready", [lobby_ready.keys()], [peer])
+		return
+	_ready_msec[peer] = now
 	if on:
 		lobby_ready[peer] = true
 	else:

@@ -497,9 +497,7 @@ func play_packets(pk: Array, bus: StringName = &"VoiceBase", owner_peer: int = 0
 		pb.push_opus_packet(pkt, 0, 0)
 	pb.mark_end_opus_stream(true)
 	_playing.append([owner_peer, clip_id, p])
-	get_tree().create_timer(pk.size() * FRAME_S + 0.3).timeout.connect(func() -> void:
-		if is_instance_valid(p):
-			_drop(p))
+	get_tree().create_timer(pk.size() * FRAME_S + 0.3).timeout.connect(_drop_id.bind(p.get_instance_id()))  # P5-29: not a lambda; one capturing `p` errors when `stop` freed it first
 	return p
 
 
@@ -508,6 +506,12 @@ func stop(owner_peer: int, clip_id: String = "") -> void:
 	for e in _playing.duplicate():
 		if e[0] == owner_peer and (clip_id.is_empty() or e[1] == clip_id or clip_id in VoiceSplice.spec_ids(e[1])):
 			_drop(e[2])
+
+
+func _drop_id(id: int) -> void:
+	var p := instance_from_id(id) as AudioStreamPlayer
+	if p != null:
+		_drop(p)
 
 
 func _drop(p: AudioStreamPlayer) -> void:
