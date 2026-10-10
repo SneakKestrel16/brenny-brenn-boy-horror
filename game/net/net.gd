@@ -817,6 +817,13 @@ func apply_whistle(peer: int, position: Vector3) -> void:
 	apply_received.emit(&"whistle", [peer, position])
 
 
+## P5-10 (doc 01 "Dev toys", doc 05 s25): the host started toy `toy` for `seconds` (0 = a one-shot such as a
+## squeak at `position`). Each peer shows it locally; nothing here changes the game state.
+@rpc("authority", "call_remote", "reliable")
+func apply_dev_toy(toy: StringName, seconds: float, position: Vector3) -> void:
+	apply_received.emit(&"dev_toy", [toy, seconds, position])
+
+
 @rpc("authority", "call_remote", "reliable")
 func apply_emote(peer: int, emote_id: StringName, position: Vector3) -> void:
 	apply_received.emit(&"emote", [peer, emote_id, position])

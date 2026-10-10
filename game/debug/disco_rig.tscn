@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+; P5-10 (doc 01 "Dev toys", Disco): the four mirror-ball beams. The energy is a static scene value, never animated:
+; doc 07 s4.4 rule 3 keeps `light_energy` assignments in game/render/, and the lights are only ever swept, never pulsed (D-046).
+; game/debug/dev_toys.gd turns the holders and colours the beams.
+
+[node name="DiscoRig" type="Node3D"]
+
+[node name="Holder0" type="Node3D" parent="."]
+
+[node name="Beam" type="SpotLight3D" parent="Holder0"]
+light_energy = 4.0
+spot_range = 45.0
+spot_angle = 18.0
+
+[node name="Holder1" type="Node3D" parent="."]
+
+[node name="Beam" type="SpotLight3D" parent="Holder1"]
+light_energy = 4.0
+spot_range = 45.0
+spot_angle = 18.0
+
+[node name="Holder2" type="Node3D" parent="."]
+
+[node name="Beam" type="SpotLight3D" parent="Holder2"]
+light_energy = 4.0
+spot_range = 45.0
+spot_angle = 18.0
+
+[node name="Holder3" type="Node3D" parent="."]
+
+[node name="Beam" type="SpotLight3D" parent="Holder3"]
+light_energy = 4.0
+spot_range = 45.0
+spot_angle = 18.0

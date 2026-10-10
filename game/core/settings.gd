@@ -34,6 +34,7 @@ const DEFAULTS := {
 	"toggle_sprint": false,
 	"invert_y": false,
 	"ui_text_scale": 1.0,  ## 0.8..1.5 menu text
+	"photosensitive_safe": false,  ## doc 01 "Photosensitivity safety": safe mode; P5-10 reads it (no disco lights, no nuke glow)
 }
 
 signal changed(key: StringName)

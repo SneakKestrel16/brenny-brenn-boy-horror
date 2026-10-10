@@ -8,6 +8,7 @@ const HEIGHT_CROUCH := 1.1  ## placeholder: no crouch height in the docs
 const EYE_CROUCH := 0.95  ## placeholder
 const RADIUS := 0.35  ## placeholder
 const GRAVITY := 20.0
+const JUMP_V := 5.0  ## P5-10 low gravity jump speed, m/s (placeholder; with 0.2 gravity it floats about 3 m up for 2.5 s)
 const RESUME_S := 1.5  ## placeholder: stamina needed to sprint again after running dry (doc 02 section 2.2 gives max and refill only)
 const TaintScript := preload("res://game/player/taint.gd")
 const PROXY_SMOOTH := 15.0  ## exponential smoothing rate for proxies (ponytail: no snapshot buffer)
@@ -49,6 +50,12 @@ var _t := 0.0
 var _eye := EYE_STAND  ## smoothed eye height; the head bob rides on it
 var _bob := 0.0  ## head bob phase
 var _sprint_on := false  ## toggle_sprint (D-047): sprint stays on until you stop, run dry or crouch
+var body_scale := 1.0  ## P5-10 dev toys (doc 01 "Dev toys"): shrink, 0.25; body, eye and camera follow
+var head_scale := 1.0  ## P5-10: big heads, 3.0
+var gravity_scale := 1.0  ## P5-10: low gravity
+var jump_ok := false  ## P5-10: low gravity also turns on a jump (Space); the game has no jump otherwise (inference, see doc 05 s25)
+var _head: MeshInstance3D  ## P5-10: made on first use
+var _toy_tw: Tween
 var _pushing := false  ## P4-32: locked to a festival cart handle slot (cart.push_slot)
 var _cart_yaw := 0.0  ## P4-32: the cart heading last frame, so the pusher turns with the route
 
@@ -153,13 +160,70 @@ func farm_has_carry() -> bool:
 
 
 func _apply_height(crouch: bool) -> void:
-	var h := HEIGHT_CROUCH if crouch else HEIGHT_STAND
+	var h := (HEIGHT_CROUCH if crouch else HEIGHT_STAND) * body_scale
+	var r := RADIUS * body_scale
 	(_shape.shape as CapsuleShape3D).height = h
-	(_shape.shape as CapsuleShape3D).radius = RADIUS
+	(_shape.shape as CapsuleShape3D).radius = r
 	_shape.position.y = h / 2.0
 	(_mesh.mesh as CapsuleMesh).height = h
-	(_mesh.mesh as CapsuleMesh).radius = RADIUS
+	(_mesh.mesh as CapsuleMesh).radius = r
 	_mesh.position.y = h / 2.0
+	if _head:
+		var s := head_scale * body_scale
+		_head.scale = Vector3.ONE * s
+		_head.position.y = h + 0.12 * s
+
+
+## P5-10 dev toys (every peer, visual and collision size only; the host's speed check is untouched).
+func set_body_scale(s: float) -> void:
+	body_scale = s
+	_apply_height(crouching)
+
+
+## P5-10: a head sphere on the body, `s` times its size (1 hides it).
+func set_head_scale(s: float) -> void:
+	head_scale = s
+	if _head == null and s != 1.0:
+		_head = MeshInstance3D.new()
+		var sp := SphereMesh.new()
+		sp.radius = 0.18
+		sp.height = 0.36
+		_head.mesh = sp
+		add_child(_head)
+	_apply_height(crouching)
+
+
+## P5-10 disco: one frame of the dance at time `t` (bob 1.5 per second, a slow spin). Visual only; `dance_end` undoes it.
+func dance(t: float) -> void:
+	_mesh.rotation.y = t * 2.0
+	_mesh.position.y = (HEIGHT_CROUCH if crouching else HEIGHT_STAND) * body_scale / 2.0 + 0.15 * absf(sin(t * PI * 1.5))
+
+
+func dance_end() -> void:
+	_mesh.rotation = Vector3.ZERO
+	_apply_height(crouching)
+
+
+## P5-10 nuke: thrown `dir` (world, flat) and back over `secs`, tumbling, as a body and as a gentle camera roll.
+## Visual only: the position the host and the others track never moves.
+func ragdoll(dir: Vector3, secs: float) -> void:
+	if _toy_tw:
+		_toy_tw.kill()
+	var ld := global_transform.basis.inverse() * dir
+	var base := (HEIGHT_CROUCH if crouching else HEIGHT_STAND) * body_scale / 2.0
+	_toy_tw = create_tween()
+	_toy_tw.tween_method(_ragdoll_pose.bind(ld, base), 0.0, 1.0, secs)
+	_toy_tw.tween_callback(func() -> void:
+		_mesh.rotation = Vector3.ZERO
+		_cam.rotation.z = 0.0
+		_apply_height(crouching))
+
+
+func _ragdoll_pose(k: float, ld: Vector3, base: float) -> void:
+	var arc := sin(k * PI)
+	_mesh.position = Vector3(ld.x * 6.0 * arc, base + 2.5 * arc, ld.z * 6.0 * arc)
+	_mesh.rotation.x = k * TAU * 2.0
+	_cam.rotation.z = 0.35 * arc
 
 
 ## Proxies and the host's relay: where the latest frame says this player is.
@@ -205,9 +269,11 @@ func _physics_process(delta: float) -> void:
 		if ve:
 			ve.volume_db = _peer_gain_db()
 	_held.visible = not ghost
+	if _head:
+		_head.visible = head_scale != 1.0 and _mesh.visible
 	rotation.y = yaw
 	_cam.rotation.x = pitch
-	_eye = lerpf(_eye, EYE_CROUCH if crouching else EYE_STAND, 1.0 - exp(-12.0 * delta))
+	_eye = lerpf(_eye, (EYE_CROUCH if crouching else EYE_STAND) * body_scale, 1.0 - exp(-12.0 * delta))
 	_cam.position.y = _eye + _head_bob(delta)
 
 
@@ -402,7 +468,12 @@ func _local(delta: float) -> void:
 		wish = Vector3(slot.x - global_position.x, 0.0, slot.z - global_position.z) / delta
 	velocity.x = wish.x
 	velocity.z = wish.z
-	velocity.y = 0.0 if is_on_floor() else velocity.y - GRAVITY * delta
+	if jump_ok and is_on_floor() and not Game.console_open and Input.is_physical_key_pressed(KEY_SPACE):
+		velocity.y = JUMP_V  # P5-10 low gravity only
+	elif is_on_floor():
+		velocity.y = 0.0
+	else:
+		velocity.y -= GRAVITY * gravity_scale * delta
 	move_and_slide()
 	_sprint_any = _sprint_any or sprinting
 	_crouch_all = _crouch_all and crouching

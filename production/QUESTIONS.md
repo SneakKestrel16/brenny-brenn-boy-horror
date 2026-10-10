@@ -1397,3 +1397,19 @@ P5-08 gate rows.
 
 **Answer (CEO, 2026-10-09):** "done when is when i say its done". Phase 5 has no measured gate; the CEO
 declares it done. Doc 01 "Build Plan > Phase 5" records this.
+
+### Q-261 · 2026-10-09 · Gameplay Programmer -> CEO · FOR CEO · open
+P5-10 (dev toys) and P5-11 (imposter mode) open only on your PC. The gate compares a SHA-256 of your machine id
+with a list in `game/core/dev_gate.gd` (`DevGate.HASHES`), which is empty until you answer. Please run this once,
+in Git Bash from the repo root, and paste the last line (a 64-character hex hash; it is not your machine id and
+cannot be turned back into it):
+
+    "$GODOT" --headless --path . -s res://game/core/print_machine_hash.gd 2>/dev/null | tail -1
+
+The Director then pastes it into `DevGate.HASHES`. Add a hash for every PC you want the toys on. Until then
+`toy ...` answers "unknown command" everywhere. Settled by: the hash, pasted in.
+
+### Q-262 · 2026-10-09 · Gameplay Programmer -> Game Designer · open
+P5-10 placeholders doc 01 does not give (listed in doc 05 section 25): disco 45 s, nuke 14 s, big heads 60 s, low
+gravity 0.2 of normal, squeaky pitch 1.7. Also, low gravity adds a Space jump (the base game has none) so the toy
+shows; say if you want it dropped. Settled by: a playtest of each toy, then the numbers go in doc 01 or stay.

@@ -145,7 +145,7 @@ func run(line: String) -> String:
 	var args := a.slice(1)
 	match cmd:
 		"help":
-			return HELP
+			return HELP + ("\n  toy <name>   dev toy: shrink disco nuke low_gravity big_heads confetti chicken" if DevGate.unlocked() else "")
 		"clear":
 			_out.clear()
 			return ""
@@ -196,6 +196,12 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				return "? length day|dusk|night|harvest_moon <seconds>"
 			Clock.set_length(StringName(a[0]), a[1].to_float())
 			return "%s is now %.0f s on the host (a client's countdown still shows its own length)" % [a[0], a[1].to_float()]
+		"toy":  # P5-10: dev toys, closed unless DevGate.unlocked() (D-044); a closed gate answers like any unknown command
+			if not DevGate.unlocked():
+				return "? unknown command '%s' (help)" % cmd
+			if a.is_empty():
+				return "? toy shrink|disco|nuke|low_gravity|big_heads|confetti|chicken"
+			return main.get_node("DevToys").run(StringName(a[0]))
 		"buy":
 			if a.is_empty():
 				return "? buy <store item id>"

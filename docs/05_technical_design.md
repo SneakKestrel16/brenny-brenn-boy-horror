@@ -40,6 +40,7 @@ one is new it is a technical limit and tagged `placeholder`.
 22. [Gotchas](#22-gotchas)
 23. [Answers to open questions](#23-answers-to-open-questions)
 24. [Questions raised](#24-questions-raised)
+25. [Dev gate and dev toys (P5-10)](#25-dev-gate-and-dev-toys-p5-10)
 
 ---
 
@@ -1171,6 +1172,7 @@ the QA changes.
 | `perf_sample` | each peer, debug runs only (`--debug-view` or `--bots`) | `avg_ms`, `max_ms`, `draw_calls`, `adapter` (`RenderingServer.get_video_adapter_name()`) | Doc 07 section 10.3 four-instance corn profile (Q-037) |
 | `whistle` | host, on an accepted whistle | `player`, `position` (`[x, z]`), `cooldown_s` | Doc 01 "Whistle"; P3-11 cooldown check |
 | `emote` | host, on an accepted emote | `player`, `emote` (`wave`, `point`, `shrug`, `scream`), `position` (`[x, z]`) | Doc 01 "Emotes"; P3-11 rate-limit check. Refusals of both are `hold_refused` with `verb` `whistle` or `emote` and `reason` `cooldown`, `rate_limit`, `unknown_emote`, `ghost` or `no_player` |
+| `dev_toy` | host, when a dev toy starts (P5-10) | `toy` (`shrink`, `disco`, `nuke`, `low_gravity`, `big_heads`, `confetti`, `chicken`), `seconds` (0 = until dawn), `player` | Doc 01 "Dev toys": a session that used a toy is not a play session. `check_logs.py` drops the session from every measure and lists it (`dev_toy_sessions`). Section 25 |
 
 The event names and fields in the first table are final; the second table is a proposal
 (`placeholder`) and adding an event never needs the Director (CONTRACTS section 10 asks only that
@@ -1377,3 +1379,28 @@ Raised in `production/QUESTIONS.md` (Q-019 onward):
 - Open plots at 2/3/4/5/6 players: 16 + 0/0/0/4/8 extras, matching `field_plots_start_by_players` (16/16/16/20/24).
 - `Farm.plot_ceiling()` reads `field_plots_max_by_players` from `player_scaling.json` (24/24/24/28/32), not `season.json`. No store sells plots yet; whoever builds it reads this.
 - Log: `plots_open {headcount, extras_open, ceiling}` on every peer. Debug: `--headcount=<n>` (host) overrides the count for no-lobby runs, where joiners arrive after the farm loads.
+
+## 25. Dev gate and dev toys (P5-10)
+
+Doc 01 "Hidden dev setting" and "Dev toys" (D-044, D-045, D-046). Code: `game/core/dev_gate.gd`, `game/debug/dev_toys.gd`, `game/debug/disco_rig.tscn`, `game/voice/squeaky.gd`.
+
+**The gate (`DevGate`, reused by P5-11).** `DevGate.unlocked()` is true only when `OS.get_unique_id().sha256_text()` is in `DevGate.HASHES`. `--dev` and a debug build do not open it. Only hashes are stored, never a raw id. `HASHES` is empty until the CEO answers Q-261; the CEO prints their hash with `"$GODOT" --headless --path . -s res://game/core/print_machine_hash.gd | tail -1` and the Director pastes it in. The host's machine decides: every check runs on the host (peer 1).
+
+- Test path: in a debug build only, `--dev-gate-test-hash=<hash>` (a user argument) adds one hash, and only if it equals this machine's own hash, so the real compare still runs. Tests pass the hash the print script gives for their own machine. Inference: someone who has the repo can print their own hash and use this argument, so the gate guards against accidents and stray `--dev` runs, not against a determined reader. A secret kept outside the repo would settle it.
+- A closed gate makes `toy` answer like any unknown command (`? unknown command 'toy' (help)`), and `help` does not list it.
+
+**Running a toy.** The dev console (backquote, host only) or `--dev-exec="toy disco"`: `toy shrink|disco|nuke|low_gravity|big_heads|confetti|chicken`. `DevToys.run` (host) checks the gate, logs `dev_toy {toy, seconds, player}` (section 18), and sends `apply_dev_toy(toy, seconds, position)` through `Net.to_peers`, plus a local `Net.apply_received.emit` for the host. The RPC sits in `net.gd` like every other (doc 06 s14). Each peer then runs the toy on its own screen and Player nodes. `squeak` is the same message with a one-shot name (the rubber chicken). A peer that joins while a toy runs does not see it (inference: toys are short; settle by replaying the active list in the join snapshot).
+
+**What never happens.** A toy calls nothing in `Farm`, `Save`, `Death`, `Debt` or the generator, so the save, coins, debt and deaths stay untouched. No light energy is assigned in `game/debug/` (doc 07 s4.4 rule 3; `tools/qa/grep_rules.py` passes): the disco beams are in `disco_rig.tscn` with a static energy, and the nuke's glow is a screen tint plus emissive cloud meshes. Nothing flashes: the disco turns the rig at 0.5 rad/s and drifts the hue at 0.4 rad/s; the nuke glow ramps over 5 s to alpha 0.30 (at most 0.09 per second) and falls over 6 s, warm orange, never white or red. Safe mode (`photosensitive_safe`, now in `Settings.DEFAULTS`, default false) hides the beams and the glow on that peer.
+
+| Toy | Length | Effect |
+|---|---|---|
+| `shrink` | 60 s (doc 01) | Every player's `body_scale` 0.25 (height, camera eye, collider keep their ratio). `Squeaky` adds one `AudioEffectPitchShift` (1.7) to the `Voice` bus, which all voice buses feed, so live, dead and creature-replayed voices squeak. A bus effect, not `pitch_scale`, because a faster emitter drains its Opus buffer and underflows. |
+| `disco` | 45 s (inference) | Mirror ball drops in over the host's player, generated music loop on the `Music` bus, four slow colour beams, every player dances (`Player.dance`), the creature gets a steady colour overlay (fully visible) and its parts bob and spin. |
+| `nuke` | 14 s (inference) | Warm slow glow, a mushroom cloud over the corn (middle of `World/CornBlockers`), a rumble; 1.2 s in, players ragdoll outward (`Player.ragdoll`, visual tumble and a camera roll, 4 s) and so do the creature's parts. No damage, no death, nothing destroyed. |
+| `low_gravity` | 60 s (doc 01) | The local player's gravity scale is 0.2 (placeholder). There is no jump in the base game, so while this runs Space jumps (`JUMP_V` 5 m/s); inference, the toy would otherwise only slow falls. |
+| `big_heads` | 60 s (inference) | Every player's `head_scale` 3 (a sphere head), and a `ToyHead` sphere on the creature. |
+| `confetti` | until dawn | A ripe-to-empty `plot_changed` (a harvest) pops confetti and a kazoo on every peer. |
+| `chicken` | until dawn | The host's tools squeak: each `hold_done` on the host broadcasts `squeak`, every peer plays a rubber-chicken squeak. |
+
+Durations other than doc 01's 60 s, the 0.2 gravity, the 1.7 pitch and the sound designs are placeholders for a listen and play test. Sounds are generated at run time (no files, no recordings). Tests: `tests/gameplay/test_dev_gate.gd` (gate closed by default, open with the test hash, `Squeaky` adds and removes one effect) and `tests/net/test_dev_toys_sync.gd` (2 instances: a host `toy shrink` reaches a client; see its header for the command). `tests/qa/test_harness.py` covers the `check_logs.py` skip.

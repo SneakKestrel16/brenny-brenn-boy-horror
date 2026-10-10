@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -163,6 +164,21 @@ class LogCheckerFixture(unittest.TestCase):
         rep = check_logs.close_call_measure([cc(2, "hit", 40), cc(2, "miss_timeout", 300), cc(3, "miss_disagree", 90)])
         self.assertEqual((rep["calls"], rep["by_result"]), (3, {"hit": 1, "miss_disagree": 1, "miss_timeout": 1}))
         self.assertEqual(rep["by_victim"]["s/2"], {"results": {"hit": 1, "miss_timeout": 1}, "rtt_ms_max": 300})
+
+    def test_p510_dev_toy_session_is_skipped_by_the_measures(self) -> None:
+        def line(event: str, data: dict) -> str:
+            return json.dumps({"t": 1.0, "day": 1, "phase": "night", "peer": 1, "event": event, "data": data})
+
+        with tempfile.TemporaryDirectory() as tmp:
+            for name, extra in (("toy_session", [line("dev_toy", {"toy": "shrink", "seconds": 60, "player": 1})]), ("real_session", [])):
+                d = Path(tmp) / name
+                d.mkdir()
+                (d / "peer_1.jsonl").write_text("\n".join(extra + [line("death", {}), line("lure_result", {"moved_m": 20, "within_s": 5})]) + "\n", encoding="utf-8", newline="\n")
+            rep = check_logs.analyze([Path(tmp)])
+        self.assertEqual(rep["dev_toy_sessions"], ["toy_session"])
+        self.assertEqual(rep["other"]["deaths"], 1)  # the real session's only
+        self.assertEqual(rep["lure"]["lure_results"], 1)
+        self.assertIn("Skipped 1 session(s)", check_logs.format_report(rep))
 
     def test_clean_fixture_has_no_problems_and_text_report_renders(self) -> None:
         self.assertEqual(self.rep["problems"], [])

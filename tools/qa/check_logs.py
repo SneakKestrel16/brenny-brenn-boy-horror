@@ -474,8 +474,13 @@ def other_measures(recs: list[Record]) -> dict[str, Any]:
 def analyze(paths: list[Path]) -> dict[str, Any]:
     loaded = load(paths)
     recs = authoritative(loaded)
+    # P5-10 (doc 01 "Dev toys"): a session where a dev toy ran is not a real play session, so the measures skip it.
+    toy_sessions = sorted({r.session for r in recs if r.event == "dev_toy"})
+    recs = [r for r in recs if r.session not in toy_sessions]
+    loaded.records = [r for r in loaded.records if r.session not in toy_sessions or r.event == "dev_toy"]
     problems = loaded.problems
     report = {
+        "dev_toy_sessions": toy_sessions,
         "files": [str(f) for f in loaded.files],
         "sessions": sorted({r.session for r in loaded.records}),
         "records": len(loaded.records),
@@ -508,6 +513,8 @@ def format_report(rep: dict[str, Any]) -> str:
     add = out.append
     add(f"Files: {len(rep['files'])}  sessions: {len(rep['sessions'])}  records: {rep['records']}")
     add("Events counted (host files): " + (", ".join(f"{k}={v}" for k, v in rep["event_counts"].items()) or "none"))
+    if rep["dev_toy_sessions"]:
+        add(f"Skipped {len(rep['dev_toy_sessions'])} session(s) that used a dev toy (dev_toy, doc 01 'Dev toys'): {', '.join(rep['dev_toy_sessions'])}")
     lure = rep["lure"]
     add("")
     add("Lure success (doc 01 Testing: moved > 10 m toward the source within 8 s; Phase 1 gate >= 30%)")

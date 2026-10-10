@@ -359,3 +359,12 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
 - **Splice log nits.** `lure_stopped` and `lure_skipped` put the whole spec in `clip_id`; doc 03 s12.4
   "Wire" and "Logs" bullets need rewrapping. Owner: Network & Voice.
 
+## Found at the P5-10 review (QA, 2026-10-09)
+
+- **Dev toys unseen and unheard.** No toy has been looked at or listened to, and safe mode was checked by
+  reading only. Needs a windowed playtest on the CEO's PC once Q-261's hash is in. Owner: QA (P5-08).
+- **Late joiners miss a running toy.** A peer joining mid-toy does not get it. Owner: Gameplay.
+- **Low-gravity jump bypasses the InputMap** (`KEY_SPACE` read directly); settle with Q-262. Owner: Gameplay.
+- **`test_harness.py` `MultiArgs` fails on main** (2 tests): `multi.py` now appends `--profile=p<n>` and
+  `--`, which the tests do not expect. Owner: QA.
+

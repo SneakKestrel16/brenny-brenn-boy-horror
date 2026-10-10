@@ -1071,3 +1071,18 @@ Designer), `game/creature/creature.gd` (AI Programmer, co-owner on the row), `ga
 and its test (Gameplay). All are small and needed for the splice to log and replay.
 **Why:** QA PASS (handoffs/P5-03.md "QA review"); the proposals were in the P5-03 handoff.
 
+### D-157 · 2026-10-09 · Director · P5-10 dev toys merged; gate rulings
+P5-10 passed QA and is merged. Rulings on its handoff and review notes:
+1. No secret salt on the machine-hash gate. The debug-only `--dev-gate-test-hash=` path accepts only the
+   running machine's own hash and is dead in release exports (`package_playtest.py` uses
+   `--export-release`); anyone who could exploit it already holds the repo and could edit `HASHES`.
+2. Safe mode hides the disco beams and the nuke screen glow but keeps the mushroom cloud. The cloud is a
+   steady, slowly growing emissive mesh, not a flash, and doc 01 lists "glow" and "mushroom cloud"
+   separately.
+3. The Director narrowed `_creature_parts()` to visual nodes (a `VisualInstance3D` or a plain `Node3D` such
+   as a glb root), so P5-13's sensors and emitters on the creature are never moved by a toy.
+4. The Q-261 command gains `2>/dev/null`, so Godot's leak warnings do not crowd the hash.
+5. Edits outside Gameplay paths are ratified: `tools/qa/check_logs.py` and `tests/qa/test_harness.py`
+   (QA accepted them), `game/net/net.gd` and `game/voice/squeaky.gd` (Network & Voice, co-owner on the row).
+**Why:** QA PASS (handoffs/P5-10.md "QA review").
+
