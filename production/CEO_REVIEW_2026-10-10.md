@@ -60,6 +60,7 @@ without a revert.
 | P5-71 | 947889d | Horror role scares follow the normal hallucination rules: distant 'turn' and 'edge' silhouettes replace the fake grab and edge shadow | `git revert 947889d` |
 | P5-70 | b694c8f | Creature flings a shut door open again (with a bang) instead of walking through it | `git revert b694c8f` |
 | P5-69 | 6f438c6 | By day the creature dashes across open ground and waits in corn while a player can see the gap | `git revert 6f438c6` (or set lurk_dash_speed_day / lurk_hide_wait_s in data/creature.json) |
+| P5-72 | bfd1a90 | Creature gets unstuck in every state (side-steps obstacles), searches nearby cover after losing a stalked player, approaches noises through corn | `git revert bfd1a90` |
 
 ## 3. Tests run and what we did
 
@@ -89,3 +90,4 @@ without a revert.
 - **P5-71 Horror role: Opus QA PASS after 4 fixes.** As Horror, from day 5, watch for a far figure that turns to face you, or one at the screen edge that vanishes when you look. Open: some figures stand inside the corn and are hidden.
 - **P5-70 door fling: Opus QA PASS after 1 fix (bang sound on re-fling).** Shut a barn door on the creature at night: it should bang and the door snaps open again. Open: the door snaps rather than swings.
 - **P5-69 hidden by day: Opus QA PASS.** Stand in a field by day after the first third: you should rarely if ever see the creature (longest sighting in tests 0.2 s, was 8.5 s). Open: walking into view mid-dash can still show one 2-3 s crossing.
+- **P5-72 creature AI fixes (your outside review): Opus QA PASS after 1 fix (side-step could enter a lit building).** Sight rays were already right; now tested. Watch at night for the creature pinned on the pen fence or well: it should step round within a few seconds. Open: fence and well still cause most stucks; pacing not touched yet.
