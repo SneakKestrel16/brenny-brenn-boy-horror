@@ -10,6 +10,8 @@ without a revert.
 
 ## 1. Decisions for you
 
+**Answered by the CEO on 2026-10-10: see DECISIONS.md D-188. Follow-up tasks P5-69, P5-70, P5-71.**
+
 | # | Question | Default we went with | Where |
 |---|---|---|---|
 | D-1 | Day full-body visibility of the creature (Q-345) | Unchanged | QUESTIONS.md Q-345 |

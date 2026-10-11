@@ -1321,3 +1321,19 @@ P5-66 adds `request_crow_steer(dir)` and `apply_crow_pos(peer, position, yaw)` t
 **Why:** one 20 s stream per ghost a night; a `send_bytes` type would touch the movement packet code for no gain.
 The host keeps authority: it accepts a steer only from the ghost holding that crow, drops non-finite vectors and
 clamps length to 1 (QA, P5-66).
+
+### D-188 · 2026-10-10 · CEO · Answers to the overnight review (D-1 to D-18)
+CEO answers to `production/CEO_REVIEW_2026-10-10.md` section 1. "Keep" means keep the built default.
+- D-1 (Q-345 part 2): the creature should be as little visible as possible by day. Task P5-69.
+- D-18: by day it dashes across open lanes between corn blocks to limit how long it is seen. Task P5-69.
+- D-3: the P5-43 whisper stays a dev trigger for now.
+- D-4: well stays. D-5: all 15 emotes kept. D-6: nuke radius 60 m kept. D-7 (Q-352): Crowkeeper role kept.
+- D-8 (Q-349): the Horror role only dims; only ghosts flicker lights.
+- D-9 (Q-350): replace the four doc 03 s23.1 exceptions with effects that keep doc 01's hallucination rules. Task P5-71.
+- D-10: the name whisper keeps replaying the player's own clip.
+- D-11: all players walked through closed doors in the CEO's playtest; it looks resolved since P5-55.
+- D-12: when a player shuts a door on the creature, it flings the door open again rather than walking through it.
+  Task P5-70.
+- D-13 (Q-356): corn lurk kept. D-14 (Q-355): all bodies hunt identically, for now. D-15: whistle note on the shed
+  back wall. D-16: intro stays in daylight. D-17: jumpscare flash stays lit.
+**Why:** CEO call, given in chat on 2026-10-10.
