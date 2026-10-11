@@ -54,8 +54,8 @@ const HELP := """Commands (host only unless marked):
   shaken [peer]             Shaken for taint.json's 60 s (default: you)
   msg <peer> <text>         show a text message on that player's screen only (P5-36)
   whisper [peer|name]       P5-43: the whisper scare on that one player only (default: you)
-  horror <kind>             P5-53: a Horror-role scare on your own screen: silhouette, whisper, name_whisper,
-                            steps, shadow, grab, chill (local only, role not needed; forces the darker world)
+  horror <kind>             P5-53: a Horror-role local effect on your own screen: steps, chill (local only,
+                            role not needed; forces the darker world). Hallucinations: use `scare`
   debug                     toggle the debug view (F3)
   clear                     clear this console (any peer)"""
 
@@ -524,7 +524,7 @@ func _host(cmd: String, a: PackedStringArray) -> String:
 				if c is HorrorScares:
 					hs = c
 			if hs == null or a.is_empty() or not StringName(a[0]) in HorrorScares.KINDS + [&"chill"]:
-				return "? horror <silhouette|whisper|name_whisper|steps|shadow|grab|chill>"
+				return "? horror <steps|chill>"
 			hs.forced_until_msec = Time.get_ticks_msec() + 20000
 			var r := hs.run(StringName(a[0]))
 			return "horror %s: %s" % [a[0], r if r else "nowhere to put it / no clip"]

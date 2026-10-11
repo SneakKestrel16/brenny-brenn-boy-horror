@@ -59,7 +59,7 @@ func _process(delta: float) -> bool:
 			_since = _t
 			for k in hs.KINDS:
 				hs._due[k] = 0.0  # all due at once
-		elif _seen >= 2 and _t - _since > 2.0:
+		elif _seen >= 1 and _t - _since > 2.0:
 			var dark: bool = hs.ambient_mult < 1.0 and hs.fog_mult > 1.0 and hs.lamp_mult < 1.0
 			_end(dark, "client: scares %d, darker %s" % [_seen, dark])
 	return false

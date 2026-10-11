@@ -87,6 +87,8 @@ func _physics_process(delta: float) -> void:
 		var s: int = peers[i]
 		peers[i] = peers[j]
 		peers[j] = s
+	# P5-71: the Horror role is picked first when the budget allows (the Director's rules still apply to it)
+	peers = peers.filter(func(p: int) -> bool: return Roles.of(p) == &"horror") + peers.filter(func(p: int) -> bool: return Roles.of(p) != &"horror")
 	for p: int in peers:
 		if _busy.has(p) or not _dir.allow(&"scare", p) or _rng.randf() >= SCARE_CHANCE_PER_S * TICK_S:
 			continue
@@ -208,6 +210,14 @@ func fire(kind: StringName, p: int, hold: Dictionary = {}, forced := false) -> v
 			if pos == Vector3.INF:  # forced by the dev console with nowhere in view: straight ahead
 				var yaw := float(Game.players[p].get("yaw", 0.0))
 				pos = Game.players[p].pos + Vector3(-sin(yaw), 0.0, -cos(yaw)) * float(_d.hallucination.distance_m[0])
+			if kind == &"hallucination" and Roles.of(p) == &"horror":  # P5-71: the role's two variants, still this one hallucination
+				extra = ["", "turn", "edge"][_rng.randi() % 3]
+				if extra == "edge":  # at the corn edge of the view: 50 to 75 degrees off the facing
+					var hz := Roles.perks(&"horror")
+					var off := deg_to_rad(_rng.randf_range(hz.shadow_edge_deg[0], hz.shadow_edge_deg[1])) * (1.0 if _rng.randf() < 0.5 else -1.0)
+					var yaw := float(Game.players[p].get("yaw", 0.0))  # off the facing, not off the spot (which is up to 60 degrees off already)
+					pos = Game.players[p].pos + Vector3(-sin(yaw), 0.0, -cos(yaw)).rotated(Vector3.UP, off) * Vector2(pos.x - Game.players[p].pos.x, pos.z - Game.players[p].pos.z).length()
+					pos.y = 0.0  # on the ground, as _in_view's spots
 	if bool(rec.big) and kind != &"jumpscare":
 		_dir.spend(&"scare", p)
 	if kind == &"wrong_count":
@@ -416,7 +426,9 @@ func _present(kind: StringName, slot: int, pos: Vector3, extra: String) -> void:
 			Net.apply_received.emit(&"lure", ["scare_%s" % kind, extra, pos, slot, &"none", false])  # the lure clip player
 		&"wrong_count", &"hallucination":
 			Soundscape.play_2d(&"cre_presence_swell")
-			_apparition(pos, kind, APPARITION_MAX_S)
+			_apparition(pos, kind, APPARITION_MAX_S, extra)
+			if kind == &"hallucination" and randf() < 0.4:
+				get_tree().call_group(&"horror_scares", &"chill", false)  # P5-53: hallucinations also chill the Horror role (no-op off it)
 		&"fake_out":
 			Soundscape.play_3d(&"sfx_step_corn", pos)  # the rustle; no layer change (doc 08 section 4.4 rule 4)
 			Soundscape.play_3d(&"sfx_crow_burst", pos)
@@ -553,7 +565,9 @@ func _lock(me: Node, seconds: float) -> void:
 ## night, the hallucination a black silhouette. The wrong count is a farmer: a brown capsule (no farmer
 ## model here yet), as is the creature when its body is not known or has no glb. It goes after
 ## `vanish_look_s` looked at, `vanish_approach_m` walked toward it, or `seconds`.
-func _apparition(pos: Vector3, kind: StringName, seconds: float) -> void:
+## P5-71 `variant` (hallucination of the Horror role): "turn" stands with its back to the player, turns round with a
+## stinger and goes; "edge" goes the moment it is looked at. Both are the same distant silhouette: no jolt, no camera change.
+func _apparition(pos: Vector3, kind: StringName, seconds: float, variant := "") -> void:
 	var creature := kind != &"wrong_count"
 	var n: Node3D = _body_art(kind == &"jumpscare") if creature else null
 	var lift := 0.0
@@ -576,6 +590,8 @@ func _apparition(pos: Vector3, kind: StringName, seconds: float) -> void:
 		var to := Vector3(face.global_position.x, n.global_position.y, face.global_position.z)
 		if to.distance_to(n.global_position) > 0.01:
 			n.look_at(to, Vector3.UP)  # the body's front is -Z, as the creature's yaw
+			if variant == "turn":
+				n.rotate_y(PI)  # back to the player until it turns
 		if kind == &"jumpscare" and lift == 0.0:
 			var front := 0.0  # how far the body reaches in front of its origin: the boar's snout is 1.5 m out
 			var top := 0.0
@@ -593,6 +609,7 @@ func _apparition(pos: Vector3, kind: StringName, seconds: float) -> void:
 	var me := _local_player()
 	var start_d: float = me.global_position.distance_to(pos) if me else 0.0
 	var look := 0.0
+	var turn_at := 2.0 if variant == "turn" else INF
 	var t := 0.0
 	while t < seconds and is_instance_valid(n):
 		var dt := get_process_delta_time()
@@ -600,7 +617,13 @@ func _apparition(pos: Vector3, kind: StringName, seconds: float) -> void:
 		var cam := get_viewport().get_camera_3d()
 		if cam and (-cam.global_transform.basis.z).dot((n.global_position - cam.global_position).normalized()) > 0.97:
 			look += dt
-		if look >= float(h.vanish_look_s) or (is_instance_valid(me) and start_d - me.global_position.distance_to(pos) >= float(h.vanish_approach_m)):
+		if t >= turn_at and cam:
+			turn_at = INF
+			n.look_at(Vector3(cam.global_position.x, n.global_position.y, cam.global_position.z), Vector3.UP)
+			if not bool(Settings.get_value(&"reduce_scares")):
+				Soundscape.play_2d(&"cre_jumpscare_hit", -4.0)  # the stinger (dropped by reduce_scares, as the old fake grab was); the camera is not touched
+			seconds = t + 1.0
+		if (variant != "turn" and look >= (0.2 if variant == "edge" else float(h.vanish_look_s))) or (is_instance_valid(me) and start_d - me.global_position.distance_to(pos) >= float(h.vanish_approach_m)):
 			break
 		await get_tree().process_frame
 		if not is_inside_tree():

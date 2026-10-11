@@ -1285,26 +1285,25 @@ Game Designer to confirm. Every number is a placeholder in `data/roles.json` (`h
 | Scare | What the Horror player gets | Placeholder |
 |---|---|---|
 | Darker world | Ambient light, lamps and fog density scaled; no flicker | ambient x0.55, lamps x0.6, fog x2.0 |
-| More hallucinations | The AI Director's hallucination weight doubles for that player | x2.0, from day 5 |
-| Silhouette | A hallucination put in view by the role, not the AI Director | every 50-110 s, 18-40 m |
-| Whisper | A teammate's real clip, or a stranger line, from a spot nearby | every 60-140 s, 10-22 m |
-| Own-voice whisper | The player's own recorded clip from the corn (the "name" scare) | every 150-300 s, 6-12 m |
-| Steps behind | Footsteps behind that close in while moving, and stop when the player turns more than 35 degrees | every 70-160 s, 14 s, 3.5 m to 2.0 m |
-| Edge shadow | A black shape 50-75 degrees off the view axis; gone when it comes within 20 degrees of the centre | every 80-170 s, 5-11 m |
-| Fake grab | A camera jolt and a stinger, then nothing: nothing is held, dropped, locked or slowed | every 200-420 s, 2 a day, 0.35 s |
-| Sixth sense | A slow dark-blue vignette and a swell when the real creature is within 30 m (host-sent, `Scares._sixth_sense`), and also on 40% of hallucinations, 30% of whispers and a random fake about every 50 s, so it is never proof | cooldown 25 s |
+| More hallucinations | The AI Director picks the Horror player first when it has budget and weights hallucinations x2.0 for them; they open on day 5 as for everyone (doc 01 "Ramp-up") | x2.0, from day 5 |
+| Turning silhouette | A Director hallucination (the same distant silhouette, 15-30 m): stands with its back to the player, turns to face them after 2 s with a stinger, gone 1 s later. No camera jolt | one third of the role's hallucinations |
+| Edge silhouette | A Director hallucination placed 35-50 degrees off the view axis, just inside the screen edge at FOV 75 16:9 (placeholder; QA P5-71 found 50-75 mostly off-screen); gone the moment it is looked at | one third of the role's hallucinations |
+| Whisper, own-voice clip | The Director's own `whisper` and `own_voice` records, unchanged: the own clip at most once a season per player, only when `Game.replays_voice` | doc 01 limits |
+| Steps behind | Footsteps behind that close in while moving, and stop when the player turns more than 35 degrees. Sound only, not a hallucination | every 70-160 s, 14 s, 3.5 m to 2.0 m |
+| Sixth sense | A slow dark-blue vignette and a swell when the real creature is within 30 m (host-sent, `Scares._sixth_sense`), and also on 40% of hallucinations and a random fake about every 50 s, so it is never proof | cooldown 25 s |
 
-### 23.1 Exceptions to doc 01's hallucination rules (placeholder, FOR CEO in Q-350)
+### 23.1 No exceptions to doc 01's hallucination rules (P5-71, CEO D-188; replaces the four exceptions of Q-350)
 
-1. The role's scares are extra to the AI Director's budget and do not count against its once-per-season-per-player and
-   spacing limits. They only reach the Horror player, who chose them.
-2. The own-voice whisper replays the Horror player's own clips more than doc 01 allows a clip to be replayed in a season.
-   It still honours doc 06 s11: only when that player's voice setting replays it (`Game.replays_voice`), never with Off or
-   streamer-safe, and it uses the same `lure` path as the creature's copied voices. It is the player's own clip, not the
-   real name (the game cannot make the name in their voice; inference, Q-353).
-3. The fake grab is a jolt, not a grab: no catch, no pin, no Corruption, no loss of items.
-4. The edge shadow is a near-field shape that vanishes on sight; doc 01's hallucinations are distant silhouettes.
+1. Role scares count toward the AI Director's limits: there are no role-timed silhouettes or whispers. The Director fires
+   them, so its budget, once-per-season-per-player and spacing limits apply. The Horror player gets them by being picked
+   first when budget allows and by the x2 weight, from day 5 (doc 01 "Ramp-up").
+2. The own-voice clip is the Director's `own_voice` record: at most `own_voice_per_player_per_season` (1) a season, and only
+   when `Game.replays_voice` (doc 06 s11; never with Off or streamer-safe). The game cannot make the name in their voice
+   (inference, Q-353).
+3. The fake grab is a distant silhouette in the field that turns toward the player, with a stinger, and vanishes. No camera jolt.
+4. The edge shadow is a distant silhouette at the corn edge of the view that vanishes when looked at. Hallucinations stay
+   distant silhouettes (doc 01).
 
-Settings: `reduce_scares` doubles every interval and drops the edge shadow and the fake grab. `camera_shake` 0 removes the
-jolt (the sound stays). No white flash anywhere (doc 07 s4.3). `photosensitive_safe` needs no extra handling: the world
-only dims, and the vignette ramps in 0.8 s.
+Settings: `reduce_scares` doubles the steps interval. `camera_shake` has no effect on the role (no jolt remains). No white
+flash anywhere (doc 07 s4.3). `photosensitive_safe` needs no extra handling: the world only dims, and the vignette ramps
+in 0.8 s.

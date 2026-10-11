@@ -1611,9 +1611,10 @@ forced it for 20 s on that machine). It never sends an RPC and never touches hos
 
 - Darker world: static `HorrorScares.ambient_mult` / `fog_mult` / `lamp_mult` (1.0 when inactive), read by `WorldLook._apply`
   (ambient energy, fog density) and `LightRig` (lamp energy). Nothing flickers a light; only ghosts do.
-- Local scares: `silhouette` reuses `Scares._present(&"hallucination", ...)`, whispers use `Soundscape` or the `lure` event
-  through `Net.apply_received` (same path and voice-setting rules as the creature's copied voices), `steps` follows the
-  player until `turned`, `shadow` is a local mesh, `grab` jolts the camera.
+- Local scares (P5-71): only `steps` (follows the player until `turned`) and fake chills. Silhouettes, whispers and the own
+  clip are the host AI Director's (`Scares`): the Horror peer is sorted first in the target loop (hallucinations from day 5),
+  and `fire` picks a variant in `extra` ("", "turn", "edge") that `_apparition` plays (turn with a
+  stinger, or vanish on sight). All still go through `allow(&"scare")` and `spend`.
 - Sixth sense: the host's `Scares._sixth_sense` (dusk and night) sends a private `chill` through `apply_scare` to the Horror
   peer when the real creature is within `chill_range_m` (`DirectorLogic.chill_due`); `_present` calls the `horror_scares` group.
   Fake chills come from the role's own loop. The client cannot tell them apart.
