@@ -573,3 +573,12 @@ Source: `production/handoffs/real_creature.md` "CEO picks".
   `ERROR: 1 resources still in use at exit` (`--verbose`: `res://assets/audio/ui_trait_gained.wav`, AudioStreamWAV and
   AudioStreamPlaybackWAV still held when the Dawn Report's sound is playing at quit). Exit noise, not a gameplay
   fault (inference: a playback freed before quit would settle it). Owner: QA.
+
+## Found in the CEO playtest (CEO, 2026-10-10 evening)
+
+- **The flare gun should shoot a projectile.** CEO: "the flare gun should shoot a projectile". Not looked at yet;
+  settled by checking what the flare gun does now (game/player tools) against doc 01. Owner: Gameplay. On hold by
+  CEO request.
+- **Barn door framing clips through when moving.** CEO: "the framing on the barn door clips through when moving".
+  Not looked at yet; inference: the door leaf or its frame mesh passes through the frame while it swings. Settled by
+  a screenshot of the door mid-swing. Owner: Level Designer / Gameplay (Doors). On hold by CEO request.
