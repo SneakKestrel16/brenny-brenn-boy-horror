@@ -329,6 +329,13 @@ Doc 01 "Nights".
   during the bang. `door_bang_radius_m` is not a separate number: the bang's reach is the sound's
   own falloff in the Soundscape catalog (`cre_door_bang`, max 90 m). Before P5-39 the bang was never
   built, and it walked into the dark barn and killed the sheltering players without a sound.
+- **Shut doors (P5-70, CEO D-188 on D-12, as built).** The creature ignores door collision (P5-27), so
+  the door rule lives in its walk: it never passes a shut door. Whenever it reaches a door it is passing
+  through (in or out, any state, day or night, within 2 m of the door), a shut door is flung open on the
+  host through the normal door sync, with no extra wait, and again each time a player shuts it on it.
+  Each fling plays one `cre_door_bang` at the door for every peer (the bang's sound, no new asset).
+  The night entry bang above still comes first. Before P5-70 it opened a door once per pass (P5-55), so
+  a door shut right after it opened stayed shut and it walked through it.
 
 ## 7. Day deaths and the trap race
 

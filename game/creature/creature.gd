@@ -155,7 +155,6 @@ var _hold_side := 1.0  ## P5-39: the side a stalk circles to when no cover hides
 var _rest: Dictionary = {}  ## P5-39: peer -> _now until which it will not stalk that player again
 var _banged := -1  ## P5-39: the dark building (rect index) it banged on and may enter, -1 for none
 var _bang_open := false  ## P5-55: a bang is running; the door opens when it ends
-var _exit_open := -1  ## P5-55: the building whose door it opened on its way out, -1 for none
 var _bang_until := -INF ## P5-39: _now when the bang ends
 var _bang_next := -INF  ## P5-39: _now of the next bang sound
 var _route: Array = []  ## P5-56: the cover points still to walk to `_dest`, nearest first (Vector2 x, z)
@@ -1417,6 +1416,8 @@ func _move(_delta: float) -> void:
 		_bang_open = false
 		if _banged >= 0:
 			_open_door(_banged)
+	if goal != Vector3.INF:
+		_fling_doors(goal)
 	var d := Vector3.INF if goal == Vector3.INF else goal - global_position
 	if _scripted and state == &"stalk" and d != Vector3.INF and Vector2(d.x, d.z).length() < stop - ARRIVE_M:
 		d = -d  # the target walked closer: back off to stay out of sight (doc 03 section 2)
@@ -1514,11 +1515,27 @@ func _shut_out(to: Vector3) -> Vector3:
 	return to
 
 
-## P5-55: open the door of building `i` if it stands shut (host_set does nothing when already open; no noise).
-func _open_door(i: int) -> void:
+## P5-55: open the door of building `i` if it stands shut (no NoiseBus noise). True when it was shut.
+func _open_door(i: int) -> bool:
 	var doors := get_parent().get_node_or_null(^"Doors") as Doors
-	if doors:
-		doors.host_set("door_" + _rect_names[i].to_lower(), true, 0)
+	var id := "door_" + _rect_names[i].to_lower()
+	if doors == null or doors.open.get(id, true):
+		return false
+	doors.host_set(id, true, 0)
+	return true
+
+
+## P5-70 (CEO D-188 on D-12): it never walks through a shut door. Passing one (in or out, any state, day or night) it
+## flings it open as it reaches the threshold, again each time a player shuts it on it; no extra wait. P5-55 opened a
+## door once per pass, so a door shut right after it opened stayed shut and it walked through (P5-27 exempts it from
+## door collision). The night entry bang still comes first: `_bang_first` holds `goal` outside until the bang ends.
+func _fling_doors(goal: Vector3) -> void:
+	var at := Vector2(global_position.x, global_position.z)
+	for i in _rects.size():
+		if _rects[i].has_point(at) != _rects[i].has_point(Vector2(goal.x, goal.z)) \
+				and at.distance_to(_doors[i]) <= ARRIVE_M + 1.0:
+			if _open_door(i):  # P5-70 QA: a fling is heard: the night bang's sound, once, at the door (no new asset)
+				_send_lure(["door_bang", "sound:door_fake", _door_step(i, 0.0), -1, &"none", false])
 
 
 ## P5-39, doc 03 section 6 ("Dark buildings: enterable through the door; it always bangs first"): a goal in a dark
@@ -1528,14 +1545,6 @@ func _open_door(i: int) -> void:
 func _bang_first(to: Vector3) -> Vector3:
 	var at := Vector2(global_position.x, global_position.z)
 	var goal := Vector2(to.x, to.z)
-	for i in _rects.size():  # P5-55: it walks out through the door like any body: a door a player shut opens once, as it reaches it
-		if _rects[i].has_point(at) and not _rects[i].has_point(goal):
-			var sp := _door_step(i, 0.0)
-			if _exit_open != i and at.distance_to(Vector2(sp.x, sp.z)) <= ARRIVE_M + 1.0:
-				_exit_open = i
-				_open_door(i)
-		elif _exit_open == i and not _rects[i].has_point(at):
-			_exit_open = -1
 	if _night_t < 0.0 or _race_mps > 0.0 or _lit():
 		_banged = -1  # power back: _shut_out drives it out, and the next dark entry bangs again
 		return to
