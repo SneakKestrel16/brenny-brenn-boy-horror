@@ -27,6 +27,9 @@ without a revert.
 | D-13 | Smarter creature makes the game easier for bots (Q-356). It now lurks and walks through corn (open time 806 s to 129 s of a 900 s night), but corn muffles its hearing and keeps it away from where players work. Bot seasons, seeds 1-6, old vs new: deaths 23 to 7, finales lost 4 of 6 to 1 of 6 | New behaviour on. To soften, lower `lurk_open_cost_mult` in data/creature.json (0 = old behaviour); not yet measured | P5-56 handoff, Q-356 |
 | D-14 | Different behaviour per creature body (Q-355)? Doc 01 says all bodies "hunt identically", so not built | Identical | Q-355 |
 | D-15 | Whistle note: doc 11 says "shed shelf"; it is pinned on the shed back wall (P5-48) | Back wall | data/lore.json, P5-48 handoff |
+| D-16 | Intro cutscene is all daylight; the only scare is a brief shape in the corn. Set it at dusk? | Daylight | P5-67 handoff |
+| D-17 | Jumpscare flash lights the creature model for 0.4 s; doc 01 says a clear night view only in the dark. Darker? | Lit | P5-68 handoff |
+| D-18 | By day the creature can be seen crossing open lanes between corn blocks (13-19 m, up to 8 s). Dash across, or avoid lanes players can see? | Crosses at walk speed | P5-65 handoff |
 
 ## 2. Changes made (commit, what, how to revert)
 
