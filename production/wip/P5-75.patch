@@ -1,0 +1,240 @@
+diff --git a/data/ai_director.json b/data/ai_director.json
+index c0a5012..6ec47bb 100644
+--- a/data/ai_director.json
++++ b/data/ai_director.json
+@@ -56,7 +56,7 @@
+     {
+       "id": "profile_harvest_moon",
+       "source": "placeholder",
+-      "cite": "doc 03 sections 11.2 and 14; doc 01 Harvest Moon (no timer, 900 s cap in season.json harvest_moon_cap_s). Cart speed by pushers is doc 02 section 9; doc 05 section 13 reads it",
++      "cite": "doc 03 sections 11.2 and 14; doc 01 Harvest Moon (no timer, 900 s cap in season.json harvest_moon_cap_s). Cart speed by pushers is doc 02 section 9; doc 05 section 13 reads it. gate_run_chase_speed_mps: D-190 (P5-74 proposal 1), the act 3 gate_run chase only; every other chase keeps creature.json chase_speed_mps",
+       "uses_tension": false,
+       "knock_cooldown_s": 15,
+       "gate_run_m": 30,
+@@ -69,7 +69,9 @@
+       "cart_speed_3p_mps": 2.0,
+       "cart_speed_4p_mps": 2.4,
+       "knock_stall_s": 5,
++      "gate_run_chase_speed_mps": 4.5,
+       "sources": {
++        "gate_run_chase_speed_mps": "placeholder",
+         "gate_run_guaranteed_peak": "doc01",
+         "uses_tension": "doc01"
+       }
+diff --git a/game/bots/bot.gd b/game/bots/bot.gd
+index c02ad80..eab6f15 100644
+--- a/game/bots/bot.gd
++++ b/game/bots/bot.gd
+@@ -45,6 +45,8 @@ const SHELTER_SPOT := Vector3(0, 0, -5)
+ const FUEL_PREP_S := 30.0
+ const REFUEL_AT_S := 35.0
+ const HOME_BY_S := 50.0
++const PLOT_FROM_DAY := 4  ## P5-75: tools/sim/policies/median.json `buy_plots_from_day`
++const FLARE_AT_M := 20.0  ## P5-75 placeholder: a chasing creature this close in the gate run draws the flare
+ 
+ var peer := 0
+ var players: Node
+@@ -83,6 +85,7 @@ func _physics_process(delta: float) -> void:
+ 	if Game.is_ghost(peer):
+ 		_path.clear()  # a dead bot stops where it fell
+ 	_pry(delta)
++	_flare()
+ 	_send_t += delta
+ 	var ticks := floori(_send_t * players.SEND_HZ)
+ 	if ticks >= 1:
+@@ -114,6 +117,18 @@ func _pry(delta: float) -> void:
+ 			_pin_t = -1000.0  # once per trap
+ 
+ 
++## P5-75 (D-190): in the Harvest Moon gate run (doc 03 s14 act 3) a bot fires the team's flare gun once the creature
++## chases within FLARE_AT_M. A player sees the same: the creature's state and position reach every peer, and the
++## chase has its tell. The store checks the gun, the shot and the reload; a hit sends it into Retreat for 30 s.
++func _flare() -> void:
++	var cart: Node = farm.get(&"cart")
++	if cart == null or cart.act != cart.GATE_RUN or farm.store.flare_shots < 1 or Game.is_ghost(peer):
++		return
++	var cr := get_tree().get_first_node_in_group(&"creature") as Node3D
++	if cr and cr.state == &"chase" and cr.global_position.distance_to(_pos) <= FLARE_AT_M:
++		farm.store.fire_flare(peer)
++
++
+ ## P5-55: a bot moves by position, not move_and_slide, so it honours the barn door itself (the door is at the origin, see BARN).
+ ## A step across a closed doorway stops it at the threshold and it opens the door (host only, as a player's `open_door`).
+ ## P5-57 `door_hold`: every door, in the door marker's frame (the gap runs along local x, the door plane is local z 0), and the
+@@ -188,8 +203,8 @@ func _run() -> void:
+ 			await _wait(1.0)
+ 			continue
+ 		claims[job[1]] = peer
+-		if job[0] == &"tend":  # P4-21: wait by the generator with the full fuel can, or by a moonflower
+-			await _walk(_stand(job[1]))
++		if job[0] in [&"tend", &"guard"]:  # P4-21: wait by the generator with the full fuel can, or by a moonflower
++			await _walk(_guard_spot() if job[0] == &"guard" else _stand(job[1]))
+ 			await _wait(1.0)
+ 		elif job[0] == &"push_cart":
+ 			await _push()
+@@ -282,6 +297,10 @@ func _night_job(st: Dictionary) -> Array:
+ 		return [&"sell", "sell_box"]  # the dead lose what they carry (doc 02 s9 step 1)
+ 	if not day and _sentinel():
+ 		return [&"sentinel", "town_stand"]
++	var pk: Node = farm.targets.get("prize_pumpkin")
++	if Clock.phase == &"night" and pk and pk.planted and not pk.judged and pk.guard_s.is_empty() and _free("prize_pumpkin") \
++			and Clock.day >= int(pk.rule(&"gnaw_from_night")) and _home_by(_guard_spot(), 1.0):
++		return [&"guard", "prize_pumpkin"]  # P5-75: one living player within guard_radius_m tonight blocks the gnaw
+ 	var room := int(st.get("bag", 0)) < int(Data.value(&"labor", &"carry", &"capacity"))
+ 	if not day:
+ 		for p: Node in _plots(func(p: Node) -> bool: return p.bed and (p.state == &"ripe" or (p.state == &"growing" and p.watered))):
+@@ -317,6 +336,17 @@ func _sentinel() -> bool:
+ 	return true
+ 
+ 
++## P5-75 (doc 01 The Prize Pumpkin "Gnawing", doc 03 s10 gnaw rule): the creature gnaws the Prize Pumpkin on a night
++## nobody comes within pumpkin.json `guard_radius_m` (20). The bot's guard spot is 3 m inside that circle on the barn
++## door's side, the shortest night trip that counts (sabotage.gd `_pumpkin_near`, prize_pumpkin.gd `guard_s`).
++# ponytail: blocks the gnaw only; Giant's 60 s guard (doc 01) keeps a bot outdoors past the scripted lurk's 60 s.
++func _guard_spot() -> Vector3:
++	var pk: Node = farm.targets["prize_pumpkin"]
++	var at: Vector3 = pk.target_pos()
++	var r := float(pk.rule(&"guard_radius_m")) - 3.0
++	return Vector3(at.x, 0.0, at.z) + Vector3(BARN_DOOR_OUT.x - at.x, 0.0, BARN_DOOR_OUT.z - at.z).normalized() * r
++
++
+ ## P4-21: a trip to `at` with a `hold_s` hold there ends inside the barn by HOME_BY_S into the night. Game clock only.
+ func _home_by(at: Vector3, hold_s: float) -> bool:
+ 	var t := Clock.t_phase - (Clock.length_of(&"dusk") if Clock.phase == &"dusk" else 0.0)
+diff --git a/game/creature/creature.gd b/game/creature/creature.gd
+index 6aa09f4..45a1d45 100644
+--- a/game/creature/creature.gd
++++ b/game/creature/creature.gd
+@@ -136,6 +136,7 @@ var _kept: Dictionary = {}  ## peer -> building: held a bear trap in a lit build
+ var _theft_t := 0.0
+ var _race_mps := 0.0  ## P5-33: a day trap race's approach speed while it walks in; 0 otherwise
+ var _race_end := 0.0  ## P5-33: the race deadline in `_now` seconds
++var _chase_mps := 0.0  ## P5-75 (D-190): the gate-run chase's speed; 0 means chase_speed_mps
+ var _nights := 0
+ var _rects: Array[Rect2] = []  ## building floors (x, z), for "outdoor"
+ var _rect_names: Array[String] = []  ## the building of each rect (the door's parent)
+@@ -475,6 +476,7 @@ func _harvest_moon(delta: float) -> void:
+ 	if cart.act == cart.GATE_RUN and p != 0 and _dir.allow(&"chase", p):
+ 		_dir.spend(&"chase", p)
+ 		_set_state(&"chase", &"gate_run", p)
++		_chase_mps = float(Data.value(&"ai_director", &"profile_harvest_moon", &"gate_run_chase_speed_mps"))  # P5-75 (D-190)
+ 	elif cart.act == cart.PUSH and near and cart.pushers.has(p) and cart.knock_ready() and _dir.stand_ok(&"knock_off", p):
+ 		_set_state(&"chase", &"knock_off", p)  # the lunge carries the chase tell before the hit
+ 	else:
+@@ -737,6 +739,7 @@ func _set_state(s: StringName, reason: StringName, p_target: int) -> void:
+ 	target = p_target
+ 	_t_state = 0.0
+ 	_race_mps = 0.0
++	_chase_mps = 0.0
+ 	_hold = Vector3.INF
+ 	_hold_t = -INF
+ 	_hold_side = 1.0 if _rng.randf() < 0.5 else -1.0
+@@ -1413,7 +1416,7 @@ func _move(_delta: float) -> void:
+ 	var speed: float = _num[&"lurk_speed_mps"]
+ 	match state:
+ 		&"stalk": speed = _num[&"stalk_speed_mps"]
+-		&"chase", &"retreat": speed = _num[&"chase_speed_mps"]
++		&"chase", &"retreat": speed = _chase_mps if _chase_mps > 0.0 else _num[&"chase_speed_mps"]
+ 	if _night_t < 0.0 and state == &"lurk" and not _corn_rects().is_empty() and not _in_corn(global_position):
+ 		speed = _num[&"lurk_dash_speed_day"]  # P5-69 (CEO D-188, doc 01 "What players see"): by day it dashes across open ground
+ 	if _race_mps > 0.0 and _alive(target):
+diff --git a/tests/creature/test_p5_75.gd b/tests/creature/test_p5_75.gd
+new file mode 100644
+index 0000000..c62ffde
+--- /dev/null
++++ b/tests/creature/test_p5_75.gd
+@@ -0,0 +1,94 @@
++extends SceneTree
++## P5-75 (D-190) on a live host: the Harvest Moon act 3 `gate_run` chase runs at ai_director.json
++## profile_harvest_moon `gate_run_chase_speed_mps` (4.5); any other chase, here a forced one in act 3, keeps
++## creature.json `chase_speed_mps` (5.5). Before P5-75 both measured 5.5, so the first check fails on the old code.
++##   "$GODOT" --headless --audio-driver Dummy --path . -s res://tests/creature/test_p5_75.gd -- --host --port=51075 --free-mouse
++## Exits 0 on pass, 1 on any failure.
++
++var _fails := 0
++var _frames := 0
++var _ev: Array = []  # [name, data] from Log.logged
++var Game: Node
++var cr: Node
++var farm: Node
++var cart: Node
++
++
++func _initialize() -> void:
++	change_scene_to_file.call_deferred("res://game/core/boot.tscn")
++
++
++func _process(_d: float) -> bool:
++	_frames += 1
++	if _frames == 60:
++		_run()
++	return false
++
++
++func _check(ok: bool, what: String) -> void:
++	print("  %s %s" % ["ok  " if ok else "FAIL", what])
++	if not ok:
++		_fails += 1
++
++
++## Horizontal metres per game second the creature covers over `s` seconds while the player pushes.
++func _speed(s: float) -> float:
++	var at: Vector3 = cr.global_position
++	var t := 0.0
++	var walked := 0.0
++	while t < s:
++		await physics_frame
++		Game.players[1].pos = cart.handle_pos()
++		t += 1.0 / Engine.physics_ticks_per_second
++		walked += Vector2(cr.global_position.x - at.x, cr.global_position.z - at.z).length()
++		at = cr.global_position
++	return walked / s
++
++
++func _run() -> void:
++	Game = root.get_node("Game")
++	var data := root.get_node("Data")
++	var main := root.get_node("Main")
++	cr = main.get_node("Creature")
++	farm = main.get_node("Farm")
++	cart = farm.cart
++	root.get_node("Log").logged.connect(func(n: StringName, d: Dictionary) -> void: _ev.append([String(n), d]))
++	var dev: Node
++	for c in main.get_children():
++		if c.get_script() and c.get_script().resource_path.ends_with("dev_console.gd"):
++			dev = c
++	_check(dev != null and cr._ok, "dev console and a host creature")
++	if dev == null or not cr._ok:
++		quit(1)
++		return
++	var gate_mps := float(data.value(&"ai_director", &"profile_harvest_moon", &"gate_run_chase_speed_mps"))
++	var chase_mps := float(data.value(&"creature", &"chase_speed_mps", &"speed_mps"))
++	Game.players[1].freeze_until = Time.get_ticks_msec() + 3600000
++	root.get_node("Clock").day = int(data.value(&"season", &"season_days"))
++	dev.run("phase harvest_moon")
++	cart.act = cart.PUSH
++	cart.offset = cart.length - 25.0  # inside the last gate_run_m 30: the next frame starts act 3
++	cart._place()
++	main.get_node("Generator").damage()
++	Game.players[1].pos = cart.handle_pos()
++	farm.registry.request(1, &"push_cart", "cart")
++	cr.global_position = cart.pos_at(cart.offset - 18.0)  # on the route behind the cart: open road
++	cr.force_state(&"lurk", &"test", 0)
++	var t := 0.0
++	while t < 10.0 and cr.state != &"chase":
++		await physics_frame
++		Game.players[1].pos = cart.handle_pos()
++		t += 1.0 / Engine.physics_ticks_per_second
++	var why: Array = _ev.filter(func(e: Array) -> bool: return e[0] == "chase_started").map(func(e: Array) -> String: return e[1].reason)
++	_check(cart.act == cart.GATE_RUN and why.has("gate_run"), "act 3 gate_run chase started (act %d, chases %s, %.1f s)" % [cart.act, why, t])
++	var v: float = await _speed(1.0)
++	_check(absf(v - gate_mps) < 0.3, "gate_run chase speed %.2f m/s, want %.1f" % [v, gate_mps])
++	# Any other chase keeps chase_speed_mps: force one from behind the cart again.
++	cr.force_state(&"lurk", &"test", 0)
++	cr.global_position = cart.pos_at(cart.offset - 18.0)
++	cr.force_state(&"chase", &"test", 1)
++	v = await _speed(1.0)
++	_check(cr.state == &"chase" and absf(v - chase_mps) < 0.3, "other act 3 chase speed %.2f m/s, want %.1f" % [v, chase_mps])
++	farm.registry.cancel(1)
++	print("test_p5_75: ", "FAIL %d" % _fails if _fails else "PASS")
++	quit(1 if _fails else 0)

@@ -10,3 +10,4 @@ How the studio coordinates. Agents read the relevant files before a task and upd
 | [QUESTIONS.md](QUESTIONS.md) | Blocked? Ask here, addressed to a role. **FOR CEO** items wait for the next STOP | Anyone appends; Director answers |
 | [OPEN_ISSUES.md](OPEN_ISSUES.md) | Problems from playtests and reviews, for the between-phase review | QA and Director |
 | [handoffs/](handoffs/README.md) | One note per finished task | Task owner, then QA |
+| [wip/](wip/README.md) | Unfinished task diffs saved at a pause | Director |

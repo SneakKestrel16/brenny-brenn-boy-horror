@@ -1,0 +1,565 @@
+diff --git a/docs/03_creature_ai_director_and_scares.md b/docs/03_creature_ai_director_and_scares.md
+index c75217d..8f2b2b1 100644
+--- a/docs/03_creature_ai_director_and_scares.md
++++ b/docs/03_creature_ai_director_and_scares.md
+@@ -270,8 +270,8 @@ placeholder player speeds (Q-016).
+   1-5, one player at each field 150 s: longest full-body sighting at walk speed (P5-65) 0-8.5 s, dash only 0-3.1 s,
+   dash and hide 0-0.2 s (nearest 34 m). Night routes and speeds are unchanged. Inference: 5.5 m/s,
+   10 s and 3 m come from these runs, not doc 01; playtests settle them.
+-- **Stuck walk (P5-56, as built).** The route knows buildings and doors but not fences, so a hop can
+-  push into the pen fence. A lurk walk that moves under a fifth of its speed for 2 s drops its goal and
++- **Stuck walk (P5-56, as built).** The route knew buildings and doors but not fences (P5-73 adds
++  them), so a hop could push into the pen fence. A lurk walk that moves under a fifth of its speed for 2 s drops its goal and
+   route and picks again (`creature_stuck` logs the position). No data number: it fixes a stall, not a
+   rule.
+ - **Stuck in any state (P5-72, as built).** The stuck check now runs in `stalk`, `chase` and
+@@ -284,6 +284,18 @@ placeholder player speeds (Q-016).
+   wait, the stalk hold spot, the lunge, trap setting and the Harvest Moon standoff. A chase standing
+   in reach of its goal does not count either. Before, a chase into the pen fence pushed against it
+   until the chase was lost (`test_p5_72` part B).
++- **The pen and the props in the route (P5-73, as built).** The route now knows the pen fence and
++  the yard props (`World/Pen`, `World/Props` in the level: well, generator, fuel drum, shipping crate,
++  town stand, gate posts) as well as the buildings, read from their collision boxes, padded as walls
++  are. The pen is entered and left by its gate, as a building by its door, so a goal inside the pen
++  is still reached (no rule keeps it out; the fence break is Sabotage, P4-08). A goal on a
++  prop, such as a `well_pump` noise at the well's centre, moves to the prop's edge: before, it pushed
++  into the well until the noise was forgotten. A lurk search that gets stuck skips that point and goes
++  on to the next (before, it dropped the search). The side step of the stuck recovery is a goal like
++  any other, so it never enters a lit building (section 6). Intentionally unchanged: the scripted
++  stalk (section 18) walks at the named player's true position with its fixed standoff, and the
++  Harvest Moon acts 2 and 3 (section 14) walk straight at the sensed pusher with no hiding spot and
++  no corn route (`test_p5_73` parts C and D).
+ - **A target-less stalk goes through the corn (P5-72, as built).** A stalk on a noise with no player
+   behind it (a dead generator) walks to the noise by a corn route, as a lurk does (P5-56). Before, it
+   walked straight across the open. The scripted stalk (section 18) is unchanged. The Harvest Moon
+diff --git a/game/creature/creature.gd b/game/creature/creature.gd
+index 6aa09f4..ed6cc73 100644
+--- a/game/creature/creature.gd
++++ b/game/creature/creature.gd
+@@ -140,6 +140,8 @@ var _nights := 0
+ var _rects: Array[Rect2] = []  ## building floors (x, z), for "outdoor"
+ var _rect_names: Array[String] = []  ## the building of each rect (the door's parent)
+ var _doors: Array[Vector2] = []  ## the door of each rect (x, z)
++var _walls: Array[Rect2] = []  ## P5-73: the pen and each Props body: collision footprints (x, z) `_way_to` routes round
++var _wall_doors: Array[Vector2] = []  ## P5-73: the pen gate (x, z); Vector2.INF for a prop, which has no inside
+ var _send_t := 0.0
+ var _log_t := 0.0
+ var _log := false
+@@ -247,6 +249,24 @@ func _ready() -> void:
+ 		_rects.append(r)
+ 		_rect_names.append(String(door.get_parent().name))
+ 		_doors.append(Vector2(door.global_position.x, door.global_position.z))
++	# P5-73: the pen fence and the yard props (the well, generator, drum, crate, stand, gate posts) stopped it as
++	# walls do but `_way_to` knew only buildings: most P5-72 stucks were at the pen fence and the well. Each footprint
++	# is shrunk by half a 0.3 m building wall, so WALL_PAD_M pads it as it pads a wall line: 0.35 m past the face,
++	# under the 0.4 m radius, so it never stands inside a pad (where `_way_to` finds no clear corner).
++	var pen := get_parent().get_node_or_null(^"World/Pen")
++	if pen:
++		var r := Rect2()
++		for b in pen.get_children():
++			if b is StaticBody3D:
++				r = _footprint(b) if r.size == Vector2.ZERO else r.merge(_footprint(b))
++		var gate := pen.get_node_or_null(^"PenGate") as Node3D
++		_walls.append(r.grow(-0.15))
++		_wall_doors.append(Vector2(gate.global_position.x, gate.global_position.z) if gate else Vector2.INF)
++	var props := get_parent().get_node_or_null(^"World/Props")
++	for b in props.get_children() if props else []:
++		if b is StaticBody3D:
++			_walls.append(_footprint(b).grow(-0.15))
++			_wall_doors.append(Vector2.INF)
+ 	NoiseBus.noise_emitted.connect(_on_noise)
+ 	Clock.phase_changed.connect(func(p: StringName) -> void:
+ 		if p == &"night" and not _test:
+@@ -1498,7 +1518,7 @@ func _move(_delta: float) -> void:
+ 	var was := global_position
+ 	move_and_slide()
+ 	global_position.y = 0.0
+-	# P5-56: no navmesh, and `_way_to` knows only buildings, so a lurk hop into a fence or a wall (the pen's) pushed on
++	# P5-56: no navmesh, and `_way_to` knew only buildings (P5-73: the pen and props too now), so a lurk hop into a wall pushed on
+ 	# all night; after STUCK_S it drops the hop and its route (the recent pick keeps it off the same point). P5-72: in
+ 	# every state, except a chase within reach of what it is after (the lunge at a player or the finale's cart)
+ 	var walked := Vector2(global_position.x - was.x, global_position.z - was.z).length()
+@@ -1531,9 +1551,14 @@ func _unstick() -> void:
+ 	_stuck_at = global_position
+ 	match state:
+ 		&"lurk":
++			var searching := _search_until >= _now and _goal != Vector3.INF
++			if searching:
++				_searched.append(_goal)  # P5-73: a search skips the point it cannot reach and goes on (else it wandered off)
+ 			_goal = Vector3.INF
+ 			_route.clear()
+ 			_dest = Vector3.INF
++			if searching:
++				_search_next()
+ 		&"stalk":
+ 			_hold_bad = _hold
+ 			_hold = Vector3.INF
+@@ -1551,21 +1576,25 @@ func _unstick() -> void:
+ func _way_to(to: Vector3) -> Vector3:
+ 	var at := Vector2(global_position.x, global_position.z)
+ 	var goal := Vector2(to.x, to.z)
+-	for i in _rects.size():
+-		var by_door := at.distance_to(_doors[i]) < DOOR_STEP_M + 0.5
+-		var out := _door_step(i, DOOR_STEP_M)
+-		if _rects[i].has_point(goal):
+-			if not _rects[i].has_point(at):
++	var rs := _rects + _walls  # P5-73: the pen goes in and out by its gate as a building by its door
++	var ds := _doors + _wall_doors
++	for i in rs.size():
++		if ds[i] == Vector2.INF:
++			continue  # a prop: no inside (`_shut_out` keeps goals off it)
++		var by_door := at.distance_to(ds[i]) < DOOR_STEP_M + 0.5
++		var out := _step_out(rs[i], ds[i], DOOR_STEP_M)
++		if rs[i].has_point(goal):
++			if not rs[i].has_point(at):
+ 				if by_door:
+-					return _door_step(i, -DOOR_STEP_M)
++					return _step_out(rs[i], ds[i], -DOOR_STEP_M)
+ 				goal = Vector2(out.x, out.z)
+-		elif _rects[i].has_point(at):
+-			return out if by_door else _door_step(i, -DOOR_STEP_M)
+-		elif by_door and _rects[i].grow(WALL_PAD_M).has_point(at):
++		elif rs[i].has_point(at):
++			return out if by_door else _step_out(rs[i], ds[i], -DOOR_STEP_M)
++		elif by_door and rs[i].grow(WALL_PAD_M).has_point(at):
+ 			return out  # just out of the doorway, still inside the wall pad: step clear before rounding a corner
+ 	var best := goal
+ 	var block := INF
+-	for r in _rects:
++	for r in rs:
+ 		var pad := r.grow(WALL_PAD_M)
+ 		if not _crosses(at, goal, pad) or at.distance_to(r.get_center()) >= block:
+ 			continue
+@@ -1582,10 +1611,22 @@ func _way_to(to: Vector3) -> Vector3:
+ 
+ ## The point `m` metres out from door `i` along its wall's outward normal (negative: inside).
+ func _door_step(i: int, m: float) -> Vector3:
+-	var p := _doors[i] + (_doors[i] - _rects[i].get_center()).normalized() * m
++	return _step_out(_rects[i], _doors[i], m)
++
++
++static func _step_out(r: Rect2, door: Vector2, m: float) -> Vector3:
++	var p := door + (door - r.get_center()).normalized() * m
+ 	return Vector3(p.x, 0.0, p.y)
+ 
+ 
++## P5-73: the (x, z) footprint of a StaticBody3D's box `Shape` (the farm's are unrotated).
++static func _footprint(b: Node3D) -> Rect2:
++	var shape := b.get_node(^"Shape") as CollisionShape3D
++	var size := (shape.shape as BoxShape3D).size
++	var c := shape.global_position
++	return Rect2(c.x - size.x / 2.0, c.z - size.z / 2.0, size.x, size.z)
++
++
+ static func _crosses(a: Vector2, b: Vector2, r: Rect2) -> bool:
+ 	var box := PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+ 	return not Geometry2D.intersect_polyline_with_polygon(PackedVector2Array([a, b]), box).is_empty()
+@@ -1593,7 +1634,21 @@ static func _crosses(a: Vector2, b: Vector2, r: Rect2) -> bool:
+ 
+ ## P4-25, doc 03 section 6: it never enters a lit building. A goal inside one becomes a spot outside its door,
+ ## out of the doorway light; power coming back walks it out of one it was in.
++## P5-73: a goal on a prop or the pen fence (a well pump noise sits at the well's centre: it pushed into the well
++## all night, never in arrival range) moves to the nearest edge of the padded footprint; inside the pen stays.
+ func _shut_out(to: Vector3) -> Vector3:
++	for i in _walls.size():
++		var g := _walls[i].grow(WALL_PAD_M + 0.05)  # the face + 0.4 m: it stands there touching
++		var q := Vector2(to.x, to.z)
++		if not g.has_point(q) or (_wall_doors[i] != Vector2.INF and _walls[i].has_point(q)):
++			continue
++		var edge := [Vector2(g.position.x, q.y), Vector2(g.end.x, q.y), Vector2(q.x, g.position.y), Vector2(q.x, g.end.y)]
++		var at := Vector2(global_position.x, global_position.z)
++		var best: Vector2 = edge[0]
++		for e: Vector2 in edge:  # the nearest edge; a tie (the well's centre) goes to the creature's side
++			if e.distance_to(q) + 0.01 * e.distance_to(at) < best.distance_to(q) + 0.01 * best.distance_to(at):
++				best = e
++		to = Vector3(best.x, to.y, best.y)
+ 	if not _lit():
+ 		return to
+ 	for i in _rects.size():
+diff --git a/tests/creature/test_p5_56.gd b/tests/creature/test_p5_56.gd
+index d717e5a..0e2425f 100644
+--- a/tests/creature/test_p5_56.gd
++++ b/tests/creature/test_p5_56.gd
+@@ -9,7 +9,8 @@ extends SceneTree
+ ##   F, anti-repetition (`wander_recent_s`): consecutive picks in a region do not repeat while others are free.
+ ##   G, search (`search_radius_m`): a lost chase checks the cover and trap spots round the last sensed position.
+ ##   H, traffic traps (`trap_traffic_m`): night trap spots go where the heard player noises are.
+-##   I, stuck: a lurk walk pushing into the pen's fence drops its hop after STUCK_S.
++##   I, the pen fence: a lurk walk that pushed into it (and dropped its hop after STUCK_S) now walks round it (P5-73;
++##      test_p5_73 covers stuck recovery on a wall `_way_to` does not know).
+ ##   "$GODOT" --headless --audio-driver Dummy --path . -s res://tests/creature/test_p5_56.gd -- --host --bots=3 --port=56420 --free-mouse
+ ## Exits 0 on pass, 1 on any failure.
+ 
+@@ -210,7 +211,7 @@ func _run() -> void:
+ 	_check(hits >= 70, "%d of 100 picks within %.0f m of the busy spot" % [hits, cr._num[&"trap_traffic_m"]])
+ 	cr._work.clear()
+ 
+-	print("I: a lurk walk into the pen fence gives up")
++	print("I: a lurk walk past the pen fence walks round it")
+ 	_ev.clear()
+ 	cr._set_state(&"lurk", &"dev", 0)
+ 	cr._memory.clear()
+@@ -218,9 +219,10 @@ func _run() -> void:
+ 	_reset_wander()
+ 	cr._goal = Vector3(-47, 0, 42)
+ 	cr._dest = cr._goal
++	var from: Vector3 = cr.global_position
+ 	await _wait(cr.STUCK_S + 1.0)
+ 	var stuck := _ev.any(func(e: Array) -> bool: return e[0] == "creature_stuck")
+-	_check(stuck, "dropped the hop: creature_stuck logged")
++	_check(not stuck and cr.global_position.distance_to(from) > 3.0, "no creature_stuck, walked %.1f m" % cr.global_position.distance_to(from))
+ 
+ 	print("test_p5_56: ", "FAIL %d" % _fails if _fails else "PASS")
+ 	quit(1 if _fails else 0)
+diff --git a/tests/creature/test_p5_72.gd b/tests/creature/test_p5_72.gd
+index 5090bb0..1a8e4f7 100644
+--- a/tests/creature/test_p5_72.gd
++++ b/tests/creature/test_p5_72.gd
+@@ -3,8 +3,9 @@ extends SceneTree
+ ##   A, sight: lists the world (layer 1) and corn (layer 16) bodies that reach the 1.65 m eye line and are not
+ ##      buildings, bounds, trees or doors; a player stood just behind a prop or the pen fence is seen, one behind
+ ##      the barn wall is not.
+-##   B, stuck in a chase: a chase pushing into the pen's north fence logs creature_stuck (state chase) and gets
+-##      round it to the target. The old code (lurk-only stuck recovery) pushed on and never got closer.
++##   B, a chase across the pen: it gets round the north fence to the target. The old code (lurk-only stuck recovery)
++##      pushed on and never got closer; P5-72 logged creature_stuck and side-stepped; P5-73 routes round the pen, so no
++##      stuck (test_p5_73 covers stuck recovery per state on a wall `_way_to` does not know).
+ ##   C, a target-less stalk (a noise, doc 03 s4.2) walks to it through the corn: fewer open metres than straight.
+ ##   D, a lost stalk searches round the last sensed position for `search_s`, from sensed positions only (D-189).
+ ##   "$GODOT" --headless --audio-driver Dummy --path . -s res://tests/creature/test_p5_72.gd -- --host --bots=3 --port=46720 --free-mouse
+@@ -154,7 +155,7 @@ func _run() -> void:
+ 		t += 1.0 / Engine.physics_ticks_per_second
+ 		best = minf(best, cr.global_position.distance_to(pv))
+ 	var stuck := _ev.filter(func(e: Array) -> bool: return e[0] == "creature_stuck" and e[1].get("state") == "chase")
+-	_check(not stuck.is_empty(), "creature_stuck logged in chase (%d)" % stuck.size())
++	_check(stuck.is_empty(), "no creature_stuck in chase: the pen is routed round (P5-73) (%d)" % stuck.size())
+ 	_check(best <= cr._num[&"reach_m"] + 1.0, "it got round the fence to the target: %.1f m at best, from %.1f m (%.1f s)" % [best, start, t])
+ 	cr._set_state(&"lurk", &"dev", 0)
+ 	park.call()
+diff --git a/tests/creature/test_p5_73.gd b/tests/creature/test_p5_73.gd
+new file mode 100644
+index 0000000..6a5d680
+--- /dev/null
++++ b/tests/creature/test_p5_73.gd
+@@ -0,0 +1,321 @@
++extends SceneTree
++## P5-73 creature pathing checks, on frozen bots:
++##   A, the pen and the props: `_way_to` knows the pen (its gate is its door) and the well; a lurk goal inside the pen
++##      is reached through the gate, and one at the well's centre (where a well_pump noise sits) is reached, no stuck.
++##   B, P5-72 stuck recovery per state, on a temporary wall `_way_to` does not know: chase, stalk, retreat and a lurk
++##      search each log creature_stuck, recover (the search keeps searching) and stuck at most 4 times in 20 s (no
++##      endless swing along the wall); the side step pointing into the lit barn never enters it.
++##   C, as designed, not dynamic: the scripted stalk (doc 03 s18) walks at the true position, takes no hiding spot,
++##      holds at scripted_standoff_m and backs off when the target comes closer.
++##   D, as designed: the Harvest Moon act 2 stalk on a pusher (knock not ready) walks straight and holds 10 m off
++##      (doc 03 s14), no stuck while it holds; act 3 chases straight.
++##   "$GODOT" --headless --audio-driver Dummy --path . -s res://tests/creature/test_p5_73.gd -- --host --bots=3 --port=46730 --free-mouse
++## Exits 0 on pass, 1 on any failure.
++
++var _fails := 0
++var _frames := 0
++var _ev: Array = []
++var Game: Node
++var main: Node
++var cr: Node
++var v := 0
++
++
++func _initialize() -> void:
++	change_scene_to_file.call_deferred("res://game/core/boot.tscn")
++
++
++func _process(_d: float) -> bool:
++	_frames += 1
++	if _frames == 60:
++		_run()
++	return false
++
++
++func _check(ok: bool, what: String) -> void:
++	print("  %s %s" % ["ok  " if ok else "FAIL", what])
++	if not ok:
++		_fails += 1
++
++
++func _wait(s: float) -> void:
++	var t := 0.0
++	while t < s:
++		await physics_frame
++		t += 1.0 / Engine.physics_ticks_per_second
++
++
++func _flat(p: Vector3) -> Vector2:
++	return Vector2(p.x, p.z)
++
++
++func _stucks() -> Array:
++	return _ev.filter(func(e: Array) -> bool: return e[0] == "creature_stuck")
++
++
++## A 0.3 m thick, 2.5 m tall wall `w` metres wide, centred on `at`, across the line from `from`.
++func _wall(at: Vector3, from: Vector3, w: float) -> StaticBody3D:
++	var b := StaticBody3D.new()
++	var s := CollisionShape3D.new()
++	var box := BoxShape3D.new()
++	box.size = Vector3(w, 2.5, 0.3)
++	s.shape = box
++	b.add_child(s)
++	main.get_node("World").add_child(b)
++	b.global_position = Vector3(at.x, 1.25, at.z)
++	b.rotation.y = atan2(at.x - from.x, at.z - from.z)  # local z along the walk: the wall's width across it
++	return b
++
++
++## Runs `secs` (or until `done`), calling `feed` each frame; returns [stuck count, moved after the first stuck, first
++## stuck position]. Moved is the farthest the creature got from where it first got stuck.
++func _push(secs: float, feed: Callable, done: Callable, after_stuck: Callable) -> Array:
++	_ev.clear()
++	var first := Vector3.INF
++	var moved := 0.0
++	var t := 0.0
++	while t < secs and not done.call():
++		feed.call()
++		await physics_frame
++		t += 1.0 / Engine.physics_ticks_per_second
++		if first == Vector3.INF and not _stucks().is_empty():
++			first = cr.global_position
++			after_stuck.call()
++		if first != Vector3.INF:
++			moved = maxf(moved, cr.global_position.distance_to(first))
++	return [_stucks().size(), moved, first]
++
++
++func _run() -> void:
++	Game = root.get_node("Game")
++	main = root.get_node("Main")
++	cr = main.get_node("Creature")
++	root.get_node("Log").logged.connect(func(n: StringName, d: Dictionary) -> void: _ev.append([String(n), d]))
++	var dir: Node = main.get_node("AiDirector")
++	var gen: Node = main.get_node("Generator")
++	var ids: Array = Game.players.keys()
++	for p: int in ids:
++		Game.players[p].freeze_until = Time.get_ticks_msec() + 3600000
++		Game.players[p].pos = Vector3(-60, 0, -60) + Vector3(p % 7, 0, 0)
++	for b in main.get_node("Bots").get_children():
++		b.process_mode = Node.PROCESS_MODE_DISABLED
++	var dev: Node
++	for c in main.get_children():
++		if c.get_script() and c.get_script().resource_path.ends_with("dev_console.gd"):
++			dev = c
++	dev.run("day 2")
++	await _wait(1.0)
++	dev.run("phase night")
++	await _wait(0.5)
++	gen.damage()
++	cr._scripted = false
++	cr._set_state(&"lurk", &"dev", 0)
++	v = ids[0]
++	var nothing := func() -> void: pass
++	var never := func() -> bool: return false
++
++	print("A: the pen and the well are in the way-finding")
++	var pen := Rect2()
++	var gate := Vector2.INF
++	var well := false
++	for i in cr._walls.size():
++		if cr._wall_doors[i] != Vector2.INF:
++			pen = cr._walls[i]
++			gate = cr._wall_doors[i]
++		well = well or cr._walls[i].has_point(Vector2(49, -20))
++	_check(pen.has_point(Vector2(-24, -33)) and pen.has_point(Vector2(-29.5, -37.5)) and not pen.has_point(Vector2(-24, -39)),
++		"the pen footprint %s from the level's fence" % pen)
++	_check(gate.distance_to(Vector2(-24, -28)) < 0.1 and well, "its gate %s is its door; the well is a wall too (%s)" % [gate, well])
++	var inside := Vector3(-24, 0, -33)
++	cr.global_position = Vector3(-24, 0, -41)  # north of the north fence: the gate is on the far side
++	cr._memory.clear()
++	cr._goal = inside
++	var via := [INF]
++	var r: Array = await _push(30.0, func() -> void: via[0] = minf(via[0], _flat(cr.global_position).distance_to(gate)),
++		func() -> bool: return cr._goal == Vector3.INF, nothing)
++	_check(r[0] == 0 and cr._goal == Vector3.INF and cr.global_position.distance_to(inside) <= cr.ARRIVE_M + 0.5,
++		"a lurk goal inside the pen is reached, %d stuck, ends %.1f m off" % [r[0], cr.global_position.distance_to(inside)])
++	_check(via[0] < 1.5, "in through the gate: %.1f m from it at closest" % via[0])
++	var wc := Vector3(49, 0, -20)
++	cr.global_position = Vector3(49, 0, -28)
++	cr._goal = wc
++	r = await _push(15.0, nothing, func() -> bool: return cr._goal != wc, nothing)
++	_check(r[0] == 0 and cr._goal != wc and cr.global_position.distance_to(wc) < 3.0,  # arrival: within ARRIVE_M of the padded edge
++		"a lurk goal at the well's centre (a well_pump noise) is reached at its side, %d stuck, %.1f m off" % [r[0], cr.global_position.distance_to(wc)])
++
++	print("B: stuck recovery per state, on a wall `_way_to` does not know")
++	var from := Vector3(30, 0, -48)
++	var to := Vector3(30, 0, -32)
++	var w := _wall(Vector3(30, 0, -40), from, 10.0)
++	await _wait(0.1)
++	var see := func(at: Vector3) -> void:
++		Game.players[v].pos = at
++		cr._seen = {v: {"position": at, "t": cr._now}}
++
++	dir.phase = &"peak"
++	cr.global_position = from
++	cr._goal = Vector3.INF
++	cr._set_state(&"chase", &"dev", v)
++	# stops short of reach_m, before the catch: the later checks need the target alive
++	r = await _push(20.0, see.bind(to), func() -> bool: return cr.state != &"chase" or cr.global_position.distance_to(to) <= cr._num[&"reach_m"] + 1.0, nothing)
++	var states: Array = _stucks().map(func(e: Array) -> String: return e[1].state)
++	_check(r[0] >= 1 and states.all(func(s: String) -> bool: return s == "chase") and r[0] <= 4,
++		"chase: stuck %d time(s) (%s), at most 4" % [r[0], states])
++	_check(cr.state == &"chase" and cr.global_position.distance_to(to) <= cr._num[&"reach_m"] + 1.0,
++		"chase: got round to the target: %s, %.1f m off" % [cr.state, cr.global_position.distance_to(to)])
++	cr._set_state(&"lurk", &"dev", 0)
++
++	dir.phase = &"build_up"  # stalks, no chases (doc 03 section 11.2)
++	var pt := Vector3(30, 0, -22)
++	var hold := Vector3(30, 0, -33)
++	cr.global_position = from
++	cr._set_state(&"stalk", &"dev", v)
++	cr._hold = hold
++	cr._hold_t = cr._now
++	cr._hold_bad = Vector3.INF
++	var bad := [Vector3.INF]
++	r = await _push(20.0, see.bind(pt), func() -> bool: return cr.state != &"stalk", func() -> void: bad[0] = cr._hold_bad)
++	states = _stucks().map(func(e: Array) -> String: return e[1].state)
++	_check(r[0] >= 1 and r[0] <= 4 and bad[0] == hold, "stalk: stuck %d time(s), at most 4; the stuck hiding spot is dropped (%s)" % [r[0], bad[0]])
++	_check(r[1] >= 3.0, "stalk: walks on from the stuck spot: %.1f m" % r[1])
++	cr._set_state(&"lurk", &"dev", 0)
++
++	cr.global_position = from
++	cr._set_state(&"retreat", &"dev", 0)
++	cr._goal = to
++	var re := [Vector3.INF]
++	r = await _push(20.0, nothing, func() -> bool: return cr.state != &"retreat", func() -> void: re[0] = cr._goal)
++	_check(r[0] >= 1 and r[0] <= 4, "retreat: stuck %d time(s), at most 4" % r[0])
++	_check(re[0] != to and r[1] >= 3.0, "retreat: picks another point and goes (%s, %.1f m on)" % [re[0], r[1]])
++	cr._set_state(&"lurk", &"dev", 0)
++	w.free()
++
++	var cover: Array = get_nodes_in_group(&"creature_cover").map(func(n: Node3D) -> Vector3: return n.global_position)
++	var spots: Array = cover + get_nodes_in_group(&"trap_spots").map(func(n: Node3D) -> Vector3: return n.global_position)
++	var sc := Vector3.INF
++	var sfrom := Vector3.INF
++	for c: Vector3 in cover:
++		var near := spots.filter(func(p: Vector3) -> bool: return p.distance_to(c) > 3.0 and p.distance_to(c) <= cr._num[&"search_radius_m"])
++		for off: Vector3 in [Vector3(0, 0, -8), Vector3(0, 0, 8), Vector3(8, 0, 0), Vector3(-8, 0, 0)]:
++			if sc == Vector3.INF and not near.is_empty() and cr._outdoor(c + off) and not cr._blocked(c + off + Vector3.UP, c + Vector3.UP, 1):
++				sc = c
++				sfrom = c + off
++	w = _wall(sc.lerp(sfrom, 0.5), sfrom, 10.0)
++	await _wait(0.1)
++	cr.global_position = sfrom
++	cr._memory.clear()
++	cr._seen.clear()
++	cr._search_c = sc
++	cr._searched = []
++	cr._search_until = cr._now + cr._num[&"search_s"]
++	cr._goal = sc
++	var go := [Vector3.INF, false]
++	r = await _push(cr._num[&"search_s"], nothing, never, func() -> void:
++		go[0] = cr._goal
++		go[1] = cr._search_until >= cr._now and cr._search_c == sc)
++	_check(r[0] >= 1 and r[0] <= 4, "search round %s from %s: stuck %d time(s), at most 4" % [sc, sfrom, r[0]])
++	_check(go[1] and go[0] != Vector3.INF and go[0] != sc, "search: goes on to the next point (%s), still searching" % [go[0]])
++	_check(r[1] >= 3.0, "search: walks on from the stuck spot: %.1f m" % r[1])
++	w.free()
++
++	gen.repair()
++	await _wait(0.2)
++	var bi: int = cr._rect_names.find("Barn")
++	var barn: Rect2 = cr._rects[bi]
++	var door: Vector2 = cr._doors[bi]
++	var inward := (barn.get_center() - door).normalized()
++	var start: Vector3 = cr._step_out(barn, door, 1.5)
++	var far_side: Vector2 = barn.get_center() + inward * (barn.size.length() / 2.0 + 8.0)
++	dir.phase = &"peak"
++	cr.global_position = start
++	cr._set_state(&"chase", &"dev", v)
++	cr._stuck_at = start
++	cr._detour = Vector3(inward.x, 0, inward.y)  # the side step pointing in at the lit barn
++	var entered := [false]
++	r = await _push(6.0, func() -> void:
++		see.call(Vector3(far_side.x, 0, far_side.y))
++		entered[0] = entered[0] or barn.has_point(_flat(cr.global_position)), never, nothing)
++	_check(not entered[0], "a side step pointing into the lit barn never enters it (from %s)" % start)
++	cr._detour = Vector3.INF
++	cr._set_state(&"lurk", &"dev", 0)
++	gen.damage()
++
++	print("C: the scripted stalk walks at the true position (doc 03 s18)")
++	var standoff: float = cr._num[&"scripted_standoff_m"]
++	var spot := Vector3(30, 0, -24)
++	Game.players[v].pos = spot
++	cr._seen.clear()
++	cr.global_position = Vector3(30, 0, -50)
++	cr.target = v
++	cr._scripted = true
++	cr._night_t = cr._num[&"scripted_lurk_s"] + 10.0
++	cr._stalk_at = cr._night_t - 2.0  # stalk until scripted_chase_after_stalk_s
++	var held := [true, true]
++	var t := 0.0
++	while t < 7.0:
++		await physics_frame
++		t += 1.0 / Engine.physics_ticks_per_second
++		held[0] = held[0] and cr.state == &"stalk" and cr._hold == Vector3.INF
++		held[1] = held[1] and cr._goal == Game.players[v].pos
++	var d: float = cr.global_position.distance_to(spot)
++	_check(held[0] and held[1], "scripted stalk: no hiding spot (%s), goal the true position (%s)" % [held[0], held[1]])
++	_check(d >= standoff - 1.0 and d <= standoff + 1.0, "it holds at scripted_standoff_m %.0f: %.1f m" % [standoff, d])
++	Game.players[v].pos = cr.global_position + (spot - cr.global_position).normalized() * 8.0
++	var near0: float = cr.global_position.distance_to(Game.players[v].pos)
++	await _wait(1.5)
++	var near1: float = cr.global_position.distance_to(Game.players[v].pos)
++	_check(near1 > near0 + 1.0, "the target came closer: it backs off (%.1f m to %.1f m)" % [near0, near1])
++	cr._scripted = false
++	cr._set_state(&"lurk", &"dev", 0)
++
++	print("D: the Harvest Moon act 2 stalk and act 3 chase walk straight (doc 03 s14)")
++	root.get_node("Clock").day = int(root.get_node("Data").value(&"season", &"season_days")) - 1  # from night: dawn, the last day, dusk, the Harvest Moon
++	dev.run("phase harvest_moon")
++	await _wait(0.5)
++	gen.damage()
++	var cart: Node = main.get_node("Farm").cart
++	cart.act = cart.PUSH
++	cart.offset = 25.0
++	cart._place()
++	cart.process_mode = Node.PROCESS_MODE_DISABLED  # pushers held by hand, the cart stays put
++	cart.pushers = [v]
++	cart._last_knock = cart._t  # the knock-off is not ready: it stalks
++	var at: Vector3 = cart.body.global_position + Vector3(3, 0, 0)
++	at.y = 0.0
++	var cfrom := Vector3.INF
++	for a in 16:
++		var c: Vector3 = at + Vector3.FORWARD.rotated(Vector3.UP, TAU * a / 16.0) * 25.0
++		if cfrom == Vector3.INF and cr._outdoor(c) and not cr._blocked(c + Vector3.UP, at + Vector3.UP, 1):
++			cfrom = c
++	cr.global_position = cfrom
++	cr._memory.clear()
++	cr._goal = Vector3.INF
++	_ev.clear()
++	var straight := [true]
++	var stuck_at_hold := 0
++	t = 0.0
++	while t < 12.0:
++		see.call(at)
++		await physics_frame
++		t += 1.0 / Engine.physics_ticks_per_second
++		if t > 0.5:
++			straight[0] = straight[0] and cr.state == &"stalk" and cr._hold == Vector3.INF and cr._route.is_empty()
++		if t > 8.0:
++			stuck_at_hold = _stucks().size()
++	d = cr.global_position.distance_to(at)
++	_check(straight[0], "act 2 (knock not ready): a stalk with no hiding spot and no route, from %s" % cfrom)
++	_check(absf(d - cr.STALK_STANDOFF_M) <= 1.5 and stuck_at_hold == 0, "it holds %.0f m off: %.1f m, %d stuck" % [cr.STALK_STANDOFF_M, d, stuck_at_hold])
++	cart.act = cart.GATE_RUN
++	var chased := [false, true]
++	t = 0.0
++	while t < 3.0:
++		see.call(at)
++		await physics_frame
++		t += 1.0 / Engine.physics_ticks_per_second
++		chased[0] = chased[0] or cr.state == &"chase"
++		if cr.state == &"chase":
++			chased[1] = chased[1] and cr._hold == Vector3.INF and cr._route.is_empty()
++	_check(chased[0] and chased[1], "act 3: a straight chase (%s, %s)" % [chased[0], chased[1]])
++
++	print("test_p5_73: ", "FAIL %d" % _fails if _fails else "PASS")
++	quit(1 if _fails else 0)
