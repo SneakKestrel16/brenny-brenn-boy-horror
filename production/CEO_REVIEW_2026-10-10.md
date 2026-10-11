@@ -58,6 +58,7 @@ without a revert.
 | P5-68 | a827ed1 | Jumpscare shows this season's creature model; hallucinations show it as a black silhouette | `git revert a827ed1` |
 | P5-65 | d9d3786 | Creature moves through corn by day instead of standing still (holds cover in the first third of the day) | `git revert d9d3786` |
 | P5-71 | 947889d | Horror role scares follow the normal hallucination rules: distant 'turn' and 'edge' silhouettes replace the fake grab and edge shadow | `git revert 947889d` |
+| P5-70 | b694c8f | Creature flings a shut door open again (with a bang) instead of walking through it | `git revert b694c8f` |
 
 ## 3. Tests run and what we did
 
@@ -85,3 +86,4 @@ without a revert.
 - **P5-68 jumpscare model: Opus QA PASS.** All four bodies checked day and night. Note: doc 01 says the creature is seen clearly at night only in the dark; the jumpscare flash now lights it for 0.4 s so you can see the model. Say if you want it darker.
 - **P5-65 creature by day: Opus QA PASS.** Play a day past its first third and watch the corn: it should move, mostly hidden. You may still see it cross the open lanes between corn blocks at 13-19 m for up to 8 s. Should it dash across, or avoid lanes players can see?
 - **P5-71 Horror role: Opus QA PASS after 4 fixes.** As Horror, from day 5, watch for a far figure that turns to face you, or one at the screen edge that vanishes when you look. Open: some figures stand inside the corn and are hidden.
+- **P5-70 door fling: Opus QA PASS after 1 fix (bang sound on re-fling).** Shut a barn door on the creature at night: it should bang and the door snaps open again. Open: the door snaps rather than swings.
