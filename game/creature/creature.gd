@@ -13,8 +13,8 @@ extends CharacterBody3D
 ## as world sounds, in the scripted lurk too. Taint (P3-07, sections 3.3 and 8; off on the Phase 1 farm by
 ## `phase1.json` `taint_enabled`): at night it tracks Tainted players and leaves stains. After the scripted night the AI
 ## Director (P3-04, game/ai_director/) gates its lures, stalks, chases and kills and sets its wander region.
-## Day: it waits in far cover and, from the day's second third, sends a targeted lure now and then from a
-## trap spot, the target picked by the AI Director's scare budget.
+## Day: it waits in far cover through the calm first third, then lurks through the corn (P5-65) and sends a
+## targeted lure now and then from a trap spot, the target picked by the AI Director's scare budget.
 ##
 ## Presentation may read true positions (lure targeting, the trap spring check, the lit doorway rule);
 ## hunting never does, except the scripted stalk and chase, which doc 03 section 18 scripts at "the
@@ -221,7 +221,7 @@ func _ready() -> void:
 	for id in [&"reach_m", &"sight_night_m", &"sight_day_m", &"sight_still_crouch_m", &"scripted_standoff_m", &"trap_lure_m", &"wander_min_hop_m",
 			&"stalk_hold_near_m", &"stalk_hold_far_m", &"retreat_min_m", &"search_radius_m", &"trap_traffic_m"]:
 		_num[id] = float(Data.value(&"creature", id, &"metres"))
-	for id in [&"corn_damp_mult", &"lurk_open_cost_mult"]:
+	for id in [&"corn_damp_mult", &"lurk_open_cost_mult", &"lurk_open_cost_mult_day"]:
 		_num[id] = float(Data.value(&"creature", id, &"mult"))
 	for f in [&"weight_dead", &"weight_alive", &"weight_own", &"weight_stranger"]:
 		_num[f] = float(Data.value(&"ai_director", &"lures", f))
@@ -1388,8 +1388,16 @@ func _move(_delta: float) -> void:
 		# the way round buildings is longer than start_m: speed up to chase speed to still arrive on the deadline
 		var left := Vector2(_goal.x - global_position.x, _goal.z - global_position.z).length()
 		speed = clampf(left / maxf(_race_end - _now, 0.25), _race_mps, _num[&"chase_speed_mps"])
+	elif _night_t < 0.0 and state == &"lurk" and _dir.third() != 1:
+		# P5-65 (CEO playtest: "the monster just stood there during the day"): this branch pinned it to its day cover
+		# all day. Doc 03 s4 / doc 01 "Behavior states": by day it lurks, moving through corn, so from the second third
+		# (and at dusk) it walks the night's corn routes. Inference: the first third keeps the day cover (s11.3 "no
+		# presence", the field keep-out); a playtest settles whether it should wander there too.
+		_wander()
 	elif _night_t < 0.0:
 		_goal = _dir.day_cover(_marker(&"creature_cover", DAY_COVER))
+		_route.clear()  # P5-65 QA: else the second third resumes last night's corn route from the day cover
+		_dest = Vector3.INF
 	var goal := _goal if _goal == Vector3.INF else _shut_out(_goal)
 	var stop := ARRIVE_M
 	if state == &"stalk" and _hold != Vector3.INF:
@@ -1620,7 +1628,7 @@ func _wander(direct := false) -> void:
 		_linger_until = _now + _num[&"lurk_linger_s"]
 	if _now < _linger_until:
 		return
-	var corn: bool = not direct and _num[&"lurk_open_cost_mult"] > 0.0
+	var corn: bool = not direct and _open_mult() > 0.0
 	var here := global_position
 	var pool := get_tree().get_nodes_in_group(&"creature_cover")
 	if not corn:
@@ -1649,10 +1657,16 @@ func _wander(direct := false) -> void:
 	if not corn:
 		_goal = to
 		return
-	_route = Logic.corn_route(Vector2(here.x, here.z), Vector2(to.x, to.z), _corn_via(), _corn_rects(), _num[&"lurk_open_cost_mult"], _via_cost)
+	_route = Logic.corn_route(Vector2(here.x, here.z), Vector2(to.x, to.z), _corn_via(), _corn_rects(), _open_mult(), _via_cost)
 	_dest = to
 	var first: Vector2 = _route.pop_front()
 	_goal = Vector3(first.x, 0.0, first.y)
+
+
+## P5-65 QA (doc 01 "What players see": by day parts and motion only): a day lurk route at the night's 4 crossed
+## 30 m of open yard past field B, in full view of a player there for 17 s; by day open ground costs more.
+func _open_mult() -> float:
+	return _num[&"lurk_open_cost_mult" if _night_t >= 0.0 else &"lurk_open_cost_mult_day"]
 
 
 func _key(p: Vector3) -> Vector2i:
@@ -1663,12 +1677,12 @@ func _key(p: Vector3) -> Vector2i:
 ## cover set or `lurk_open_cost_mult` changes.
 func _corn_via() -> Array:
 	var cover := get_tree().get_nodes_in_group(&"creature_cover")
-	var key := "%d %s" % [cover.size(), _num[&"lurk_open_cost_mult"]]
+	var key := "%d %s" % [cover.size(), _open_mult()]
 	if key != _via_key:
 		_via_key = key
 		_via = cover.map(func(n: Node3D) -> Vector2: return Vector2(n.global_position.x, n.global_position.z)) \
 				+ Logic.corn_waypoints(_corn_rects(), RING_STEP_M, RING_INSET_M, RING_MIN_M)
-		_via_cost = Logic.hop_costs(_via, _corn_rects(), _num[&"lurk_open_cost_mult"])
+		_via_cost = Logic.hop_costs(_via, _corn_rects(), _open_mult())
 	return _via
 
 

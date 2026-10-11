@@ -217,6 +217,13 @@
       "mult": 4
     },
     {
+      "id": "lurk_open_cost_mult_day",
+      "source": "placeholder",
+      "cite": "doc 01 What players see (by day parts and motion only), doc 03 section 4; P5-65 QA: lurk_open_cost_mult by day (and dusk, dawn). At 4 a day route crossed 30 m of open yard past field B in full view; at 20 a day in thirds 2 and 3 spends 95 to 97% of its time in corn with no sighting from a field over 1 s",
+      "kind": "mult",
+      "mult": 20
+    },
+    {
       "id": "lurk_linger_s",
       "source": "placeholder",
       "cite": "doc 01 Behavior states (Lurk), doc 03 section 4; P5-56: at the end of a lurk route it waits this long in the cover point before the next one (a sound still pulls it at once); 0 = off",
