@@ -1476,4 +1476,4 @@ Acceptance:
 | P5-69 | AI Programmer | Creature as little visible as possible by day: dash across open lanes between corn blocks, keep out of players' sight (CEO D-188, D-1/D-18) | done (QA PASS) | - |
 | P5-70 | AI Programmer | Door shut on the creature: it flings the door open again instead of walking through it (CEO D-188, D-12) | done (QA PASS) | - |
 | P5-71 | Gameplay Programmer | Horror role: replace the four doc 03 s23.1 exceptions with effects inside doc 01's hallucination rules (CEO D-188, D-9) | done (QA PASS) | - |
-| P5-72 | AI Programmer | Creature AI fixes from CEO (outside review): sight rays ignore only the target, stuck recovery in every state, stalk repositions to cover, search nearby cover after losing a player; pacing later (CEO 2026-10-11) | todo | - |
+| P5-72 | AI Programmer | Creature AI fixes from CEO (outside review): sight rays ignore only the target, stuck recovery in every state, stalk repositions to cover, search nearby cover after losing a player; pacing later (CEO 2026-10-11) | in review | P5-72.md |

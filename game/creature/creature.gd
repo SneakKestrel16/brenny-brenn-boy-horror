@@ -166,7 +166,10 @@ var _picked: Dictionary = {}  ## P5-56: wander point (Vector2 x, z) -> _now it w
 var _corn: Array = []  ## P5-56: CornBlockers rects (x, z), read on first use
 var _search_c := Vector3.INF  ## P5-56: the last sensed position a lost chase searches round
 var _searched: Array = []  ## P5-56: the points that search has checked (Vector3)
-var _stuck_t := 0.0  ## P5-56: seconds a lurk walk has barely moved
+var _stuck_t := 0.0  ## P5-56: seconds a walk has barely moved (P5-72: any state)
+var _stuck_at := Vector3.INF  ## P5-72: where it last got stuck (the side step's start)
+var _detour := Vector3.INF  ## P5-72: the direction of its side step after getting stuck, INF for none
+var _hold_bad := Vector3.INF  ## P5-72: a stalk hiding spot it got stuck walking to; the next pick keeps 3 m off it
 var _hide_until := -INF  ## P5-69: _now until which a day lurk waits at the corn's edge for no player to look
 var _via: Array = []  ## P5-56: lurk route points (Vector2 x, z): cover points, then ring waypoints
 var _via_cost := PackedFloat32Array()  ## P5-56: Logic.hop_costs of _via
@@ -218,10 +221,10 @@ func _ready() -> void:
 	for id in [&"lurk_speed_mps", &"stalk_speed_mps", &"chase_speed_mps", &"lurk_dash_speed_day"]:
 		_num[id] = float(Data.value(&"creature", id, &"speed_mps"))
 	for id in [&"lure_wait_s", &"stalk_max_s", &"chase_commit_s", &"retreat_s", &"hearing_memory_s", &"chase_lose_quiet_s", &"chase_tell_s",
-			&"door_bang_s", &"stalk_repick_s", &"stalk_rest_s", &"lurk_linger_s", &"wander_recent_s", &"lurk_hide_wait_s"]:
+			&"door_bang_s", &"stalk_repick_s", &"stalk_rest_s", &"lurk_linger_s", &"wander_recent_s", &"lurk_hide_wait_s", &"search_s"]:
 		_num[id] = float(Data.value(&"creature", id, &"seconds"))
 	for id in [&"reach_m", &"sight_night_m", &"sight_day_m", &"sight_still_crouch_m", &"scripted_standoff_m", &"trap_lure_m", &"wander_min_hop_m",
-			&"stalk_hold_near_m", &"stalk_hold_far_m", &"retreat_min_m", &"search_radius_m", &"trap_traffic_m"]:
+			&"stalk_hold_near_m", &"stalk_hold_far_m", &"retreat_min_m", &"search_radius_m", &"trap_traffic_m", &"stuck_step_m"]:
 		_num[id] = float(Data.value(&"creature", id, &"metres"))
 	for id in [&"corn_damp_mult", &"lurk_open_cost_mult", &"lurk_open_cost_mult_day"]:
 		_num[id] = float(Data.value(&"creature", id, &"mult"))
@@ -569,14 +572,16 @@ func _hunt(delta: float) -> void:
 		&"stalk":
 			var sensed := _sensed_pos(target, heard)
 			if sensed == Vector3.INF:
-				_set_state(&"lurk", &"lost_track", 0)
+				_lose(&"lost_track")  # P5-72: a lost stalk searches as a lost chase does (section 5)
 				return
-			_goal = sensed
 			if target == 0:  # a noise with no player behind it (a dead generator): look, then go back
 				if sensed.distance_to(global_position) < 2.0 or _t_state >= _num[&"stalk_max_s"]:
 					_memory.clear()
 					_set_state(&"lurk", &"investigated", 0)
+				else:
+					_route_to(sensed)  # P5-72: through the corn, as a lurk route goes (it walked straight across the open)
 				return
+			_goal = sensed
 			var seen := _seen.has(target) and _now - float(_seen[target].t) < 0.5
 			var sprint := not heard.is_empty() and int(heard.peer) == target and String(heard.kind).begins_with("step_sprint") and _now - float(heard.t) < 0.5
 			if (seen or sprint or sensed.distance_to(global_position) <= STALK_CHASE_M) and _dir.allow(&"chase", target):
@@ -637,14 +642,35 @@ func _resting(p: int) -> bool:
 
 func _end_chase(how: StringName, reason: StringName) -> void:
 	if how == &"lost":
-		_search_until = _now + _num[&"hearing_memory_s"]  # section 5: search for `memory` seconds
-		_memory.clear()
-		_set_state(&"lurk", reason, 0)
-		# _goal stays at the last sensed position
-		_search_c = _goal
-		_searched.clear()
+		_lose(reason)
 	else:
 		_set_state(&"retreat", reason, target)
+
+
+## Section 5: a lost chase (P5-72: or a lost stalk) searches round the last sensed position for `search_s`. The
+## position is what it sensed (D-189): the chase or stalk goal, or the end of a target-less stalk's corn route.
+func _lose(reason: StringName) -> void:
+	var last := _dest if _dest != Vector3.INF else _goal
+	_search_until = _now + _num[&"search_s"]
+	_memory.clear()
+	_set_state(&"lurk", reason, 0)
+	_goal = last
+	_search_c = last
+	_searched.clear()
+
+
+## P5-72: steer to `to` through the corn by a corn route (P5-56), rebuilt when `to` moves 3 m; straight with open
+## ground free (open cost 0) or no corn. Uses _route and _dest, as a lurk route does.
+func _route_to(to: Vector3) -> void:
+	if _dest == Vector3.INF or _dest.distance_to(to) > 3.0:
+		_dest = to
+		_route = [Vector2(to.x, to.z)]
+		if _open_mult() > 0.0 and not _corn_rects().is_empty():
+			_route = Logic.corn_route(Vector2(global_position.x, global_position.z), Vector2(to.x, to.z), _corn_via(), _corn_rects(), _open_mult(), _via_cost)
+		_goal = Vector3.INF
+	if (_goal == Vector3.INF or Vector2(_goal.x - global_position.x, _goal.z - global_position.z).length() < ARRIVE_M) and not _route.is_empty():
+		var hop: Vector2 = _route.pop_front()
+		_goal = Vector3(hop.x, 0.0, hop.y)
 
 
 ## Latest sensed position of `peer`: seen, else its newest heard entry, else the picked entry.
@@ -714,6 +740,7 @@ func _set_state(s: StringName, reason: StringName, p_target: int) -> void:
 	_hold = Vector3.INF
 	_hold_t = -INF
 	_hold_side = 1.0 if _rng.randf() < 0.5 else -1.0
+	_hold_bad = Vector3.INF
 	_route.clear()  # P5-56: a lurk route ends with the lurk
 	_dest = Vector3.INF
 	if s == &"chase" and from != &"chase":
@@ -1381,6 +1408,8 @@ func _shoot_clue(at: Vector3, path: String) -> void:
 # --- movement ------------------------------------------------------------------------------------
 
 func _move(_delta: float) -> void:
+	var stuck_t := _stuck_t  # P5-72: any frame it does not walk (an arrival, a bang, a wait) restarts the stuck clock
+	_stuck_t = 0.0
 	var speed: float = _num[&"lurk_speed_mps"]
 	match state:
 		&"stalk": speed = _num[&"stalk_speed_mps"]
@@ -1408,6 +1437,18 @@ func _move(_delta: float) -> void:
 		goal = _shut_out(_hold)  # P5-39: a night stalk creeps between hiding spots, not straight at the target
 	elif state == &"stalk" and target != 0:
 		stop = _num[&"scripted_standoff_m"] if _scripted else STALK_STANDOFF_M
+	if _detour != Vector3.INF and goal == Vector3.INF:
+		_detour = Vector3.INF
+	elif _detour != Vector3.INF:  # P5-72: the side step along a fence or wall (_unstick)
+		var side_m := Vector2(global_position.x - _stuck_at.x, global_position.z - _stuck_at.z).length()
+		if side_m >= _num[&"stuck_step_m"]:
+			_hold_side = -_hold_side  # this side did not clear it: the next stuck tries the other
+			_detour = Vector3.INF
+		elif side_m >= 1.0 and not _blocked(global_position + Vector3.UP * CHEST_M, goal + Vector3.UP * CHEST_M, 1):
+			_detour = Vector3.INF  # past its end: on to the goal
+		else:
+			goal = _shut_out(global_position + _detour * 2.0)
+			stop = ARRIVE_M
 	if goal != Vector3.INF:
 		goal = _bang_first(goal)
 	if _now < _bang_until:
@@ -1458,20 +1499,49 @@ func _move(_delta: float) -> void:
 	move_and_slide()
 	global_position.y = 0.0
 	# P5-56: no navmesh, and `_way_to` knows only buildings, so a lurk hop into a fence or a wall (the pen's) pushed on
-	# all night; after STUCK_S it drops the hop and its route (the recent pick keeps it off the same point)
+	# all night; after STUCK_S it drops the hop and its route (the recent pick keeps it off the same point). P5-72: in
+	# every state, except a chase within reach of what it is after (the lunge at a player or the finale's cart)
 	var walked := Vector2(global_position.x - was.x, global_position.z - was.z).length()
-	_stuck_t = _stuck_t + _delta if state == &"lurk" and walked < speed * _delta * 0.2 else 0.0
+	var at_goal: bool = state == &"chase" and Vector2(_goal.x - global_position.x, _goal.z - global_position.z).length() <= _num[&"reach_m"] + 1.0
+	_stuck_t = stuck_t + _delta if walked < speed * _delta * 0.2 and not at_goal else 0.0
 	if _stuck_t >= STUCK_S:
-		_stuck_t = 0.0
-		_goal = Vector3.INF
-		_route.clear()
-		_dest = Vector3.INF
-		Log.event(&"creature_stuck", {"position": _v(global_position)})
+		_unstick()
 	if _taint and _night_t >= 0.0 and (state == &"lurk" or state == &"stalk"):  # doc 03 section 8: leavings
 		_leave_m += Vector2(global_position.x - was.x, global_position.z - was.z).length()
 		if _leave_m >= _num[&"leavings_every_m"]:
 			_leave_m = 0.0
 			get_tree().get_first_node_in_group(&"taint").add_source(&"leavings", global_position)
+
+
+## P5-72 (outside review: stuck recovery ran in lurk only): it pushed into a fence or wall for STUCK_S. It walks
+## sideways along the obstacle until the straight line to its goal clears (or `stuck_step_m`, then the next stuck
+## tries the other side; stuck again on the side step flips at once), and each state repicks: lurk drops its hop and
+## route, a stalk picks another hiding spot (3 m off this one), a retreat another point, a target-less stalk
+## re-routes; a chase keeps its sensed goal and goes on from the side step.
+## ponytail: a blind side walk, no navmesh; fine for fences and props, an obstacle longer than 2 x stuck_step_m
+## (none on the farm off the buildings, which `_way_to` already routes round) would need a real path search.
+func _unstick() -> void:
+	_stuck_t = 0.0
+	if _detour != Vector3.INF:  # stuck on the side step too: back the other way
+		_hold_side = -_hold_side
+		_detour = Vector3(-_detour.x, 0.0, -_detour.z)
+	else:
+		var fwd := Vector3.FORWARD.rotated(Vector3.UP, rotation.y)  # it faces its walk (rotation.y = atan2(-d.x, -d.z))
+		_detour = (fwd.cross(Vector3.UP) * _hold_side - fwd * 0.25).normalized()
+	_stuck_at = global_position
+	match state:
+		&"lurk":
+			_goal = Vector3.INF
+			_route.clear()
+			_dest = Vector3.INF
+		&"stalk":
+			_hold_bad = _hold
+			_hold = Vector3.INF
+			_hold_t = -INF
+			_dest = Vector3.INF  # a target-less stalk builds a new route from the side step
+		&"retreat":
+			_goal = Vector3.INF
+	Log.event(&"creature_stuck", {"position": _v(global_position), "state": String(state)})
 
 
 ## P4-25: it has no navmesh and steered straight at its goal, so a line through the barn door walked it in and
@@ -1596,11 +1666,14 @@ func _stalk_hold(at: Vector3) -> Vector3:
 	for i in range(-5, 6):  # 16 points round the ring; the 11 within 112.5 degrees of the creature's side
 		var p := at + from.rotated(Vector3.UP, TAU * i / 16.0) * r
 		var d := p.distance_to(global_position)
-		if d < best_d and _outdoor(p) and not _in_lit_doorway(p) and _blocked(eye, p + Vector3.UP * EYE_M, 1 | 16):
+		if d < best_d and _outdoor(p) and not _in_lit_doorway(p) and not (_hold_bad != Vector3.INF and p.distance_to(_hold_bad) < 3.0) \
+				and _blocked(eye, p + Vector3.UP * EYE_M, 1 | 16):
 			best = p
 			best_d = d
 	if best == Vector3.INF:
 		best = at + from.rotated(Vector3.UP, _hold_side * PI / 4.0) * r
+		if _hold_bad != Vector3.INF and best.distance_to(_hold_bad) < 3.0:
+			best = at + from.rotated(Vector3.UP, -_hold_side * PI / 4.0) * r  # P5-72: stuck on that flank: the other one
 	return best if _outdoor(best) else at + from * r
 
 

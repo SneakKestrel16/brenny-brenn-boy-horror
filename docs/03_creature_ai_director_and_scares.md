@@ -126,6 +126,13 @@ Corn damping does not apply to `step_sprint_corn`; its 40 m already includes the
 
 - Sight is a ray from the creature's head to the player's head and feet, blocked by layer 5 and
   layer 1. Open ground means no corn on that ray.
+- **What blocks it (P5-72, checked).** The ray's mask is `1 | 16`. Players (layer 2), the creature
+  (4) and interactables (8) are not in it, so no target exclusion is needed. On the full farm the
+  only layer-1 bodies above the 0.9 m crouched eye, besides buildings, doors, trees and bounds, are
+  the props (Generator 1.2 m, fuel drum, well, shipping crate and town stand 1.0 m), the pen fence
+  (1.2 m) and the two 2 m farm gate posts. All are below the 1.65 m eye line, so a standing player
+  beside them is seen. `test_p5_72` part A shows this: a player just behind each prop and the pen
+  fence is seen, and a player inside the barn is not.
 - **Stillness** is the host's own check on received transforms: under 0.2 m moved over 1 s
   (`placeholder`, doc 01 "Hiding verbs: go still").
 
@@ -267,6 +274,21 @@ placeholder player speeds (Q-016).
   push into the pen fence. A lurk walk that moves under a fifth of its speed for 2 s drops its goal and
   route and picks again (`creature_stuck` logs the position). No data number: it fixes a stall, not a
   rule.
+- **Stuck in any state (P5-72, as built).** The stuck check now runs in `stalk`, `chase` and
+  `retreat` too (`creature_stuck` also logs the state). A walk that is stuck for 2 s steps sideways
+  along the fence or wall, at most `stuck_step_m` (creature.json, placeholder 8 m). The step ends
+  once a chest-height ray to its goal is clear, after at least 1 m. If it is stuck again, it turns
+  back the other way. On top of the side step, a lurk drops its route and a stalk picks a new hiding
+  spot at least 3 m from the one it could not reach. A retreat picks a new point, and a chase goes on
+  for the sensed position from the new side. Holds do not count as stuck: the bang hold, the hide
+  wait, the stalk hold spot, the lunge, trap setting and the Harvest Moon standoff. A chase standing
+  in reach of its goal does not count either. Before, a chase into the pen fence pushed against it
+  until the chase was lost (`test_p5_72` part B).
+- **A target-less stalk goes through the corn (P5-72, as built).** A stalk on a noise with no player
+  behind it (a dead generator) walks to the noise by a corn route, as a lurk does (P5-56). Before, it
+  walked straight across the open. The scripted stalk (section 18) is unchanged. The Harvest Moon
+  attack on the pusher (section 14) is left as it is: it goes for the pusher it senses loudest by
+  design, and P5-56 found that corn routes kept it away from the cart.
 - **Stalk hiding spots (P5-39, as built).** A night `stalk` no longer walks the straight line at the
   sensed position and stands 10 m off in the open. Every `stalk_repick_s` (placeholder 6 s) it picks a
   spot on a ring round the target's **sensed** position: `stalk_hold_far_m` (placeholder 18 m, past
@@ -300,7 +322,10 @@ reach a lit building**.
 - A chase can be lost only after `chase_commit_s` (6 s) has passed; the 4 s of `chase_lose_quiet_s`
   may run during it.
 - When a chase is lost the creature goes to the last sensed position, searches for `memory` seconds
-  (section 3.1) and returns to `lurk`.
+  (section 3.1) and returns to `lurk`. P5-72: the search length is the data number `search_s`
+  (creature.json, placeholder 12 s, equal to `hearing_memory_s`). A stalk that loses its target
+  (`lost_track`) searches the same way. Before, it stopped where it was. Both use the last **sensed**
+  position, never a true one (doc 01 "Senses", D-189).
 - **Search pattern (P5-56, as built).** During that search it walks to the nearest cover point or
   trap spot within `search_radius_m` (creature.json, placeholder 15 m) of the last sensed position
   that it has not checked (a point counts as checked within 3 m), one after another, until `memory`
