@@ -247,6 +247,13 @@ placeholder player speeds (Q-016).
   hop: testing the hop dropped every act 1 route at once and left it standing at cover_01. Each
   number set to 0 restores the old walk. Inference: 4 makes one open metre cost as much as five
   corn metres, which keeps open crossings short without long detours; playtests settle it.
+- **Lurk by day (P5-65, as built).** CEO playtest 2026-10-10: the creature stood still all day (log
+  `[30,0,57]`), because the day branch reset its goal to day cover every frame. Now it stays parked at
+  day cover in the day's first third and lurks through corn after that, with
+  `lurk_open_cost_mult_day` (creature.json, placeholder 20) in place of the night 4. With 4, day
+  routes crossed about 30 m of open yard and showed the whole body for up to 17 s (QA P5-65). With
+  20, seeds 1-5 spent 81-100% of the second third in corn. Inference: the first-third park and the
+  20 come from QA runs, not doc 01; playtests settle them.
 - **Stuck walk (P5-56, as built).** The route knows buildings and doors but not fences, so a hop can
   push into the pen fence. A lurk walk that moves under a fifth of its speed for 2 s drops its goal and
   route and picks again (`creature_stuck` logs the position). No data number: it fixes a stall, not a
