@@ -51,6 +51,7 @@ without a revert.
 | P5-66 | 669f05e | A ghost can fly the crow it possesses (move keys and look); it flies home when time runs out | `git revert 669f05e` |
 | P5-67 | 0a69d46 | Wordless 26 s intro cutscene (gate, yard, pumpkin, a shape in the corn, title) replaces the start text | `git revert 0a69d46` |
 | P5-68 | a827ed1 | Jumpscare shows this season's creature model; hallucinations show it as a black silhouette | `git revert a827ed1` |
+| P5-65 | d9d3786 | Creature moves through corn by day instead of standing still (holds cover in the first third of the day) | `git revert d9d3786` |
 
 ## 3. Tests run and what we did
 
@@ -76,3 +77,4 @@ without a revert.
 - **P5-66 crow flight: Opus QA PASS after fixes.** QA proved real key steering on a client (no test bypass), blocked a bad-data steer from a modified client, and checked ending at time-out, quit and dawn. Open: a player who joins mid-flight does not see that crow.
 - **P5-67 intro: Opus QA PASS after a fix.** A player rejoining mid-season got the whole intro; fixed. Note for you: every shot is in daylight, so the only scare is the brief shape in the corn and its sound. Say if you want it at dusk.
 - **P5-68 jumpscare model: Opus QA PASS.** All four bodies checked day and night. Note: doc 01 says the creature is seen clearly at night only in the dark; the jumpscare flash now lights it for 0.4 s so you can see the model. Say if you want it darker.
+- **P5-65 creature by day: Opus QA PASS.** Play a day past its first third and watch the corn: it should move, mostly hidden. You may still see it cross the open lanes between corn blocks at 13-19 m for up to 8 s. Should it dash across, or avoid lanes players can see?
