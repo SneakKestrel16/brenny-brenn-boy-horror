@@ -1346,3 +1346,16 @@ route and never steers toward a player. No later task may use true positions to 
 player, or a target.
 **Why:** CEO D-188 (D-1) asks for the creature to be as little seen as possible by day; QA P5-69 judged the use fair
 and asked for it to be fixed in writing so it does not grow into pursuit.
+
+### D-190 · 2026-10-11 · Director · P5-74 pacing: soften the gate run only; economy waits for real play
+The CEO asked the Director to choose from the P5-74 proposals ("do what you think").
+- Taken: a gate-run-only chase speed, `profile_harvest_moon.gate_run_chase_speed_mps` 4.5 (placeholder; P5-74
+  proposed 4.0-4.5, 4.5 is the cautious end). Nights 1-6 stay at `chase_speed_mps` 5.5.
+- Taken: bots guard the pumpkin, buy plots, skip day-7 seeds and fire flares in the gate run, so bot seasons measure
+  the game rather than bot gaps. Task P5-75.
+- Not taken, for now: the pause after a gate-run kill, and the flare price. Re-judge both after P5-75's bot A/B.
+- Not taken: the pumpkin gnaw day and start coins (doc 01 numbers). The sim median clears 58.1% when the pumpkin is
+  guarded. The bot losses come from bots never guarding the pumpkin or buying plots, not from the numbers. A human
+  playtest would settle it.
+**Why:** CEO delegated the call in chat on 2026-10-11. The gate run kills in about 6 game seconds from 30 m at 5.5
+m/s, which no cart speed outruns (P5-74). Economy evidence is bot-only.
