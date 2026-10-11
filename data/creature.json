@@ -63,6 +63,13 @@
       "speed_mps": 5.5
     },
     {
+      "id": "lurk_dash_speed_day",
+      "source": "placeholder",
+      "cite": "doc 01 What players see (by day parts and motion only), doc 03 section 4; P5-69 (CEO D-188): a day lurk crosses open ground (out of World/CornBlockers) at this speed until it is back in corn; chase speed",
+      "kind": "speed",
+      "speed_mps": 5.5
+    },
+    {
       "id": "chase_speed_tainted_mps",
       "source": "placeholder",
       "cite": "doc 03 section 4.1",
@@ -229,6 +236,13 @@
       "cite": "doc 01 Behavior states (Lurk), doc 03 section 4; P5-56: at the end of a lurk route it waits this long in the cover point before the next one (a sound still pulls it at once); 0 = off",
       "kind": "timer",
       "seconds": 6
+    },
+    {
+      "id": "lurk_hide_wait_s",
+      "source": "placeholder",
+      "cite": "doc 01 What players see (by day parts and motion only), doc 03 section 4; P5-69 (CEO D-188): a day lurk at the corn's edge waits while a living player has a clear line to its open crossing; after this long it drops the route and picks another",
+      "kind": "timer",
+      "seconds": 10
     },
     {
       "id": "wander_recent_s",

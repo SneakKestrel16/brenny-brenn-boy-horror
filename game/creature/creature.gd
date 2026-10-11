@@ -44,6 +44,8 @@ const PKT_BYTES := 18  ## type u8, state u8, position 3 x f32, yaw f32
 const SEND_HZ := 15.0  ## doc 06 section 7 (placeholder)
 const EYE_M := 1.65  ## doc 03 section 3.2, CONTRACTS section 4
 const EYE_CROUCH_M := 0.9  ## placeholder: crouched head height for the sight ray
+const CHEST_M := 1.2  ## P5-69 placeholder: the creature's chest, the point a player's eye must reach to see the body
+const WATCH_STEP_M := 3.0  ## P5-69 placeholder: spacing of the points `_watched` checks along an open crossing
 const STALK_CHASE_M := 12.0  ## doc 03 section 4.2: at night a sensed target this close starts a chase
 const STALK_STANDOFF_M := 10.0  ## placeholder: a stalk holds back this far ("just out of sight", section 4)
 # chase_tell_s, scripted_standoff_m and trap_lure_m live in data/creature.json (P2-12, Q-048 (1)).
@@ -165,6 +167,7 @@ var _corn: Array = []  ## P5-56: CornBlockers rects (x, z), read on first use
 var _search_c := Vector3.INF  ## P5-56: the last sensed position a lost chase searches round
 var _searched: Array = []  ## P5-56: the points that search has checked (Vector3)
 var _stuck_t := 0.0  ## P5-56: seconds a lurk walk has barely moved
+var _hide_until := -INF  ## P5-69: _now until which a day lurk waits at the corn's edge for no player to look
 var _via: Array = []  ## P5-56: lurk route points (Vector2 x, z): cover points, then ring waypoints
 var _via_cost := PackedFloat32Array()  ## P5-56: Logic.hop_costs of _via
 var _via_key := ""  ## P5-56: what _via was built for
@@ -212,10 +215,10 @@ func _ready() -> void:
 	_rng.seed = Game.seed_value
 	_dir = get_tree().get_first_node_in_group(&"ai_director")  # main adds it before the Creature
 	_num[&"day_gap_s"] = float(Data.value(&"ai_director", &"lures", &"day_gap_s"))
-	for id in [&"lurk_speed_mps", &"stalk_speed_mps", &"chase_speed_mps"]:
+	for id in [&"lurk_speed_mps", &"stalk_speed_mps", &"chase_speed_mps", &"lurk_dash_speed_day"]:
 		_num[id] = float(Data.value(&"creature", id, &"speed_mps"))
 	for id in [&"lure_wait_s", &"stalk_max_s", &"chase_commit_s", &"retreat_s", &"hearing_memory_s", &"chase_lose_quiet_s", &"chase_tell_s",
-			&"door_bang_s", &"stalk_repick_s", &"stalk_rest_s", &"lurk_linger_s", &"wander_recent_s"]:
+			&"door_bang_s", &"stalk_repick_s", &"stalk_rest_s", &"lurk_linger_s", &"wander_recent_s", &"lurk_hide_wait_s"]:
 		_num[id] = float(Data.value(&"creature", id, &"seconds"))
 	for id in [&"reach_m", &"sight_night_m", &"sight_day_m", &"sight_still_crouch_m", &"scripted_standoff_m", &"trap_lure_m", &"wander_min_hop_m",
 			&"stalk_hold_near_m", &"stalk_hold_far_m", &"retreat_min_m", &"search_radius_m", &"trap_traffic_m"]:
@@ -1382,6 +1385,8 @@ func _move(_delta: float) -> void:
 	match state:
 		&"stalk": speed = _num[&"stalk_speed_mps"]
 		&"chase", &"retreat": speed = _num[&"chase_speed_mps"]
+	if _night_t < 0.0 and state == &"lurk" and not _corn_rects().is_empty() and not _in_corn(global_position):
+		speed = _num[&"lurk_dash_speed_day"]  # P5-69 (CEO D-188, doc 01 "What players see"): by day it dashes across open ground
 	if _race_mps > 0.0 and _alive(target):
 		_goal = Game.players[target].pos
 		# the way round buildings is longer than start_m: speed up to chase speed to still arrive on the deadline
@@ -1431,6 +1436,18 @@ func _move(_delta: float) -> void:
 	else:
 		d = _way_to(goal) - global_position
 	d.y = 0.0
+	if _night_t < 0.0 and state == &"lurk" and _in_corn(global_position) and not _in_corn(global_position + d.normalized()) \
+			and _watched(global_position + d):
+		velocity = Vector3.ZERO  # P5-69: at the corn's edge, a player would see the crossing: wait in the corn
+		if _hide_until == -INF:
+			_hide_until = _now + _num[&"lurk_hide_wait_s"]
+		elif _now >= _hide_until:  # still watched: drop the route, the next pick may cross elsewhere
+			_hide_until = -INF
+			_goal = Vector3.INF
+			_route.clear()
+			_dest = Vector3.INF
+		return
+	_hide_until = -INF
 	if state in [&"lurk", &"lure", &"stalk"] and _scarecrow_in_way(d.normalized()):  # P4-06: store.json `scarecrow` creature_avoid_m
 		_goal = Vector3.INF
 		velocity = Vector3.ZERO
@@ -1676,6 +1693,25 @@ func _wander(direct := false) -> void:
 ## 30 m of open yard past field B, in full view of a player there for 17 s; by day open ground costs more.
 func _open_mult() -> float:
 	return _num[&"lurk_open_cost_mult" if _night_t >= 0.0 else &"lurk_open_cost_mult_day"]
+
+
+## P5-69 (CEO D-188, doc 01 "What players see"): a living player's eye has a clear line to the creature's chest at
+## some open point, every WATCH_STEP_M, on the straight walk from here to `to`. Presentation, true positions: it hides
+## from view and never steers toward a player, so hunting still runs on what it senses only.
+func _watched(to: Vector3) -> bool:
+	var n := ceili(global_position.distance_to(to) / WATCH_STEP_M)
+	for i in range(1, n + 1):
+		var p := global_position.lerp(to, float(i) / n)
+		if _in_corn(p):
+			continue
+		for q in Game.players:
+			if _alive(q) and not _blocked(Game.players[q].pos + Vector3.UP * EYE_M, p + Vector3.UP * CHEST_M, 1 | 16):
+				return true
+	return false
+
+
+func _in_corn(p: Vector3) -> bool:
+	return _corn_rects().any(func(r: Rect2) -> bool: return r.has_point(Vector2(p.x, p.z)))
 
 
 func _key(p: Vector3) -> Vector2i:

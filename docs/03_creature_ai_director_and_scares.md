@@ -254,6 +254,15 @@ placeholder player speeds (Q-016).
   routes crossed about 30 m of open yard and showed the whole body for up to 17 s (QA P5-65). With
   20, seeds 1-5 spent 81-100% of the second third in corn. Inference: the first-third park and the
   20 come from QA runs, not doc 01; playtests settle them.
+  **Dash and hide (P5-69, CEO D-188, as built).** By day (and dusk, dawn) a `lurk` out of the
+  `World/CornBlockers` corn moves at `lurk_dash_speed_day` (placeholder 5.5 m/s, chase speed) until it
+  is back in corn. At the corn's edge it waits while any living player's eye (1.65 m) has a clear line
+  to its chest (1.2 m) at an open point of the next leg, checked every 3 m. After `lurk_hide_wait_s`
+  (placeholder 10 s) still watched, it drops the route and picks another. This uses true positions
+  but only to hide, never to find a player, so hunting stays on what it senses. `test_p5_69`, seeds
+  1-5, one player at each field 150 s: longest full-body sighting at walk speed (P5-65) 0-8.5 s, dash only 0-3.1 s,
+  dash and hide 0-0.2 s (nearest 34 m). Night routes and speeds are unchanged. Inference: 5.5 m/s,
+  10 s and 3 m come from these runs, not doc 01; playtests settle them.
 - **Stuck walk (P5-56, as built).** The route knows buildings and doors but not fences, so a hop can
   push into the pen fence. A lurk walk that moves under a fifth of its speed for 2 s drops its goal and
   route and picks again (`creature_stuck` logs the position). No data number: it fixes a stall, not a

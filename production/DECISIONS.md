@@ -1337,3 +1337,12 @@ CEO answers to `production/CEO_REVIEW_2026-10-10.md` section 1. "Keep" means kee
 - D-13 (Q-356): corn lurk kept. D-14 (Q-355): all bodies hunt identically, for now. D-15: whistle note on the shed
   back wall. D-16: intro stays in daylight. D-17: jumpscare flash stays lit.
 **Why:** CEO call, given in chat on 2026-10-10.
+
+### D-189 · 2026-10-10 · Director · Day hiding may read true player positions, never to pursue
+P5-69's day hide check (`_watched` in game/creature/creature.gd) reads living players' true positions to wait in
+corn while a player can see the next open stretch. Doc 01 lets hunting use only what the creature senses; this reading
+treats hiding as presentation (doc 01 "Presentation ... may use true positions"), because it only stops or drops a
+route and never steers toward a player. No later task may use true positions to choose a goal, a route toward a
+player, or a target.
+**Why:** CEO D-188 (D-1) asks for the creature to be as little seen as possible by day; QA P5-69 judged the use fair
+and asked for it to be fixed in writing so it does not grow into pursuit.

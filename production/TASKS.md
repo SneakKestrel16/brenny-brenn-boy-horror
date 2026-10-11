@@ -1473,6 +1473,6 @@ Acceptance:
   clips of their own recorded voice; (d) fake grab: a jolt and a stinger as if caught, then nothing. Out: wrong
   teammate, things move, tunnel vision. None of these can hurt or kill; doc 01 hallucination rules (distant, never
   cut to black or knock down) apply except where this pick says otherwise, which the Game Designer records in doc 03.
-| P5-69 | AI Programmer | Creature as little visible as possible by day: dash across open lanes between corn blocks, keep out of players' sight (CEO D-188, D-1/D-18) | todo | - |
+| P5-69 | AI Programmer | Creature as little visible as possible by day: dash across open lanes between corn blocks, keep out of players' sight (CEO D-188, D-1/D-18) | done (QA PASS) | - |
 | P5-70 | AI Programmer | Door shut on the creature: it flings the door open again instead of walking through it (CEO D-188, D-12) | done (QA PASS) | - |
 | P5-71 | Gameplay Programmer | Horror role: replace the four doc 03 s23.1 exceptions with effects inside doc 01's hallucination rules (CEO D-188, D-9) | done (QA PASS) | - |
