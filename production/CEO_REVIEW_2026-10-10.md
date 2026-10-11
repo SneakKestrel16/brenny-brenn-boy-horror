@@ -57,6 +57,7 @@ without a revert.
 | P5-67 | 0a69d46 | Wordless 26 s intro cutscene (gate, yard, pumpkin, a shape in the corn, title) replaces the start text | `git revert 0a69d46` |
 | P5-68 | a827ed1 | Jumpscare shows this season's creature model; hallucinations show it as a black silhouette | `git revert a827ed1` |
 | P5-65 | d9d3786 | Creature moves through corn by day instead of standing still (holds cover in the first third of the day) | `git revert d9d3786` |
+| P5-71 | 947889d | Horror role scares follow the normal hallucination rules: distant 'turn' and 'edge' silhouettes replace the fake grab and edge shadow | `git revert 947889d` |
 
 ## 3. Tests run and what we did
 
@@ -83,3 +84,4 @@ without a revert.
 - **P5-67 intro: Opus QA PASS after a fix.** A player rejoining mid-season got the whole intro; fixed. Note for you: every shot is in daylight, so the only scare is the brief shape in the corn and its sound. Say if you want it at dusk.
 - **P5-68 jumpscare model: Opus QA PASS.** All four bodies checked day and night. Note: doc 01 says the creature is seen clearly at night only in the dark; the jumpscare flash now lights it for 0.4 s so you can see the model. Say if you want it darker.
 - **P5-65 creature by day: Opus QA PASS.** Play a day past its first third and watch the corn: it should move, mostly hidden. You may still see it cross the open lanes between corn blocks at 13-19 m for up to 8 s. Should it dash across, or avoid lanes players can see?
+- **P5-71 Horror role: Opus QA PASS after 4 fixes.** As Horror, from day 5, watch for a far figure that turns to face you, or one at the screen edge that vanishes when you look. Open: some figures stand inside the corn and are hidden.
