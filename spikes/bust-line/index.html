@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bust Line Prototype</title>
+<style>
+:root{
+  --bg:#0e0d0b; --panel:#17150f; --felt:#163024; --felt2:#0b1812; --ink:#e9e2d0; --dim:#9a917c;
+  --red:#c4453a; --gold:#d6a84a; --green:#6fbf73; --card:#efe8d6; --cardInk:#1b1a17; --line:#2f3a30;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+#app{max-width:1000px;margin:0 auto;padding:16px;display:grid;gap:12px}
+header{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;justify-content:space-between}
+h1{font-size:18px;margin:0;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.stats{display:flex;flex-wrap:wrap;gap:6px 16px;font-variant-numeric:tabular-nums}
+.stat b{color:var(--gold)}
+.dim{color:var(--dim)}
+main{display:grid;grid-template-columns:1fr 270px;gap:12px}
+@media (max-width:780px){main{grid-template-columns:1fr}}
+#table{background:radial-gradient(ellipse at 50% 30%,var(--felt),var(--felt2));border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px;min-height:460px;transition:filter .6s}
+.zone h2{margin:0 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);font-weight:600}
+.zone .line{font-style:italic;color:#c9bfa6;margin:0 0 8px;font-size:14px}
+.zone .rule{color:var(--red);font-size:13px;margin:-4px 0 8px}
+.cards{display:flex;gap:8px;flex-wrap:wrap;min-height:96px;align-items:center}
+.card{width:62px;height:90px;border-radius:8px;background:var(--card);color:var(--cardInk);display:flex;flex-direction:column;justify-content:space-between;padding:4px 6px;font-weight:700;box-shadow:0 3px 8px #000a;animation:in .22s ease-out;position:relative;user-select:none}
+.card .sm{font-size:13px}
+.card .big{font-size:24px;text-align:center;line-height:1}
+.card .tag{font-size:9px;text-transform:uppercase;text-align:right;opacity:.7}
+.card.red{color:#a52a22}
+.card.glass{background:linear-gradient(135deg,#e6f6ff,#a9d6ef);outline:2px solid #bfe9ff}
+.card.wild{background:#2a2216;color:var(--gold);outline:2px solid var(--gold)}
+.card.half{outline:2px solid #8a6fbf}
+.card.temp{outline:2px dashed #777;opacity:.9}
+.card.back{background:repeating-linear-gradient(45deg,#3a1513 0 6px,#250d0c 6px 12px);outline:2px solid #5a2320}
+.card.click{cursor:pointer}
+.card.click:hover{transform:translateY(-3px);outline:2px solid var(--red)}
+@keyframes in{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
+.total{font-size:14px;color:var(--dim);margin-top:4px;font-variant-numeric:tabular-nums}
+.total b{color:var(--ink);font-size:18px}
+#banner{min-height:52px;border-radius:10px;padding:8px 12px;background:#0006;display:flex;flex-direction:column;justify-content:center}
+#banner.win{border-left:4px solid var(--green)} #banner.lose{border-left:4px solid var(--red)} #banner.push{border-left:4px solid var(--dim)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;background:#2a2619;color:var(--ink);border:1px solid #4a4330;border-radius:8px;padding:8px 14px;cursor:pointer;min-height:40px}
+button:hover:not(:disabled){border-color:var(--gold)}
+button:disabled{opacity:.35;cursor:not-allowed}
+button.primary{background:var(--gold);color:#1b1608;border-color:var(--gold);font-weight:700}
+button.sel{outline:2px solid var(--gold)}
+button.con{background:#241a26;border-color:#5b3f62}
+kbd{font-size:11px;opacity:.6;margin-left:4px}
+aside{display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.panel h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
+.relic{margin:0 0 8px}.relic b{color:var(--gold)}.relic div{font-size:13px;color:var(--dim)}
+#log{font-size:12px;color:var(--dim);max-height:220px;overflow:auto;margin:0;padding-left:16px}
+#log li{margin-bottom:3px}
+.bar{height:8px;background:#0008;border-radius:4px;overflow:hidden;margin-top:4px;min-width:120px}
+.bar i{display:block;height:100%;background:var(--green);transition:width .3s}
+.heat{display:inline-flex;gap:3px;vertical-align:middle}
+.heat i{width:10px;height:10px;border-radius:2px;background:#3a3326}
+.heat i.on{background:var(--red)}
+.overlay{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal{background:var(--panel);border:1px solid #4a4330;border-radius:14px;padding:18px;max-width:720px;width:100%;max-height:90vh;overflow:auto}
+.modal h2{margin:0 0 6px;color:var(--gold)}
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0}
+.item{border:1px solid #4a4330;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;background:#1d1a12}
+.item .k{font-size:11px;text-transform:uppercase;color:var(--dim);letter-spacing:.08em}
+.item b{color:var(--gold)} .item p{margin:0;font-size:13px;color:#cfc6ae;flex:1}
+.item.sold{opacity:.35}
+.deckgrid{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.deckgrid .card{width:46px;height:66px;font-size:12px}
+.deckgrid .card .big{font-size:16px}
+/* rot: low chips */
+body.rot #table{filter:saturate(.45) contrast(1.15) hue-rotate(-12deg)}
+#whisper{position:fixed;pointer-events:none;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-style:italic;color:#c4453a55;opacity:0;transition:opacity 1.5s;z-index:5}
+body.rot #whisper{opacity:1;animation:drift 6s ease-in-out infinite}
+@keyframes drift{50%{transform:translate(12px,-8px) scale(1.03);color:#c4453a22}}
+</style>
+</head>
+<body>
+<div id="whisper">it remembers how many years you had</div>
+<div id="app">
+  <header>
+    <h1>Bust Line</h1>
+    <div class="stats" id="stats"></div>
+  </header>
+  <main>
+    <section id="table">
+      <div class="zone" id="dealerZone"></div>
+      <div id="banner"></div>
+      <div class="zone" id="playerZone"></div>
+      <div class="controls" id="controls"></div>
+      <div class="controls" id="cons"></div>
+    </section>
+    <aside>
+      <div class="panel"><h3>Relics</h3><div id="relics"></div></div>
+      <div class="panel"><h3>Deck</h3><div id="deckInfo"></div></div>
+      <div class="panel"><h3>Log</h3><ul id="log"></ul></div>
+    </aside>
+  </main>
+</div>
+<div id="overlay"></div>
+
+<script>
+// ---------- RNG ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let DEALER_MS=380; // set to 0 for automated tests
+const sleep=ms=>new Promise(r=>setTimeout(r,ms*DEALER_MS/380));
+
+// ---------- DATA ----------
+const SUITS=['♠','♥','♦','♣'];
+const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+let HANDS_PER_TABLE=3; const MIN_DECK=20, MAX_CONS=3, HEAT_MAX=5;
+
+const TABLES=[
+  {name:'The Groundskeeper',line:'"Soil takes everything back. Bet."',goal:25},
+  {name:'Mother Hollow',line:'"Sit, child. Your hands are so cold."',goal:50},
+  {name:'The Thin Man',line:'"I have been counting you."',goal:80},
+  {boss:true,goal:120},
+];
+const BOSSES={
+  mirror:{name:'The Mirror',line:'"Whatever you draw, I drew it first."',rule:"Boss rule: dealer's up card copies your first card."},
+  hoarder:{name:'The Hoarder',line:'"That one is mine."',rule:'Boss rule: dealer steals your highest card after the deal. You draw a replacement.'},
+};
+const RELICS={
+  softhands:{name:'Soft Hands',desc:'A total one over your bust line counts as exactly on it.',price:70},
+  shoe:{name:'Loaded Shoe',desc:'Once per hand, peek at the top card. +1 heat.',price:55},
+  fraud:{name:'Insurance Fraud',desc:'Dealer blackjack pays you your bet instead of taking it.',price:50},
+  greed:{name:'Greed',desc:'Each card past the 4th in a winning hand: payout ×1.5.',price:70},
+  seven:{name:'Seventh Son',desc:'Each 7 in a winning hand: +0.5 mult.',price:45},
+  throat:{name:'Stretched Throat',desc:'Your bust line is 24. The dealer stays at 21.',price:90},
+};
+const CONS={
+  peek:{name:'Peek',desc:'See the top card of the shoe.',heat:1,price:15},
+  burn:{name:'Burn',desc:'Discard the top card of the shoe.',heat:1,price:15},
+  swap:{name:'Swap',desc:"Trade your last card for the dealer's up card.",heat:2,price:25},
+  force:{name:'Force',desc:'Dealer draws one card right now.',heat:1,price:20},
+};
+const ADDS={
+  glass:{name:'Glass 10',desc:'Counts 10. +1 mult in a winning hand. Shatters after the hand.',price:25,make:()=>mk('10','♦','glass')},
+  wild:{name:'Wild ★',desc:'Counts 1–11, whatever fits best under your line.',price:40,make:()=>mk('★','','wild')},
+  half:{name:'6½',desc:'Counts 6.5. Two of them make 13.',price:20,make:()=>mk('6½',pick(SUITS),'half')},
+  seven:{name:'Extra 7',desc:'Another 7 in the shoe.',price:15,make:()=>mk('7',pick(SUITS))},
+};
+
+// ---------- STATE ----------
+let S, uid=0;
+function mk(r,s,mod=null){return {id:++uid,r,s,mod}}
+function pick(a){return a[Math.floor(S.rng()*a.length)]}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(S.rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function has(k){return S.relics.includes(k)}
+function log(m){S.log.unshift(m);S.log.length=Math.min(S.log.length,50)}
+
+function newRun(seed){
+  seed = seed ?? Math.floor(Math.random()*1e9);
+  S={seed,rng:mulberry32(seed),chips:100,table:0,hand:0,tableStart:100,deck:[],shoe:[],discard:[],
+     relics:[],consumables:[],heat:0,fingers:3,bet:25,phase:'bet',player:[],dealer:[],hole:true,handBet:0,
+     peekUsed:false,peek:null,boss:null,result:null,log:[],shopItems:[],cutting:false,showDeck:false,stats:{hands:0,wins:0,best:0}};
+  for(const s of SUITS)for(const r of RANKS)S.deck.push(mk(r,s));
+  log(`Run started. Seed ${seed}.`);
+  startTable();
+}
+
+function startTable(){
+  const T=TABLES[S.table];
+  S.tableStart=S.chips; S.hand=0; S.heat=Math.max(0,S.heat-1);
+  S.shoe=shuffle(S.deck.slice()); S.discard=[];
+  S.boss = T.boss ? pick(Object.keys(BOSSES)) : null;
+  S.phase='bet'; S.result=null; S.player=[]; S.dealer=[];
+  S.bet=Math.min(S.bet,S.chips);
+  log(`Table ${S.table+1}: ${dealerName()}. Goal +${T.goal}.`);
+  render();
+}
+function dealerName(){return S.boss?BOSSES[S.boss].name:TABLES[S.table].name}
+
+// ---------- CARDS ----------
+function cval(c){ if(c.r==='A'||c.r==='★')return 1; if(c.r==='6½')return 6.5; if(['J','Q','K'].includes(c.r))return 10; return +c.r }
+function score(cards,limit){
+  let t=0,aces=0,wilds=0;
+  for(const c of cards){t+=cval(c); if(c.r==='A')aces++; if(c.r==='★')wilds++}
+  let soft=false;
+  if(aces&&t+10<=limit){t+=10;soft=true}
+  for(let i=0;i<wilds;i++){const add=Math.min(10,limit-t); if(add>0)t+=add}
+  return {t,soft};
+}
+function fmt(t){return Number.isInteger(t)?String(t):Math.floor(t)+'½'}
+function pLimit(){return has('throat')?24:21}
+function pScore(){
+  const lim=pLimit(); let {t}=score(S.player,lim); let saved=false;
+  if(has('softhands')&&t===lim+1){t=lim;saved=true}
+  return {t,bust:t>lim,saved};
+}
+function isNatural(cards){return cards.length===2&&score(cards,21).t===21}
+function draw(){
+  if(!S.shoe.length){S.shoe=shuffle(S.discard);S.discard=[];log('Shoe empty. Discards reshuffled.')}
+  S.peek=null;
+  return S.shoe.pop();
+}
+function topCard(){if(!S.shoe.length){S.shoe=shuffle(S.discard);S.discard=[]}return S.shoe[S.shoe.length-1]}
+function label(c){return c.r+(c.s||'')}
+
+// ---------- HAND FLOW ----------
+function setBet(v){if(S.phase!=='bet')return;S.bet=Math.min(v,S.chips);render()}
+function deal(){
+  if(S.phase!=='bet')return;
+  S.handBet=Math.max(1,Math.min(S.bet,S.chips));
+  S.player=[];S.dealer=[];S.hole=true;S.peekUsed=false;S.peek=null;S.result=null;
+  S.player.push(draw());S.dealer.push(draw());S.player.push(draw());S.dealer.push(draw());
+  if(S.boss==='mirror'){
+    S.discard.push(S.dealer[0]);
+    S.dealer[0]={...S.player[0],id:++uid,temp:true};
+    log(`The Mirror shows your ${label(S.player[0])}.`);
+  }
+  if(S.boss==='hoarder'){
+    let bi=0;S.player.forEach((c,i)=>{if(rankWeight(c)>rankWeight(S.player[bi]))bi=i});
+    const [c]=S.player.splice(bi,1); S.dealer.push(c); S.player.push(draw());
+    log(`The Hoarder takes your ${label(c)}.`);
+  }
+  S.phase='play';
+  const pn=isNatural(S.player), dn=S.dealer.length===2&&isNatural(S.dealer);
+  if(pn||dn){S.hole=false; if(pn&&dn)settle('push','Both blackjack'); else if(pn)settle('win','Blackjack!'); else settle('dealerbj','Dealer blackjack')}
+  else if(pScore().t===pLimit()) stand();
+  render();
+}
+function rankWeight(c){return c.r==='A'||c.r==='★'?11:cval(c)}
+function afterPlayerCard(){
+  const p=pScore();
+  if(p.bust){S.hole=false;settle('lose','Bust');return}
+  if(p.saved)log('Soft Hands catches the bust.');
+  if(S.player.length>=6){S.hole=false;settle('win','Six-card charlie');return}
+  if(p.t===pLimit()){stand();return}
+  render();
+}
+function hit(){if(S.phase!=='play')return;S.player.push(draw());afterPlayerCard()}
+function canDouble(){return S.phase==='play'&&S.player.length===2&&S.chips>=S.handBet*2}
+function dbl(){
+  if(!canDouble())return;
+  S.handBet*=2; log(`Double down: ${S.handBet}.`);
+  S.player.push(draw());
+  const p=pScore();
+  if(p.bust){S.hole=false;settle('lose','Bust on double');return}
+  stand();
+}
+async function stand(){
+  if(S.phase!=='play')return;
+  S.phase='dealer';S.hole=false;render();
+  await sleep(380);
+  while(score(S.dealer,21).t<17){S.dealer.push(draw());render();await sleep(380)}
+  const d=score(S.dealer,21).t, p=pScore().t;
+  if(d>21)settle('win','Dealer busts');
+  else if(p>d)settle('win',`${fmt(p)} beats ${d}`);
+  else if(p===d)settle('push',`Push at ${fmt(p)}`);
+  else settle('lose',`${d} beats ${fmt(p)}`);
+}
+function calcMult(){
+  let mult=1;const notes=[];const p=S.player;const lim=pLimit();const {t}=pScore();
+  if(isNatural(p)){mult*=1.5;notes.push('Blackjack ×1.5')}
+  else if(t===lim){mult+=0.5;notes.push(`Exact ${lim} +0.5`)}
+  const suits=p.filter(c=>c.s).map(c=>c.s);
+  if(p.length>=2&&suits.length===p.length&&suits.every(s=>s===suits[0])){const b=p.length>=3?1:0.5;mult+=b;notes.push(`Suited +${b}`)}
+  const g=p.filter(c=>c.mod==='glass').length; if(g){mult+=g;notes.push(`Glass +${g}`)}
+  if(p.length>=6){mult+=1;notes.push('Charlie +1')}
+  if(has('seven')){const n=p.filter(c=>c.r==='7').length;if(n){mult+=0.5*n;notes.push(`Seventh Son +${0.5*n}`)}}
+  if(has('greed')&&p.length>4){const f=1.5**(p.length-4);mult*=f;notes.push(`Greed ×${f}`)}
+  return {mult,notes};
+}
+function settle(outcome,reason){
+  let delta=0,notes=[],mult=1;
+  if(outcome==='win'){({mult,notes}=calcMult());delta=Math.round(S.handBet*mult);S.stats.wins++}
+  else if(outcome==='lose')delta=-S.handBet;
+  else if(outcome==='dealerbj'){if(has('fraud')){delta=S.handBet;notes=['Insurance Fraud pays']}else delta=-S.handBet}
+  S.chips+=delta;S.stats.hands++;S.stats.best=Math.max(S.stats.best,delta);
+  S.result={outcome,reason,delta,notes,mult};
+  if(S.heat>=HEAT_MAX){const loss=Math.ceil(Math.max(0,S.chips)*0.25);S.chips-=loss;S.heat=0;S.result.heatLoss=loss;log(`The pit boss takes ${loss}. Heat reset.`)}
+  log(`${reason}: ${delta>=0?'+':''}${delta}${notes.length?' ('+notes.join(', ')+')':''}`);
+  S.phase='result';render();
+}
+function cleanup(){
+  for(const c of [...S.player,...S.dealer]){
+    if(c.temp)continue;
+    if(c.mod==='glass'){S.deck=S.deck.filter(d=>d.id!==c.id);log('A glass 10 shatters.')}
+    else S.discard.push(c);
+  }
+  S.player=[];S.dealer=[];
+}
+function next(){
+  if(S.phase!=='result')return;
+  cleanup();S.hand++;
+  const T=TABLES[S.table];
+  if(S.chips<=0)return over(false,'Your chips are gone. So are the years they stood for.');
+  if(S.hand>=HANDS_PER_TABLE){
+    const profit=S.chips-S.tableStart;
+    if(profit<T.goal){
+      if(T.boss)return over(false,`${dealerName()} keeps you. Table profit ${profit} of ${T.goal}.`);
+      S.fingers--;
+      if(S.fingers<=0)return over(false,`Missed the goal with no fingers left to pay. ${dealerName()} keeps the rest of you.`);
+      log(`Missed goal (${profit}/${T.goal}). ${dealerName()} takes a finger. No shop.`);
+      S.table++;return startTable();
+    }
+    if(S.table===TABLES.length-1)return over(true,`${dealerName()} folds. The House lets you leave. For now.`);
+    return openShop();
+  }
+  S.phase='bet';S.result=null;S.bet=Math.min(S.bet,S.chips);render();
+}
+
+// ---------- CONSUMABLES ----------
+function useCon(i){
+  if(S.phase!=='play')return;
+  const k=S.consumables[i];if(!k)return;
+  S.consumables.splice(i,1);S.heat+=CONS[k].heat;applyCon(k);
+}
+function relicPeek(){
+  if(S.phase!=='play'||!has('shoe')||S.peekUsed)return;
+  S.peekUsed=true;S.heat+=1;applyCon('peek');
+}
+function applyCon(k){
+  if(k==='peek'){S.peek=topCard();log(`Peek: next card is ${label(S.peek)}.`);render()}
+  if(k==='burn'){const c=draw();S.discard.push(c);log(`Burned ${label(c)}.`);render()}
+  if(k==='force'){const c=draw();S.dealer.push(c);log(`Dealer forced to draw ${label(c)}.`);render()}
+  if(k==='swap'){const mine=S.player.pop(),up=S.dealer[0];S.dealer[0]=mine;S.player.push(up);log(`Swapped your ${label(mine)} for ${label(up)}.`);afterPlayerCard()}
+}
+
+// ---------- SHOP ----------
+function openShop(){
+  S.phase='shop';S.result=null;rollShop();log('The shop opens.');render();
+}
+function rollShop(){
+  const items=[];
+  shuffle(Object.keys(RELICS).filter(k=>!has(k))).slice(0,2).forEach(k=>items.push({type:'relic',key:k}));
+  const ck=Object.keys(CONS);items.push({type:'con',key:pick(ck)});items.push({type:'con',key:pick(ck)});
+  shuffle(Object.keys(ADDS)).slice(0,2).forEach(k=>items.push({type:'add',key:k}));
+  S.shopItems=items;
+}
+function itemDef(it){return it.type==='relic'?RELICS[it.key]:it.type==='con'?CONS[it.key]:ADDS[it.key]}
+function afford(p){return S.chips-p>=10}
+function buy(i){
+  const it=S.shopItems[i];if(!it||it.sold)return;const d=itemDef(it);
+  if(!afford(d.price))return;
+  if(it.type==='con'&&S.consumables.length>=MAX_CONS)return;
+  S.chips-=d.price;it.sold=true;
+  if(it.type==='relic')S.relics.push(it.key);
+  if(it.type==='con')S.consumables.push(it.key);
+  if(it.type==='add')S.deck.push(d.make());
+  log(`Bought ${d.name} for ${d.price}.`);render();
+}
+function reroll(){if(!afford(10))return;S.chips-=10;rollShop();render()}
+function cutCard(id){
+  if(!S.cutting||S.deck.length<=MIN_DECK||!afford(20))return;
+  const c=S.deck.find(d=>d.id===id);S.deck=S.deck.filter(d=>d.id!==id);S.chips-=20;S.cutting=false;S.showDeck=false;
+  log(`Cut ${label(c)} from the deck.`);render();
+}
+function leaveShop(){S.table++;S.cutting=false;S.showDeck=false;startTable()}
+
+function over(won,msg){S.phase=won?'won':'over';S.overMsg=msg;log(msg);render()}
+
+// ---------- RENDER ----------
+function cardHTML(c,opts={}){
+  if(opts.back)return `<div class="card back"></div>`;
+  const red=c.s==='♥'||c.s==='♦';
+  const cls=['card',red?'red':'',c.mod||'',c.temp?'temp':'',opts.click?'click':''].join(' ');
+  const tag=c.mod==='glass'?'glass':c.temp?'mirror':c.mod==='wild'?'wild':'';
+  return `<div class="${cls}" ${opts.click?`data-act="cut" data-id="${c.id}"`:''}><div class="sm">${c.r}${c.s}</div><div class="big">${c.r==='★'?'★':c.s}</div><div class="tag">${tag}</div></div>`;
+}
+const $=id=>document.getElementById(id);
+function render(){
+  const T=TABLES[S.table], profit=S.chips-S.tableStart;
+  document.body.classList.toggle('rot',S.chips<40&&!['over','won'].includes(S.phase));
+  $('stats').innerHTML=`
+    <span class="stat">Table <b>${S.table+1}/${TABLES.length}</b></span>
+    <span class="stat">Hand <b>${Math.min(S.hand+1,HANDS_PER_TABLE)}/${HANDS_PER_TABLE}</b></span>
+    <span class="stat">Chips <b>${S.chips}</b></span>
+    <span class="stat">Goal <b>${profit>=0?'+':''}${profit}/${T.goal}</b><div class="bar"><i style="width:${Math.max(0,Math.min(100,profit/T.goal*100))}%"></i></div></span>
+    <span class="stat">Fingers <b>${'I'.repeat(S.fingers)}</b><span class="dim">${'·'.repeat(3-S.fingers)}</span></span>
+    <span class="stat">Heat <span class="heat">${Array.from({length:HEAT_MAX},(_,i)=>`<i class="${i<S.heat?'on':''}"></i>`).join('')}</span></span>
+    <span class="stat dim">Seed ${S.seed}</span>`;
+
+  // dealer
+  const showD=S.hole?S.dealer.filter((_,i)=>i!==1):S.dealer;
+  const B=S.boss?BOSSES[S.boss]:null;
+  $('dealerZone').innerHTML=`<h2>Dealer · ${dealerName()}</h2>
+    <p class="line">${B?B.line:T.line}</p>${B?`<p class="rule">${B.rule}</p>`:''}
+    <div class="cards">${S.dealer.map((c,i)=>cardHTML(c,{back:S.hole&&i===1})).join('')}</div>
+    <div class="total">${S.dealer.length?`Showing <b>${score(showD,21).t}</b>${S.hole?' + ?':''}`:'&nbsp;'}</div>`;
+
+  // banner
+  const bn=$('banner');bn.className='';
+  if(S.result){
+    const r=S.result;bn.classList.add(r.delta>0?'win':r.delta<0?'lose':'push');
+    bn.innerHTML=`<div><b>${r.reason}</b> · ${r.delta>=0?'+':''}${r.delta} chips${r.outcome==='win'?` (bet ${S.handBet} × ${+r.mult.toFixed(3)})`:''}</div>
+      ${r.notes.length?`<div class="dim">${r.notes.join(' · ')}</div>`:''}
+      ${r.heatLoss?`<div style="color:var(--red)">Heat maxed. The pit boss takes ${r.heatLoss}.</div>`:''}`;
+  } else if(S.phase==='bet'){
+    bn.innerHTML=`<div class="dim">Pick a bet and deal. Bust line: <b style="color:var(--ink)">${pLimit()}</b>. Shoe: ${S.shoe.length} cards.</div>`;
+  } else if(S.peek){
+    bn.innerHTML=`<div>Next card: <b style="color:var(--gold)">${label(S.peek)}</b></div>`;
+  } else bn.innerHTML=`<div class="dim">Shoe: ${S.shoe.length} cards. Bet ${S.handBet}.</div>`;
+
+  // player
+  const ps=S.player.length?pScore():null;
+  $('playerZone').innerHTML=`<h2>You · bust line ${pLimit()}</h2>
+    <div class="cards">${S.player.map(c=>cardHTML(c)).join('')}</div>
+    <div class="total">${ps?`Total <b>${fmt(ps.t)}</b>${ps.saved?' (Soft Hands)':''}${ps.bust?' · BUST':''}`:'&nbsp;'}</div>`;
+
+  // controls
+  let h='';
+  if(S.phase==='bet'){
+    h+=[10,25,50,100].map(v=>`<button data-act="bet" data-v="${v}" class="${S.bet===v?'sel':''}" ${v>S.chips?'disabled':''}>${v}</button>`).join('');
+    h+=`<button class="primary" data-act="deal">Deal ${S.bet}<kbd>space</kbd></button>`;
+  } else if(S.phase==='play'||S.phase==='dealer'){
+    const p=S.phase==='play';
+    h+=`<button data-act="hit" ${p?'':'disabled'}>Hit<kbd>H</kbd></button>
+        <button data-act="stand" ${p?'':'disabled'}>Stand<kbd>S</kbd></button>
+        <button data-act="dbl" ${canDouble()?'':'disabled'}>Double<kbd>D</kbd></button>`;
+  } else if(S.phase==='result'){
+    const last=S.hand+1>=HANDS_PER_TABLE;
+    h+=`<button class="primary" data-act="next">${last?'End table':'Next hand'}<kbd>space</kbd></button>`;
+  }
+  $('controls').innerHTML=h;
+
+  let c='';
+  if(has('shoe'))c+=`<button class="con" data-act="rpeek" ${S.phase==='play'&&!S.peekUsed?'':'disabled'} title="Loaded Shoe">Shoe peek (+1 heat)</button>`;
+  S.consumables.forEach((k,i)=>{c+=`<button class="con" data-act="con" data-i="${i}" ${S.phase==='play'?'':'disabled'} title="${CONS[k].desc}">${CONS[k].name} (+${CONS[k].heat} heat)</button>`});
+  $('cons').innerHTML=c||`<span class="dim" style="font-size:13px">No consumables. Buy some in the shop.</span>`;
+
+  $('relics').innerHTML=S.relics.length?S.relics.map(k=>`<div class="relic"><b>${RELICS[k].name}</b><div>${RELICS[k].desc}</div></div>`).join(''):'<span class="dim">None yet.</span>';
+  const extras=S.deck.filter(d=>d.mod||d.r==='6½').length;
+  $('deckInfo').innerHTML=`<div>${S.deck.length} cards${extras?` · ${extras} special`:''}</div><div class="dim">Shoe ${S.shoe.length} · Discard ${S.discard.length}</div><button data-act="viewdeck" style="margin-top:8px">View deck</button>`;
+  $('log').innerHTML=S.log.map(m=>`<li>${m}</li>`).join('');
+
+  renderOverlay();
+}
+function sortedDeck(){
+  const ro=r=>r==='★'?0:r==='6½'?6.5:RANKS.indexOf(r)+1;
+  return S.deck.slice().sort((a,b)=>SUITS.indexOf(a.s)-SUITS.indexOf(b.s)||ro(a.r)-ro(b.r));
+}
+function renderOverlay(){
+  const o=$('overlay');let h='';
+  if(S.showDeck){
+    h=`<div class="overlay"><div class="modal"><h2>${S.cutting?'Cut a card (20 chips)':'Your deck'}</h2>
+      <div class="dim">${S.deck.length} cards. Minimum ${MIN_DECK}. The dealer draws from this deck too.</div>
+      <div class="deckgrid">${sortedDeck().map(c=>cardHTML(c,{click:S.cutting})).join('')}</div>
+      <div class="controls" style="margin-top:14px"><button data-act="closedeck">Close</button></div></div></div>`;
+  } else if(S.phase==='shop'){
+    const nt=TABLES[S.table+1];
+    h=`<div class="overlay"><div class="modal"><h2>Between tables</h2>
+      <div>Chips <b style="color:var(--gold)">${S.chips}</b> · next goal +${nt.goal}${nt.boss?' (boss)':''} · consumables ${S.consumables.length}/${MAX_CONS}</div>
+      <div class="dim" style="font-size:13px">You must keep at least 10 chips. Next table's goal counts from what you leave with.</div>
+      <div class="shop">${S.shopItems.map((it,i)=>{const d=itemDef(it);const full=it.type==='con'&&S.consumables.length>=MAX_CONS;
+        return `<div class="item ${it.sold?'sold':''}"><span class="k">${it.type==='relic'?'Relic':it.type==='con'?'Consumable':'Add card'}</span><b>${d.name}</b><p>${d.desc}</p>
+        <button data-act="buy" data-i="${i}" ${it.sold||!afford(d.price)||full?'disabled':''}>${it.sold?'Sold':'Buy '+d.price}</button></div>`}).join('')}</div>
+      <div class="controls">
+        <button data-act="cutmode" ${S.deck.length>MIN_DECK&&afford(20)?'':'disabled'}>Cut a card (20)</button>
+        <button data-act="reroll" ${afford(10)?'':'disabled'}>Reroll (10)</button>
+        <button class="primary" data-act="leave">Next table →</button>
+      </div></div></div>`;
+  } else if(S.phase==='over'||S.phase==='won'){
+    h=`<div class="overlay"><div class="modal"><h2>${S.phase==='won'?'You walk out':'Run over'}</h2><p>${S.overMsg}</p>
+      <p class="dim">Reached table ${S.table+1} · ${S.stats.wins}/${S.stats.hands} hands won · best hand +${S.stats.best} · final chips ${S.chips} · relics ${S.relics.length}</p>
+      <div class="controls"><button class="primary" data-act="new">New run</button><button data-act="retry">Retry seed ${S.seed}</button></div></div></div>`;
+  }
+  o.innerHTML=h;
+}
+
+// ---------- INPUT ----------
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;
+  const a=b.dataset.act;
+  ({bet:()=>setBet(+b.dataset.v),deal,hit,stand,dbl,next,
+    con:()=>useCon(+b.dataset.i),rpeek:relicPeek,buy:()=>buy(+b.dataset.i),reroll,leave:leaveShop,
+    cutmode:()=>{S.cutting=true;S.showDeck=true;render()},cut:()=>cutCard(+b.dataset.id),
+    viewdeck:()=>{S.cutting=false;S.showDeck=true;render()},closedeck:()=>{S.cutting=false;S.showDeck=false;render()},
+    new:()=>newRun(),retry:()=>newRun(S.seed)}[a]||(()=>{}))();
+});
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  const k=e.key.toLowerCase();
+  if(k==='h')hit(); else if(k==='s')stand(); else if(k==='d')dbl();
+  else if(k===' '||k==='enter'){e.preventDefault(); if(S.phase==='bet')deal(); else if(S.phase==='result')next()}
+});
+
+const qs=new URLSearchParams(location.search).get('seed');
+newRun(qs?+qs:undefined);
+</script>
+</body>
+</html>
